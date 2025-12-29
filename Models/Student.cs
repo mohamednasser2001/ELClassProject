@@ -10,7 +10,7 @@ namespace Models
         public string NameAr { get; set; }
         public string NameEn { get; set; }
 
-        //public ICollection<InstructorStudent> InstructorStudents { get; set; }
-        //public ICollection<StudentCourse> StudentCourses { get; set; }
+        public ICollection<InstructorStudent> InstructorStudents { get; set; }
+        public ICollection<StudentCourse> StudentCourses { get; set; }
     }
 }

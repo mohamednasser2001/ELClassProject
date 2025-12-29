@@ -13,8 +13,8 @@ namespace Models
         public string BioAr { get; set; }
         public string BioEn { get; set; }
 
-      
-        //public ICollection<InstructorStudent> InstructorStudents { get; set; }
-        //public ICollection<InstructorCourse> InstructorCourses { get; set; }
+
+        public ICollection<InstructorStudent> InstructorStudents { get; set; }
+        public ICollection<InstructorCourse> InstructorCourses { get; set; }
     }
 }
