@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Models
 {
-    internal class AuditLogging
+    public class AuditLogging
     {
        
         public DateTime? CreateAT { get; set; } = DateTime.Now;
