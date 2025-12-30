@@ -1,3 +1,8 @@
+using DataAccess;
+using DataAccess.Repositories;
+using DataAccess.Repositories.IRepositories;
+using Microsoft.EntityFrameworkCore;
+using Models;
 using Scalar;
 using Scalar.AspNetCore;
 namespace ELClass
@@ -11,6 +16,20 @@ namespace ELClass
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            // add the DbContext 
+
+            builder.Services.AddDbContext<ApplicationDbContext>(option =>
+            {
+                option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
+
+
+
+            // add services to the container
+            builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
+            builder.Services.AddScoped<IRepository<Course>,Repository<Course>>();
+            builder.Services.AddScoped<IRepository<Instructor>,Repository<Instructor>>();
+            builder.Services.AddScoped<IRepository<Student>,Repository<Student>>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

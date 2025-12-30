@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Models
 {
-    internal class Course: AuditLogging
+    public class Course: AuditLogging
     {
         public int Id { get; set; }
         public string TitleAr { get; set; }

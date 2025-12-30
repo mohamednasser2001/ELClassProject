@@ -1,0 +1,138 @@
+﻿using DataAccess.Repositories.IRepositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+
+namespace DataAccess.Repositories
+{
+
+    public class Repository<T> : IRepository<T> where T : class
+    {
+        private readonly DbSet<T> _dbSet;
+        private readonly ApplicationDbContext _context;
+
+        public Repository(ApplicationDbContext context)
+        {
+            _context = context;
+            _dbSet = _context.Set<T>(); //_context.Brands, _context.Categories, _context.Products
+        }
+
+        // CRUD
+        public async Task<bool> CreateAsync(T entity)
+        {
+            try
+            {
+
+                await _dbSet.AddAsync(entity);
+                await _context.SaveChangesAsync();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"{ex.Message}");
+                return false;
+
+            }
+        }
+
+        public async Task<bool> EditAsync(T entity)
+        {
+            try
+            {
+
+                _dbSet.Update(entity);
+                await _context.SaveChangesAsync();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"{ex.Message}");
+                return false;
+
+            }
+        }
+
+        public async Task<bool> DeleteAsync(T entity)
+        {
+            try
+            {
+
+                _dbSet.Remove(entity);
+                await _context.SaveChangesAsync();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"{ex.Message}");
+                return false;
+
+            }
+        }
+
+        public async Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, bool tracked = true
+            , int? skip = null, int? take = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        {
+            IQueryable<T> entities = _dbSet;
+
+            if (filter is not null)
+            {
+                entities = entities.Where(filter);
+            }
+
+            if (include is not null)
+            {
+
+                entities = include(entities);
+
+            }
+            if (orderBy is not null)
+            {
+                entities = orderBy(entities);
+            }
+            if (!tracked)
+            {
+                entities = entities.AsNoTracking();
+            }
+            if (skip is not null && take is not null)
+            {
+                entities = entities.Skip(skip.Value).Take(take.Value);
+            }
+            return (await entities.ToListAsync());
+        }
+
+        public T? GetOne(Expression<Func<T, bool>>? filter = null,
+           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, bool tracked = true)
+        {
+            return GetAsync(filter, include, tracked).GetAwaiter().GetResult().FirstOrDefault();
+        }
+
+        public async Task<bool> CommitAsync()
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+
+                return false;
+            }
+        }
+
+    }
+}
