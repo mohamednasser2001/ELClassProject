@@ -10,5 +10,7 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<Course> CourseRepository { get; }
         IRepository<Instructor> InstructorRepository { get; }
         IRepository<Student> StudentRepository { get; }
+        Task<bool> CommitAsync();
+        void Dispose();
     }
 }
