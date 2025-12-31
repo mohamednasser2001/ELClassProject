@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace Models
 {
+    [PrimaryKey("StudentId", "CourseId")]
     public class StudentCourse
     {
         public int StudentId { get; set; }
