@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Models
 {
-    internal class ErrorViewModel
+    public class ErrorViewModel
     {
         public string? RequestId { get; set; }
 
