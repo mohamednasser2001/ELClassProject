@@ -1,0 +1,87 @@
+﻿@* @model RegisterVM
+
+<div class="card overflow-hidden z-index-1">
+    <div class="card-body p-0">
+        <div class="row g-0 h-100">
+            <div class="col-md-5 text-center" style="background-color: #F28B00;">
+                <div class="position-relative p-4 pt-md-5 pb-md-7 light">
+                    <div class="bg-holder bg-auth-card-shape" style="">
+                    </div>
+                    <!--/.bg-holder-->
+
+                    <div class="z-index-1 position-relative">
+                        <a class="link-light mb-4 font-sans-serif fs-4 d-inline-block fw-bolder" href="../../../index.html">Ecommerce</a>
+                        <p class="opacity-75 text-white">With the power of Falcon, you can now focus only on functionaries for your digital products, while leaving the UI design on us!</p>
+                    </div>
+                </div>
+                <div class="mt-3 mb-4 mt-md-4 mb-md-5 light">
+                    <p class="pt-3 text-white">Have an account?<br><a class="btn btn-outline-light mt-2 px-4" href="/Identity/Account/Login">Log In</a></p>
+                </div>
+            </div>
+            <div class="col-md-7 d-flex flex-center">
+                <div class="p-4 p-md-5 flex-grow-1">
+                    <h3>Register</h3>
+                    <form method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="card-name">Name</label>
+                            <input class="form-control" autocomplete="on" asp-for="Name" />
+                            <span class="text-danger" asp-validation-for="Name"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="card-email">Email address</label>
+                            <input class="form-control" type="text" autocomplete="on" asp-for="Email" placeholder="test@gmail.com" />
+                            <span class="text-danger" asp-validation-for="Email"></span>
+                        </div>
+                        <div class="row gx-2">
+                            <div class="mb-3 col-sm-6">
+                                <label class="form-label" for="card-password">Password</label>
+                                <input class="form-control" type="password" autocomplete="on" asp-for="Password" />
+                                <span class="text-danger" asp-validation-for="Password"></span>
+                            </div>
+                            <div class="mb-3 col-sm-6">
+                                <label class="form-label" for="card-confirm-password">Confirm Password</label>
+                                <input class="form-control" type="password" autocomplete="on" asp-for="ConfirmPassword" />
+                                <span class="text-danger" asp-validation-for="ConfirmPassword"></span>
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="card-register-checkbox" />
+                            <label class="form-label" for="card-register-checkbox">I accept the <a href="#!">terms </a>and <a href="#!">privacy policy</a></label>
+                        </div>
+                        <div class="mb-3">
+                            <button class="btn btn-primary d-block w-100 mt-3" style="background-color: #F28B00;border-block-color: #F28B00;" type="submit" name="submit">
+                                Register
+                            </button>
+                        </div>
+                    </form>
+                    <div class="position-relative mt-4">
+                        <hr />
+                        <div class="divider-content-center">or register with</div>
+                    </div>
+                    <div class="row g-2 mt-2">
+                        <div class="col-sm-6"><a class="btn btn-outline-google-plus btn-sm d-block w-100" href="#"><span class="fab fa-google-plus-g me-2" data-fa-transform="grow-8"></span> google</a></div>
+                        <div class="col-sm-6"><a class="btn btn-outline-facebook btn-sm d-block w-100" href="#"><span class="fab fa-facebook-square me-2" data-fa-transform="grow-8"></span> facebook</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @if (@TempData["success-notifications"] is not null)
+    {
+        <script>
+            toastr.success('@TempData["success-notifications"]')
+        </script>
+    }
+    else if (@TempData["error-notifications"] is not null)
+    {
+        <script>
+            toastr.success('@TempData["error-notifications"]')
+        </script>
+    }
+
+    <partial name="_ValidationScriptsPartial" />
+} *@

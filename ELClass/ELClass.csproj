@@ -10,7 +10,6 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Areas\Identity\Controllers\" />
     <Folder Include="Controllers\" />
   </ItemGroup>
 	<ItemGroup>
