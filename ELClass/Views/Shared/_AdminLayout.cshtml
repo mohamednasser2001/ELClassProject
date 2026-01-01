@@ -31,6 +31,14 @@
     <link rel="stylesheet" href="~/assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="~/assets/css/style-preset.css" />
 
+
+    <!-- Data Table-->
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <!-- sweet alert-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+
 </head>
 <!-- [Head] end -->
 <!-- [Body] Start -->
@@ -67,7 +75,7 @@
                         <i class="ti ti-apps"></i>
                     </li>
                     <li class="pc-item">
-                        <a href="/admin/Courses/index" class="pc-link">
+                        <a href="/admin/Course/index" class="pc-link">
                             <span class="pc-micon"> 
                                 <i class="fa-solid fa-laptop-code"></i>
                             </span>
@@ -75,7 +83,7 @@
                         </a>
                     </li>
                     <li class="pc-item">
-                        <a href="/admin/instructors/index" class="pc-link">
+                        <a href="/admin/instructor/index" class="pc-link">
                             <span class="pc-micon"> 
                                 <i class="fa-solid fa-person-chalkboard"></i>
                             </span>
@@ -83,7 +91,7 @@
                         </a>
                     </li>
                     <li class="pc-item">
-                        <a href="/admin/Students/index" class="pc-link">
+                        <a href="/admin/Student/index" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fa-solid fa-people-roof"></i>
                             </span>
@@ -311,7 +319,16 @@
     <!-- Apex Chart -->
     <script src="~/assets/js/plugins/apexcharts.min.js"></script>
     <script src="~/assets/js/pages/dashboard-default.js"></script>
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/3f25f6a80f.js" crossorigin="anonymous"></script>
+    <!-- data table -->
+    <!-- DataTables core -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+    <!-- DataTables Bootstrap 5 -->
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <!-- sweet alert-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <!-- [Page Specific JS] end -->
 </body>
