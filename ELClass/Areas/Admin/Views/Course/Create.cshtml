@@ -1,0 +1,55 @@
+﻿@model Models.Course
+
+@{
+    ViewData["Title"] = "Create Course";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="card-title mb-3">Create Course</h3>
+            <hr />
+
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row">
+                    <div class="form-group col-sm-12 col-md-6 mb-3">
+                        <label asp-for="TitleAr" class="form-label">العنوان</label>
+                        <input asp-for="TitleAr" class="form-control" placeholder="العنوان" />
+                        <span asp-validation-for="TitleAr" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group col-sm-12 col-md-6 mb-3">
+                        <label asp-for="TitleEn" class="form-label">Title</label>
+                        <input asp-for="TitleEn" class="form-control" placeholder="Title" />
+                        <span asp-validation-for="TitleEn" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="DescriptionAr" class="form-label">الوصف</label>
+                    <textarea asp-for="DescriptionAr" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="DescriptionAr" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="DescriptionEn" class="form-label">Description</label>
+                    <textarea asp-for="DescriptionEn" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="DescriptionEn" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <input type="submit" value="Create" class="btn btn-primary px-4" />
+                    <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -23,7 +23,12 @@ namespace ELClass
                 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
 
-
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
 
             // add services to the container
             builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
@@ -41,7 +46,7 @@ namespace ELClass
                 app.MapScalarApiReference();
 
             }
-
+            app.UseSession();
             app.UseHttpsRedirection();
             app.UseRouting();
 

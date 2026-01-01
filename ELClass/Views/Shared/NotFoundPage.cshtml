@@ -1,0 +1,58 @@
+﻿@{
+     var currentLang = Context.Session.GetString("Language") ?? "en";
+}
+<div>
+    @if(currentLang == "ar")
+    {
+        
+        <title>صفحة غير موجودة</title>
+        <div class="not-found-container">
+            <h1>404 - الصفحة غير موجودة</h1>
+            <p>عذرًا، الصفحة اللي طلبتها مش موجودة أو تم نقلها.</p>
+            <a href="/">العودة للرئيسية</a>
+        </div>
+    }
+    else
+    {
+        
+        <title>Page Not Found</title>
+        <div class="not-found-container">
+            <h1>404 - Page Not Found</h1>
+            <p>Sorry, the page you are looking for does not exist or has been moved.</p>
+        <a href="/">Go Back to Home</a> 
+        </div>
+    }
+
+   
+
+    <style>
+        .not-found-container {
+            text-align: center;
+            padding: 60px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+            .not-found-container h1 {
+                font-size: 2.5rem;
+                color: #e63946;
+                margin-bottom: 16px;
+            }
+
+            .not-found-container p {
+                font-size: 1.1rem;
+                color: #495057;
+                margin-bottom: 24px;
+            }
+
+            .not-found-container a {
+                display: inline-block;
+                padding: 10px 24px;
+                background: #4361ee;
+                color: white;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: bold;
+            }
+    </style>
+</div>
