@@ -13,6 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Controllers\" />
+    <Folder Include="wwwroot\js\Admin\Course\" />
   </ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />

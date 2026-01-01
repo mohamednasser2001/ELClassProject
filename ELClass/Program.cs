@@ -47,6 +47,7 @@ namespace ELClass
 
             }
             app.UseSession();
+            app.UseStaticFiles();
             app.UseHttpsRedirection();
             app.UseRouting();
 

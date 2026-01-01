@@ -34,7 +34,7 @@ namespace DataAccess.Repositories
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-
+                
                 return false;
             }
         }
