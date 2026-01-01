@@ -1,31 +1,27 @@
-﻿using DataAccess.Repositories;
-using DataAccess.Repositories.IRepositories;
+﻿using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Mvc;
 using Models;
-using Models.ViewModels.Course;
 using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    public class CourseController : Controller
+    public class InstructorController : Controller
     {
         private readonly IUnitOfWork unitOfWork;
 
-        public CourseController(IUnitOfWork unitOfWork)
+        public InstructorController(IUnitOfWork unitOfWork)
         {
             this.unitOfWork = unitOfWork;
         }
-
         public IActionResult Index()
         {
             return View();
         }
 
-        
 
         [HttpPost]
-        public async Task<IActionResult> GetCourses()
+        public async Task<IActionResult> GetInstructors()
         {
             try
             {
@@ -36,28 +32,28 @@ namespace ELClass.Areas.Admin.Controllers
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
 
 
-                var courses = await unitOfWork.CourseRepository.GetAsync();
+                var instructors = await unitOfWork.InstructorRepository.GetAsync();
                 var lang = HttpContext.Session.GetString("Language") ?? "en";
 
 
-                var data = courses.Select(c => new
+                var data = instructors.Select(c => new
                 {
                     id = c.Id,
-                    title = lang == "en" ? c.TitleEn : c.TitleAr,
-                    description = lang == "en" ? c.DescriptionEn : c.DescriptionAr
+                    name = lang == "en" ? c.NameEn : c.NameAr,
+                    bio = lang == "en" ? c.BioEn : c.BioAr
                 }).ToList();
 
 
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     data = data.Where(c =>
-                        (c.title != null && c.title.ToLower().Contains(searchValue.ToLower())) ||
-                        (c.description != null && c.description.ToLower().Contains(searchValue.ToLower()))
+                        (c.name != null && c.name.ToLower().Contains(searchValue.ToLower())) ||
+                        (c.bio != null && c.bio.ToLower().Contains(searchValue.ToLower()))
                     ).ToList();
                 }
 
 
-                var recordsTotal = courses.Count();
+                var recordsTotal = instructors.Count();
                 var recordsFiltered = data.Count();
 
 
@@ -87,82 +83,88 @@ namespace ELClass.Areas.Admin.Controllers
             }
         }
 
+
         public IActionResult Create()
         {
             return View();
         }
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public async Task<IActionResult> Create(Course crs)
-        {
-            ModelState.Remove("StudentCourses");
-            ModelState.Remove("InstructorCourses");
 
+        [HttpPost]
+        public async Task<IActionResult> Create(Instructor ins)
+        {
+
+            var lang = HttpContext.Session.GetString("Language") ?? "en";
+
+            ModelState.Remove("ApplicationUser");
+            ModelState.Remove("InstructorStudents");
+            ModelState.Remove("InstructorCourses");
+            ModelState.Remove("Id");
             if (!ModelState.IsValid)
             {
-                return View(crs);
+                return View(ins);
             }
-            var course = new Course()
+            var newInstructor = new Instructor
             {
-                TitleAr = crs.TitleAr,
-                TitleEn = crs.TitleEn,
-                DescriptionAr = crs.DescriptionAr,
-                DescriptionEn = crs.DescriptionEn,
-                CreateAT = DateTime.Now,
-                CreateById = "409548af-75f2-49de-852d-b3552166b65d", // محتاجة تتغير بعد ما نعمل ال identity
-                //UpdatedAT = DateTime.Now,
+                Id = "409548af-75f2-49de-852d-b3552166b65d", // محتاجة تتغير بعد ما نعمل ال identity
+                NameAr = ins.NameAr,
+                NameEn = ins.NameEn,
+                BioAr = ins.BioAr,
+                BioEn = ins.BioEn,
+
             };
-            await unitOfWork.CourseRepository.CreateAsync(course);
+            await unitOfWork.InstructorRepository.CreateAsync(newInstructor);
             var commit = await unitOfWork.CommitAsync();
             if (!commit)
             {
                 ModelState.AddModelError("", "Something went wrong");
-                return View(crs);
+                return View(ins);
             }
+            TempData["Success"] = lang == "en" ? " instructor has been added successfully" : "تمت إضافة المدرب بنجاح";
             return RedirectToAction("Index");
         }
-
-
-        public IActionResult Edit(int id)
+        public IActionResult Edit(string id)
         {
-            var course = unitOfWork.CourseRepository.GetOne(c => c.Id == id);
-            if (course == null)
+            var instructor = unitOfWork.InstructorRepository.GetOne(i => i.Id == id);
+            if (instructor == null)
             {
                 return View("AdminNotFoundPage");
             }
-            return View(course);
+            return View(instructor);
         }
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public async Task<IActionResult> Edit(Course crs)
-        {
-            ModelState.Remove("StudentCourses");
-            ModelState.Remove("InstructorCourses");
 
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(Instructor ins)
+        {
+            var lang = HttpContext.Session.GetString("Language") ?? "en";
+            ModelState.Remove("ApplicationUser");
+            ModelState.Remove("InstructorStudents");
+            ModelState.Remove("InstructorCourses");
             if (!ModelState.IsValid)
             {
-                return View(crs);
+                return View(ins);
             }
-            crs.UpdatedAT = DateTime.Now;
-            await unitOfWork.CourseRepository.EditAsync(crs);
+            await unitOfWork.InstructorRepository.EditAsync(ins);
             var commit = await unitOfWork.CommitAsync();
             if (!commit)
             {
-                ModelState.AddModelError("", "Something went wrong");
-                return View(crs);
+                var errorMessage = lang == "en" ? "Something went wrong, Failed To Edit Instructor" : "حدث خطأ ما، فشل في تعديل المدرب";
+                ModelState.AddModelError("", errorMessage);
+                return View(ins);
             }
+            TempData["success"] = lang == "en" ? "Instructor Edited Successfully" : "تم تعديل المدرب بنجاح";
             return RedirectToAction("Index");
         }
-
-        public async Task<IActionResult> Delete(int id) 
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(string id)
         {
-            var course = unitOfWork.CourseRepository.GetOne(c => c.Id == id);
-            if (course == null)
+            var instructor = unitOfWork.InstructorRepository.GetOne(c => c.Id == id);
+            if (instructor == null)
             {
                 return View("AdminNotFoundPage");
             }
 
-            await unitOfWork.CourseRepository.DeleteAsync(course);
+            await unitOfWork.InstructorRepository.DeleteAsync(instructor);
             await unitOfWork.CommitAsync();
             return RedirectToAction("Index");
         }

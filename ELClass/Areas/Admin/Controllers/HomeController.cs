@@ -17,5 +17,14 @@ namespace ELClass.Areas.Admin.Controllers
             
             return View();
         }
+
+        [HttpPost]
+        public IActionResult SetLanguage(string language)
+        {
+
+            HttpContext.Session.SetString("Language", language);
+
+            return Json(new { success = true });
+        }
     }
 }
