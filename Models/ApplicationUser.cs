@@ -4,8 +4,12 @@ namespace Models
 {
     public class ApplicationUser:IdentityUser
     {
-        public string Name { get; set; }
-        public string? Address { get; set; }
+        public string NameAR { get; set; }
+        public string NameEN { get; set; }
+
+        public string? AddressAR { get; set; }
+        public string? AddressEN { get; set; }
+
         public string? Img { get; set; }
         public Student Student { get; set; }
         public Instructor Instructor { get; set; }
