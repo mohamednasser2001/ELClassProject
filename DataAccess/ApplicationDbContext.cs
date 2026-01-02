@@ -1,15 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Models;
 
 namespace DataAccess
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(DbContextOptions options) : base(options)
+        private readonly IConfiguration _configuration;
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration)
+        : base(options)
         {
+            _configuration = configuration;
         }
 
+        public ApplicationDbContext(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
         public DbSet<Course> Courses { get; set; }
         public DbSet<Student> Students { get; set; }

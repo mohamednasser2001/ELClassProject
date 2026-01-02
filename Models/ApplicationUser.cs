@@ -4,8 +4,8 @@ namespace Models
 {
     public class ApplicationUser:IdentityUser
     {
-        public string NameAR { get; set; }
-        public string NameEN { get; set; }
+        public string? NameAR { get; set; }
+        public string? NameEN { get; set; }
 
         public string? AddressAR { get; set; }
         public string? AddressEN { get; set; }
