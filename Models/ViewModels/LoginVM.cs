@@ -7,10 +7,15 @@ namespace Models.ViewModels
 {
      public class LoginVM
     {
-        [Required]
+        [Required(ErrorMessage = "This field is required")]
+        [Display(Name = "Email or User Name")]
         public string EmailOrUserName { get; set; }
-        [DataType(DataType.Password), Required]
+
+        [Required(ErrorMessage = "Password is required")]
+        [DataType(DataType.Password)]
         public string Password { get; set; }
+
+        [Display(Name = "Remember Me")]
         public bool RememberMe { get; set; }
     }
 }

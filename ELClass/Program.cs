@@ -1,6 +1,7 @@
 using DataAccess;
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Scalar;
@@ -15,6 +16,23 @@ namespace ELClass
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
+            {
+                config.Password.RequiredLength = 8;
+                config.User.RequireUniqueEmail = true;
+                config.SignIn.RequireConfirmedEmail = false;
+
+                // ??????? ??? ?????? (Lockout)
+                config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                config.Lockout.MaxFailedAccessAttempts = 5;
+                config.Lockout.AllowedForNewUsers = true;
+            })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
 
             // add the DbContext 
 
