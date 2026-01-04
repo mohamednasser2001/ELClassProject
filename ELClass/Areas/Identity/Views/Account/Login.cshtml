@@ -2,102 +2,100 @@
 @model LoginVM
 
 @{
+    Layout = null; // سنستخدم التصميم الجديد بالكامل بدون Layout قديم
     var currentLang = Context.Session.GetString("Language") ?? "en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
-<main class="main" id="top" style="direction:@direction;">
-    <div class="container" data-layout="container">
-        <div class="row flex-center min-vh-100 py-6">
-            <div class="col-sm-10 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
+<!DOCTYPE html>
+<html lang="@currentLang" dir="@direction">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(currentLang == "ar" ? "تسجيل الدخول" : "Login") - ELClass</title>
 
-                <div class="text-end mb-2">
-                    <button type="button" class="btn btn-link btn-sm p-0" onclick="changeLanguage()">
-                        @(currentLang == "ar" ? "English" : "العربية")
-                    </button>
+    <link rel="stylesheet" href="~/AuthAssets/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+</head>
+<body>
+
+    <div class="auth-container">
+        <div style="text-align: end; margin-bottom: 10px;">
+            <button type="button" class="btn-change-lang" onclick="changeLanguage()">
+                <i class="fas fa-globe"></i> @(currentLang == "ar" ? "English" : "العربية")
+            </button>
+        </div>
+
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>@(currentLang == "ar" ? "تسجيل الدخول" : "Log in")</h2>
+                <p>
+                    @(currentLang == "ar" ? "أو" : "or")
+                    <a href="/Identity/Account/Register" style="color:var(--primary-color); font-weight:bold;">
+                        @(currentLang == "ar" ? "إنشاء حساب جديد" : "Create an account")
+                    </a>
+                </p>
+            </div>
+
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-size: 13px;"></div>
+
+                <div class="form-group">
+                    <label class="form-label">@(currentLang == "ar" ? "اسم المستخدم" : "Username / Email")</label>
+                    <input class="form-control" type="text" id="EmailOrUserName"
+                           placeholder="@(currentLang == "ar" ? "البريد الإلكتروني أو اسم المستخدم" : "Email address Or UserName")"
+                           asp-for="EmailOrUserName" />
+                    <span class="text-danger fs--1" asp-validation-for="EmailOrUserName"></span>
                 </div>
 
-                <div class="card">
-                    <div class="card-body p-4 p-sm-5">
-                        <div class="row flex-between-center mb-2">
-                            <div class="col-auto">
-                                <h5>@(currentLang == "ar" ? "تسجيل الدخول" : "Log in")</h5>
-                            </div>
-                            <div class="col-auto fs--1 text-600">
-                                <span class="mb-0">@(currentLang == "ar" ? "أو" : "or")</span>
-                                <span><a href="/Identity/Account/Register">@(currentLang == "ar" ? "إنشاء حساب جديد" : "Create an account")</a></span>
-                            </div>
-                        </div>
+                <div class="form-group">
+                    <label class="form-label">@(currentLang == "ar" ? "كلمة المرور" : "Password")</label>
+                    <input class="form-control" type="password"
+                           placeholder="@(currentLang == "ar" ? "كلمة المرور" : "Password")"
+                           asp-for="Password" />
+                    <span class="text-danger fs--1" asp-validation-for="Password"></span>
+                </div>
 
-                        <form method="post">
-                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                            <div class="mb-3">
-                                <input class="form-control"
-                                       type="text"
-                                       placeholder="@(currentLang == "ar" ? "البريد الإلكتروني أو اسم المستخدم" : "Email address Or UserName")"
-                                       asp-for="EmailOrUserName" />
-                                <span class="text-danger" asp-validation-for="EmailOrUserName"></span>
-                            </div>
-
-                            <div class="mb-3">
-                                <input class="form-control"
-                                       type="password"
-                                       placeholder="@(currentLang == "ar" ? "كلمة المرور" : "Password")"
-                                       asp-for="Password" />
-                                <span class="text-danger" asp-validation-for="Password"></span>
-                            </div>
-
-                            <div class="row flex-between-center">
-                                <div class="col-auto">
-                                    <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="basic-checkbox" checked="checked" />
-                                        <label class="form-check-label mb-0" for="basic-checkbox">
-                                            @(currentLang == "ar" ? "تذكرني" : "Remember me")
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-auto">
-                                    <a class="fs--1" href="/Identity/Account/ForgetPassword">
-                                        @(currentLang == "ar" ? "نسيت كلمة المرور؟" : "Forgot Password?")
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <button class="btn btn-primary d-block w-100 mt-3"
-                                        style="background-color: #F28B00; border-color: #F28B00;"
-                                        type="submit" name="submit">
-                                    @(currentLang == "ar" ? "دخول" : "Log in")
-                                </button>
-                            </div>
-                        </form>
-
-                        <div class="position-relative mt-4">
-                            <hr />
-                            <div class="divider-content-center">@(currentLang == "ar" ? "أو الدخول بواسطة" : "or log in with")</div>
-                        </div>
-                        <div class="row g-2 mt-2">
-                            <div class="col-sm-6">
-                                <a class="btn btn-outline-google-plus btn-sm d-block w-100" href="#">
-                                    <span class="fab fa-google-plus-g me-2"></span> google
-                                </a>
-                            </div>
-                            <div class="col-sm-6">
-                                <a class="btn btn-outline-facebook btn-sm d-block w-100" href="#">
-                                    <span class="fab fa-facebook-square me-2"></span> facebook
-                                </a>
-                            </div>
-                        </div>
+                <div class="auth-links">
+                    <div class="form-check">
+                        <input type="checkbox" id="remember-me" asp-for="RememberMe" />
+                        <label for="remember-me">@(currentLang == "ar" ? "تذكرني" : "Remember me")</label>
                     </div>
+                    <a href="/Identity/Account/ForgotPassword">@(currentLang == "ar" ? "نسيت كلمة المرور؟" : "Forgot Password?")</a>
                 </div>
+
+                <button class="btn-auth mt-3" type="submit" style="background-color: #F28B00;">
+                    @(currentLang == "ar" ? "دخول" : "Log in")
+                </button>
+            </form>
+
+            <div class="social-login">
+                <p>@(currentLang == "ar" ? "أو الدخول بواسطة" : "or log in with")</p>
+                <div style="display:flex; gap:10px;">
+                    <a href="#" class="btn-auth btn-google" style="flex:1; text-decoration:none; display:flex; align-items:center; justify-content:center;">
+                        <i class="fab fa-google me-2"></i> Google
+                    </a>
+                    <a href="#" class="btn-auth" style="flex:1; background:#1877f2; text-decoration:none; display:flex; align-items:center; justify-content:center;">
+                        <i class="fab fa-facebook-f me-2"></i> Facebook
+                    </a>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="javascript:void(0)" onclick="resendEmail()" class="text-muted" style="font-size:13px; text-decoration:underline;">
+                    <i class="fas fa-envelope-open-text"></i> @(currentLang == "ar" ? "إعادة إرسال رابط التفعيل؟" : "Resend activation link?")
+                </a>
             </div>
         </div>
     </div>
-</main>
 
-@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
-        // وظيفة تغيير اللغة المستخدمة في الـ Register
+        // تغيير اللغة بنفس الـ Logic بتاعك
         function changeLanguage() {
             var newLang = '@currentLang' === 'ar' ? 'en' : 'ar';
             $.ajax({
@@ -109,16 +107,27 @@
                 }
             });
         }
+
+        // إعادة إرسال الإيميل
+        function resendEmail() {
+            var email = document.getElementById("EmailOrUserName").value;
+            if (email === "") {
+                var msg = "@(currentLang == "ar" ? "يرجى كتابة البريد الإلكتروني أولاً" : "Please enter your email first")";
+                toastr.error(msg);
+                return;
+            }
+            window.location.href = "/Identity/Account/ResendConfirmationEmail?email=" + email;
+        }
     </script>
 
-    @if (TempData["success-notifications"] is not null)
+    @* عرض التنبيهات *@
+    @if (TempData["success-notifications"] != null)
     {
         <script>toastr.success('@TempData["success-notifications"]')</script>
     }
-    else if (TempData["error-notifications"] is not null)
+    @if (TempData["error-notifications"] != null)
     {
         <script>toastr.error('@TempData["error-notifications"]')</script>
     }
-
-    <partial name="_ValidationScriptsPartial" />
-}
+</body>
+</html>
