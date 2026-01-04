@@ -8,7 +8,7 @@ namespace Models
     [PrimaryKey("InstructorId", "CourseId")]
     public class InstructorCourse
     {
-        public int InstructorId { get; set; }
+        public string InstructorId { get; set; } = string.Empty;
         public Instructor Instructor { get; set; }
 
         public int CourseId { get; set; }

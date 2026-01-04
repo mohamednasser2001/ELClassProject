@@ -13,16 +13,23 @@ namespace DataAccess.Repositories
         private readonly ApplicationDbContext context;
 
         public UnitOfWork(IRepository<Course> courseRepository, IRepository<Instructor> instructorRepository,
-           IRepository<Student> studentRepository , ApplicationDbContext context)
+           IRepository<Student> studentRepository , ApplicationDbContext context , IRepository<InstructorCourse> instructorCourseRepository ,
+           IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository)
         {
             CourseRepository = courseRepository;
             InstructorRepository = instructorRepository;
             StudentRepository = studentRepository;
             this.context = context;
+            InstructorCourseRepository = instructorCourseRepository;
+            InstructorStudentRepository = instructorStudentRepository;
+            StudentCourseRepository = studentCourseRepository;
         }
         public IRepository<Course> CourseRepository { get; }
         public IRepository<Instructor> InstructorRepository { get; }
         public IRepository<Student> StudentRepository { get; }
+        public IRepository<InstructorCourse> InstructorCourseRepository { get; }
+        public IRepository<InstructorStudent> InstructorStudentRepository { get; }
+        public IRepository<StudentCourse> StudentCourseRepository { get; }
         public async Task<bool> CommitAsync()
         {
             try

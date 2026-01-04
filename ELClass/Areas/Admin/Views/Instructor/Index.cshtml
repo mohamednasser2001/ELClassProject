@@ -141,8 +141,15 @@
                      },
                     {
                         data: 'name',
-                        name: 'name'
-                    },
+                        name: 'name',
+                        render: function (data, type, row) {
+                            return `
+                                <a href="/Admin/Instructor/Details/${row.id}"
+                                    class="fw-bold text-decoration-none">
+                                    ${data}
+                                </a>`;
+                         }
+                     },
                     {
                         data: 'bio',
                         name: 'bio'

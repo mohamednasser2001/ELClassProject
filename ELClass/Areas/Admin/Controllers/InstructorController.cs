@@ -1,6 +1,8 @@
 ﻿using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Models;
+using Models.ViewModels.Instructor;
 using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
@@ -83,7 +85,158 @@ namespace ELClass.Areas.Admin.Controllers
             }
         }
 
+        public async Task<IActionResult> Details(string id)
+        {
+            var instructor = unitOfWork.InstructorRepository.GetOne(e => e.Id == id , include: e=>e.Include(e=>e.ApplicationUser));
+            if (instructor == null)
+            {
+                return View("AdminNotFoundPage");
+            }
 
+            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(filter:e=>e.InstructorId==id, include:e=>e.Include(e=>e.Course));
+            var students = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Student));
+            var model = new InstructorDetailsVM()
+            {
+                Instructor = instructor,
+                InstructorCourses = courses.ToList() ?? new List<InstructorCourse>(),
+                InstructorStudents = students.ToList() ?? new List<InstructorStudent>()
+            };
+            return View(model);
+        }
+
+
+
+        public async Task<IActionResult> AssignCourse(int courseId , string instructorId)
+        {
+            if (courseId != 0 && instructorId != null)
+            {
+                var instructorCourse = new InstructorCourse()
+                {
+                    CourseId = courseId,
+                    InstructorId = instructorId
+                };
+                await unitOfWork.InstructorCourseRepository.CreateAsync(instructorCourse);
+                await unitOfWork.CommitAsync();
+                return Json( new {success = true});
+
+            }
+            
+                return View("AdminNotFoundPage");
+            
+        }
+
+
+        public async Task<IActionResult> AssignStudent(string stdId, string instructorId)
+        {
+            if (stdId !=null && instructorId != null)
+            {
+                var instructorStudent = new InstructorStudent()
+                {
+                    StudentId = stdId,
+                    InstructorId = instructorId
+                };
+                await unitOfWork.InstructorStudentRepository.CreateAsync(instructorStudent);
+                await unitOfWork.CommitAsync();
+                return Json(new { success = true });
+
+            }
+            else
+            {
+                return View("AdminNotFoundPage");
+            }
+        }
+
+
+        public async Task<IActionResult> RemoveCourse(int crsId, string insId)
+        {
+            var course = unitOfWork.InstructorCourseRepository.GetOne(filter: e => e.InstructorId == insId && e.CourseId == crsId);
+            if (course == null)
+            {
+                return View("AdminNotFoundPage");
+            }
+
+            var result = await unitOfWork.InstructorCourseRepository.DeleteAsync(course);
+            if (result)
+            {
+                var suc = await unitOfWork.CommitAsync();
+                if (suc)
+                {
+
+                    return RedirectToAction("details", new { id = insId });
+                }
+
+            }
+            return BadRequest();
+        }
+
+        public async Task<IActionResult> RemoveStudent(string stdId, string insId)
+        {
+            var student = unitOfWork.InstructorStudentRepository.GetOne(filter: e => e.InstructorId == insId && e.StudentId == stdId);
+            if (student == null)
+            {
+                return View("AdminNotFoundPage");
+            }
+
+            var result = await unitOfWork.InstructorStudentRepository.DeleteAsync(student);
+            if (result)
+            {
+                var suc = await unitOfWork.CommitAsync();
+                if (suc)
+                {
+
+                    return RedirectToAction("details", new { id = insId });
+                }
+
+            }
+            return BadRequest();
+        }
+
+        
+
+        public async Task<IActionResult> SearchStudents(string term, string insId)
+        {
+            var students = await unitOfWork.StudentRepository.GetAsync(filter: e =>
+            (e.NameAr.Contains(term) || e.NameEn.Contains(term)));
+
+
+            var insStdunt = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.InstructorId == insId);
+            if (insStdunt.Any())
+            {
+                var assignedStudentIds = insStdunt.Select(ic => ic.StudentId).ToList();
+                students = students.Where(c => !assignedStudentIds.Contains(c.Id)).ToList();
+            }
+
+            var result = students
+                .Select(c => new
+                {
+                    id = c.Id,
+                    text = $"{c.NameEn} - {c.NameAr}"
+                });
+
+            return Json(result);
+        }
+        public async Task<IActionResult> SearchCourses(string term, string insId)
+        {
+            var courses = await unitOfWork.CourseRepository.GetAsync(filter: e =>
+            (e.TitleAr.Contains(term) || e.TitleEn.Contains(term)));
+
+
+            var stdCourses = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.InstructorId == insId);
+            if (stdCourses.Any())
+            {
+                var assignedCourseIds = stdCourses.Select(ic => ic.CourseId).ToList();
+                courses = courses.Where(c => !assignedCourseIds.Contains(c.Id)).ToList();
+            }
+
+            var result = courses
+                .Select(c => new
+                {
+                    id = c.Id,
+                    text = $"{c.TitleEn} - {c.TitleAr}"
+                });
+
+            return Json(result);
+        }
         public IActionResult Create()
         {
             return View();

@@ -1,0 +1,756 @@
+﻿@using Models.ViewModels.Instructor
+@model InstructorDetailsVM
+
+<style>
+    .img-account-profile {
+        height: 10rem;
+    }
+
+    .rounded-circle {
+        border-radius: 50% !important;
+    }
+
+    .card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #eaeaea;
+        margin-bottom: 1.5rem;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: white;
+        transition: box-shadow 0.2s ease;
+    }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .card .card-header {
+            font-weight: 600;
+        }
+
+    .card-header:first-child {
+        border-radius: 10px 10px 0 0;
+    }
+
+    .card-header {
+        padding: 1.2rem 1.5rem;
+        background-color: #f8f9fa;
+        color: #2d3748;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 1.1rem;
+        position: relative;
+    }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #4299e1 0%, #ed8936 100%);
+            opacity: 0.6;
+        }
+
+    .form-control, .dataTable-input, .select2-container .select2-selection--single {
+        display: block;
+        width: 100%;
+        padding: 0.875rem 1.125rem;
+        font-size: 0.875rem;
+        font-weight: 400;
+        line-height: 1;
+        color: #4a5568;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #d1d9e6;
+        border-radius: 6px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+        .form-control:focus, .dataTable-input:focus, .select2-container--focus .select2-selection--single {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+        }
+
+    /* Courses Section */
+    .courses-section, .students-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem 0;
+        margin-top: 2rem;
+    }
+
+        .courses-section h2, .students-section h2 {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+    /* Person/Course Cards */
+    .person-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        height: 100%;
+    }
+
+        .person-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            border-color: #cbd5e0;
+        }
+
+        .person-card .card-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .person-card .card-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+        }
+
+    /* Buttons */
+    .btn-primary {
+        background-color: #4299e1;
+        border: 1px solid #4299e1;
+        border-radius: 5px;
+        font-weight: 500;
+        padding: 6px 12px;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background-color: #3182ce;
+            border-color: #3182ce;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(49, 130, 206, 0.2);
+        }
+
+    .btn-danger {
+        background-color: #f56565;
+        border: 1px solid #f56565;
+        border-radius: 5px;
+        font-weight: 500;
+        padding: 6px 12px;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        color: white;
+    }
+
+        .btn-danger:hover {
+            background-color: #e53e3e;
+            border-color: #e53e3e;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(229, 62, 62, 0.2);
+        }
+
+    .btn-success {
+        background-color: #48bb78;
+        border: 1px solid #48bb78;
+        border-radius: 5px;
+        font-weight: 500;
+        padding: 6px 12px;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        color: white;
+    }
+
+        .btn-success:hover {
+            background-color: #38a169;
+            border-color: #38a169;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(56, 161, 105, 0.2);
+        }
+
+    /* Assign Sections */
+    .assign-section {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-top: 1.25rem;
+        border: 1px dashed #cbd5e0;
+    }
+
+        .assign-section:hover {
+            border-color: #ed8936;
+            border-style: solid;
+        }
+
+        .assign-section label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.9rem;
+        }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #a0aec0;
+    }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #cbd5e0;
+        }
+
+        .empty-state h5 {
+            color: #718096;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .empty-state p {
+            color: #a0aec0;
+            max-width: 280px;
+            margin: 0 auto;
+            font-size: 0.9rem;
+        }
+
+    /* Page Header */
+    .page-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+        .page-header h2 {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.5rem;
+        }
+
+            .page-header h2 i {
+                color: #4299e1;
+            }
+
+        .page-header .subtitle {
+            color: #4a5568;
+            font-size: 0.95rem;
+            background: #f7fafc;
+            padding: 6px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            border: 1px solid #e2e8f0;
+        }
+
+    /* Badge Count */
+    .badge-count {
+        background: #edf2f7;
+        color: #2d3748;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Orange Text */
+    .text-orange {
+        color: #ed8936;
+    }
+
+    /* Select2 Styling */
+    .select2-container .select2-selection--single {
+        height: 42px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #d1d9e6;
+        background-color: #fff;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 24px;
+        color: #4a5568;
+        font-size: 0.9rem;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
+        color: #718096;
+    }
+
+    /* Responsive */
+    
+
+    /* Additional Spacing */
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .mt-4 {
+        margin-top: 1.5rem !important;
+    }
+
+    /* Profile Image Styling */
+    .profile-img-container {
+        padding: 1rem;
+        text-align: center;
+    }
+
+        .profile-img-container img {
+            border: 3px solid #edf2f7;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    /* Form Groups */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+        .form-group label {
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+</style>
+
+<div class="container-xl px-3 px-md-4 mt-4">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2><i class="fas fa-user-tie text-orange"></i> Instructor Management</h2>
+        <div class="subtitle">
+            <i class="fas fa-info-circle"></i> Manage instructor details and assigned courses/students
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-4">
+            <!-- Profile Picture Card -->
+            <div class="card mb-4 mb-xl-0">
+                <div class="card-header">
+                    <i class="fas fa-user-circle"></i> Profile Picture
+                </div>
+                <div class="card-body profile-img-container">
+                    <!-- Profile Picture Image -->
+                    <img class="img-account-profile rounded-circle mb-3" src="http://bootdey.com/img/Content/avatar/avatar1.png" alt="Profile Picture">
+                    <!-- Profile Picture Help Text -->
+                    <div class="small font-italic text-muted mb-3">JPG or PNG no larger than 5 MB</div>
+                    <!-- Profile Picture Upload Button -->
+                    <button class="btn btn-primary" type="button">
+                        <i class="fas fa-upload"></i> Upload New Image
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            <!-- Account Details Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-user-cog"></i> Account Details
+                </div>
+                <div class="card-body">
+                    <form>
+                        <!-- Username -->
+                        <div class="form-group">
+                            <label class="small mb-1" for="inputUsername">Username</label>
+                            <input class="form-control" id="inputUsername" type="text" placeholder="Enter username" value="@Model.Instructor.ApplicationUser.UserName">
+                            <small class="text-muted">How your name appears to other users</small>
+                        </div>
+
+                        <!-- Name Fields -->
+                        <div class="row gx-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="small mb-1" for="inputFirstName">Name (English)</label>
+                                    <input class="form-control" id="inputFirstName" type="text" placeholder="Enter name in English" value="@Model.Instructor.NameEn">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="small mb-1" for="inputLastName">Name (Arabic)</label>
+                                    <input class="form-control" id="inputLastName" type="text" placeholder="Enter name in Arabic" value="@Model.Instructor.NameAr">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email Address -->
+                        <div class="form-group">
+                            <label class="small mb-1" for="inputEmailAddress">Email Address</label>
+                            <input class="form-control" id="inputEmailAddress" type="email" placeholder="Enter email address" value="@Model.Instructor.ApplicationUser.Email">
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="row gx-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="small mb-1" for="inputPhone">Phone Number</label>
+                                    <input class="form-control" id="inputPhone" type="tel" placeholder="Enter phone number" value="@Model.Instructor.ApplicationUser.PhoneNumber" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save Changes Button -->
+                        <button class="btn btn-primary" type="button">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Courses Section -->
+    <div class="courses-section">
+        <div class="container">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-chalkboard-teacher"></i> Assigned Courses
+            </h2>
+            <div class="row" id="assignedCoursesRow">
+                @if (Model.InstructorCourses.Any())
+                {
+                    @foreach (var item in Model.InstructorCourses)
+                    {
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="person-card">
+                                <h5 class="card-title">@item.Course.TitleEn</h5>
+                                <div class="card-actions">
+                                    <a class="btn btn-primary btn-sm" href="/Admin/Course/Details/@item.CourseId">
+                                        <i class="fas fa-eye"></i> Details
+                                    </a>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmRemoveCourse(@item.CourseId, '@item.InstructorId')">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <i class="fas fa-book-open fa-2x"></i>
+                            <h5>No Courses Assigned</h5>
+                            <p>This instructor doesn't have any assigned courses yet</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Assign New Course Section -->
+            <div class="assign-section mt-4">
+                <label><i class="fas fa-plus-circle text-orange"></i> Assign New Course</label>
+                <div class="row align-items-end">
+                    <div class="col-md-8 mb-2">
+                        <select id="courseSelect" class="form-control" style="width:100%"></select>
+                        <input type="hidden" id="instructorId" value="@Model.Instructor.Id" />
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <button type="button" id="assignCourseBtn" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Assign Course
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted mt-2 d-block">
+                    <i class="fas fa-info-circle text-orange"></i> Start typing to search for courses
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Students Section -->
+    <div class="students-section">
+        <div class="container">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-user-graduate"></i> Assigned Students
+            </h2>
+            <div class="row" id="assignedStudentsRow">
+                @if (Model.InstructorStudents.Any())
+                {
+                    @foreach (var item in Model.InstructorStudents)
+                    {
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="person-card">
+                                <h5 class="card-title">@item.Student.NameEn</h5>
+                                <div class="card-actions">
+                                    <a class="btn btn-primary btn-sm" href="/Admin/Student/Details/@item.StudentId">
+                                        <i class="fas fa-eye"></i> Details
+                                    </a>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmRemoveStudent('@item.StudentId', '@item.InstructorId')">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                            <h5>No Students Assigned</h5>
+                            <p>This instructor doesn't have any assigned students yet</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Assign New Student Section -->
+            <div class="assign-section mt-4">
+                <label><i class="fas fa-plus-circle text-orange"></i> Assign New Student</label>
+                <div class="row align-items-end">
+                    <div class="col-md-8 mb-2">
+                        <select id="studentSelect" class="form-control" style="width:100%"></select>
+                        <input type="hidden" id="instructorId" value="@Model.Instructor.Id" />
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <button type="button" id="assignStudentBtn" class="btn btn-success w-100">
+                            <i class="fas fa-plus"></i> Assign Student
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted mt-2 d-block">
+                    <i class="fas fa-info-circle text-orange"></i> Start typing to search for students
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <!-- Add Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <script>
+        // Sweet Alert for Removing Course
+        function confirmRemoveCourse(courseId, instructorId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This course will be removed from the instructor.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f56565',
+                cancelButtonColor: '#4299e1',
+                confirmButtonText: 'Yes, remove it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/Admin/Instructor/RemoveCourse?crsId=${courseId}&insId=${instructorId}`;
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Course Select2
+            $('#courseSelect').select2({
+                placeholder: "Search course...",
+                allowClear: true,
+                minimumInputLength: 2,
+                width: '100%',
+                ajax: {
+                    url: '/Admin/Instructor/SearchCourses',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function (params) {
+                        const instructorId = $('#instructorId').val();
+                        return {
+                            term: params.term,
+                            insId: instructorId
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.map(item => ({
+                                id: item.id,
+                                text: item.text
+                            }))
+                        };
+                    }
+                }
+            });
+
+            // Assign Course Button
+            $('#assignCourseBtn').click(function () {
+                const courseId = $('#courseSelect').val();
+                const instructorId = $('#instructorId').val();
+
+                if (!courseId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Selection Required',
+                        text: 'Please select a course first',
+                        confirmButtonColor: '#4299e1',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Admin/Instructor/AssignCourse',
+                    type: 'POST',
+                    data: {
+                        instructorId: instructorId,
+                        courseId: courseId
+                    },
+                    beforeSend: function() {
+                        $('#assignCourseBtn').html('<i class="fas fa-spinner fa-spin"></i> Assigning...').prop('disabled', true);
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Course assigned successfully',
+                                confirmButtonColor: '#4299e1',
+                                confirmButtonText: 'OK'
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: res.message || 'Something went wrong',
+                                confirmButtonColor: '#4299e1',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error while assigning course',
+                            confirmButtonColor: '#4299e1',
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    complete: function() {
+                        $('#assignCourseBtn').html('<i class="fas fa-plus"></i> Assign Course').prop('disabled', false);
+                    }
+                });
+            });
+
+            // Student Select2
+            $('#studentSelect').select2({
+                placeholder: "Search student...",
+                allowClear: true,
+                minimumInputLength: 2,
+                width: '100%',
+                ajax: {
+                    url: '/Admin/Instructor/SearchStudents',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function (params) {
+                        const instructorId = $('#instructorId').val();
+                        return {
+                            term: params.term,
+                            insId: instructorId
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.map(item => ({
+                                id: item.id,
+                                text: item.text
+                            }))
+                        };
+                    }
+                }
+            });
+
+            // Assign Student Button
+            $('#assignStudentBtn').click(function () {
+                const studentId = $('#studentSelect').val();
+                const instructorId = $('#instructorId').val();
+
+                if (!studentId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Selection Required',
+                        text: 'Please select a student first',
+                        confirmButtonColor: '#4299e1',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Admin/Instructor/AssignStudent',
+                    type: 'POST',
+                    data: {
+                        instructorId: instructorId,
+                        stdId: studentId
+                    },
+                    beforeSend: function() {
+                        $('#assignStudentBtn').html('<i class="fas fa-spinner fa-spin"></i> Assigning...').prop('disabled', true);
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Student assigned successfully',
+                                confirmButtonColor: '#4299e1',
+                                confirmButtonText: 'OK'
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: res.message || 'Something went wrong',
+                                confirmButtonColor: '#4299e1',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error while assigning student',
+                            confirmButtonColor: '#4299e1',
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    complete: function() {
+                        $('#assignStudentBtn').html('<i class="fas fa-plus"></i> Assign Student').prop('disabled', false);
+                    }
+                });
+            });
+        });
+
+        // Sweet Alert for Removing Student
+        function confirmRemoveStudent(studentId, instructorId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This student will be removed from the instructor.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f56565',
+                cancelButtonColor: '#4299e1',
+                confirmButtonText: 'Yes, remove it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/Admin/Instructor/RemoveStudent?stdId=${studentId}&insId=${instructorId}`;
+                }
+            });
+        }
+    </script>
+}
