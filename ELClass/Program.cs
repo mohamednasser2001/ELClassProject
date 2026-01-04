@@ -53,6 +53,9 @@ namespace ELClass
             builder.Services.AddScoped<IRepository<Course>,Repository<Course>>();
             builder.Services.AddScoped<IRepository<Instructor>,Repository<Instructor>>();
             builder.Services.AddScoped<IRepository<Student>,Repository<Student>>();
+            builder.Services.AddScoped<IRepository<InstructorCourse>,Repository<InstructorCourse>>();
+            builder.Services.AddScoped<IRepository<InstructorStudent>,Repository<InstructorStudent>>();
+            builder.Services.AddScoped<IRepository<StudentCourse>,Repository<StudentCourse>>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

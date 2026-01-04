@@ -8,10 +8,10 @@ namespace Models
     [PrimaryKey("InstructorId", "StudentId")]
     public class InstructorStudent
     {
-        public int InstructorId { get; set; }
+        public string InstructorId { get; set; }
         public Instructor Instructor { get; set; }
 
-        public int StudentId { get; set; }
+        public string StudentId { get; set; }
         public Student Student { get; set; }
     }
 }

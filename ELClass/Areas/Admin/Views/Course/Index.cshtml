@@ -117,7 +117,14 @@
                      },
                     {
                         data: 'title',
-                        name: 'title'
+                        name: 'title',
+                        render: function (data, type, row) {
+                            return `
+                                <a href="/Admin/course/Details/${row.id}"
+                                    class="fw-bold text-decoration-none">
+                                    ${data}
+                                </a>`;
+                         }
                     },
                     {
                         data: 'description',
