@@ -2,142 +2,111 @@
 @model RegisterVM
 
 @{
+    Layout = null;
     var currentLang = Context.Session.GetString("Language") ?? "en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
-<div class="card overflow-hidden z-index-1" style="direction:@direction;">
-    <div class="card-body p-0">
-        <div class="row g-0 h-100">
+<!DOCTYPE html>
+<html lang="@currentLang" dir="@direction">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(currentLang == "ar" ? "إنشاء حساب" : "Register") - ElClass</title>
 
-            <!-- LEFT SIDE -->
-            <div class="col-md-5 text-center" style="background-color:#F28B00;">
-                <div class="position-relative p-4 pt-md-5 pb-md-7 light">
-                    <div class="z-index-1 position-relative">
-                        <a class="link-light mb-4 font-sans-serif fs-4 d-inline-block fw-bolder" href="#">
-                            ElClass
-                        </a>
-                        <p class="opacity-75 text-white">
-                            @(currentLang == "ar"
-                                                        ? "من خلال منصتنا يمكنك التركيز على التعلم فقط"
-                                                        : "With our platform, you can focus only on learning")
-                        </p>
+    <link rel="stylesheet" href="~/AuthAssets/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+</head>
+<body>
+
+    <div class="auth-container" style="max-width: 500px;">
+        <div style="text-align: end; margin-bottom: 10px;">
+            <button type="button" class="btn-change-lang" onclick="changeLanguage()">
+                <i class="fas fa-globe"></i> @(currentLang == "ar" ? "English" : "العربية")
+            </button>
+        </div>
+
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>@(currentLang == "ar" ? "إنشاء حساب جديد" : "Register")</h2>
+                <p>
+                    @(currentLang == "ar"
+                                        ? "من خلال منصتنا يمكنك التركيز على التعلم فقط"
+                                        : "With our platform, you can focus only on learning")
+                </p>
+            </div>
+
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-size: 13px;"></div>
+
+                @* حقل الاسم الديناميكي بناءً على اللغة *@
+                @if (currentLang == "en")
+                {
+                    <div class="form-group">
+                        <label class="form-label">Name (English)</label>
+                        <input class="form-control" asp-for="NameEN" placeholder="Enter your name in English" />
+                        <span class="text-danger fs--1" asp-validation-for="NameEN"></span>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label class="form-label">الاسم بالعربي</label>
+                        <input class="form-control" asp-for="NameAR" placeholder="اكتب اسمك بالعربي" />
+                        <span class="text-danger fs--1" asp-validation-for="NameAR"></span>
+                    </div>
+                }
+
+                <div class="form-group">
+                    <label class="form-label">@(currentLang == "ar" ? "البريد الإلكتروني" : "Email Address")</label>
+                    <input class="form-control" type="email" asp-for="Email" placeholder="test@gmail.com" />
+                    <span class="text-danger fs--1" asp-validation-for="Email"></span>
+                </div>
+
+                <div class="row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">@(currentLang == "ar" ? "كلمة المرور" : "Password")</label>
+                        <input class="form-control" type="password" asp-for="Password" placeholder="********" />
+                        <span class="text-danger fs--1" asp-validation-for="Password"></span>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">@(currentLang == "ar" ? "تأكيد كلمة المرور" : "Confirm")</label>
+                        <input class="form-control" type="password" asp-for="ConfirmPassword" placeholder="********" />
+                        <span class="text-danger fs--1" asp-validation-for="ConfirmPassword"></span>
                     </div>
                 </div>
 
-                <div class="mt-3 mb-4 mt-md-4 mb-md-5 light">
-                    <p class="pt-3 text-white">
-                        @(currentLang == "ar" ? "لديك حساب؟" : "Have an account?")
-                        <br />
-                        <a class="btn btn-outline-light mt-2 px-4" href="/Identity/Account/Login">
-                            @(currentLang == "ar" ? "تسجيل الدخول" : "Log In")
-                        </a>
-                    </p>
+                <div class="form-check mb-3">
+                    <input type="checkbox" id="terms" required />
+                    <label for="terms" style="font-size: 13px; color: #475569;">
+                        @(currentLang == "ar" ? "أوافق على الشروط وسياسة الخصوصية" : "I accept the terms and privacy policy")
+                    </label>
                 </div>
+
+                <button class="btn-auth mt-2" type="submit" style="background-color: #F28B00;">
+                    @(currentLang == "ar" ? "إنشاء حساب" : "Register")
+                </button>
+            </form>
+
+            <div class="text-center mt-4">
+                <p style="font-size: 14px;">
+                    @(currentLang == "ar" ? "لديك حساب بالفعل؟" : "Already have an account?")
+                    <a href="/Identity/Account/Login" style="color:var(--primary-color); font-weight:bold;">
+                        @(currentLang == "ar" ? "تسجيل الدخول" : "Log In")
+                    </a>
+                </p>
             </div>
-
-            <!-- RIGHT SIDE -->
-            <div class="col-md-7 d-flex flex-center">
-                <div class="p-4 p-md-5 flex-grow-1">
-
-                    <!-- Language Toggle -->
-                    <div class="text-end mb-3">
-                        <button type="button"
-                                class="btn btn-outline-secondary btn-sm"
-                                onclick="changeLanguage()">
-                            @(currentLang == "ar" ? "English" : "العربية")
-                        </button>
-                    </div>
-
-                    <h3 class="mb-4">
-                        @(currentLang == "ar" ? "إنشاء حساب جديد" : "Register")
-                    </h3>
-
-                    <form method="post">
-
-                        <!-- Name (Dynamic by Language) -->
-                        @if (currentLang == "en")
-                        {
-                            <div class="mb-3">
-                                <label class="form-label">Name (English)</label>
-                                <input class="form-control"
-                                       asp-for="NameEN"
-                                       placeholder="Enter your name in English" />
-                                <span class="text-danger" asp-validation-for="NameEN"></span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="mb-3">
-                                <label class="form-label">الاسم بالعربي</label>
-                                <input class="form-control"
-                                       asp-for="NameAR"
-                                       placeholder="اكتب اسمك بالعربي" dir="rtl" />
-                                <span class="text-danger" asp-validation-for="NameAR"></span>
-                            </div>
-                        }
-
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label class="form-label">
-                                @(currentLang == "ar" ? "البريد الإلكتروني" : "Email Address")
-                            </label>
-                            <input class="form-control"
-                                   asp-for="Email"
-                                   placeholder="test@gmail.com" />
-                            <span class="text-danger" asp-validation-for="Email"></span>
-                        </div>
-
-                        <!-- Password -->
-                        <div class="row gx-2">
-                            <div class="mb-3 col-sm-6">
-                                <label class="form-label">
-                                    @(currentLang == "ar" ? "كلمة المرور" : "Password")
-                                </label>
-                                <input class="form-control" type="password" asp-for="Password" />
-                                <span class="text-danger" asp-validation-for="Password"></span>
-                            </div>
-
-                            <div class="mb-3 col-sm-6">
-                                <label class="form-label">
-                                    @(currentLang == "ar" ? "تأكيد كلمة المرور" : "Confirm Password")
-                                </label>
-                                <input class="form-control" type="password" asp-for="ConfirmPassword" />
-                                <span class="text-danger" asp-validation-for="ConfirmPassword"></span>
-                            </div>
-                        </div>
-
-                        <!-- Terms -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="terms" />
-                            <label class="form-check-label" for="terms">
-                                @(currentLang == "ar"
-                                                                ? "أوافق على الشروط وسياسة الخصوصية"
-                                                                : "I accept the terms and privacy policy")
-                            </label>
-                        </div>
-
-                        <!-- Submit -->
-                        <button class="btn btn-primary w-100"
-                                style="background-color:#F28B00;border-color:#F28B00;"
-                                type="submit">
-                            @(currentLang == "ar" ? "إنشاء حساب" : "Register")
-                        </button>
-
-                    </form>
-                </div>
-            </div>
-
         </div>
     </div>
-</div>
 
-@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
 
     <script>
         function changeLanguage() {
             var newLang = '@currentLang' === 'ar' ? 'en' : 'ar';
-
             $.ajax({
                 url: '/Identity/Account/SetLanguage',
                 type: 'POST',
@@ -148,19 +117,14 @@
             });
         }
     </script>
-    @if (@TempData["success-notifications"] is not null)
-    {
-        <script>
-            toastr.success('@TempData["success-notifications"]')
-        </script>
-    }
-    else if (@TempData["error-notifications"] is not null)
-    {
-        <script>
-            toastr.success('@TempData["error-notifications"]')
-        </script>
-    }
 
-    <partial name="_ValidationScriptsPartial" />
-}
-
+    @if (TempData["success-notifications"] != null)
+    {
+        <script>toastr.success('@TempData["success-notifications"]')</script>
+    }
+    @if (TempData["error-notifications"] != null)
+    {
+        <script>toastr.error('@TempData["error-notifications"]')</script>
+    }
+</body>
+</html>

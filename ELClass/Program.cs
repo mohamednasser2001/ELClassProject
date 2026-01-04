@@ -1,16 +1,19 @@
+﻿using System.Threading.Tasks;
 using DataAccess;
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using Models.Utilites;
 using Scalar;
 using Scalar.AspNetCore;
 namespace ELClass
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +27,8 @@ namespace ELClass
             {
                 config.Password.RequiredLength = 8;
                 config.User.RequireUniqueEmail = true;
-                config.SignIn.RequireConfirmedEmail = false;
+                config.SignIn.RequireConfirmedEmail=true;
+                
 
                 // ??????? ??? ?????? (Lockout)
                 config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
@@ -33,6 +37,7 @@ namespace ELClass
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             // add the DbContext 
 
@@ -79,6 +84,23 @@ namespace ELClass
                 name: "default",
                 pattern: "{area=Admin}/{controller=Home}/{action=Index}/{id?}")
                 .WithStaticAssets();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                string[] roleNames = { "Admin", "Teacher", "Student" };
+
+                foreach (var roleName in roleNames)
+                {
+                    // إذا كان الدور غير موجود، قم بإنشائه
+                 
+                    if (!await roleManager.RoleExistsAsync(roleName))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(roleName));
+                    }
+                }
+            }
 
             app.Run();
         }
