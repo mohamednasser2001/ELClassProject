@@ -1,78 +1,181 @@
 ﻿@{
     var currentLang = Context.Session.GetString("Language") ?? "en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
-
-    
 }
 
-
 <style>
+    /* الإعدادات العامة للكارت */
+    .custom-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        background-color: #ffffff;
+        border-top: 4px solid #fd7e14; /* الخط الأورانج المميز */
+        margin-top: 20px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: transparent !important;
+        border-bottom: 1px solid #f0f0f0 !important;
+        padding: 20px !important;
+    }
+
+    .card-title {
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* تنسيق الجدول الاحترافي */
+    #InstructorsTable {
+        border-collapse: separate;
+        border-spacing: 0 8px;
+        width: 100% !important;
+    }
+
+        #InstructorsTable thead th {
+            background-color: #f8f9fa;
+            border: none;
+            color: #666;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 15px;
+        }
+
+        #InstructorsTable tbody tr {
+            background-color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+            #InstructorsTable tbody tr:hover {
+                background-color: #fffaf5;
+            }
+
+        #InstructorsTable td {
+            border: none !important;
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f1f1 !important;
+        }
+
+    /* الأزرار */
+    .btn-orange-outline {
+        border: 1px solid #fd7e14;
+        color: #fd7e14;
+        background: transparent;
+        transition: 0.3s;
+    }
+
+        .btn-orange-outline:hover {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+    .btn-success-custom {
+        background-color: #fd7e14;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-weight: 500;
+        color: white !important;
+    }
+
+        .btn-success-custom:hover {
+            background-color: #e86b00;
+        }
+
+    /* تنسيق الروابط */
+    .instructor-link {
+        color: #333;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .instructor-link:hover {
+            color: #fd7e14;
+        }
+
+    /* تعديلات الموبايل (Responsive) */
+    @@media (max-width: 576px) {
+        .dataTables_info {
+            display: none !important; /* إخفاء النص الطويل في الموبايل */
+        }
+
+        .btn-success-custom span {
+            display: none; /* أيقونة فقط في الموبايل */
+        }
+
+        .btn-success-custom {
+            padding: 8px 12px !important;
+        }
+
+        .card-header {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .language-toggle {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* إخفاء أسهم DataTable */
     table.dataTable thead th::before,
     table.dataTable thead th::after {
         display: none !important;
     }
 </style>
+
+@Html.AntiForgeryToken()
 <div class="container-fluid" style="direction: @direction;">
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card custom-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">@(currentLang == "ar" ? "قائمة المدربين" : "Instructors List")</h3>
+                    <h3 class="card-title">
+                        <i class="fas fa-chalkboard-teacher" style="color:#fd7e14"></i>
+                        @(currentLang == "ar" ? "قائمة المدربين" : "Instructors List")
+                    </h3>
 
-                    <div class="language-toggle">
-                        <button class="btn btn-outline-primary" onclick="changeLanguage()">
-                            @(currentLang == "ar" ? "English" : "العربية")
+                    <div class="d-flex gap-2 align-items-center language-toggle">
+                        <a href="/Admin/Instructor/Create" class="btn btn-sm btn-success-custom">
+                            <i class="fas fa-user-plus"></i>
+                            <span> @(currentLang == "ar" ? "إضافة مدرب جديد" : "Add New Instructor")</span>
+                        </a>
+                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
+                            <i class="fas fa-language"></i>
                         </button>
                     </div>
                 </div>
-                <div>
-                    <a href="/Admin/Instructor/Create" class="btn btn-sm btn-success">
-                        @(currentLang == "ar" ? "إضافة مدرب جديد" : "Add New Instructor")
-                        <i class="fa fa-plus"></i>
-                    </a>
-                </div>
-                <div class="card-body">
-                    <table id="InstructorsTable" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "الرقم" : "Number")</th>
-                                <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "الاسم" : "Name")</th>
-                                <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "السيرة الذاتية" : "bio")</th>
-                                <th style="text-align:@(currentLang == "ar" ? "right" : "left")">
-                                    @(currentLang == "ar" ? "التحكم" : "Actions")
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+
+                <div class="card-body p-2 p-md-4">
+                    <div class="table-responsive">
+                        <table id="InstructorsTable" class="table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "الاسم" : "Name")</th>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "السيرة الذاتية" : "Biography")</th>
+                                    <th style="text-align: center">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-
 @section scripts {
-
-    @{
-            if(TempData["success"] != null)
-        {
-        
-                <script>
-                    toastr.success('@TempData["success"]');
-                </script>
-        
-        }
-
-        if (TempData["error"] != null)
-        {
-        
-                <script>
-                    toastr.error('@TempData["error"]');
-                </script>
-        
-        }
-    }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <script>
         var currentLang = '@currentLang';
@@ -82,177 +185,104 @@
             ar: {
                 processing: "جاري التحميل...",
                 search: "بحث:",
-                lengthMenu: "عرض _MENU_ عناصر",
-                info: "عرض _START_ إلى _END_ من _TOTAL_ عناصر",
-                infoEmpty: "لا توجد بيانات",
-                infoFiltered: "(تم الفلترة من _MAX_ عناصر)",
+                lengthMenu: "_MENU_",
+                info: "عرض _START_ إلى _END_ من _TOTAL_",
                 zeroRecords: "لم يتم العثور على نتائج",
-                paginate: {
-                    first: "الأول",
-                    last: "الأخير",
-                    next: "التالي",
-                    previous: "السابق"
-                },
-                emptyTable: "لا توجد بيانات متاحة"
+                paginate: { next: "»", previous: "«" }
             },
             en: {
                 processing: "Loading...",
                 search: "Search:",
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                infoEmpty: "Showing 0 to 0 of 0 entries",
-                infoFiltered: "(filtered from _MAX_ total entries)",
+                lengthMenu: "_MENU_",
+                info: "Showing _START_ to _END_ of _TOTAL_",
                 zeroRecords: "No matching records found",
-                paginate: {
-                    first: "First",
-                    last: "Last",
-                    next: "Next",
-                    previous: "Previous"
-                },
-                emptyTable: "No data available"
+                paginate: { next: "»", previous: "«" }
             }
         };
 
         $(document).ready(function () {
             $('#InstructorsTable').DataTable({
                 processing: true,
-                ordering:false ,
                 serverSide: true,
+                ordering: true,
                 ajax: {
                     url: '@Url.Action("GetInstructors", "Instructor", new { area = "Admin" })',
                     type: 'POST',
-                    data: function(d) {
-                        d.language = currentLang;
-                    },
-                    error: function(xhr, error, code) {
-                        console.log('Error:', error);
-                        console.log('Code:', code);
-                        console.log('Response:', xhr.responseText);
-                    }
+                    data: function(d) { d.language = currentLang; }
                 },
                 columns: [
                     {
                         data: null,
-                        orderable: false,
-                        searchable: false,
                         render: function (data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
-                            }
-                     },
-                    {
-                        data: 'name',
-                        name: 'name',
-                        render: function (data, type, row) {
-                            return `
-                                <a href="/Admin/Instructor/Details/${row.id}"
-                                    class="fw-bold text-decoration-none">
-                                    ${data}
-                                </a>`;
-                         }
-                     },
-                    {
-                        data: 'bio',
-                        name: 'bio'
+                            return `<span class="text-muted small">${meta.row + meta.settings._iDisplayStart + 1}</span>`;
+                        }
                     },
                     {
-                         data: 'id',
-                    orderable: false,
-                    searchable: false,
-                    render: function (data, type, row) {
-                        return `
-                <div class="d-flex gap-2 justify-content-${currentLang === 'ar' ? 'end' : 'start'}">
-                    <a href="/Admin/Instructor/Edit/${data}"
-                       class="btn btn-sm btn-warning">
-                        <i class="fa fa-edit"></i>
-                        ${currentLang === 'ar' ? 'تعديل' : 'Edit'}
-                    </a>
-
-                    <button class="btn btn-sm btn-danger"
-                            onclick="deleteInstructor('${data}')">
-                        <i class="fa fa-trash"></i>
-                        ${currentLang === 'ar' ? 'حذف' : 'Delete'}
-                    </button>
-                </div>
-            `;
-        }
+                        data: 'name',
+                        render: function (data, type, row) {
+                            return `<a href="/Admin/Instructor/Details/${row.id}" class="instructor-link">
+                                    <i class="fas fa-user-circle me-1" style="color:#fd7e14; opacity:0.7"></i> ${data}
+                                    </a>`;
+                        }
+                    },
+                    {
+                        data: 'bio',
+                        className: 'd-none d-md-table-cell',
+                        render: function(data) {
+                            if (!data) return '<span class="text-muted">-</span>';
+                            return `<span class="text-muted small">${data.length > 60 ? data.substring(0, 60) + '...' : data}</span>`;
+                        }
+                    },
+                    {
+                        data: 'id',
+                        render: function (data) {
+                            return `
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a href="/Admin/Instructor/Edit/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-edit"></i></a>
+                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteInstructor('${data}')"><i class="fas fa-trash"></i></button>
+                                </div>`;
+                        }
                     }
                 ],
                 language: languageSettings[currentLang],
                 pageLength: 10,
-                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                ordering: true,
-                searching: true,
-                autoWidth: false,
-                responsive: true
+                responsive: true,
+                dom: '<"d-flex justify-content-between mb-2"lf>rt<"d-flex justify-content-between mt-2"ip>'
             });
         });
 
+        // دوال الـ AJAX تبقى كما هي لضمان عمل السيستم
         function changeLanguage() {
             var newLang = currentLang === 'ar' ? 'en' : 'ar';
-
             $.ajax({
                 url: '@Url.Action("SetLanguage", "Home", new { area = "Admin" })',
                 type: 'POST',
                 data: { language: newLang },
-                success: function() {
-                    location.reload();
-                }
+                success: function() { location.reload(); }
             });
         }
 
-
         function deleteInstructor(id) {
-            
             Swal.fire({
                 title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
-                text: currentLang === 'ar'
-                    ? 'هل أنت متأكد من حذف هذا المدرب؟ لا يمكن التراجع.'
-                    : 'Are you sure you want to delete this Instructor? This action cannot be undone.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: currentLang === 'ar' ? 'نعم، احذف' : 'Yes, delete',
-                cancelButtonText: currentLang === 'ar' ? 'إلغاء' : 'Cancel'
+                confirmButtonColor: '#fd7e14',
+                confirmButtonText: currentLang === 'ar' ? 'حذف' : 'Delete'
             }).then((result) => {
-
                 if (result.isConfirmed) {
-
                     $.ajax({
                         url: '/Admin/Instructor/Delete',
                         type: 'POST',
                         data: { id: id },
-                                headers: {
-           'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-        },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                         success: function () {
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: currentLang === 'ar' ? 'تم الحذف' : 'Deleted',
-                                text: currentLang === 'ar'
-                                    ? 'تم حذف الكورس بنجاح'
-                                    : 'Instructor deleted successfully',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-
                             $('#InstructorsTable').DataTable().ajax.reload(null, false);
-                        },
-                        error: function () {
-                            Swal.fire({
-                                icon: 'error',
-                                title: currentLang === 'ar' ? 'خطأ' : 'Error',
-                                text: currentLang === 'ar'
-                                    ? 'حدث خطأ أثناء الحذف'
-                                    : 'An error occurred while deleting'
-                            });
+                            Swal.fire({ icon: 'success', title: currentLang === 'ar' ? 'تم' : 'Done', timer: 1000, showConfirmButton: false });
                         }
                     });
-
                 }
             });
         }
-
     </script>
 }

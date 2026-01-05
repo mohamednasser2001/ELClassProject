@@ -4,44 +4,307 @@
     ViewData["Title"] = "Create Instructor";
 }
 
+<style>
+    /* Main Container and Card */
+    .container {
+        max-width: 900px;
+    }
+
+    .card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #eaeaea;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: white;
+        transition: box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    /* Card Header */
+    .card-title {
+        color: #2d3748;
+        font-weight: 600;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-title i {
+        color: #ed8936;
+    }
+
+    .card hr {
+        margin: 1.5rem 0;
+        border: none;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    /* Form Elements */
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        border-radius: 6px;
+        border: 1px solid #d1d9e6;
+        padding: 0.875rem 1.125rem;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        background-color: #fff;
+    }
+
+    .form-control:focus {
+        border-color: #4299e1;
+        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+        outline: none;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Select2 Styling */
+    .select2-container .select2-selection--single {
+        height: 45px;
+        border-radius: 6px;
+        border: 1px solid #d1d9e6;
+        background-color: #fff;
+    }
+
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: 45px;
+        padding-left: 15px;
+        color: #4a5568;
+        font-size: 0.95rem;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 45px;
+        width: 30px;
+    }
+
+    .select2-container--focus .select2-selection--single {
+        border-color: #4299e1;
+        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+    }
+
+    /* Validation */
+    .alert-danger {
+        background-color: #fed7d7;
+        border: 1px solid #fc8181;
+        border-radius: 6px;
+        color: #c53030;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .text-danger {
+        color: #f56565;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        background-color: #4299e1;
+        border: 1px solid #4299e1;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #3182ce;
+        border-color: #3182ce;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(49, 130, 206, 0.2);
+    }
+
+    .btn-outline-secondary {
+        background-color: transparent;
+        border: 1px solid #cbd5e0;
+        color: #4a5568;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #f7fafc;
+        border-color: #a0aec0;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Form Group */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Row and Columns */
+    .row {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+    }
+
+    .col-sm-12, .col-md-6 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    /* Button Container */
+    .d-flex.gap-2 {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    /* Placeholder styling */
+    .form-control::placeholder {
+        color: #a0aec0;
+    }
+
+    /* Focus state for textarea */
+    textarea.form-control:focus {
+        border-color: #4299e1;
+        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+        }
+
+        .btn {
+            padding: 0.65rem 1.25rem;
+        }
+
+        .d-flex.gap-2 {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .d-flex.gap-2 .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+    /* Select2 dropdown styling */
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #edf2f7;
+        color: #2d3748;
+    }
+
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #4299e1;
+        color: white;
+    }
+
+    /* Orange accent for labels with Arabic text */
+    .form-label[for="NameAr"],
+    .form-label[for="BioAr"],
+    .form-label[for="BioEn"],
+    .form-label[for="NameEn"] {
+        color: #ed8936;
+    }
+
+    /* Orange border for focus on Arabic fields */
+    #NameAr:focus,
+    #BioAr:focus ,
+    #BioEn:focus,
+    #NameEn:focus{
+        border-color: #ed8936;
+        box-shadow: 0 0 0 2px rgba(237, 137, 54, 0.1);
+    }
+</style>
+
 <div class="container mt-4">
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-body">
-            <h3 class="card-title mb-3">Create Instructor</h3>
+            <h3 class="card-title">
+                <i class="fas fa-user-plus"></i> Create Instructor
+            </h3>
             <hr />
 
             <form asp-action="Create">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
+                <div class="form-group mb-4">
+                    <label asp-for="Id" class="form-label">
+                        <i class="fas fa-user text-orange"></i> Select User Account
+                    </label>
+                    <select asp-for="Id" class="form-control select2-user"></select>
+                    <span asp-validation-for="Id" class="text-danger"></span>
+                    <small class="text-muted mt-1 d-block">
+                        <i class="fas fa-info-circle"></i> Search for an existing user to assign as instructor
+                    </small>
+                </div>
+
                 <div class="row">
                     <div class="form-group col-sm-12 col-md-6 mb-3">
-                        <label asp-for="NameAr" class="form-label">الاسم</label>
-                        <input asp-for="NameAr" class="form-control" placeholder="الاسم" />
+                        <label asp-for="NameAr" class="form-label">
+                            <i class="fas fa-language text-orange"></i> الاسم (Arabic)
+                        </label>
+                        <input asp-for="NameAr" class="form-control" placeholder="أدخل الاسم باللغة العربية" />
                         <span asp-validation-for="NameAr" class="text-danger"></span>
                     </div>
 
                     <div class="form-group col-sm-12 col-md-6 mb-3">
-                        <label asp-for="NameEn" class="form-label">Name</label>
-                        <input asp-for="NameEn" class="form-control" placeholder="Name" />
+                        <label asp-for="NameEn" class="form-label">
+                            <i class="fas fa-language"></i> Name (English)
+                        </label>
+                        <input asp-for="NameEn" class="form-control" placeholder="Enter name in English" />
                         <span asp-validation-for="NameEn" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="BioAr" class="form-label">السيرة الذاتية</label>
-                    <textarea asp-for="BioAr" placeholder="السيرة الذاتية" class="form-control" rows="3"></textarea>
+                    <label asp-for="BioAr" class="form-label">
+                        <i class="fas fa-file-alt text-orange"></i> السيرة الذاتية (Arabic)
+                    </label>
+                    <textarea asp-for="BioAr" placeholder="أدخل السيرة الذاتية باللغة العربية" class="form-control" rows="4"></textarea>
                     <span asp-validation-for="BioAr" class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-4">
-                    <label asp-for="BioEn" class="form-label">Bio</label>
-                    <textarea asp-for="BioEn" class="form-control" placeholder="Bio" rows="3"></textarea>
+                    <label asp-for="BioEn" class="form-label">
+                        <i class="fas fa-file-alt"></i> Biography (English)
+                    </label>
+                    <textarea asp-for="BioEn" class="form-control" placeholder="Enter biography in English" rows="4"></textarea>
                     <span asp-validation-for="BioEn" class="text-danger"></span>
                 </div>
 
                 <div class="d-flex gap-2">
-                    <input type="submit" value="Create" class="btn btn-primary px-4" />
-                    <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-plus-circle"></i> Create Instructor
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
                 </div>
             </form>
         </div>
@@ -52,4 +315,62 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <!-- Add Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2 for user search
+            $('.select2-user').select2({
+                placeholder: "Search user by name or email...",
+                allowClear: true,
+                minimumInputLength: 2,
+                width: '100%',
+                templateResult: formatUserResult,
+                templateSelection: formatUserSelection,
+                ajax: {
+                    url: '/Admin/Instructor/SearchUsers',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function (params) {
+                        return {
+                            term: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.map(item => ({
+                                id: item.id,
+                                text: item.text,
+                                email: item.email
+                            }))
+                        };
+                    }
+                }
+            });
+
+            // Format user display in dropdown
+            function formatUserResult(user) {
+                if (!user.id) {
+                    return user.text;
+                }
+
+                var $result = $(
+                    '<div>' +
+                        '<strong>' + user.text + '</strong>' +
+                        '<br><small class="text-muted">' + (user.email || '') + '</small>' +
+                    '</div>'
+                );
+                return $result;
+            }
+
+            function formatUserSelection(user) {
+                return user.text;
+            }
+
+            // Add orange color class for dynamic use
+            $('head').append('<style>.text-orange { color: #ed8936 !important; }</style>');
+        });
+    </script>
 }
