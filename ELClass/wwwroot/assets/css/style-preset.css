@@ -305,9 +305,6 @@ body {
   background: #e1d8f1;
   color: #673ab7;
 }
-[data-pc-preset=preset-1] .pc-header .pc-head-link.head-link-secondary > i {
-  color: #673ab7;
-}
 [data-pc-preset=preset-1] .pc-header .pc-head-link.head-link-secondary:hover {
   background: #673ab7;
   color: #fff;

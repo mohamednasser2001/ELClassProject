@@ -3,139 +3,6 @@
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
-<style>
-    /* الإعدادات العامة للكارت - مطابقة لقائمة المدربين */
-    .custom-card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        background-color: #ffffff;
-        border-top: 4px solid #fd7e14; /* الخط البرتقالي المميز */
-        margin-top: 20px;
-        overflow: hidden;
-    }
-
-    .card-header {
-        background-color: transparent !important;
-        border-bottom: 1px solid #f0f0f0 !important;
-        padding: 20px !important;
-    }
-
-    .card-title {
-        font-weight: 700;
-        color: #333;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    /* تنسيق الجدول الاحترافي المتباعد */
-    #StudentsTable {
-        border-collapse: separate;
-        border-spacing: 0 8px;
-        width: 100% !important;
-    }
-
-        #StudentsTable thead th {
-            background-color: #f8f9fa;
-            border: none;
-            color: #666;
-            font-weight: 600;
-            font-size: 0.85rem;
-            padding: 15px;
-        }
-
-        #StudentsTable tbody tr {
-            background-color: #ffffff;
-            transition: all 0.3s ease;
-        }
-
-            #StudentsTable tbody tr:hover {
-                background-color: #fffaf5;
-            }
-
-        #StudentsTable td {
-            border: none !important;
-            padding: 12px 15px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f1f1 !important;
-        }
-
-    /* الأزرار المخصصة */
-    .btn-orange-outline {
-        border: 1px solid #fd7e14;
-        color: #fd7e14;
-        background: transparent;
-        transition: 0.3s;
-    }
-
-        .btn-orange-outline:hover {
-            background-color: #fd7e14;
-            color: white;
-        }
-
-    .btn-success-custom {
-        background-color: #fd7e14;
-        border: none;
-        padding: 8px 18px;
-        border-radius: 8px;
-        font-weight: 500;
-        color: white !important;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-        .btn-success-custom:hover {
-            background-color: #e86b00;
-        }
-
-    /* تنسيق روابط الأسماء */
-    .student-link {
-        color: #333;
-        font-weight: 600;
-        text-decoration: none;
-    }
-
-        .student-link:hover {
-            color: #fd7e14;
-        }
-
-    /* تعديلات الشاشات الصغيرة */
-    @@media (max-width: 576px) {
-        .dataTables_info {
-            display: none !important;
-        }
-
-        .btn-success-custom span {
-            display: none;
-        }
-
-        .btn-success-custom {
-            padding: 8px 12px !important;
-        }
-
-        .card-header {
-            flex-direction: column;
-            gap: 15px;
-            text-align: center;
-        }
-
-        .language-toggle {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-
-    /* إخفاء أسهم الـ DataTable الافتراضية */
-    table.dataTable thead th::before,
-    table.dataTable thead th::after {
-        display: none !important;
-    }
-</style>
-
 @Html.AntiForgeryToken()
 <div class="container-fluid" style="direction: @direction;">
     <div class="row">
@@ -143,7 +10,7 @@
             <div class="card custom-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">
-                        <i class="fas fa-user-graduate" style="color:#fd7e14"></i>
+                        <i class="fas fa-user-graduate icon-primary"></i>
                         @(currentLang == "ar" ? "قائمة الطلاب" : "Students List")
                     </h3>
 
@@ -224,7 +91,7 @@
                         data: 'name',
                         render: function (data, type, row) {
                             return `<a href="/Admin/Student/Details/${row.id}" class="student-link">
-                                    <i class="fas fa-user-circle me-1" style="color:#fd7e14; opacity:0.7"></i> ${data}
+                                    <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
                                     </a>`;
                         }
                     },
@@ -258,7 +125,7 @@
                 title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#fd7e14',
+                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
                 confirmButtonText: currentLang === 'ar' ? 'حذف' : 'Delete'
             }).then((result) => {
                 if (result.isConfirmed) {

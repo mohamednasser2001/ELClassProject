@@ -1,0 +1,305 @@
+/* ========================================
+   Accessibility Overrides
+   WCAG 2.1 AA Compliance for Color Contrast
+   ======================================== */
+
+/* === TEXT COLOR COMPLIANCE === */
+
+/* Secondary color has low contrast on white (2.3:1)
+   Use darker variant for text */
+.text-secondary-color {
+    color: var(--color-secondary-dark) !important;
+}
+
+/* Ensure secondary text meets AA standards */
+.text-secondary {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Accent color requires large text (18px+) for AA compliance
+   Use darker variant for small text */
+.text-accent-small {
+    color: var(--color-accent-dark) !important;
+}
+
+/* Warning color requires dark text overlay for visibility */
+.text-warning {
+    color: var(--color-warning-dark) !important;
+}
+
+/* === BADGE COMPLIANCE === */
+
+/* Warning badges MUST use dark text */
+.badge.bg-warning,
+.badge-warning {
+    background-color: var(--color-warning) !important;
+    color: var(--color-text-primary) !important;
+    font-weight: 600;
+}
+
+/* Secondary badges use dark variant for better contrast */
+.badge.bg-secondary,
+.badge-secondary {
+    background-color: var(--color-secondary-dark) !important;
+    color: white !important;
+}
+
+/* === ALERT COMPLIANCE === */
+
+/* Warning alerts with proper text contrast */
+.alert-warning {
+    background-color: var(--color-warning-light) !important;
+    border-color: var(--color-warning) !important;
+    color: var(--color-text-primary) !important;
+}
+
+/* Secondary alerts use darker variant */
+.alert-secondary {
+    background-color: var(--color-secondary-light) !important;
+    border-color: var(--color-secondary-dark) !important;
+    color: var(--color-secondary-dark) !important;
+}
+
+/* === LINK COMPLIANCE === */
+
+/* Ensure all links meet contrast requirements */
+a:not([class]) {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+a:not([class]):hover {
+    color: var(--color-primary-hover);
+}
+
+/* Links in dark backgrounds */
+.bg-dark a,
+.bg-primary a {
+    color: white !important;
+    text-decoration: underline;
+}
+
+/* === BUTTON COMPLIANCE === */
+
+/* Secondary buttons with proper contrast */
+.btn-secondary {
+    background-color: var(--color-secondary-dark) !important;
+    border-color: var(--color-secondary-dark) !important;
+    color: white !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-secondary-hover) !important;
+    border-color: var(--color-secondary-hover) !important;
+}
+
+/* Warning buttons with dark text */
+.btn-warning {
+    background-color: var(--color-warning) !important;
+    border-color: var(--color-warning) !important;
+    color: var(--color-text-primary) !important;
+    font-weight: 600;
+}
+
+.btn-warning:hover {
+    background-color: var(--color-warning-hover) !important;
+    border-color: var(--color-warning-hover) !important;
+    color: var(--color-text-primary) !important;
+}
+
+/* === FOCUS INDICATORS === */
+
+/* Enhanced focus indicators for keyboard navigation */
+:focus-visible {
+    outline: 3px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* Button focus states */
+.btn:focus-visible {
+    box-shadow: 0 0 0 0.25rem rgba(var(--color-primary-rgb), 0.5) !important;
+}
+
+/* Form control focus states */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--color-primary-rgb), 0.25) !important;
+}
+
+.form-check-input:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--color-primary-rgb), 0.25) !important;
+}
+
+/* === TABLE COMPLIANCE === */
+
+/* Table striped rows with sufficient contrast */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-primary);
+}
+
+/* Table hover with proper contrast */
+.table-hover > tbody > tr:hover > * {
+    background-color: var(--color-secondary-light);
+    color: var(--color-text-primary);
+}
+
+/* === DISABLED STATE COMPLIANCE === */
+
+/* Ensure disabled elements are clearly distinguishable */
+.btn:disabled,
+.btn.disabled,
+fieldset:disabled .btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-muted);
+    opacity: 1;
+}
+
+/* === BACKGROUND COLOR TEXT CONTRAST === */
+
+/* Ensure text on colored backgrounds meets contrast */
+.bg-primary {
+    color: white !important;
+}
+
+.bg-secondary {
+    color: white !important;
+}
+
+.bg-success {
+    color: white !important;
+}
+
+.bg-danger {
+    color: white !important;
+}
+
+.bg-warning {
+    color: var(--color-text-primary) !important;
+}
+
+.bg-info {
+    color: white !important;
+}
+
+.bg-light {
+    color: var(--color-text-primary) !important;
+}
+
+.bg-dark {
+    color: white !important;
+}
+
+/* === CARD COMPLIANCE === */
+
+/* Cards with colored headers need proper contrast */
+.card-header.bg-primary,
+.card-header.bg-secondary,
+.card-header.bg-success,
+.card-header.bg-danger,
+.card-header.bg-info {
+    color: white !important;
+}
+
+.card-header.bg-warning {
+    color: var(--color-text-primary) !important;
+}
+
+/* === NAVIGATION COMPLIANCE === */
+
+/* Active navigation items with proper contrast */
+.nav-link.active {
+    color: var(--color-primary) !important;
+    font-weight: 600;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+}
+
+/* === BREADCRUMB COMPLIANCE === */
+
+.breadcrumb-item.active {
+    color: var(--color-text-primary) !important;
+}
+
+/* === PAGINATION COMPLIANCE === */
+
+.pagination .page-item.active .page-link {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: white !important;
+}
+
+.pagination .page-link {
+    color: var(--color-primary) !important;
+}
+
+.pagination .page-link:hover {
+    color: var(--color-primary-hover) !important;
+    background-color: var(--color-primary-light) !important;
+}
+
+/* === SCREEN READER ONLY === */
+
+.sr-only,
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* === HIGH CONTRAST MODE SUPPORT === */
+
+@media (prefers-contrast: high) {
+    :root {
+        --color-primary-light: #d4e5f7;
+        --color-secondary-light: #e0f4ff;
+        --color-accent-light: #ffe5e5;
+        --color-warning-light: #fff5e0;
+    }
+
+    .btn {
+        border-width: 2px !important;
+    }
+
+    :focus-visible {
+        outline-width: 4px !important;
+    }
+}
+
+/* === REDUCED MOTION SUPPORT === */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* === DARK MODE PREPARATION === */
+
+/* These selectors are ready for dark mode implementation */
+@media (prefers-color-scheme: dark) {
+    /* Dark mode styles can be added here in the future */
+    /* The color token system supports easy dark mode integration */
+}

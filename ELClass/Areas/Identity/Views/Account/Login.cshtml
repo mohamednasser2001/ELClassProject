@@ -14,6 +14,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(currentLang == "ar" ? "تسجيل الدخول" : "Login") - ELClass</title>
 
+    <!-- ELClass Color System -->
+    <link rel="stylesheet" href="~/css/color-tokens.css" />
     <link rel="stylesheet" href="~/AuthAssets/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
@@ -65,7 +67,7 @@
                     <a href="/Identity/Account/ForgotPassword">@(currentLang == "ar" ? "نسيت كلمة المرور؟" : "Forgot Password?")</a>
                 </div>
 
-                <button class="btn-auth mt-3" type="submit" style="background-color: #F28B00;">
+                <button class="btn-auth mt-3" type="submit">
                     @(currentLang == "ar" ? "دخول" : "Log in")
                 </button>
             </form>

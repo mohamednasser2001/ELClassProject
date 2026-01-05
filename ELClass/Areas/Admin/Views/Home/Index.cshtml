@@ -1,266 +1,334 @@
-﻿<div class="row">
-    <!-- [ sample-page ] start -->
-    <div class="col-xl-4 col-md-6">
-        <div class="card bg-secondary-dark dashnum-card text-white overflow-hidden">
-            <span class="round small"></span>
-            <span class="round big"></span>
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<!-- Welcome Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card custom-card" style="border-top: 4px solid var(--color-primary); background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-white) 100%);">
+            <div class="card-body py-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3 class="mb-2" style="color: var(--color-primary);">
+                            <i class="ti ti-dashboard me-2"></i>Welcome to ELClass Admin Dashboard
+                        </h3>
+                        <p class="mb-0 text-muted">
+                            Manage your educational platform with ease. Track student progress, organize lessons, and support your teaching community.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end d-none d-md-block">
+                        <i class="ti ti-book" style="font-size: 80px; opacity: 0.15; color: var(--color-primary);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card custom-card overflow-hidden">
+            <span class="round small" style="background: var(--color-primary);"></span>
+            <span class="round big" style="background: var(--color-primary);"></span>
             <div class="card-body">
                 <div class="row">
                     <div class="col">
-                        <div class="avtar avtar-lg">
-                            <i class="text-white ti ti-credit-card"></i>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div class="btn-group">
-                            <a href="#"
-                               class="avtar avtar-s bg-secondary text-white dropdown-toggle arrow-none"
-                               data-bs-toggle="dropdown"
-                               aria-expanded="false">
-                                <i class="ti ti-dots"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><button class="dropdown-item">Import Card</button></li>
-                                <li><button class="dropdown-item">Export</button></li>
-                            </ul>
+                        <div class="avtar avtar-lg" style="background-color: var(--color-primary-light);">
+                            <i class="ti ti-users" style="color: var(--color-primary);"></i>
                         </div>
                     </div>
                 </div>
-                <span class="text-white d-block f-34 f-w-500 my-2">
-                    1350
-                    <i class="ti ti-arrow-up-right-circle opacity-50"></i>
+                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-primary);">
+                    1,247
+                    <i class="ti ti-trending-up opacity-50"></i>
                 </span>
-                <p class="mb-0 opacity-50">Total Pending Orders</p>
+                <p class="mb-0 text-muted">Total Students</p>
+                <small class="text-success"><i class="ti ti-arrow-up"></i> 12% this month</small>
             </div>
         </div>
     </div>
-    <div class="col-xl-4 col-md-6">
-        <div class="card bg-primary-dark dashnum-card text-white overflow-hidden">
-            <span class="round small"></span>
-            <span class="round big"></span>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card custom-card overflow-hidden">
+            <span class="round small" style="background: var(--color-accent);"></span>
+            <span class="round big" style="background: var(--color-accent);"></span>
             <div class="card-body">
                 <div class="row">
                     <div class="col">
-                        <div class="avtar avtar-lg">
-                            <i class="text-white ti ti-credit-card"></i>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <ul class="nav nav-pills justify-content-end mb-0" id="chart-tab-tab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link text-white active"
-                                        id="chart-tab-home-tab"
-                                        data-bs-toggle="pill"
-                                        data-bs-target="#chart-tab-home"
-                                        role="tab"
-                                        aria-controls="chart-tab-home"
-                                        aria-selected="true">
-                                    Month
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link text-white"
-                                        id="chart-tab-profile-tab"
-                                        data-bs-toggle="pill"
-                                        data-bs-target="#chart-tab-profile"
-                                        role="tab"
-                                        aria-controls="chart-tab-profile"
-                                        aria-selected="false">
-                                    Year
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="tab-content" id="chart-tab-tabContent">
-                    <div class="tab-pane show active" id="chart-tab-home" role="tabpanel" aria-labelledby="chart-tab-home-tab" tabindex="0">
-                        <div class="row">
-                            <div class="col-6">
-                                <span class="text-white d-block f-34 f-w-500 my-2">
-                                    $135
-                                    <i class="ti ti-arrow-up-right-circle opacity-50"></i>
-                                </span>
-                                <p class="mb-0 opacity-50">Total Earning</p>
-                            </div>
-                            <div class="col-6">
-                                <div id="tab-chart-1"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tab-pane" id="chart-tab-profile" role="tabpanel" aria-labelledby="chart-tab-profile-tab" tabindex="0">
-                        <div class="row">
-                            <div class="col-6">
-                                <span class="text-white d-block f-34 f-w-500 my-2">
-                                    $291
-                                    <i class="ti ti-arrow-down-right-circle opacity-50"></i>
-                                </span>
-                                <p class="mb-0 opacity-50">C/W Last Year</p>
-                            </div>
-                            <div class="col-6">
-                                <div id="tab-chart-2"></div>
-                            </div>
+                        <div class="avtar avtar-lg" style="background-color: var(--color-accent-light);">
+                            <i class="ti ti-book" style="color: var(--color-accent);"></i>
                         </div>
                     </div>
                 </div>
+                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-accent);">
+                    342
+                    <i class="ti ti-book-2 opacity-50"></i>
+                </span>
+                <p class="mb-0 text-muted">Active Lessons</p>
+                <small class="text-success"><i class="ti ti-arrow-up"></i> 8 new this week</small>
             </div>
         </div>
     </div>
-    <div class="col-xl-4 col-md-12">
-        <div class="card bg-primary-dark dashnum-card dashnum-card-small text-white overflow-hidden">
-            <span class="round bg-primary small"></span>
-            <span class="round bg-primary big"></span>
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center">
-                    <div class="avtar avtar-lg">
-                        <i class="text-white ti ti-credit-card"></i>
-                    </div>
-                    <div class="ms-2">
-                        <h4 class="text-white mb-1">$203k</h4>
-                        <p class="mb-0 opacity-75 text-sm">Total Income</p>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card custom-card overflow-hidden">
+            <span class="round small" style="background: var(--color-secondary-dark);"></span>
+            <span class="round big" style="background: var(--color-secondary-dark);"></span>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <div class="avtar avtar-lg" style="background-color: var(--color-secondary-light);">
+                            <i class="ti ti-school" style="color: var(--color-secondary-dark);"></i>
+                        </div>
                     </div>
                 </div>
+                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-secondary-dark);">
+                    28
+                    <i class="ti ti-books opacity-50"></i>
+                </span>
+                <p class="mb-0 text-muted">Total Subjects</p>
+                <small class="text-muted">Across all grades</small>
             </div>
         </div>
-        <div class="card dashnum-card dashnum-card-small overflow-hidden">
-            <span class="round bg-warning small"></span>
-            <span class="round bg-warning big"></span>
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center">
-                    <div class="avtar avtar-lg bg-light-warning">
-                        <i class="text-warning ti ti-credit-card"></i>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card custom-card overflow-hidden">
+            <span class="round small" style="background: var(--color-warning);"></span>
+            <span class="round big" style="background: var(--color-warning);"></span>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <div class="avtar avtar-lg" style="background-color: var(--color-warning-light);">
+                            <i class="ti ti-user-check" style="color: var(--color-warning-dark);"></i>
+                        </div>
                     </div>
-                    <div class="ms-2">
-                        <h4 class="mb-1">$203k</h4>
-                        <p class="mb-0 opacity-75 text-sm">Total Income</p>
+                </div>
+                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-warning-dark);">
+                    67
+                    <i class="ti ti-chalkboard opacity-50"></i>
+                </span>
+                <p class="mb-0 text-muted">Active Instructors</p>
+                <small class="text-success"><i class="ti ti-arrow-up"></i> 3 joined recently</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="col-12 mt-3">
+        <div class="card custom-card">
+            <div class="card-header" style="background-color: var(--color-bg-white); border-bottom: 2px solid var(--color-primary-light);">
+                <h5 class="mb-0" style="color: var(--color-primary);">
+                    <i class="ti ti-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-xl-3 col-md-6">
+                        <a href="/Admin/Student" class="btn btn-primary-custom w-100 py-3" style="text-decoration: none;">
+                            <i class="ti ti-users d-block mb-2" style="font-size: 2rem;"></i>
+                            <span class="d-block">Manage Students</span>
+                            <small class="d-block mt-1 opacity-75">View and edit student profiles</small>
+                        </a>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <a href="/Admin/Course" class="btn w-100 py-3" style="background-color: var(--color-accent); color: white; text-decoration: none;">
+                            <i class="ti ti-book d-block mb-2" style="font-size: 2rem;"></i>
+                            <span class="d-block">Manage Lessons</span>
+                            <small class="d-block mt-1 opacity-75">Create and organize content</small>
+                        </a>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <a href="#" class="btn w-100 py-3" style="background-color: var(--color-secondary-dark); color: white; text-decoration: none;">
+                            <i class="ti ti-school d-block mb-2" style="font-size: 2rem;"></i>
+                            <span class="d-block">Manage Subjects</span>
+                            <small class="d-block mt-1 opacity-75">Organize subject categories</small>
+                        </a>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <a href="/Admin/Instructor" class="btn w-100 py-3" style="background-color: var(--color-warning-dark); color: white; text-decoration: none;">
+                            <i class="ti ti-user-check d-block mb-2" style="font-size: 2rem;"></i>
+                            <span class="d-block">Manage Instructors</span>
+                            <small class="d-block mt-1 opacity-75">Manage teaching staff</small>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Recent Activity and Platform Overview -->
     <div class="col-xl-8 col-md-12">
-        <div class="card">
+        <div class="card custom-card">
+            <div class="card-header" style="background-color: var(--color-bg-white); border-bottom: 2px solid var(--color-primary-light);">
+                <h5 class="mb-0" style="color: var(--color-primary);">
+                    <i class="ti ti-activity me-2"></i>Platform Activity Overview
+                </h5>
+            </div>
             <div class="card-body">
                 <div class="row mb-3 align-items-center">
                     <div class="col">
-                        <small class="text-muted">Total Growth</small>
-                        <h3>$2,324.00</h3>
+                        <small class="text-muted">Student Enrollment Growth</small>
+                        <h3 style="color: var(--color-primary);">+156 Students</h3>
                     </div>
                     <div class="col-auto">
-                        <select class="form-select p-r-35">
-                            <option>Today</option>
+                        <select class="form-select" style="border-color: var(--color-primary);">
+                            <option>This Week</option>
                             <option selected>This Month</option>
                             <option>This Year</option>
                         </select>
                     </div>
                 </div>
-                <div id="growthchart"></div>
+                <div class="alert" style="background-color: var(--color-primary-light); border-left: 4px solid var(--color-primary); color: var(--color-text-primary);">
+                    <div class="d-flex align-items-center">
+                        <i class="ti ti-chart-line me-3" style="font-size: 2rem; color: var(--color-primary);"></i>
+                        <div>
+                            <h6 class="mb-1" style="color: var(--color-primary);">Great Progress!</h6>
+                            <p class="mb-0 small">Your platform has seen a 23% increase in active students this month. Keep up the excellent work!</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="enrollment-chart" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background-color: var(--color-bg-light); border-radius: 8px;">
+                    <div class="text-center text-muted">
+                        <i class="ti ti-chart-bar" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-2">Enrollment chart visualization will appear here</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Recent Enrollments -->
     <div class="col-xl-4 col-md-12">
-        <div class="card">
+        <div class="card custom-card">
+            <div class="card-header" style="background-color: var(--color-bg-white); border-bottom: 2px solid var(--color-primary-light);">
+                <h5 class="mb-0" style="color: var(--color-primary);">
+                    <i class="ti ti-trending-up me-2"></i>Top Performing Subjects
+                </h5>
+            </div>
             <div class="card-body">
-                <div class="row mb-3 align-items-center">
-                    <div class="col">
-                        <h4>Popular Stocks</h4>
-                    </div>
-                    <div class="col-auto"></div>
-                </div>
-                <div class="rounded bg-light-secondary overflow-hidden mb-3">
-                    <div class="px-3 pt-3">
-                        <div class="row mb-1 align-items-start">
-                            <div class="col">
-                                <h5 class="text-secondary mb-0">Bajaj Finery</h5>
-                                <small class="text-muted">10% Profit</small>
-                            </div>
-                            <div class="col-auto">
-                                <h4 class="mb-0">$1839.00</h4>
-                            </div>
+                <div class="rounded overflow-hidden mb-3" style="background-color: var(--color-primary-light); padding: 1rem;">
+                    <div class="row mb-1 align-items-start">
+                        <div class="col">
+                            <h6 class="mb-0" style="color: var(--color-primary);">
+                                <i class="ti ti-math me-1"></i>Mathematics
+                            </h6>
+                            <small class="text-muted">456 enrolled students</small>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge" style="background-color: var(--color-success);">95%</span>
                         </div>
                     </div>
-                    <div id="bajajchart"></div>
                 </div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item px-0">
-                        <div class="row align-items-start">
+                        <div class="row align-items-center">
                             <div class="col">
-                                <h5 class="mb-0">Bajaj Finery</h5>
-                                <small class="text-success">10% Profit</small>
+                                <h6 class="mb-0">
+                                    <i class="ti ti-flask me-1" style="color: var(--color-accent);"></i>Science
+                                </h6>
+                                <small class="text-success">423 students</small>
                             </div>
                             <div class="col-auto">
-                                <h4 class="mb-0">
-                                    $1839.00
-                                    <span class="ms-2 align-top avtar avtar-xxs bg-light-success"><i class="ti ti-chevron-up text-success"></i></span>
-                                </h4>
+                                <span class="badge" style="background-color: var(--color-success);">
+                                    92%
+                                    <i class="ti ti-arrow-up ms-1"></i>
+                                </span>
                             </div>
                         </div>
                     </li>
                     <li class="list-group-item px-0">
-                        <div class="row align-items-start">
+                        <div class="row align-items-center">
                             <div class="col">
-                                <h5 class="mb-0">TTML</h5>
-                                <small class="text-danger">10% Profit</small>
+                                <h6 class="mb-0">
+                                    <i class="ti ti-language me-1" style="color: var(--color-secondary-dark);"></i>English
+                                </h6>
+                                <small class="text-success">398 students</small>
                             </div>
                             <div class="col-auto">
-                                <h4 class="mb-0">
-                                    $100.00
-                                    <span class="ms-2 align-top avtar avtar-xxs bg-light-danger"><i class="ti ti-chevron-down text-danger"></i></span>
-                                </h4>
+                                <span class="badge" style="background-color: var(--color-success);">
+                                    89%
+                                    <i class="ti ti-arrow-up ms-1"></i>
+                                </span>
                             </div>
                         </div>
                     </li>
                     <li class="list-group-item px-0">
-                        <div class="row align-items-start">
+                        <div class="row align-items-center">
                             <div class="col">
-                                <h5 class="mb-0">Reliance</h5>
-                                <small class="text-success">10% Profit</small>
+                                <h6 class="mb-0">
+                                    <i class="ti ti-world me-1" style="color: var(--color-accent);"></i>History
+                                </h6>
+                                <small class="text-muted">312 students</small>
                             </div>
                             <div class="col-auto">
-                                <h4 class="mb-0">
-                                    $200.00
-                                    <span class="ms-2 align-top avtar avtar-xxs bg-light-success"><i class="ti ti-chevron-up text-success"></i></span>
-                                </h4>
+                                <span class="badge bg-secondary">
+                                    85%
+                                </span>
                             </div>
                         </div>
                     </li>
                     <li class="list-group-item px-0">
-                        <div class="row align-items-start">
+                        <div class="row align-items-center">
                             <div class="col">
-                                <h5 class="mb-0">TTML</h5>
-                                <small class="text-danger">10% Profit</small>
+                                <h6 class="mb-0">
+                                    <i class="ti ti-device-desktop me-1" style="color: var(--color-primary);"></i>Computer Science
+                                </h6>
+                                <small class="text-success">287 students</small>
                             </div>
                             <div class="col-auto">
-                                <h4 class="mb-0">
-                                    $189.00
-                                    <span class="ms-2 align-top avtar avtar-xxs bg-light-danger"><i class="ti ti-chevron-down text-danger"></i></span>
-                                </h4>
+                                <span class="badge" style="background-color: var(--color-success);">
+                                    88%
+                                    <i class="ti ti-arrow-up ms-1"></i>
+                                </span>
                             </div>
                         </div>
                     </li>
                     <li class="list-group-item px-0">
-                        <div class="row align-items-start">
+                        <div class="row align-items-center">
                             <div class="col">
-                                <h5 class="mb-0">Stolon</h5>
-                                <small class="text-danger">10% Profit</small>
+                                <h6 class="mb-0">
+                                    <i class="ti ti-palette me-1" style="color: var(--color-warning);"></i>Art & Design
+                                </h6>
+                                <small class="text-muted">245 students</small>
                             </div>
                             <div class="col-auto">
-                                <h4 class="mb-0">
-                                    $189.00
-                                    <span class="ms-2 align-top avtar avtar-xxs bg-light-danger"><i class="ti ti-chevron-down text-danger"></i></span>
-                                </h4>
+                                <span class="badge bg-secondary">
+                                    82%
+                                </span>
                             </div>
                         </div>
                     </li>
                 </ul>
-                <div class="text-center">
-                    <a href="#!" class="b-b-primary text-primary">
-                        View all
+                <div class="text-center mt-3">
+                    <a href="#" class="text-primary" style="text-decoration: none; font-weight: 500;">
+                        View all subjects
                         <i class="ti ti-chevron-right"></i>
                     </a>
                 </div>
             </div>
         </div>
     </div>
-    <!-- [ sample-page ] end -->
+
+    <!-- Platform Tips -->
+    <div class="col-12 mt-3">
+        <div class="card" style="border-left: 4px solid var(--color-accent); background: linear-gradient(to right, var(--color-accent-light) 0%, var(--color-bg-white) 100%);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <div class="avtar avtar-lg" style="background-color: var(--color-accent);">
+                            <i class="ti ti-bulb text-white"></i>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <h5 class="mb-1" style="color: var(--color-accent);">Platform Tip</h5>
+                        <p class="mb-0 text-muted">
+                            Encourage instructors to provide regular feedback to students. Studies show that timely feedback improves learning outcomes by up to 40%!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
