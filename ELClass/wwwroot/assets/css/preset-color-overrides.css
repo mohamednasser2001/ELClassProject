@@ -1,0 +1,214 @@
+/* ========================================
+   Berry Preset Theme Color Overrides
+   Overrides style-preset.css color definitions
+   Handles preset-1, preset-2, etc. variations
+   Load this AFTER style-preset.css
+   ======================================== */
+
+/* === DEFAULT PRESET OVERRIDES === */
+
+:root {
+  --pc-sidebar-active-color: var(--color-primary);
+  --pc-sidebar-active-color-rgb: var(--color-primary-rgb);
+  --bs-body-bg: var(--color-bg-light);
+  --pc-heading-color: var(--color-text-primary);
+  --pc-sidebar-background: var(--color-bg-white);
+  --pc-sidebar-color: var(--color-text-secondary);
+  --pc-header-background: var(--color-bg-white);
+  --pc-header-color: var(--color-text-secondary);
+}
+
+/* === PRESET 1 (Default Theme) === */
+
+[data-pc-preset="preset-1"] {
+  --pc-sidebar-active-color: var(--color-primary);
+  --pc-sidebar-active-color-rgb: var(--color-primary-rgb);
+  --bs-blue: var(--color-primary);
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+  --bs-secondary: var(--color-secondary-dark);
+  --bs-secondary-rgb: var(--color-secondary-rgb);
+  --bs-link-color: var(--color-primary);
+  --bs-link-hover-color: var(--color-primary-hover);
+}
+
+[data-pc-preset="preset-1"] .pc-sidebar .pc-item.active > .pc-link,
+[data-pc-preset="preset-1"] .pc-sidebar .pc-item:hover > .pc-link {
+  color: var(--color-primary) !important;
+  background-color: var(--color-primary-light) !important;
+}
+
+[data-pc-preset="preset-1"] .pc-sidebar .pc-item.active > .pc-link .pc-micon i,
+[data-pc-preset="preset-1"] .pc-sidebar .pc-item.active > .pc-link .pc-micon svg,
+[data-pc-preset="preset-1"] .pc-sidebar .pc-item:hover > .pc-link .pc-micon i,
+[data-pc-preset="preset-1"] .pc-sidebar .pc-item:hover > .pc-link .pc-micon svg {
+  color: var(--color-primary) !important;
+}
+
+[data-pc-preset="preset-1"] .btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+[data-pc-preset="preset-1"] .btn-primary:hover {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+}
+
+/* === PRESET 2 (Alternative Theme - if exists) === */
+
+[data-pc-preset="preset-2"] {
+  --pc-sidebar-active-color: var(--color-primary);
+  --pc-sidebar-active-color-rgb: var(--color-primary-rgb);
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+}
+
+[data-pc-preset="preset-2"] .pc-sidebar .pc-item.active > .pc-link {
+  color: var(--color-primary) !important;
+}
+
+/* === PRESET 3 (Alternative Theme - if exists) === */
+
+[data-pc-preset="preset-3"] {
+  --pc-sidebar-active-color: var(--color-primary);
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+}
+
+/* === PRESET 4 (Alternative Theme - if exists) === */
+
+[data-pc-preset="preset-4"] {
+  --pc-sidebar-active-color: var(--color-primary);
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+}
+
+/* === PRESET 5 (Alternative Theme - if exists) === */
+
+[data-pc-preset="preset-5"] {
+  --pc-sidebar-active-color: var(--color-primary);
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+}
+
+/* === DARK MODE PRESETS (if applicable) === */
+
+[data-pc-theme="dark"] {
+  /* Keep existing dark mode colors but ensure primary color consistency */
+  --pc-sidebar-active-color: var(--color-primary);
+  --bs-primary: var(--color-primary);
+}
+
+[data-pc-theme="dark"][data-pc-preset="preset-1"] {
+  --pc-sidebar-active-color: var(--color-primary);
+}
+
+/* === RTL MODE === */
+
+[dir="rtl"] {
+  /* Ensure colors work correctly in RTL mode */
+  --pc-sidebar-active-color: var(--color-primary);
+}
+
+/* === SIDEBAR COLOR VARIATIONS === */
+
+[data-pc-sidebar-color="sidebar-color-1"] .pc-sidebar .pc-item.active > .pc-link {
+  background-color: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
+}
+
+[data-pc-sidebar-color="sidebar-color-2"] .pc-sidebar .pc-item.active > .pc-link {
+  background-color: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
+}
+
+/* === HEADER COLOR VARIATIONS === */
+
+[data-pc-header-color="header-color-1"] {
+  --pc-header-background: var(--color-primary);
+  --pc-header-color: white;
+}
+
+[data-pc-header-color="header-color-2"] {
+  --pc-header-background: var(--color-secondary-dark);
+  --pc-header-color: white;
+}
+
+/* === LAYOUT VARIATIONS === */
+
+/* Horizontal Layout */
+[data-pc-layout="horizontal"] .pc-sidebar .pc-item.active > .pc-link {
+  color: var(--color-primary) !important;
+}
+
+/* Compact Layout */
+[data-pc-layout="compact"] .pc-sidebar .pc-item.active > .pc-link {
+  color: var(--color-primary) !important;
+}
+
+/* === CAPTION VARIATIONS === */
+
+.pc-caption {
+  color: var(--color-text-muted);
+}
+
+/* === ACTIVE SUBMENU === */
+
+.pc-submenu .pc-item.active > .pc-link::before {
+  background-color: var(--color-primary) !important;
+}
+
+/* === CARD VARIATIONS === */
+
+.card[data-pc-card-preset="preset-1"] {
+  border-top-color: var(--color-primary) !important;
+}
+
+/* === THEME TOGGLE BUTTON === */
+
+.preset-btn.active {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.25) !important;
+}
+
+/* === CUSTOMIZER PANEL (if exists) === */
+
+.pct-c-btn {
+  background-color: var(--color-primary) !important;
+}
+
+.pct-c-btn:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+/* === ENSURE ALL PRESETS USE NEW COLOR === */
+
+[class*="preset-"] .text-primary,
+[data-pc-preset*="preset-"] .text-primary {
+  color: var(--color-primary) !important;
+}
+
+[class*="preset-"] .bg-primary,
+[data-pc-preset*="preset-"] .bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+[class*="preset-"] .border-primary,
+[data-pc-preset*="preset-"] .border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+[class*="preset-"] .btn-primary,
+[data-pc-preset*="preset-"] .btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* === OVERRIDE ANY REMAINING PURPLE/ORANGE from presets === */
+
+[data-pc-preset] {
+  /* Ensure no purple (#6610f2) or orange (#fd7e14) shows through */
+  --bs-purple: var(--color-primary);
+  --bs-orange: var(--color-accent);
+}

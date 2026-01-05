@@ -6,137 +6,6 @@
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
-<style>
-    /* 1. الإعدادات العامة والألوان */
-    :root {
-        --primary-orange: #fd7e14;
-        --hover-orange: #e86b00;
-        --soft-orange: #fffaf5;
-        --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    /* تحسين الهيدر */
-    .header-section {
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    /* 2. تصميم الكروت الموحد */
-    .custom-card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: var(--card-shadow);
-        background-color: #ffffff;
-        border-top: 4px solid var(--primary-orange);
-        margin-bottom: 25px;
-        overflow: hidden;
-    }
-
-    .card-header {
-        background-color: transparent !important;
-        border-bottom: 1px solid #f0f0f0 !important;
-        padding: 15px 20px !important;
-    }
-
-    .card-title {
-        font-weight: 700;
-        color: #333;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 1.1rem;
-    }
-
-    /* 3. إحصائيات الكورس */
-    .quick-info-card {
-        background: white;
-        padding: 1.2rem;
-        border-radius: 12px;
-        border-bottom: 4px solid var(--primary-orange);
-        text-align: center;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
-        height: 100%;
-    }
-
-        .quick-info-card:hover {
-            transform: translateY(-5px);
-        }
-
-    /* 4. كروت الأشخاص */
-    .item-badge-card {
-        background: white;
-        border-radius: 10px;
-        padding: 15px;
-        border: 1px solid #eee;
-        border-inline-start: 4px solid var(--primary-orange);
-        transition: all 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    /* 5. قسم الإضافة */
-    .assign-section {
-        background: var(--soft-orange);
-        border-radius: 12px;
-        padding: 1.2rem;
-        margin-top: 1rem;
-        border: 2px dashed var(--primary-orange);
-    }
-
-    /* 6. الأزرار */
-    .btn-orange-custom {
-        background-color: var(--primary-orange);
-        border: none;
-        color: white !important;
-        font-weight: 500;
-        border-radius: 8px;
-        transition: 0.3s;
-        height: 45px; /* توحيد الطول مع Select2 */
-    }
-
-        .btn-orange-custom:hover {
-            background-color: var(--hover-orange);
-        }
-
-    /* 7. Select2 Responsive Fixes */
-    .select2-container {
-        width: 100% !important; /* ضمان العرض الكامل */
-    }
-
-    .select2-container--default .select2-selection--single {
-        border-radius: 8px;
-        height: 45px !important;
-        border: 1px solid #dee2e6;
-        display: flex;
-        align-items: center;
-    }
-
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 42px !important;
-        }
-
-    .select2-container .select2-selection--single .select2-selection__rendered {
-        padding-inline-start: 12px;
-        padding-inline-end: 30px;
-    }
-
-    /* Responsive */
-    @@media (max-width: 768px) {
-        .header-section {
-            flex-direction: column;
-            align-items: flex-start !important;
-        }
-
-        .btn-responsive-mobile {
-            margin-top: 10px;
-        }
-    }
-</style>
-
 <div class="container-fluid py-4" style="direction: @direction; text-align: @(direction == "rtl" ? "right" : "left")">
 
     @* Header Section *@
@@ -338,7 +207,7 @@
                 text: "Remove this instructor from the course?",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#fd7e14',
+                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
                 confirmButtonText: 'Yes, remove'
             }).then((result) => {
                 if (result.isConfirmed) {

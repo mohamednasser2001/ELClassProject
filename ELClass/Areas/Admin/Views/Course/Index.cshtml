@@ -3,125 +3,13 @@
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
-<style>
-    .custom-card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        background-color: #ffffff;
-        border-top: 4px solid #fd7e14;
-        margin-top: 20px;
-    }
-
-    .card-header {
-        background-color: transparent !important;
-        border-bottom: 1px solid #f0f0f0 !important;
-        padding: 20px !important;
-    }
-
-    .card-title {
-        font-weight: 700;
-        color: #333;
-        margin: 0;
-    }
-
-    #coursesTable {
-        border-collapse: separate;
-        border-spacing: 0 10px;
-    }
-
-        #coursesTable thead th {
-            background-color: #f8f9fa;
-            border: none;
-            color: #666;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            padding: 15px;
-        }
-
-        #coursesTable tbody tr {
-            background-color: #ffffff;
-            transition: all 0.3s ease;
-        }
-
-            #coursesTable tbody tr:hover {
-                background-color: #fffaf5;
-            }
-
-        #coursesTable td {
-            border: none !important;
-            padding: 12px 15px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f1f1 !important;
-        }
-
-    .btn-orange-outline {
-        border: 1px solid #fd7e14;
-        color: #fd7e14;
-        background: transparent;
-        transition: 0.3s;
-    }
-
-        .btn-orange-outline:hover {
-            background-color: #fd7e14;
-            color: white;
-        }
-
-    .btn-success-custom {
-        background-color: #fd7e14;
-        border: none;
-        padding: 8px 20px;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-        .btn-success-custom:hover {
-            background-color: #e86b00;
-        }
-
-    /* --- التعديلات الجديدة للشاشات الصغيرة --- */
-    @@media (max-width: 576px) {
-        .dataTables_info {
-            display: none !important; /* إخفاء النص المزعج في الموبايل */
-        }
-
-        .btn-success-custom span {
-            display: none; /* إخفاء نص "إضافة كورس" وبقاء علامة + */
-        }
-
-        .btn-success-custom {
-            padding: 8px 12px !important;
-        }
-
-        .card-header {
-            padding: 15px !important;
-        }
-    }
-
-    table.dataTable thead th::before,
-    table.dataTable thead th::after {
-        display: none !important;
-    }
-
-    .course-link {
-        color: #333;
-        font-weight: 600;
-        text-decoration: none;
-    }
-
-        .course-link:hover {
-            color: #fd7e14;
-        }
-</style>
-
 <div class="container-fluid" style="direction: @direction;">
     <div class="row">
         <div class="col-12">
             <div class="card custom-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">
-                        <i class="fa fa-book-open me-2 text-orange" style="color:#fd7e14"></i>
+                        <i class="fa fa-book-open me-2 icon-primary"></i>
                         @(currentLang == "ar" ? "قائمة الكورسات" : "Courses List")
                     </h3>
 
@@ -245,7 +133,7 @@
                 title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#fd7e14',
+                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
                 confirmButtonText: currentLang === 'ar' ? 'حذف' : 'Delete'
             }).then((result) => {
                 if (result.isConfirmed) {

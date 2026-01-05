@@ -1,0 +1,390 @@
+/* ========================================
+   Berry Admin Theme Color Overrides
+   Overrides Berry's 22K+ line style.css without editing it
+   Load this AFTER style.css
+   ======================================== */
+
+:root,
+[data-bs-theme=light] {
+  /* === OVERRIDE BERRY'S COLOR SYSTEM === */
+  --bs-blue: var(--color-primary);
+  --bs-orange: var(--color-accent);
+  --bs-indigo: var(--color-secondary-dark);
+  --bs-purple: var(--color-primary);
+
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+  --bs-secondary: var(--color-secondary-dark);
+  --bs-secondary-rgb: var(--color-secondary-rgb);
+  --bs-success: var(--color-success);
+  --bs-success-rgb: var(--color-success-rgb);
+  --bs-warning: var(--color-warning);
+  --bs-warning-rgb: var(--color-warning-rgb);
+  --bs-danger: var(--color-danger);
+  --bs-danger-rgb: var(--color-danger-rgb);
+  --bs-info: var(--color-info);
+  --bs-info-rgb: var(--color-info-rgb);
+
+  /* === BERRY ADMIN-SPECIFIC VARIABLES === */
+  --pc-sidebar-active-color: var(--color-primary);
+  --pc-sidebar-active-color-rgb: var(--color-primary-rgb);
+  --pc-heading-color: var(--color-text-primary);
+  --pc-sidebar-background: var(--color-bg-white);
+  --pc-sidebar-color: var(--color-text-secondary);
+  --pc-header-background: var(--color-bg-white);
+  --pc-header-color: var(--color-text-secondary);
+  --pc-body-bg: var(--color-bg-light);
+}
+
+/* === SIDEBAR STYLING === */
+
+.pc-sidebar .pc-item.active > .pc-link,
+.pc-sidebar .pc-item:hover > .pc-link {
+  color: var(--color-primary) !important;
+  background-color: var(--color-primary-light) !important;
+}
+
+.pc-sidebar .pc-item.active > .pc-link .pc-micon,
+.pc-sidebar .pc-item:hover > .pc-link .pc-micon {
+  color: var(--color-primary) !important;
+}
+
+.pc-sidebar .pc-item.active > .pc-link .pc-micon i,
+.pc-sidebar .pc-item.active > .pc-link .pc-micon svg,
+.pc-sidebar .pc-item:hover > .pc-link .pc-micon i,
+.pc-sidebar .pc-item:hover > .pc-link .pc-micon svg {
+  color: var(--color-primary) !important;
+}
+
+/* Sidebar submenu active state */
+.pc-sidebar .pc-submenu .pc-item.active > .pc-link {
+  color: var(--color-primary) !important;
+}
+
+.pc-sidebar .pc-submenu .pc-item.active > .pc-link::before {
+  background-color: var(--color-primary) !important;
+}
+
+/* === BRAND/LOGO === */
+
+.b-brand,
+.b-brand.text-primary,
+a.b-brand.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.b-brand:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+/* === HEADER/NAVBAR === */
+
+.pc-header .pc-h-item .dropdown-item:hover,
+.pc-header .pc-h-item .dropdown-item:focus {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* === CARDS === */
+
+.card-header {
+  background-color: var(--color-bg-white);
+  border-bottom-color: var(--color-border);
+}
+
+.card.card-primary {
+  border-top-color: var(--color-primary) !important;
+}
+
+/* === BUTTONS === */
+
+.btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: white !important;
+}
+
+.btn-outline-primary {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary-dark) !important;
+  border-color: var(--color-secondary-dark) !important;
+}
+
+.btn-link-primary {
+  color: var(--color-primary) !important;
+}
+
+.btn-link-primary:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+/* === BADGES === */
+
+.badge.bg-primary,
+.badge.badge-primary {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.badge.bg-light-primary {
+  background-color: var(--color-primary-light) !important;
+  color: var(--color-primary-dark) !important;
+}
+
+.badge.bg-warning,
+.badge.badge-warning {
+  background-color: var(--color-warning) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.badge.bg-light-warning {
+  background-color: var(--color-warning-light) !important;
+  color: var(--color-warning-dark) !important;
+}
+
+/* === TEXT UTILITIES === */
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+a.text-primary:hover,
+a.text-primary:focus {
+  color: var(--color-primary-hover) !important;
+}
+
+.text-secondary {
+  color: var(--color-secondary-dark) !important;
+}
+
+/* === BACKGROUND UTILITIES === */
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.bg-light-primary {
+  background-color: var(--color-primary-light) !important;
+  color: var(--color-primary-dark) !important;
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary-dark) !important;
+  color: white !important;
+}
+
+.bg-light-secondary {
+  background-color: var(--color-secondary-light) !important;
+  color: var(--color-secondary-dark) !important;
+}
+
+/* === BORDER UTILITIES === */
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+/* === FORM CONTROLS === */
+
+.form-control:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(var(--color-primary-rgb), 0.15) !important;
+}
+
+.form-select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(var(--color-primary-rgb), 0.15) !important;
+}
+
+.form-check-input:checked {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* === LINKS === */
+
+a:not([class*="btn"]):not(.dropdown-item):not(.nav-link) {
+  color: var(--color-primary);
+}
+
+a:not([class*="btn"]):not(.dropdown-item):not(.nav-link):hover {
+  color: var(--color-primary-hover);
+}
+
+/* === TABS === */
+
+.nav-tabs .nav-link.active {
+  color: var(--color-primary) !important;
+  border-bottom-color: var(--color-primary) !important;
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* === PAGINATION === */
+
+.pagination .page-link {
+  color: var(--color-primary);
+}
+
+.pagination .page-link:hover {
+  color: var(--color-primary-hover);
+  background-color: var(--color-primary-light);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: white;
+}
+
+/* === ALERTS === */
+
+.alert-primary {
+  background-color: var(--color-primary-light) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary-dark) !important;
+}
+
+.alert-warning {
+  background-color: var(--color-warning-light) !important;
+  border-color: var(--color-warning) !important;
+  color: var(--color-warning-dark) !important;
+}
+
+/* === PROGRESS BARS === */
+
+.progress-bar {
+  background-color: var(--color-primary) !important;
+}
+
+.progress-bar.bg-secondary {
+  background-color: var(--color-secondary-dark) !important;
+}
+
+/* === DROPDOWN === */
+
+.dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item:active {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* === TABLE === */
+
+.table-primary {
+  --bs-table-bg: var(--color-primary-light);
+  --bs-table-border-color: var(--color-primary);
+}
+
+/* === LOADER/SPINNER === */
+
+.loader-fill {
+  background-color: var(--color-primary) !important;
+}
+
+/* === AVATAR BADGE === */
+
+.avtar.bg-light-primary {
+  background-color: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
+}
+
+/* === NOTIFICATION BADGE === */
+
+.notification .badge {
+  background-color: var(--color-accent) !important;
+}
+
+/* === CHART COLORS (if Berry uses chart.js) === */
+
+.chart-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.chart-secondary {
+  background-color: var(--color-secondary) !important;
+}
+
+/* === FOCUS STATES === */
+
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline-color: var(--color-primary) !important;
+}
+
+/* === CUSTOM SCROLL BAR === */
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary) !important;
+}
+
+/* === SWITCH/TOGGLE === */
+
+.form-switch .form-check-input:checked {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* === ACCORDION === */
+
+.accordion-button:not(.collapsed) {
+  color: var(--color-primary) !important;
+  background-color: var(--color-primary-light) !important;
+}
+
+/* === BREADCRUMB === */
+
+.breadcrumb .breadcrumb-item.active {
+  color: var(--color-primary) !important;
+}
+
+/* === LIST GROUP === */
+
+.list-group-item.active {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* === MODAL === */
+
+.modal-header {
+  border-bottom-color: var(--color-border) !important;
+}
+
+/* === TOOLTIP & POPOVER === */
+
+.tooltip-inner {
+  background-color: var(--color-primary) !important;
+}
+
+.bs-tooltip-top .tooltip-arrow::before,
+.bs-tooltip-auto[data-popper-placement^=top] .tooltip-arrow::before {
+  border-top-color: var(--color-primary) !important;
+}

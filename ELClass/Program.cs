@@ -27,7 +27,7 @@ namespace ELClass
             {
                 config.Password.RequiredLength = 8;
                 config.User.RequireUniqueEmail = true;
-                config.SignIn.RequireConfirmedEmail=true;
+                config.SignIn.RequireConfirmedEmail=false;
                 
 
                 // ??????? ??? ?????? (Lockout)

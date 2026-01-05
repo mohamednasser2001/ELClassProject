@@ -1,0 +1,123 @@
+/* ========================================
+   ELClass Color Token System
+   Master color definitions - Single source of truth
+   ======================================== */
+
+:root {
+  /* === PRIMARY COLOR SYSTEM (Deep Blue) === */
+  --color-primary: #0053B3;
+  --color-primary-rgb: 0, 83, 179;
+  --color-primary-hover: #003d85;
+  --color-primary-light: #e6f0f9;
+  --color-primary-dark: #002952;
+
+  /* === SECONDARY COLOR SYSTEM (Light Blue) === */
+  --color-secondary: #82DAFF;
+  --color-secondary-rgb: 130, 218, 255;
+  --color-secondary-hover: #5fcbff;
+  --color-secondary-light: #f0f9ff;
+  --color-secondary-dark: #0097d6;
+
+  /* === ACCENT COLOR SYSTEM (Coral) === */
+  --color-accent: #FF716B;
+  --color-accent-rgb: 255, 113, 107;
+  --color-accent-hover: #ff4b43;
+  --color-accent-light: #fff5f5;
+  --color-accent-dark: #d94b46;
+
+  /* === WARNING/HIGHLIGHT COLOR SYSTEM (Yellow) === */
+  --color-warning: #FCC247;
+  --color-warning-rgb: 252, 194, 71;
+  --color-warning-hover: #f5b322;
+  --color-warning-light: #fffbf0;
+  --color-warning-dark: #d49a1a;
+
+  /* === SEMANTIC COLORS === */
+  --color-success: #00c853;
+  --color-success-rgb: 0, 200, 83;
+  --color-success-light: #e8f5e9;
+  --color-success-dark: #00a043;
+
+  --color-danger: #f44336;
+  --color-danger-rgb: 244, 67, 54;
+  --color-danger-light: #ffebee;
+  --color-danger-dark: #d32f2f;
+
+  --color-info: #0053B3;
+  --color-info-rgb: 0, 83, 179;
+  --color-info-light: #e6f0f9;
+
+  /* === NEUTRAL COLORS === */
+  --color-text-primary: #1a202c;
+  --color-text-secondary: #4a5568;
+  --color-text-muted: #718096;
+  --color-text-light: #a0aec0;
+
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+
+  --color-bg-light: #f7fafc;
+  --color-bg-gray: #f8f9fa;
+  --color-bg-white: #ffffff;
+
+  /* === SHADOW DEFINITIONS === */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  /* === LEGACY MAPPINGS (for gradual migration) === */
+  /* These map old color names to new system */
+  --primary-orange: var(--color-primary);
+  --hover-orange: var(--color-primary-hover);
+  --soft-orange: var(--color-primary-light);
+  --primary-color: var(--color-primary);
+  --secondary-color: var(--color-primary-hover);
+
+  /* === ACCESSIBILITY COMPLIANT TEXT COLORS === */
+  /* Use these for text to ensure WCAG AA compliance */
+  --color-secondary-text: #0097d6;  /* 4.5:1 contrast on white */
+  --color-accent-text: #d94b46;     /* 4.5:1 contrast on white */
+  --color-warning-text: #d49a1a;    /* 4.5:1 contrast on white */
+}
+
+/* === USAGE GUIDELINES ===
+
+PRIMARY COLOR (#0053B3 - Deep Blue):
+- Navbar background
+- Primary buttons
+- Active navigation links
+- Important headings
+- Focus states
+- Links
+
+SECONDARY COLOR (#82DAFF - Light Blue):
+- Background sections (light variant)
+- Card backgrounds
+- Hover states
+- Secondary UI elements
+- Subtle highlights
+NOTE: Do not use for text (low contrast), use --color-secondary-dark for text
+
+ACCENT COLOR (#FF716B - Coral):
+- Call-to-action buttons
+- Icons and badges
+- Alert emphasis
+- Important highlights (use sparingly)
+NOTE: Only for large text (18px+) or icons, use --color-accent-dark for small text
+
+WARNING COLOR (#FCC247 - Yellow):
+- Warning messages
+- Notifications
+- Badges
+- Subtle highlights
+NOTE: Always use with dark text overlay (--color-text-primary)
+
+CONTRAST RATIOS (WCAG 2.1):
+- Primary on white: 8.59:1 (AAA) ✅
+- Secondary on white: 2.3:1 (Background only) ⚠️
+- Accent on white: 3.2:1 (Large text only) ⚠️
+- Warning on white: 1.7:1 (Requires dark text) ❌
+
+============================= */

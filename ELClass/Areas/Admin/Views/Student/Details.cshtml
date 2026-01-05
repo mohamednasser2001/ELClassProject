@@ -6,125 +6,6 @@
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
-<style>
-    /* 1. الإعدادات العامة والألوان */
-    :root {
-        --primary-orange: #fd7e14;
-        --hover-orange: #e86b00;
-        --soft-orange: #fffaf5;
-        --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    /* تحسين الاستجابة للهيدر */
-    .header-section {
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    /* 2. تصميم الكروت */
-    .custom-card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: var(--card-shadow);
-        background-color: #ffffff;
-        border-top: 4px solid var(--primary-orange);
-        margin-bottom: 25px;
-        overflow: hidden;
-    }
-
-    .card-header {
-        background-color: transparent !important;
-        border-bottom: 1px solid #f0f0f0 !important;
-        padding: 15px 20px !important;
-    }
-
-    .card-title {
-        font-weight: 700;
-        color: #333;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 1.1rem;
-    }
-
-    /* 3. قسم الإضافة (Assign Section) */
-    .assign-section {
-        background: var(--soft-orange);
-        border-radius: 12px;
-        padding: 1.2rem;
-        margin-top: 1rem;
-        border: 2px dashed var(--primary-orange);
-    }
-
-    /* 4. كروت العناصر */
-    .item-badge-card {
-        background: white;
-        border-radius: 10px;
-        padding: 15px;
-        border: 1px solid #eee;
-        border-inline-start: 4px solid var(--primary-orange);
-        transition: all 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-        .item-badge-card:hover {
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-
-    /* 5. الأزرار */
-    .btn-orange-custom {
-        background-color: var(--primary-orange);
-        border: none;
-        color: white !important;
-        font-weight: 500;
-        border-radius: 8px;
-        transition: 0.3s;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        white-space: nowrap;
-    }
-
-        .btn-orange-custom:hover {
-            background-color: var(--hover-orange);
-        }
-
-    /* Select2 Responsive Fix */
-    .select2-container {
-        width: 100% !important;
-    }
-
-    .select2-container--default .select2-selection--single {
-        border-radius: 8px;
-        height: 40px;
-        border-color: #dee2e6;
-        display: flex;
-        align-items: center;
-    }
-
-    /* Media Queries لضبط الشاشات الصغيرة */
-    @@media (max-width: 768px) {
-        .header-section {
-            flex-direction: column;
-            align-items: flex-start !important;
-        }
-
-        .assign-section .row > div {
-            margin-bottom: 10px;
-        }
-
-        .item-badge-card h6 {
-            font-size: 0.85rem;
-        }
-    }
-</style>
-
 <div class="container-fluid py-4" style="direction: @direction; text-align: @(direction == "rtl" ? "right" : "left")">
     <input type="hidden" id="studentId" value="@Model.Student.Id" />
 
@@ -350,7 +231,7 @@
                 text: "Remove this course enrollment?",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#fd7e14',
+                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
                 confirmButtonText: 'Yes, remove'
             }).then(r => {
                 if (r.isConfirmed) window.location.href = `/Admin/Student/RemoveCourse?courseId=${id}&studentId=${$('#studentId').val()}`;
@@ -363,7 +244,7 @@
                 text: "Unassign this instructor?",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#fd7e14',
+                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
                 confirmButtonText: 'Yes, remove'
             }).then(r => {
                 if (r.isConfirmed) window.location.href = `/Admin/Student/RemoveInstructor?insId=${id}&stdId=${$('#studentId').val()}`;
