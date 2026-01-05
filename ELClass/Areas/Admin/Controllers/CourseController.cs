@@ -46,13 +46,13 @@ namespace ELClass.Areas.Admin.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> SearchStudents(string term, int crsId)
+        public async Task<IActionResult> SearchStudents(string term, int courseId)
         {
             var students = await unitOfWork.StudentRepository.GetAsync(filter: e =>
             (e.NameAr.Contains(term) || e.NameEn.Contains(term)));
 
 
-            var crsStdunt = await unitOfWork.StudentCourseRepository.GetAsync(filter: e => e.CourseId == crsId);
+            var crsStdunt = await unitOfWork.StudentCourseRepository.GetAsync(filter: e => e.CourseId == courseId);
             if (crsStdunt.Any())
             {
                 var assignedStudentIds = crsStdunt.Select(ic => ic.StudentId).ToList();
@@ -69,13 +69,13 @@ namespace ELClass.Areas.Admin.Controllers
             return Json(result);
         }
 
-        public async Task<IActionResult> SearchInstructors(string term, int crsId)
+        public async Task<IActionResult> SearchInstructors(string term, int courseId)
         {
             var instructors = await unitOfWork.InstructorRepository.GetAsync(filter: e =>
             (e.NameAr.Contains(term) || e.NameEn.Contains(term)));
 
 
-            var insCourse = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.CourseId == crsId);
+            var insCourse = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.CourseId == courseId);
             if (insCourse.Any())
             {
                 var assignedStudentIds = insCourse.Select(ic => ic.InstructorId).ToList();

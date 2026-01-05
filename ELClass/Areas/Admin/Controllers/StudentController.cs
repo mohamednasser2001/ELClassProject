@@ -93,7 +93,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
 
             var courses = await unitOfWork.StudentCourseRepository.GetAsync(filter: e => e.StudentId == id, include: e => e.Include(e => e.Course));
-            var instructors = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Instructor));
+            var instructors = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.StudentId == id, include: e => e.Include(e => e.Instructor));
             var model = new StudentDetailsVM()
             {
                 Student = student,
@@ -187,7 +187,7 @@ namespace ELClass.Areas.Admin.Controllers
                 if (suc)
                 {
 
-                    return RedirectToAction("details", new { id = insId });
+                    return RedirectToAction("details", new { id = stdId });
                 }
 
             }

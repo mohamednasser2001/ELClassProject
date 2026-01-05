@@ -37,6 +37,12 @@ namespace ELClass
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            // add identity to url 
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Identity/Account/Login";
+                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+            });
             builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             // add the DbContext 
