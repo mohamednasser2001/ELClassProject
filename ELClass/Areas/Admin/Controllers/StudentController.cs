@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels.Student;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
@@ -20,7 +21,7 @@ namespace ELClass.Areas.Admin.Controllers
         {
             return View();
         }
-
+        [HttpPost]
         public async Task<IActionResult> GetStudents()
         {
             try
@@ -107,10 +108,12 @@ namespace ELClass.Areas.Admin.Controllers
         {
             if (courseId != 0 && studentId != null)
             {
-                var studentCourse = new StudentCourse()
+                var studentCourse = new StudentCourse
                 {
                     CourseId = courseId,
-                    StudentId = studentId
+                    StudentId = studentId,
+                    CreatedAt = DateTime.Now,
+                    CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 };
                 var res = await unitOfWork.StudentCourseRepository.CreateAsync(studentCourse);
 
@@ -132,10 +135,12 @@ namespace ELClass.Areas.Admin.Controllers
         {
             if (studentId != null && instructorId != null)
             {
-                var instructorStudent = new InstructorStudent()
+                var instructorStudent = new InstructorStudent
                 {
                     StudentId = studentId,
-                    InstructorId = instructorId
+                    InstructorId = instructorId,
+                    CreatedAt = DateTime.Now,
+                    CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 };
                 var res =await unitOfWork.InstructorStudentRepository.CreateAsync(instructorStudent);
                 if (res)
@@ -151,6 +156,130 @@ namespace ELClass.Areas.Admin.Controllers
             return View("AdminNotFoundPage");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GetStudentCourses()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+                var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var studentId = Request.Form["studentId"].FirstOrDefault();
+
+                var courses = await unitOfWork.StudentCourseRepository.GetAsync(
+                    filter: e => e.StudentId == studentId,
+                    include: e => e.Include(x => x.Course),
+                    orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue)
+                );
+
+                var data = courses.Select(c => new
+                {
+                    courseId = c.CourseId,
+                    title = c.Course.TitleEn
+                }).ToList();
+
+                
+                if (!string.IsNullOrWhiteSpace(searchValue))
+                {
+                    data = data
+                        .Where(x =>
+                            x.title != null &&
+                            x.title.Contains(searchValue, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                var recordsTotal = data.Count;
+
+                var result = data
+                    .Skip(start)
+                    .Take(length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw,
+                    recordsTotal,
+                    recordsFiltered = recordsTotal,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    draw = Request.Form["draw"].FirstOrDefault(),
+                    recordsTotal = 0,
+                    recordsFiltered = 0,
+                    data = new List<object>(),
+                    error = ex.Message
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetStudentInstructors()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+                var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var studentId = Request.Form["studentId"].FirstOrDefault();
+
+                var instructors = await unitOfWork.InstructorStudentRepository.GetAsync(
+                    filter: e => e.StudentId == studentId,
+                    include: e => e.Include(x => x.Instructor),
+                    orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue)
+                );
+
+                var data = instructors.Select(i => new
+                {
+                    instructorId = i.InstructorId,
+                    name = i.Instructor.NameEn
+                }).ToList();
+
+                
+                if (!string.IsNullOrWhiteSpace(searchValue))
+                {
+                    data = data
+                        .Where(x =>
+                            x.name != null &&
+                            x.name.Contains(searchValue, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                var recordsTotal = data.Count;
+
+                var result = data
+                    .Skip(start)
+                    .Take(length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw,
+                    recordsTotal,
+                    recordsFiltered = recordsTotal,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    draw = Request.Form["draw"].FirstOrDefault(),
+                    recordsTotal = 0,
+                    recordsFiltered = 0,
+                    data = new List<object>(),
+                    error = ex.Message
+                });
+            }
+        }
+
+
+
         public async Task<IActionResult> RemoveCourse(int courseId, string studentId)
         {
             var course = unitOfWork.StudentCourseRepository.GetOne(filter: e => e.StudentId == studentId && e.CourseId == courseId);
@@ -165,7 +294,7 @@ namespace ELClass.Areas.Admin.Controllers
                 var suc = await unitOfWork.CommitAsync();
                 if (suc)
                 {
-                    return RedirectToAction("details", new { id = studentId });
+                    return Json(new { success = true });
                 }
 
             }
@@ -187,7 +316,7 @@ namespace ELClass.Areas.Admin.Controllers
                 if (suc)
                 {
 
-                    return RedirectToAction("details", new { id = stdId });
+                    return Json(new { success = true });
                 }
 
             }

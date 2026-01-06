@@ -8,9 +8,9 @@ namespace Models
     public class AuditLogging
     {
        
-        public DateTime? CreateAT { get; set; } = DateTime.Now;
-        public string? CreateById { get; set; }
-        [ForeignKey(nameof(CreateById))]
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
+        public string? CreatedById { get; set; }
+        [ForeignKey(nameof(CreatedById))]
         public ApplicationUser? ApplicationUser { get; set; }
        
         public DateTime? UpdatedAT { get; set; }

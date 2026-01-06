@@ -6,35 +6,54 @@
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
-<div class="container-fluid py-4" style="direction: @direction; text-align: @(direction == "rtl" ? "right" : "left")">
+<div class="container-fluid py-4" style="direction:@direction">
+
     <input type="hidden" id="studentId" value="@Model.Student.Id" />
 
-    <div class="d-flex justify-content-between align-items-center mb-4 header-section">
-        <div>
-            <h2 class="fw-bold mb-1 fs-3"><i class="fas fa-user-graduate text-orange me-2"></i> Student Management</h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/Admin/Student" class="text-muted text-decoration-none">Students</a></li>
-                    <li class="breadcrumb-item active text-orange" aria-current="page">@Model.Student.NameEn</li>
-                </ol>
-            </nav>
-        </div>
-        <span class="badge bg-white text-dark border p-2 shadow-sm">
-            <i class="fas fa-id-card" style="color:var(--primary-orange)"></i> Student ID: @Model.Student.Id
-        </span>
+    <!-- ================= HEADER ================= -->
+    <div class="page-header">
+        <h2>
+            <i class="fas fa-user-graduate icon-primary me-2"></i>
+            @Model.Student.NameEn
+        </h2>
     </div>
 
-    <div class="row">
+    <!-- ================= PROFILE ================= -->
+    <div class="row mb-4">
+
+        <div class="col-6 col-md-6 col-xl-3 mb-3">
+            <div class="stat-card text-center">
+                <i class="fas fa-book fa-2x mb-2"></i>
+                <h3>@Model.StudentCourses.Count()</h3>
+                <p>@(currentLang == "ar" ? "الكورسات" : "Courses")</p>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-6 col-xl-3 mb-3">
+            <div class="stat-card text-center">
+                <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                <h3>@Model.InstructorStudents.Count()</h3>
+                <p>@(currentLang == "ar" ? "المدربين" : "Instructors")</p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row mb-4">
         <div class="col-12 col-xl-4">
             <div class="card custom-card">
                 <div class="card-header">
-                    <h5 class="card-title"><i class="fas fa-camera" style="color:var(--primary-orange)"></i> Profile Picture</h5>
+                    <h5 class="card-title">
+                        <i class="fas fa-image icon-primary"></i> Photo
+                    </h5>
                 </div>
                 <div class="card-body text-center">
                     <img class="rounded-circle img-thumbnail mb-3 shadow-sm"
                          src="https://ui-avatars.com/api/?name=@Model.Student.NameEn&background=fffaf5&color=fd7e14&size=128"
-                         style="width:140px; height:140px; border: 3px solid var(--soft-orange); object-fit: cover;">
-                    <button class="btn btn-orange-custom w-100"><i class="fas fa-upload"></i> Update Photo</button>
+                         style="width:140px;height:140px;object-fit:cover;">
+                    <button class="btn btn-orange-custom w-100">
+                        <i class="fas fa-sync me-1"></i> Update Image
+                    </button>
                 </div>
             </div>
         </div>
@@ -42,213 +61,350 @@
         <div class="col-12 col-xl-8">
             <div class="card custom-card">
                 <div class="card-header">
-                    <h5 class="card-title"><i class="fas fa-user-edit" style="color:var(--primary-orange)"></i> Account Information</h5>
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle icon-primary"></i> Information
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Full Name (English)</label>
-                            <input class="form-control bg-light" value="@Model.Student.NameEn" readonly>
+                            <label class="small fw-bold text-muted">Name (EN)</label>
+                            <input class="form-control bg-light" value="@Model.Student.NameEn" readonly />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Username</label>
-                            <input class="form-control bg-light" value="@Model.Student.ApplicationUser.UserName" readonly>
+                            <label class="small fw-bold text-muted">Email</label>
+                            <input class="form-control bg-light" value="@Model.Student.ApplicationUser?.Email" readonly />
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="small mb-1 fw-bold text-muted">Email Address</label>
-                        <input class="form-control bg-light" value="@Model.Student.ApplicationUser.Email" readonly>
-                    </div>
-                    <button class="btn btn-orange-custom px-4"><i class="fas fa-save"></i> Edit Profile</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ================= COURSES ================= -->
     <div class="card custom-card">
         <div class="card-header">
-            <h5 class="card-title"><i class="fas fa-book-reader" style="color:var(--primary-orange)"></i> Enrolled Courses</h5>
+            <h5 class="card-title">
+                <i class="fas fa-book-reader icon-primary"></i>
+                @(currentLang == "ar" ? "الكورسات" : "Enrolled Courses")
+            </h5>
         </div>
+
         <div class="card-body">
-            <div class="row">
-                @if (Model.StudentCourses.Any())
-                {
-                    foreach (var item in Model.StudentCourses)
-                    {
-                        <div class="col-6 col-md-4 col-lg-3 mb-3">
-                            <div class="item-badge-card">
-                                <div class="mb-3">
-                                    <small class="text-muted d-block mb-1">Course Title</small>
-                                    <h6 class="fw-bold text-dark mb-0 text-truncate" title="@item.Course.TitleEn">@item.Course.TitleEn</h6>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    <a class="btn btn-sm btn-light border flex-grow-1" href="/Admin/Course/Details/@item.CourseId" title="View"><i class="fas fa-eye text-primary"></i></a>
-                                    <button class="btn btn-sm btn-light border flex-grow-1" onclick="removeCourse(@item.CourseId)" title="Remove"><i class="fas fa-trash text-danger"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="col-12 text-center py-4 text-muted">No courses found for this student.</div>
-                }
+
+            <div class="table-responsive mb-3">
+                <table id="StudentCoursesTable" class="table admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@(currentLang == "ar" ? "اسم الكورس" : "Course")</th>
+                            <th class="text-center">@((currentLang == "ar") ? "التحكم" : "Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
-            <div class="assign-section mt-4">
-                <label class="fw-bold mb-2 small"><i class="fas fa-plus-circle text-orange"></i> Enroll in New Course</label>
+            <div class="assign-section">
+                <label class="fw-bold small mb-2">
+                    <i class="fas fa-plus-circle text-orange"></i>
+                    @(currentLang == "ar" ? "إضافة كورس" : "Assign Course")
+                </label>
+
                 <div class="row g-2">
-                    <div class="col-12 col-md-9">
+                    <div class="col-md-9">
                         <select id="courseSelect" class="form-control"></select>
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-md-3">
                         <button id="assignCourseBtn" class="btn btn-orange-custom w-100">
-                            <i class="fas fa-plus"></i> Enroll
+                            <i class="fas fa-plus"></i> Assign
                         </button>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <div class="card custom-card">
+    <!-- ================= INSTRUCTORS ================= -->
+    <div class="card custom-card mt-4">
         <div class="card-header">
-            <h5 class="card-title"><i class="fas fa-chalkboard-teacher" style="color:var(--primary-orange)"></i> Assigned Instructors</h5>
+            <h5 class="card-title">
+                <i class="fas fa-chalkboard-teacher icon-primary"></i>
+                @(currentLang == "ar" ? "المدربين" : "Assigned Instructors")
+            </h5>
         </div>
+
         <div class="card-body">
-            <div class="row">
-                @if (Model.InstructorStudents.Any())
-                {
-                    foreach (var item in Model.InstructorStudents)
-                    {
-                        <div class="col-6 col-md-4 col-lg-3 mb-3">
-                            <div class="item-badge-card text-center">
-                                <div class="mb-3">
-                                    <i class="fas fa-user-tie fa-2x mb-2 text-muted"></i>
-                                    <h6 class="fw-bold text-dark mb-0 text-truncate">@item.Instructor.NameEn</h6>
-                                    <small class="text-muted">Instructor</small>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    <a class="btn btn-sm btn-light border flex-grow-1" href="/Admin/Instructor/Details/@item.InstructorId"><i class="fas fa-eye text-primary"></i></a>
-                                    <button class="btn btn-sm btn-light border flex-grow-1" onclick="removeInstructor('@item.InstructorId')"><i class="fas fa-trash text-danger"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="col-12 text-center py-4 text-muted">No instructors assigned.</div>
-                }
+
+            <div class="table-responsive mb-3">
+                <table id="StudentInstructorsTable" class="table admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@(currentLang == "ar" ? "الاسم" : "Instructor")</th>
+                            <th class="text-center">@((currentLang == "ar") ? "التحكم" : "Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
-            <div class="assign-section mt-4">
-                <label class="fw-bold mb-2 small"><i class="fas fa-user-plus text-orange"></i> Assign New Instructor</label>
+            <div class="assign-section">
+                <label class="fw-bold small mb-2">
+                    <i class="fas fa-user-plus text-orange"></i>
+                    @(currentLang == "ar" ? "إضافة مدرب" : "Assign Instructor")
+                </label>
+
                 <div class="row g-2">
-                    <div class="col-12 col-md-9">
+                    <div class="col-md-9">
                         <select id="instructorSelect" class="form-control"></select>
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-md-3">
                         <button id="assignInstructorBtn" class="btn btn-orange-custom w-100">
                             <i class="fas fa-plus"></i> Assign
                         </button>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
+
 </div>
 
 @section Scripts {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function () {
-            const stdId = $('#studentId').val();
 
-            // 1. Course Search Select2
+            const studentId = $('#studentId').val();
+
+            /* ================= COURSES TABLE ================= */
+            const coursesTable = $('#StudentCoursesTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ordering: false,
+                responsive: true,
+                autoWidth: false,
+                ajax: {
+                    url: '/Admin/Student/GetStudentCourses',
+                    type: 'POST',
+                    data: function (d) {
+                        d.studentId = studentId;
+                    }
+                },
+                columns: [
+                    {
+                        data: null,
+                        render: (d, t, r, m) => `<span class="text-muted">${m.row + 1}</span>`
+                    },
+                    { data: 'title' },
+                    {
+                        data: 'courseId',
+                        className: 'text-center',
+                        render: (id, type, row) => `
+                            <div class="action-buttons justify-content-center">
+                                <a href="/Admin/Course/Details/${id}" class="btn btn-sm btn-light border">
+                                    <i class="fas fa-eye text-primary"></i>
+                                </a>
+                                <button class="btn btn-sm btn-light border"
+                                    onclick="removeCourse('${id}', '${row.title}')">
+                                    <i class="fas fa-trash text-danger"></i>
+                                </button>
+                            </div>`
+                    }
+                ]
+            });
+
+            /* ================= INSTRUCTORS TABLE ================= */
+            const instructorsTable = $('#StudentInstructorsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ordering: false,
+                responsive: true,
+                autoWidth: false,
+                ajax: {
+                    url: '/Admin/Student/GetStudentInstructors',
+                    type: 'POST',
+                    data: function (d) {
+                        d.studentId = studentId;
+                    }
+                },
+                columns: [
+                    {
+                        data: null,
+                        render: (d, t, r, m) => `<span class="text-muted">${m.row + 1}</span>`
+                    },
+                    { data: 'name' },
+                    {
+                        data: 'instructorId',
+                        className: 'text-center',
+                        render: (id, type, row) => `
+                            <div class="action-buttons justify-content-center">
+                                <a href="/Admin/Instructor/Details/${id}" class="btn btn-sm btn-light border">
+                                    <i class="fas fa-eye text-primary"></i>
+                                </a>
+                                <button class="btn btn-sm btn-light border"
+                                    onclick="removeInstructor('${id}', '${row.name}')">
+                                    <i class="fas fa-trash text-danger"></i>
+                                </button>
+                            </div>`
+                    }
+                ]
+            });
+
+            /* ================= SELECT2 ================= */
             $('#courseSelect').select2({
-                placeholder: "Search course...",
-                allowClear: true,
+                placeholder: 'Search course...',
+                minimumInputLength: 2,
                 width: '100%',
+                dropdownParent: $('#courseSelect').closest('.assign-section'),
                 ajax: {
                     url: '/Admin/Student/SearchCourses',
-                    data: params => ({ term: params.term, stdId: stdId }),
-                    processResults: data => ({ results: data })
+                    delay: 300,
+                    data: p => ({ term: p.term, stdId: studentId }),
+                    processResults: d => ({ results: d })
                 }
             });
 
-            // 2. Instructor Search Select2
             $('#instructorSelect').select2({
-                placeholder: "Search instructor...",
-                allowClear: true,
+                placeholder: 'Search instructor...',
+                minimumInputLength: 2,
                 width: '100%',
+                dropdownParent: $('#instructorSelect').closest('.assign-section'),
                 ajax: {
                     url: '/Admin/Student/SearchInstructors',
-                    data: params => ({ term: params.term, studentId: stdId }),
-                    processResults: data => ({ results: data })
+                    delay: 300,
+                    data: p => ({ term: p.term, studentId }),
+                    processResults: d => ({ results: d })
                 }
             });
 
-            // 3. Assign Course AJAX
-            $('#assignCourseBtn').click(function () {
-                const cId = $('#courseSelect').val();
-                if (!cId) return Swal.fire('Note', 'Please select a course', 'info');
+            /* ================= ASSIGN ================= */
+            $('#assignCourseBtn').click(() =>
+                assign('/Admin/Student/AssignCourse',
+                    { studentId, courseId: $('#courseSelect').val() },
+                    'Course assigned successfully.'
+                )
+            );
 
-                $.ajax({
-                    url: '/Admin/Student/AssignCourse',
-                    type: 'POST',
-                    data: { studentId: stdId, courseId: cId },
-                    beforeSend: () => $('#assignCourseBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>'),
-                    success: res => { if (res.success) location.reload(); else Swal.fire('Error', res.message, 'error'); },
-                    error: () => Swal.fire('Error', 'Connection error', 'error'),
-                    complete: () => $('#assignCourseBtn').prop('disabled', false).html('<i class="fas fa-plus"></i> Enroll')
-                });
-            });
+            $('#assignInstructorBtn').click(() =>
+                assign('/Admin/Student/AssignInstructor',
+                    { studentId, instructorId: $('#instructorSelect').val() },
+                    'Instructor assigned successfully.'
+                )
+            );
 
-            // 4. Assign Instructor AJAX
-            $('#assignInstructorBtn').click(function () {
-                const insId = $('#instructorSelect').val();
-                if (!insId) return Swal.fire('Note', 'Please select an instructor', 'info');
-
-                $.ajax({
-                    url: '/Admin/Student/AssignInstructor',
-                    type: 'POST',
-                    data: { studentId: stdId, instructorId: insId },
-                    beforeSend: () => $('#assignInstructorBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>'),
-                    success: res => { if (res.success) location.reload(); else Swal.fire('Error', res.message, 'error'); },
-                    error: () => Swal.fire('Error', 'Connection error', 'error'),
-                    complete: () => $('#assignInstructorBtn').prop('disabled', false).html('<i class="fas fa-plus"></i> Assign')
-                });
-            });
         });
 
-        // Remove Functions
-        function removeCourse(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Remove this course enrollment?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-                confirmButtonText: 'Yes, remove'
-            }).then(r => {
-                if (r.isConfirmed) window.location.href = `/Admin/Student/RemoveCourse?courseId=${id}&studentId=${$('#studentId').val()}`;
+        /* ================= ASSIGN FUNCTION ================= */
+        function assign(url, data, successMessage) {
+            const value = Object.values(data)[1];
+            if (!value) return Swal.fire('Wait', 'Select item first', 'warning');
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: data,
+                beforeSend: function () {
+                    Swal.fire({
+                        title: 'Saving...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                },
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire({ icon: 'success', title: 'Done', text: successMessage, timer: 1200, showConfirmButton: false });
+                        $('#StudentCoursesTable').DataTable().ajax.reload(null, false);
+                        $('#StudentInstructorsTable').DataTable().ajax.reload(null, false);
+                        $('#courseSelect').val(null).trigger('change');
+                        $('#instructorSelect').val(null).trigger('change');
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Operation failed' });
+                    }
+                },
+                error: function () {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Server error occurred' });
+                }
             });
         }
 
-        function removeInstructor(id) {
+        /* ================= REMOVE ================= */
+        function removeCourse(id, title) {
             Swal.fire({
-                title: 'Are you sure?',
-                text: "Unassign this instructor?",
+                title: 'Remove Course?',
+                html: `<p>You are about to remove the course <strong>${title}</strong> from the student.</p>`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-                confirmButtonText: 'Yes, remove'
+                confirmButtonText: 'Yes, remove',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: getComputedStyle(document.documentElement)
+                    .getPropertyValue('--color-primary').trim()
             }).then(r => {
-                if (r.isConfirmed) window.location.href = `/Admin/Student/RemoveInstructor?insId=${id}&stdId=${$('#studentId').val()}`;
+                if (r.isConfirmed) {
+                    $.ajax({
+                        url: '/Admin/Student/RemoveCourse',
+                        type: 'GET',
+                        data: { courseId: id, studentId: $('#studentId').val() },
+                        beforeSend: function () {
+                            Swal.fire({
+                                title: 'Removing...',
+                                allowOutsideClick: false,
+                                didOpen: () => Swal.showLoading()
+                            });
+                        },
+                        success: function () {
+                            Swal.fire({ icon: 'success', title: 'Removed!', timer: 1200, showConfirmButton: false });
+                            $('#StudentCoursesTable').DataTable().ajax.reload(null, false);
+                        },
+                        error: function () {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to remove course' });
+                        }
+                    });
+                }
+            });
+        }
+
+        function removeInstructor(id, name) {
+            Swal.fire({
+                title: 'Unassign Instructor?',
+                html: `<p>You are about to unassign the instructor <strong>${name}</strong> from the student.</p>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, remove',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: getComputedStyle(document.documentElement)
+                    .getPropertyValue('--color-primary').trim()
+            }).then(r => {
+                if (r.isConfirmed) {
+                    $.ajax({
+                        url: '/Admin/Student/RemoveInstructor',
+                        type: 'GET',
+                        data: { insId: id, stdId: $('#studentId').val() },
+                        beforeSend: function () {
+                            Swal.fire({
+                                title: 'Removing...',
+                                allowOutsideClick: false,
+                                didOpen: () => Swal.showLoading()
+                            });
+                        },
+                        success: function () {
+                            Swal.fire({ icon: 'success', title: 'Removed!', timer: 1200, showConfirmButton: false });
+                            $('#StudentInstructorsTable').DataTable().ajax.reload(null, false);
+                        },
+                        error: function () {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to remove instructor' });
+                        }
+                    });
+                }
             });
         }
     </script>
+
+
 }
