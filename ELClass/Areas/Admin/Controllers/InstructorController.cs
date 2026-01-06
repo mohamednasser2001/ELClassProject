@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels.Instructor;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
@@ -109,23 +110,23 @@ namespace ELClass.Areas.Admin.Controllers
 
 
 
-        public async Task<IActionResult> AssignCourse(int courseId , string instructorId)
+        public async Task<IActionResult> AssignCourse(int courseId, string instructorId)
         {
-            if (courseId != 0 && instructorId != null)
-            {
-                var instructorCourse = new InstructorCourse()
-                {
-                    CourseId = courseId,
-                    InstructorId = instructorId
-                };
-                await unitOfWork.InstructorCourseRepository.CreateAsync(instructorCourse);
-                await unitOfWork.CommitAsync();
-                return Json( new {success = true});
+            if (courseId == 0 || string.IsNullOrEmpty(instructorId))
+                return BadRequest();
 
-            }
-            
-                return View("AdminNotFoundPage");
-            
+            var instructorCourse = new InstructorCourse
+            {
+                CourseId = courseId,
+                InstructorId = instructorId,
+                CreatedAt = DateTime.Now,
+                CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            };
+
+            await unitOfWork.InstructorCourseRepository.CreateAsync(instructorCourse);
+            await unitOfWork.CommitAsync();
+
+            return Json(new { success = true });
         }
 
 
@@ -133,10 +134,12 @@ namespace ELClass.Areas.Admin.Controllers
         {
             if (studentId !=null && instructorId != null)
             {
-                var instructorStudent = new InstructorStudent()
+                var instructorStudent = new InstructorStudent
                 {
                     StudentId = studentId,
-                    InstructorId = instructorId
+                    InstructorId = instructorId,
+                    CreatedAt = DateTime.Now,
+                    CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 };
                 await unitOfWork.InstructorStudentRepository.CreateAsync(instructorStudent);
                 await unitOfWork.CommitAsync();
@@ -265,6 +268,119 @@ namespace ELClass.Areas.Admin.Controllers
 
             return Json(users);
         }
+
+
+        [HttpPost]
+        public async Task<IActionResult> GetInstructorCourses()
+        {
+            var draw = Request.Form["draw"].FirstOrDefault();
+            var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+            var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+            var searchValue = Request.Form["search[value]"].FirstOrDefault();
+            var instructorId = Request.Form["instructorId"].FirstOrDefault();
+
+            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(
+                filter: e => e.InstructorId == instructorId,
+                include: e => e.Include(x => x.Course),
+                orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue)
+            );
+
+            var data = courses.Select(c => new
+            {
+                courseId = c.CourseId,
+                title = c.Course.TitleEn
+            }).ToList();
+
+            if (!string.IsNullOrWhiteSpace(searchValue))
+            {
+                data = data
+                    .Where(x => x.title != null &&
+                                x.title.Contains(searchValue, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            var recordsTotal = data.Count;
+
+            var result = data
+                .Skip(start)
+                .Take(length)
+                .ToList();
+
+            return Json(new
+            {
+                draw,
+                recordsTotal,
+                recordsFiltered = recordsTotal,
+                data = result
+            });
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> GetInstructorStudents()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+                var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var instructorId = Request.Form["instructorId"].FirstOrDefault();
+
+                var students = await unitOfWork.InstructorStudentRepository.GetAsync(
+                    filter: e => e.InstructorId == instructorId,
+                    include: e => e.Include(x => x.Student),
+                    orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue)
+                );
+
+                var data = students.Select(s => new
+                {
+                    studentId = s.StudentId,
+                    name = s.Student.NameEn
+                }).ToList();
+
+                // 🔍 SEARCH (DataTable)
+                if (!string.IsNullOrWhiteSpace(searchValue))
+                {
+                    data = data
+                        .Where(x =>
+                            x.name != null &&
+                            x.name.Contains(searchValue, StringComparison.OrdinalIgnoreCase)
+                        )
+                        .ToList();
+                }
+
+                var recordsTotal = data.Count;
+
+                var result = data
+                    .Skip(start)
+                    .Take(length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw,
+                    recordsTotal,
+                    recordsFiltered = recordsTotal,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    draw = Request.Form["draw"].FirstOrDefault(),
+                    recordsTotal = 0,
+                    recordsFiltered = 0,
+                    data = new List<object>(),
+                    error = ex.Message
+                });
+            }
+        }
+
+
+
+
         public IActionResult Create()
         {
             

@@ -40,16 +40,16 @@
 /* === TABLE STYLING === */
 
 /* Course Table */
-#coursesTable,
+/*#coursesTable,
 #studentsTable,
 #instructorsTable,
 .admin-table {
     border-collapse: separate;
     border-spacing: 0 10px;
     width: 100%;
-}
+}*/
 
-#coursesTable thead th,
+/*#coursesTable thead th,
 #studentsTable thead th,
 #instructorsTable thead th,
 .admin-table thead th {
@@ -60,16 +60,16 @@
     text-transform: uppercase;
     font-size: 0.85rem;
     padding: 15px;
-}
+}*/
 
-#coursesTable tbody tr,
+/*#coursesTable tbody tr,
 #studentsTable tbody tr,
 #instructorsTable tbody tr,
 .admin-table tbody tr {
     background-color: var(--color-bg-white);
     transition: all 0.3s ease;
-}
-
+}*/
+/*
 #coursesTable tbody tr:hover,
 #studentsTable tbody tr:hover,
 #instructorsTable tbody tr:hover,
@@ -77,9 +77,9 @@
     background-color: var(--color-secondary-light);
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
-}
+}*/
 
-#coursesTable td,
+/*#coursesTable td,
 #studentsTable td,
 #instructorsTable td,
 .admin-table td {
@@ -87,7 +87,7 @@
     padding: 12px 15px;
     vertical-align: middle;
     border-bottom: 1px solid var(--color-border-light) !important;
-}
+}*/
 
 /* Hide DataTable sorting arrows */
 table.dataTable thead th::before,
@@ -471,7 +471,7 @@ table.dataTable thead th::after {
         width: 100%;
     }
 
-    #coursesTable thead,
+/*    #coursesTable thead,
     #studentsTable thead,
     #instructorsTable thead {
         display: none;
@@ -484,25 +484,25 @@ table.dataTable thead th::after {
         margin-bottom: 1rem;
         border: 1px solid var(--color-border);
         border-radius: 8px;
-    }
+    }*/
 
-    #coursesTable td,
+/*    #coursesTable td,
     #studentsTable td,
     #instructorsTable td {
         display: block;
         text-align: right !important;
         padding: 10px !important;
         border-bottom: 1px solid var(--color-border-light) !important;
-    }
+    }*/
 
-    #coursesTable td::before,
+/*    #coursesTable td::before,
     #studentsTable td::before,
     #instructorsTable td::before {
         content: attr(data-label);
         float: left;
         font-weight: 600;
         color: var(--color-text-secondary);
-    }
+    }*/
 }
 
 /* === PRINT STYLES === */

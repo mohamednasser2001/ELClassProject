@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Models
 {
     [PrimaryKey("StudentId", "CourseId")]
-    public class StudentCourse
+    public class StudentCourse : AuditLogging
     {
         public string StudentId { get; set; } = string.Empty;
         public Student Student { get; set; }

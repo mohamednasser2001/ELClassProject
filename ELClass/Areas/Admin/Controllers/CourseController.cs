@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Area("Admin")]
     public class CourseController : Controller
     {
@@ -111,12 +111,12 @@ namespace ELClass.Areas.Admin.Controllers
                         return Json(new { success = true });
                     }
                 }
-                return BadRequest();
+                
+                return Json(new { success = false, message = "There was an error while assigning the instructor to the course." });
             }
 
             return View("AdminNotFoundPage");
         }
-
 
         public async Task<IActionResult> AssignStudent(int courseId, string studentId)
         {
@@ -145,30 +145,33 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> RemoveStudent(int courseId, string studentId)
         {
-            var course = unitOfWork.StudentCourseRepository.GetOne(filter: e => e.StudentId == studentId && e.CourseId == courseId);
-            if (course == null)
+            var studentCourse = unitOfWork.StudentCourseRepository.GetOne(filter: e => e.StudentId == studentId && e.CourseId == courseId);
+            if (studentCourse == null)
             {
-                return View("AdminNotFoundPage");
+                
+                return Json(new { success = false, message = "Student is not assigned to this course." });
             }
 
-            var result = await unitOfWork.StudentCourseRepository.DeleteAsync(course);
+            var result = await unitOfWork.StudentCourseRepository.DeleteAsync(studentCourse);
             if (result)
             {
                 var suc = await unitOfWork.CommitAsync();
                 if (suc)
                 {
-                    return RedirectToAction("details", "course", new { id = courseId });
+                    return RedirectToAction("Details", "Course", new { id = courseId });
                 }
-
             }
-            return BadRequest();
+
+            
+            return Json(new { success = false, message = "There was an error removing the student." });
         }
+
         public async Task<IActionResult> RemoveInstructor(int CourseId, string instructorId)
         {
             var instructor = unitOfWork.InstructorCourseRepository.GetOne(filter: e => e.InstructorId == instructorId && e.CourseId == CourseId);
             if (instructor == null)
             {
-                return View("AdminNotFoundPage");
+                return Json(new { success = false, message = "Instructor is not assigned to this course." });
             }
 
             var result = await unitOfWork.InstructorCourseRepository.DeleteAsync(instructor);
@@ -177,12 +180,79 @@ namespace ELClass.Areas.Admin.Controllers
                 var suc = await unitOfWork.CommitAsync();
                 if (suc)
                 {
-
-                    return RedirectToAction("details", "course" ,new { id = CourseId });
+                    return RedirectToAction("Details", "Course", new { id = CourseId });
                 }
-
             }
-            return BadRequest();
+
+            return Json(new { success = false, message = "There was an error removing the instructor." });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCourseInstructors(int courseId)
+        {
+            var draw = Request.Form["draw"].FirstOrDefault();
+            var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+            var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+            var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
+
+            // جلب البيانات مع الـ Include للمدرب
+            var query = await unitOfWork.InstructorCourseRepository.GetAsync(
+                filter: e => e.CourseId == courseId,
+                include: e => e.Include(i => i.Instructor)
+            );
+
+            var lang = HttpContext.Session.GetString("Language") ?? "en";
+
+            var data = query.Select(ic => new
+            {
+                instructorId = ic.InstructorId,
+                name = lang == "en" ? ic.Instructor.NameEn : ic.Instructor.NameAr
+            }).AsQueryable();
+
+            // البحث
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                data = data.Where(m => m.name.ToLower().Contains(searchValue.ToLower()));
+            }
+
+            var recordsTotal = query.Count();
+            var recordsFiltered = data.Count();
+            var result = data.Skip(start).Take(length).ToList();
+
+            return Json(new { draw, recordsTotal, recordsFiltered, data = result });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCourseStudents(int courseId)
+        {
+            var draw = Request.Form["draw"].FirstOrDefault();
+            var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+            var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+            var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
+
+            var query = await unitOfWork.StudentCourseRepository.GetAsync(
+                filter: e => e.CourseId == courseId,
+                include: e => e.Include(s => s.Student)
+            );
+
+            var lang = HttpContext.Session.GetString("Language") ?? "en";
+
+            var data = query.Select(sc => new
+            {
+                studentId = sc.StudentId,
+                name = lang == "en" ? sc.Student.NameEn : sc.Student.NameAr
+            }).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                data = data.Where(m => m.name.ToLower().Contains(searchValue.ToLower()));
+            }
+
+            var recordsTotal = query.Count();
+            var recordsFiltered = data.Count();
+            var result = data.Skip(start).Take(length).ToList();
+
+            return Json(new { draw, recordsTotal, recordsFiltered, data = result });
         }
 
 
@@ -191,42 +261,55 @@ namespace ELClass.Areas.Admin.Controllers
         {
             try
             {
-
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
                 var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
-
+                var orderColumn = Request.Form["order[0][column]"].FirstOrDefault(); 
+                var orderDir = Request.Form["order[0][dir]"].FirstOrDefault(); 
 
                 var courses = await unitOfWork.CourseRepository.GetAsync();
                 var lang = HttpContext.Session.GetString("Language") ?? "en";
-
 
                 var data = courses.Select(c => new
                 {
                     id = c.Id,
                     title = lang == "en" ? c.TitleEn : c.TitleAr,
                     description = lang == "en" ? c.DescriptionEn : c.DescriptionAr
-                }).ToList();
+                }).AsQueryable();
 
+               
+                if (!string.IsNullOrEmpty(orderColumn))
+                {
+                    var columnIndex = int.Parse(orderColumn);
+                    if (orderDir == "asc")
+                        data = columnIndex switch
+                        {
+                            1 => data.OrderBy(c => c.title),
+                            2 => data.OrderBy(c => c.description),
+                            _ => data.OrderBy(c => c.id)
+                        };
+                    else
+                        data = columnIndex switch
+                        {
+                            1 => data.OrderByDescending(c => c.title),
+                            2 => data.OrderByDescending(c => c.description),
+                            _ => data.OrderByDescending(c => c.id)
+                        };
+                }
 
+               
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     data = data.Where(c =>
                         (c.title != null && c.title.ToLower().Contains(searchValue.ToLower())) ||
                         (c.description != null && c.description.ToLower().Contains(searchValue.ToLower()))
-                    ).ToList();
+                    );
                 }
-
 
                 var recordsTotal = courses.Count();
                 var recordsFiltered = data.Count();
-
-
-                var result = data
-                    .Skip(start)
-                    .Take(length)
-                    .ToList();
+                var result = data.Skip(start).Take(length).ToList();
 
                 return Json(new
                 {
@@ -264,16 +347,17 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 return View(crs);
             }
+
             var course = new Course()
             {
                 TitleAr = crs.TitleAr,
                 TitleEn = crs.TitleEn,
                 DescriptionAr = crs.DescriptionAr,
                 DescriptionEn = crs.DescriptionEn,
-                CreateAT = DateTime.Now,
-                CreateById = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                //UpdatedAT = DateTime.Now,
+                CreatedAt = DateTime.Now, 
+                CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier) 
             };
+
             await unitOfWork.CourseRepository.CreateAsync(course);
             var commit = await unitOfWork.CommitAsync();
             if (!commit)
@@ -294,6 +378,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
             return View(course);
         }
+
         [ValidateAntiForgeryToken]
         [HttpPost]
         public async Task<IActionResult> Edit(Course crs)
@@ -305,7 +390,9 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 return View(crs);
             }
-            crs.UpdatedAT = DateTime.Now;
+
+            crs.UpdatedAT = DateTime.Now; 
+
             await unitOfWork.CourseRepository.EditAsync(crs);
             var commit = await unitOfWork.CommitAsync();
             if (!commit)
@@ -315,6 +402,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
             return RedirectToAction("Index");
         }
+
 
         public async Task<IActionResult> Delete(int id) 
         {
