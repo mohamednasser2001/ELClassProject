@@ -1,0 +1,59 @@
+﻿:root {
+    --main-orange: #fd7e14;
+    --dark-orange: #e86b00;
+    --soft-orange: #fffaf5;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* الـ Card الأساسي بالخط البرتقالي من فوق */
+.custom-card {
+    border: none !important;
+    border-top: 4px solid var(--main-orange) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    background-color: #fff;
+    margin-top: 20px;
+}
+
+/* الكروت الصغيرة للإحصائيات */
+.item-badge-card {
+    background-color: var(--soft-orange) !important;
+    border: none !important;
+    border-inline-start: 4px solid var(--main-orange) !important;
+    border-radius: 8px !important;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+/* الأزرار البرتقالية الموحدة */
+.btn-orange-custom {
+    background-color: var(--main-orange) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    transition: 0.3s all;
+}
+
+    .btn-orange-custom:hover {
+        background-color: var(--dark-orange) !important;
+        transform: translateY(-2px);
+    }
+
+/* منطقة الـ Dashed لإضافة كورس */
+.assign-section-dashed {
+    border: 2px dashed var(--main-orange) !important;
+    background-color: var(--soft-orange) !important;
+    border-radius: 12px;
+    padding: 40px;
+    transition: 0.3s;
+}
+
+    .assign-section-dashed:hover {
+        background-color: #fff3e6;
+    }

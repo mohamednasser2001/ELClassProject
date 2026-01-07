@@ -98,6 +98,7 @@ namespace ELClass.Areas.Identity.Controllers
 
                 if (result.Succeeded)
                 {
+                    await _userManager.AddToRoleAsync(applicationUser, "Student");
                     // 1. توليد التوكن (Token) الخاص بالتأكيد
                     var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser);
 

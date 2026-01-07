@@ -20,5 +20,7 @@ namespace Models
         public string DescriptionEn { get; set; }
         public ICollection<InstructorCourse> InstructorCourses { get; set; }
         public ICollection<StudentCourse> StudentCourses { get; set; }
+        public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
+
     }
 }
