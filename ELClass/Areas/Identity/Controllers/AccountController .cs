@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using DataAccess;
+using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -19,17 +20,20 @@ namespace ELClass.Areas.Identity.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IUnitOfWork unitOfWork;
         private UserManager<ApplicationUser> _userManager;
 
         public AccountController(UserManager<ApplicationUser> userManager,
             ApplicationDbContext _context,
-            SignInManager<ApplicationUser> signInManager, IEmailSender emailSender, RoleManager<IdentityRole> roleManager)
+            SignInManager<ApplicationUser> signInManager, IEmailSender emailSender, RoleManager<IdentityRole> roleManager
+            , IUnitOfWork unitOfWork)
         {
             _userManager = userManager;
             this._context = _context;
             this._signInManager = signInManager;
             this._emailSender = emailSender;
             this._roleManager = roleManager;
+            this.unitOfWork = unitOfWork;
         }
         public async Task<IActionResult> Logout()
         {
@@ -99,15 +103,17 @@ namespace ELClass.Areas.Identity.Controllers
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(applicationUser, "Student");
-                    // 1. توليد التوكن (Token) الخاص بالتأكيد
+
+                    var std = new Student() { Id = applicationUser.Id ,NameAr = applicationUser.NameAR ?? "", NameEn = applicationUser.NameEN ?? "" };
+                    await unitOfWork.StudentRepository.CreateAsync(std);
+                    await unitOfWork.CommitAsync();
                     var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser);
 
-                    // 2. إنشاء رابط التأكيد الذي سيوجه المستخدم لـ Action اسمه ConfirmEmail
+                    
                     var confirmationLink = Url.Action("ConfirmEmail", "Account",
                         new { userId = applicationUser.Id, token = token }, Request.Scheme);
 
-                    // 3. إرسال الإيميل (تأكد من حقن IEmailSender في الكنترولر)
-                    // إذا لم تكن قد جهزت خدمة الإرسال بعد، سأعطيك كودها في الخطوة القادمة
+                    
                     await _emailSender.SendEmailAsync(applicationUser.Email,
                         lang == "ar" ? "تأكيد الحساب" : "Confirm Your Email",
                         lang == "ar" ? $"برجاء تأكيد حسابك من خلال <a href='{confirmationLink}'>الضغط هنا</a>"
@@ -121,7 +127,7 @@ namespace ELClass.Areas.Identity.Controllers
                 }
                 else
                 {
-                    // عرض الأخطاء للمستخدم بشكل أوضح
+                  
                     foreach (var error in result.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
@@ -131,7 +137,7 @@ namespace ELClass.Areas.Identity.Controllers
             }
             catch (Exception ex)
             {
-                // ملاحظة: الـ Json return هنا قد لا يتناسب مع صفحة Register عادية إلا لو كنت تستخدم Ajax
+               
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return View(registerVM);
             }

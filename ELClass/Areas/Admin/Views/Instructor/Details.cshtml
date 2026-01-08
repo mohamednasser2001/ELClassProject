@@ -64,42 +64,108 @@
 
     <div class="row">
         <div class="col-12 col-xl-4">
-            <div class="card custom-card">
-                <div class="card-header">
-                    <h5 class="card-title"><i class="fas fa-image" style="color:var(--primary-orange)"></i> Photo</h5>
+            <div class="card custom-card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom-0 pb-0">
+                    <h5 class="card-title"><i class="fas fa-image" style="color:var(--primary-orange)"></i> Profile Photo</h5>
                 </div>
                 <div class="card-body text-center">
-                    <img class="rounded-circle img-thumbnail mb-3 shadow-sm"
-                         src="https://ui-avatars.com/api/?name=@Model.Instructor.NameEn&background=fffaf5&color=fd7e14&size=128"
-                         style="width:140px; height:140px; border: 3px solid var(--soft-orange); object-fit: cover;">
-                    <button class="btn btn-orange-custom w-100" type="button"><i class="fas fa-sync me-2"></i>Update Image</button>
+                    <div class="position-relative d-inline-block mb-3">
+                        <img id="profilePreview" class="rounded-circle img-thumbnail shadow-sm"
+                             src="@(Model.Instructor.ApplicationUser.Img != null
+                                                               ? Url.Content("~/images/users/" + Model.Instructor.ApplicationUser.Img)
+                                                               : $"https://ui-avatars.com/api/?name={Model.Instructor.NameEn}&background=fffaf5&color=fd7e14&size=128")"
+                             style="width:160px; height:160px; border: 4px solid var(--soft-orange); object-fit: cover;">
+                    </div>
+
+                    <form asp-action="ChangeProfilePhoto" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="instructorId" value="@Model.Instructor.Id" />
+                        <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none;" />
+
+                        <div class="px-3">
+                            <button class="btn btn-orange-custom w-100 mb-2" type="button" onclick="document.getElementById('photoInput').click();">
+                                <i class="fas fa-camera me-2"></i>Change Photo
+                            </button>
+                            <button id="savePhotoBtn" class="btn btn-success w-100 d-none" type="submit">
+                                <i class="fas fa-check me-2"></i>Confirm New Photo
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="mx-3 my-4 opacity-25">
+
+                    <div class="text-start px-3">
+                        <p class="small text-muted mb-2"><i class="fas fa-envelope me-2"></i> @Model.Instructor.ApplicationUser.Email</p>
+                        <p class="small text-muted mb-0"><i class="fas fa-phone me-2"></i> @(Model.Instructor.ApplicationUser.PhoneNumber ?? "No Phone")</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-xl-8">
-            <div class="card custom-card">
-                <div class="card-header">
-                    <h5 class="card-title"><i class="fas fa-info-circle" style="color:var(--primary-orange)"></i> Personal Information</h5>
+        <div class="col-12 col-xl-8" style="color:var(--primary-orange)">
+            <div class="card custom-card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0"><i class="fas fa-user-circle" style="color:var(--primary-orange)"></i> Instructor Profile</h5>
+                    <button type="button" id="enableEditBtn" class="btn btn-outline-orange btn-sm shadow-sm">
+                        <i class="fas fa-edit me-1"></i> Edit Profile
+                    </button>
                 </div>
-                <div class="card-body">
-                    <form>
+                <div class="card-body p-4">
+                    <form asp-action="EditInstructorDetails" id="instructorForm">
+                        <input type="hidden" asp-for="Instructor.Id" />
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Full Name (EN)</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" asp-for="Instructor.NameEn" type="text" readonly>
+                                <span class="text-danger" asp-validation-for="Instructor.NameEn"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-end d-block">الاسم بالكامل (AR)</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.NameAr" style="text-align:right" readonly>
+                                <span class="text-danger" asp-validation-for="Instructor.NameAr"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Email</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" type="email" asp-for="Instructor.ApplicationUser.Email" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Phone Number</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" asp-for="Instructor.ApplicationUser.PhoneNumber" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Address (EN)</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.ApplicationUser.AddressEN" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-end d-block">العنوان (AR)</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.ApplicationUser.AddressAR" style="text-align:right" readonly>
+                            </div>
+                        </div>
+
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="small mb-1 fw-bold text-muted">Name (English)</label>
-                                <input class="form-control bg-light" type="text" value="@Model.Instructor.NameEn" readonly>
+                            <div class="mb-4  col-md-6">
+                                <label class="form-label small fw-bold text-muted">About / Bio (EN)</label>
+                                <textarea class="form-control form-editable bg-light border-0" asp-for="Instructor.BioEn" rows="3" readonly></textarea>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="small mb-1 fw-bold text-muted">Name (Arabic)</label>
-                                <input class="form-control bg-light" type="text" value="@Model.Instructor.NameAr" readonly style="text-align:right">
+                            <div class="mb-4  col-md-6 text-end">
+                                <label class="form-label small fw-bold text-muted">السيرة الذاتية (AR)</label>
+                                <textarea class="form-control form-editable bg-light border-0" asp-for="Instructor.BioAr" rows="3" style="text-align:right; direction:rtl;" readonly></textarea>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Email Address</label>
-                            <input class="form-control bg-light" type="email" value="@Model.Instructor.ApplicationUser?.Email" readonly>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button class="btn btn-orange-custom" type="button"><i class="fas fa-edit me-2"></i>Edit Instructor</button>
+
+                        <div id="formActions" class="d-none gap-2 mt-4 pt-3 border-top">
+                            <button class="btn btn-orange-custom px-4 shadow-sm" type="submit">
+                                <i class="fas fa-save me-2"></i> Save Changes
+                            </button>
+                            <button class="btn btn-light px-4 border" type="button" id="cancelEditBtn">
+                                Cancel
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -107,7 +173,7 @@
         </div>
     </div>
 
-
+    
 
     <!-- ================= COURSES ================= -->
     <div class="card custom-card">
@@ -234,7 +300,11 @@
                             render: (d, t, r, m) =>
                                 `<span class="text-muted">${m.row + 1}</span>`
                         },
-                        { data: 'title' },
+                        { data: 'title', render: function (data, type, row) {
+                            return `<a href="/Admin/Course/Details/${row.courseId}" class="course-link">
+                                <i class="fas fa-book me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                                </a>`;
+                        }},
                         {
                             data: 'courseId',
                             className: 'text-center',
@@ -276,7 +346,12 @@
                             `<span class="text-muted">${m.row + 1}</span>`
                     },
                     {
-                        data: 'name'
+                        data: 'name',
+                        render: function (data, type, row) {
+                            return `<a href="/Admin/Student/Details/${row.studentId}" class="student-link">
+                                <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                                </a>`;
+                        }
                     },
                     {
                         data: 'studentId',
@@ -523,6 +598,39 @@
                 }
             });
         }
+
+        /* Form */
+
+                
+        $('#enableEditBtn').on('click', function() {
+            
+            $('.form-editable').removeAttr('readonly').removeClass('bg-light');
+           
+            $('#formActions').removeClass('d-none').addClass('d-flex');
+            $(this).hide();
+        });
+
+        
+        $('#cancelEditBtn').on('click', function() {
+            location.reload(); 
+        });
+
+        // img 
+
+            $('#photoInput').on('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    $('#profilePreview').attr('src', event.target.result);
+                };
+                reader.readAsDataURL(file);
+
+                
+                $('#savePhotoBtn').removeClass('d-none');
+            }
+        });
     </script>
 
 

@@ -11,8 +11,8 @@ namespace Models
         public string? AddressEN { get; set; }
 
         public string? Img { get; set; }
-        public Student Student { get; set; }
-        public Instructor Instructor { get; set; }
+        public Student Student { get; set; } = null!;
+        public Instructor Instructor { get; set; } = null!;
 
     }
 }
