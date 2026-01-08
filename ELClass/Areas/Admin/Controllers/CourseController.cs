@@ -22,9 +22,10 @@ namespace ELClass.Areas.Admin.Controllers
         {
             this.unitOfWork = unitOfWork;
         }
-
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
+            
             return View();
         }
 

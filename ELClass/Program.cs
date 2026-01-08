@@ -106,7 +106,10 @@ namespace ELClass
                         await roleManager.CreateAsync(new IdentityRole(roleName));
                     }
                 }
+
+        
             }
+       
 
             app.Run();
         }
