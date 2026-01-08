@@ -19,7 +19,8 @@ namespace DataAccess.Repositories.IRepositories
             , int? skip = null, int? take = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
 
-        T? GetOne(Expression<Func<T, bool>>? filter = null,
+        Task<int> CountAsync(Expression<Func<T, bool>>? filter = null);
+        Task<T?> GetOneAsync(Expression<Func<T, bool>>? filter = null,
             Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, bool tracked = true);
 
         Task<bool> CommitAsync();

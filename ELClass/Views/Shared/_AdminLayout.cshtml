@@ -352,6 +352,33 @@
 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        $(document).ready(function () {
+            
+            var successMessage = '@TempData["Success"]';
+
+            var errorMessage = '@TempData["Error"]';
+
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+            };
+            if (successMessage) {
+
+                toastr.success(successMessage);
+            }
+
+            if (errorMessage){
+                toastr.error(errorMessage);
+            }
+
+        });
+    </script>
     <!-- [Page Specific JS] end -->
 </body>
 <!-- [Body] end -->

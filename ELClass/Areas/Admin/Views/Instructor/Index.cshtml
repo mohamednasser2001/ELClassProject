@@ -19,9 +19,7 @@
                             <i class="fas fa-user-plus"></i>
                             <span> @(currentLang == "ar" ? "إضافة مدرب جديد" : "Add New Instructor")</span>
                         </a>
-                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
-                            <i class="fas fa-language"></i>
-                        </button>
+                        
                     </div>
                 </div>
 
@@ -92,7 +90,7 @@
                         data: 'name',
                         render: function (data, type, row) {
                             return `<a href="/Admin/Instructor/Details/${row.id}" class="instructor-link">
-                                    <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                                    <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i> ${data}
                                     </a>`;
                         }
                     },
@@ -109,7 +107,7 @@
                         render: function (data) {
                             return `
                                 <div class="d-flex gap-1 justify-content-center">
-                                    <a href="/Admin/Instructor/Edit/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-edit"></i></a>
+                                    <a href="/Admin/Instructor/Details/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-eye"></i></a>
                                     <button class="btn btn-sm btn-light border text-danger" onclick="deleteInstructor('${data}')"><i class="fas fa-trash"></i></button>
                                 </div>`;
                         }
