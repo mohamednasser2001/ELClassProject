@@ -23,7 +23,7 @@ namespace ELClass.Areas.StudentArea.Controllers
         {
 
 
-            var course = _unitOfWork.CourseRepository.GetOne(e => e.Id == id, q => q.Include(c => c.Lessons));
+            var course = _unitOfWork.CourseRepository.GetOneAsync(e => e.Id == id, q => q.Include(c => c.Lessons));
 
 
             if (course == null)
