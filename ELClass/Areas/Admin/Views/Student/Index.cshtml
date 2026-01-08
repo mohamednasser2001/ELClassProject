@@ -74,7 +74,9 @@
             $('#StudentsTable').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ordering: true,
+                stateSave: true,
                 ajax: {
                     url: '@Url.Action("GetStudents", "Student", new { area = "Admin" })',
                     type: 'POST',

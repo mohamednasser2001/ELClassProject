@@ -1,0 +1,161 @@
+﻿@{
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var direction = currentLang == "ar" ? "rtl" : "ltr";
+}
+
+<div class="container-fluid" style="direction: @direction;">
+    <div class="row">
+        <div class="col-12">
+            <div class="card custom-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">
+                        <i class="fa fa-users me-2 icon-primary"></i>
+                        @(currentLang == "ar" ? "قائمة المستخدمين" : "Users List")
+                    </h3>
+
+                    <div class="d-flex gap-2 align-items-center">
+                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
+                            <i class="fa fa-language"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body p-2 p-md-4">
+                    <div class="table-responsive">
+                        <table id="usersTable" class="table w-100">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "اسم المستخدم" : "User Name")</th>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "البريد الإلكتروني" : "Email")</th>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "الدور" : "role")</th>
+                                   
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var currentLang = '@currentLang';
+
+        var languageSettings = {
+            ar: {
+                processing: "جاري التحميل...",
+                search: "بحث:",
+                lengthMenu: "_MENU_",
+                info: "عرض _START_ إلى _END_ من _TOTAL_",
+                zeroRecords: "لم يتم العثور على نتائج",
+                paginate: { next: "»", previous: "«" }
+            },
+            en: {
+                processing: "Loading...",
+                search: "Search:",
+                lengthMenu: "_MENU_",
+                info: "Showing _START_ to _END_ of _TOTAL_",
+                zeroRecords: "No matching records found",
+                paginate: { next: "»", previous: "«" }
+            }
+        };
+
+        $(document).ready(function () {
+            $('#usersTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ordering: true,
+                stateSave: true,
+                responsive: true,
+                ajax: {
+                    url: '/Admin/User/GetUsers', 
+                    type: 'POST'
+                },
+                        columns: [
+            {
+                data: null,
+                render: function (data, type, row, meta) {
+                    return `<span class="text-muted small">${meta.row + meta.settings._iDisplayStart + 1}</span>`;
+                }
+            },
+            {
+                data: 'userName',
+                render: function (data, type, row) {
+                   
+                    var isStudent = row.role && row.role.indexOf('Student') !== -1;
+                    var controller = isStudent ? 'Student' : 'Instructor';
+
+                    return `<i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i>
+                            <a href="/Admin/user/Details/${row.id}" class="course-link">${data}</a>`;
+                }
+            },
+            {
+                data: 'email',
+                className: 'd-none d-md-table-cell',
+                render: (data) => `<span class="small text-muted">${data}</span>`
+            },
+            {
+                data: 'role',
+                className: ' d-md-table-cell',
+                render: (data) => `<span class="badge bg-light text-dark border">${data || ''}</span>`
+            },
+            {
+                data: 'id',
+                render: function (data, type, row) {
+                    var isStudent = row.role && row.role.indexOf('Student') !== -1;
+                    var controller = isStudent ? 'Student' : 'User';
+
+                    return `
+                        <div class="d-flex gap-1 justify-content-center">
+                            <a href="/Admin/user/Edit/${data}" class="btn btn-sm btn-light border text-warning"><i class="fa fa-edit"></i></a>
+                            <button class="btn btn-sm btn-light border text-danger" onclick="deleteUser('${data}')"><i class="fa fa-trash"></i></button>
+                        </div>`;
+                }
+            }
+        ],
+            language: languageSettings[currentLang],
+            pageLength: 10,
+            dom: '<"d-flex justify-content-between mb-2"lf>rt<"d-flex justify-content-between mt-2"ip>'
+            });
+        });
+
+        function changeLanguage() {
+            var newLang = currentLang === 'ar' ? 'en' : 'ar';
+            $.ajax({
+                url: '/Admin/Home/SetLanguage',
+                type: 'POST',
+                data: { language: newLang },
+                success: function() { location.reload(); }
+            });
+        }
+
+        function deleteUser(id) {
+            Swal.fire({
+                title: currentLang === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?',
+                text: currentLang === 'ar' ? 'لن تتمكن من التراجع عن هذا!' : 'You won\'t be able to revert this!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: currentLang === 'ar' ? 'نعم، احذف!' : 'Yes, delete it!',
+                cancelButtonText: currentLang === 'ar' ? 'إلغاء' : 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Admin/User/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function () {
+                            $('#usersTable').DataTable().ajax.reload(null, false);
+                            Swal.fire(currentLang === 'ar' ? 'تم الحذف!' : 'Deleted!', '', 'success');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

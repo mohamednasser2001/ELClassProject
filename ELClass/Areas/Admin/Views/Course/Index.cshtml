@@ -73,6 +73,7 @@
             $('#coursesTable').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ordering: true,
                 ajax: {
                     url: '@Url.Action("GetCourses", "Course", new { area = "Admin" })',
@@ -117,7 +118,7 @@
             });
         });
 
-        // دوال الحذف وتغيير اللغة (نفس الكود الأصلي)
+        
         function changeLanguage() {
             var newLang = currentLang === 'ar' ? 'en' : 'ar';
             $.ajax({

@@ -73,6 +73,7 @@
             $('#InstructorsTable').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ordering: true,
                 ajax: {
                     url: '@Url.Action("GetInstructors", "Instructor", new { area = "Admin" })',
