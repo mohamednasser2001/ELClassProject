@@ -1,7 +1,7 @@
 ﻿using DataAccess;
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
-using ELClass.Hubs;
+using ELClass.Hubs; 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;

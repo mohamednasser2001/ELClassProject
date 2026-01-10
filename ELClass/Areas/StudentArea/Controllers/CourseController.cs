@@ -27,7 +27,7 @@ namespace ELClass.Areas.StudentArea.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = _userManager.GetUserId(User);
-            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOne(sc =>
+            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOneAsync(sc =>
             sc.StudentId == userId && sc.CourseId == id) != null;
 
             if (!isEnrolled)
@@ -51,12 +51,12 @@ namespace ELClass.Areas.StudentArea.Controllers
         {
             var userId = _userManager.GetUserId(User);
             // بنجيب الدرس بناءً على الـ Id بتاعه
-            var lesson =  _unitOfWork.LessonRepository.GetOne(l => l.Id == id);
+            var lesson =  _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id);
             if (lesson == null) return NotFound();
 
             // نتحقق إن الطالب ده مسجل في الكورس اللي بيتبع له الدرس ده
-            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOne(e =>
-                e.StudentId == userId && e.CourseId == lesson.CourseId) != null;
+            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOneAsync(e =>
+                e.StudentId == userId && e.CourseId == lesson.Id) != null;
 
             if (!isEnrolled) return Forbid();
 
