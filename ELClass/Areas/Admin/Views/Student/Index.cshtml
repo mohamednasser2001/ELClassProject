@@ -19,10 +19,7 @@
                             <i class="fas fa-user-plus"></i>
                             <span> @(currentLang == "ar" ? "إضافة طالب جديد" : "Add New Student")</span>
                         </a>
-                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
-                            <i class="fas fa-language"></i>
-                            
-                        </button>
+                        
                     </div>
                 </div>
 
@@ -74,7 +71,9 @@
             $('#StudentsTable').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ordering: true,
+                stateSave: true,
                 ajax: {
                     url: '@Url.Action("GetStudents", "Student", new { area = "Admin" })',
                     type: 'POST',
@@ -100,7 +99,7 @@
                         render: function (data) {
                             return `
                                 <div class="d-flex gap-1 justify-content-center">
-                                    <a href="/Admin/Student/Edit/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-edit"></i></a>
+                                    <a href="/Admin/Student/Details/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-eye"></i></a>
                                     <button class="btn btn-sm btn-light border text-danger" onclick="deleteStudent('${data}')"><i class="fas fa-trash"></i></button>
                                 </div>`;
                         }
@@ -113,12 +112,7 @@
             });
         });
 
-        function changeLanguage() {
-            var newLang = currentLang === 'ar' ? 'en' : 'ar';
-            $.post('@Url.Action("SetLanguage", "Home", new { area = "Admin" })', { language: newLang }, function() {
-                location.reload();
-            });
-        }
+       
 
         function deleteStudent(id) {
             Swal.fire({

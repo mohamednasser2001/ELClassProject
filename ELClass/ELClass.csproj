@@ -14,6 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Controllers\" />
+    <Folder Include="wwwroot\Images\Users\" />
     <Folder Include="wwwroot\js\Admin\Course\" />
   </ItemGroup>
 	<ItemGroup>
@@ -27,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
+    <ProjectReference Include="..\Utilities\Utilities.csproj" />
   </ItemGroup>
 
 </Project>

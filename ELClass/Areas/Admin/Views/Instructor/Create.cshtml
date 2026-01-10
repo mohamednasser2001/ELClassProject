@@ -4,312 +4,88 @@
     ViewData["Title"] = "Create Instructor";
 }
 
-<style type="text/css" disabled>
-    /* Main Container and Card */
-    .container {
-        max-width: 900px;
-    }
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1 fs-3">
+            <i class="fas fa-user-plus text-orange me-2"></i>Instructor Management
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/Admin/Instructor" class="text-muted text-decoration-none">Instructors</a></li>
+                <li class="breadcrumb-item active text-orange" aria-current="page">Create New</li>
+            </ol>
+        </nav>
+    </div>
 
-    .card {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        border: 1px solid #eaeaea;
-        border-radius: 10px;
-        overflow: hidden;
-        background-color: white;
-        transition: box-shadow 0.2s ease;
-    }
+    <a href="/Admin/Instructor/CreateInstructorAccount" class="btn btn-orange-custom shadow-sm px-4">
+        <i class="fas fa-plus me-2"></i>Create New Instructor Account
+    </a>
+</div>
 
-    .card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
+<div class="card shadow-sm border-0 rounded-3">
+    <div class="card-body p-4">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-    .card-body {
-        padding: 2rem;
-    }
-
-    /* Card Header */
-    .card-title {
-        color: #2d3748;
-        font-weight: 600;
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .card-title i {
-        color: #ed8936;
-    }
-
-    .card hr {
-        margin: 1.5rem 0;
-        border: none;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    /* Form Elements */
-    .form-label {
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 0.5rem;
-        display: block;
-        font-size: 0.95rem;
-    }
-
-    .form-control {
-        border-radius: 6px;
-        border: 1px solid #d1d9e6;
-        padding: 0.875rem 1.125rem;
-        font-size: 0.95rem;
-        transition: all 0.2s;
-        background-color: #fff;
-    }
-
-    .form-control:focus {
-        border-color: #4299e1;
-        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
-        outline: none;
-    }
-
-    textarea.form-control {
-        resize: vertical;
-        min-height: 100px;
-    }
-
-    /* Select2 Styling */
-    .select2-container .select2-selection--single {
-        height: 45px;
-        border-radius: 6px;
-        border: 1px solid #d1d9e6;
-        background-color: #fff;
-    }
-
-    .select2-container .select2-selection--single .select2-selection__rendered {
-        line-height: 45px;
-        padding-left: 15px;
-        color: #4a5568;
-        font-size: 0.95rem;
-    }
-
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 45px;
-        width: 30px;
-    }
-
-    .select2-container--focus .select2-selection--single {
-        border-color: #4299e1;
-        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
-    }
-
-    /* Validation */
-    .alert-danger {
-        background-color: #fed7d7;
-        border: 1px solid #fc8181;
-        border-radius: 6px;
-        color: #c53030;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .text-danger {
-        color: #f56565;
-        font-size: 0.85rem;
-        margin-top: 0.25rem;
-        display: block;
-    }
-
-    /* Buttons */
-    .btn {
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        border-radius: 6px;
-        transition: all 0.2s;
-        font-size: 0.95rem;
-    }
-
-    .btn-primary {
-        background-color: #4299e1;
-        border: 1px solid #4299e1;
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background-color: #3182ce;
-        border-color: #3182ce;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 5px rgba(49, 130, 206, 0.2);
-    }
-
-    .btn-outline-secondary {
-        background-color: transparent;
-        border: 1px solid #cbd5e0;
-        color: #4a5568;
-    }
-
-    .btn-outline-secondary:hover {
-        background-color: #f7fafc;
-        border-color: #a0aec0;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Form Group */
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    /* Row and Columns */
-    .row {
-        margin-left: -0.5rem;
-        margin-right: -0.5rem;
-    }
-
-    .col-sm-12, .col-md-6 {
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-    }
-
-    /* Button Container */
-    .d-flex.gap-2 {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    /* Placeholder styling */
-    .form-control::placeholder {
-        color: #a0aec0;
-    }
-
-    /* Focus state for textarea */
-    textarea.form-control:focus {
-        border-color: #4299e1;
-        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
-    }
-
-    /* Responsive adjustments */
-    @@media (max-width: 768px) {
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        .card-title {
-            font-size: 1.3rem;
-        }
-
-        .btn {
-            padding: 0.65rem 1.25rem;
-        }
-
-        .d-flex.gap-2 {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .d-flex.gap-2 .btn {
-            width: 100%;
-            text-align: center;
-        }
-    }
-
-    /* Select2 dropdown styling */
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-        background-color: #edf2f7;
-        color: #2d3748;
-    }
-
-    .select2-container--default .select2-results__option[aria-selected=true] {
-        background-color: #4299e1;
-        color: white;
-    }
-
-    /* Orange accent for labels with Arabic text */
-    .form-label[for="NameAr"],
-    .form-label[for="BioAr"],
-    .form-label[for="BioEn"],
-    .form-label[for="NameEn"] {
-        color: #ed8936;
-    }
-
-    /* Orange border for focus on Arabic fields */
-    #NameAr:focus,
-    #BioAr:focus ,
-    #BioEn:focus,
-    #NameEn:focus{
-        border-color: #ed8936;
-        box-shadow: 0 0 0 2px rgba(237, 137, 54, 0.1);
-    }
-</style>
-
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">
-                <i class="fas fa-user-plus"></i> Create Instructor
-            </h3>
-            <hr />
-
-            <form asp-action="Create">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
-                <div class="form-group mb-4">
-                    <label asp-for="Id" class="form-label">
-                        <i class="fas fa-user text-orange"></i> Select User Account
-                    </label>
-                    <select asp-for="Id" class="form-control select2-user"></select>
-                    <span asp-validation-for="Id" class="text-danger"></span>
-                    <small class="text-muted mt-1 d-block">
-                        <i class="fas fa-info-circle"></i> Search for an existing user to assign as instructor
-                    </small>
+            <div class="form-group mb-4 p-3 bg-light rounded-2 border-start border-4 border-orange">
+                <label asp-for="Id" class="form-label fw-bold">
+                    <i class="fas fa-user-shield text-orange"></i> Select User Account
+                </label>
+                <select asp-for="Id" class="form-control select2-user" id="select2-user"></select>
+                <span asp-validation-for="Id" class="text-danger"></span>
+                <div class="form-text mt-2">
+                    <i class="fas fa-info-circle text-muted"></i> Search for an existing user (Email or Name) to assign as instructor.
                 </div>
+            </div>
 
-                <div class="row">
-                    <div class="form-group col-sm-12 col-md-6 mb-3">
-                        <label asp-for="NameAr" class="form-label">
-                            <i class="fas fa-language text-orange"></i> الاسم (Arabic)
-                        </label>
-                        <input asp-for="NameAr" class="form-control" placeholder="أدخل الاسم باللغة العربية" />
-                        <span asp-validation-for="NameAr" class="text-danger"></span>
+            <hr class="my-4 text-muted opacity-25">
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="small mb-2 fw-bold text-muted">Name (English)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-font text-orange"></i></span>
+                        <input class="form-control bg-light border-start-0" asp-for="NameEn" type="text" placeholder="Enter English Name">
                     </div>
-
-                    <div class="form-group col-sm-12 col-md-6 mb-3">
-                        <label asp-for="NameEn" class="form-label">
-                            <i class="fas fa-language"></i> Name (English)
-                        </label>
-                        <input asp-for="NameEn" class="form-control" placeholder="Enter name in English" />
-                        <span asp-validation-for="NameEn" class="text-danger"></span>
+                    <span class="text-danger" asp-validation-for="NameEn"></span>
+                </div>
+                <div class="col-md-6 mb-3 text-end">
+                    <label class="small mb-2 fw-bold text-muted">الأسم (بالعربية)</label>
+                    <div class="input-group" dir="rtl">
+                        <span class="input-group-text bg-white border-start-0"><i class="fas fa-signature text-orange"></i></span>
+                        <input class="form-control bg-light border-end-0" type="text" asp-for="NameAr" style="text-align:right" placeholder="أدخل الاسم بالعربي">
                     </div>
+                    <span class="text-danger" asp-validation-for="NameAr"></span>
                 </div>
+            </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="BioAr" class="form-label">
-                        <i class="fas fa-file-alt text-orange"></i> السيرة الذاتية (Arabic)
-                    </label>
-                    <textarea asp-for="BioAr" placeholder="أدخل السيرة الذاتية باللغة العربية" class="form-control" rows="4"></textarea>
-                    <span asp-validation-for="BioAr" class="text-danger"></span>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="small mb-2 fw-bold text-muted">Bio (English)</label>
+                    <textarea class="form-control bg-light" asp-for="BioEn" rows="4" placeholder="Tell us about the instructor..."></textarea>
+                    <span class="text-danger" asp-validation-for="BioEn"></span>
                 </div>
+                <div class="col-md-6 mb-3 text-end">
+                    <label class="small mb-2 fw-bold text-muted">السيرة الذاتية (بالعربية)</label>
+                    <textarea class="form-control bg-light" asp-for="BioAr" rows="4" style="text-align:right; direction:rtl;" placeholder="اكتب نبذة عن المدرب..."></textarea>
+                    <span class="text-danger" asp-validation-for="BioAr"></span>
+                </div>
+            </div>
 
-                <div class="form-group mb-4">
-                    <label asp-for="BioEn" class="form-label">
-                        <i class="fas fa-file-alt"></i> Biography (English)
-                    </label>
-                    <textarea asp-for="BioEn" class="form-control" placeholder="Enter biography in English" rows="4"></textarea>
-                    <span asp-validation-for="BioEn" class="text-danger"></span>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="fas fa-plus-circle"></i> Create Instructor
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to List
-                    </a>
-                </div>
-            </form>
-        </div>
+            <div class="mt-4 pt-2 border-top">
+                <button class="btn btn-orange-custom btn-lg px-4 shadow-sm" type="submit">
+                    <i class="fas fa-plus-circle me-2"></i>Create Instructor
+                </button>
+                <a href="/Admin/Instructor" class="btn btn-light btn px-3 ms-2">Cancel</a>
+            </div>
+        </form>
     </div>
 </div>
+
+
+
+
+
 
 @section Scripts {
     @{

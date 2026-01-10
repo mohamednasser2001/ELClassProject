@@ -122,6 +122,7 @@
                 processing: true,
                 serverSide: true,
                 ordering: false,
+                stateSave: true,
                 responsive: true,
                 ajax: {
                     url: '/Admin/Course/GetCourseInstructors',
@@ -130,7 +131,13 @@
                 },
                 columns: [
                     { data: null, render: (d, t, r, m) => m.row + 1 + m.settings._iDisplayStart },
-                    { data: 'name' },
+                    { data: 'name', render: function (data, type, row) {
+                    return `<a href="/Admin/Instructor/Details/${row.instructorId}" class="Instructor-link">
+                        <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                        </a>`;
+                     }
+                    
+                    },
                     {
                         data: 'instructorId',
                         className: 'text-center',
@@ -148,6 +155,7 @@
                 processing: true,
                 serverSide: true,
                 ordering: false,
+                stateSave: true,
                 responsive: true,
                 ajax: {
                     url: '/Admin/Course/GetCourseStudents',
@@ -156,7 +164,13 @@
                 },
                 columns: [
                     { data: null, render: (d, t, r, m) => m.row + 1 + m.settings._iDisplayStart },
-                    { data: 'name' },
+                    { data: 'name' ,
+                    render: function (data, type, row) {
+                        return `<a href="/Admin/Student/Details/${row.studentId}" class="student-link">
+                                <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                                </a>`;
+                    }
+                    },
                     {
                         data: 'studentId',
                         className: 'text-center',

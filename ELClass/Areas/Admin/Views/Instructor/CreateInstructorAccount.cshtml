@@ -1,20 +1,22 @@
-﻿@model Models.Student
+﻿@model Models.Instructor
 
 @{
-    ViewData["Title"] = "Create Student Account";
+    ViewData["Title"] = "Create Instructor Account";
 }
+
+
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold mb-0 fs-3">
-        <i class="fas fa-user-plus text-orange me-2"></i>Create Student Account
+        <i class="fas fa-user-plus text-orange me-2"></i>Create Instructor Account
     </h2>
     <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-arrow-left me-1"></i> Back to List
     </a>
 </div>
 
-<form asp-action="Create" method="post">
-    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+<form asp-action="CreateInstructorAccount" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
     <div class="row">
         <div class="col-lg-12 mb-1">
@@ -78,8 +80,25 @@
             </div>
         </div>
 
-       
-        
+        <div class="col-lg-12 ">
+            <div class="card border-orange-left">
+                <div class="card-body">
+                    <h5 class="form-section-title"><i class="fas fa-file-alt"></i> Professional Bio</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="BioEn" class="small mb-1 fw-bold text-muted">Bio (English)</label>
+                            <textarea asp-for="BioEn" class="form-control" rows="4" placeholder="Briefly describe the professional background..."></textarea>
+                            <span asp-validation-for="BioEn" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="BioAr" class="small mb-1 fw-bold text-muted d-block text-end">السيرة الذاتية (عربي)</label>
+                            <textarea asp-for="BioAr" class="form-control text-end" rows="4" dir="rtl" placeholder="نبذة مختصرة عن المسار المهني..."></textarea>
+                            <span asp-validation-for="BioAr" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="d-flex gap-1">

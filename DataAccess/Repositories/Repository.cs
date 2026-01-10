@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataAccess.Repositories
 {
@@ -112,11 +113,28 @@ namespace DataAccess.Repositories
             return (await entities.ToListAsync());
         }
 
-        public T? GetOne(Expression<Func<T, bool>>? filter = null,
-           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, bool tracked = true)
+        public async Task<T?> GetOneAsync(Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, bool tracked = true)
         {
-            return GetAsync(filter, include, tracked).GetAwaiter().GetResult().FirstOrDefault();
+            IQueryable<T> query = _dbSet;
+
+            if (!tracked) query = query.AsNoTracking();
+            if (include != null) query = include(query);
+            if (filter != null) query = query.Where(filter);
+
+            return await query.FirstOrDefaultAsync();
         }
+
+        public async Task<int> CountAsync(Expression<Func<T, bool>>? filter = null)
+        {
+            IQueryable<T> query = _dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            return await query.CountAsync();
+        }
+
 
         public async Task<bool> CommitAsync()
         {

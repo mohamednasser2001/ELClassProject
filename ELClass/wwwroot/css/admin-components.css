@@ -611,3 +611,94 @@ table.dataTable thead th::after {
     color: var(--color-text-secondary);
     font-size: 0.875rem;
 }
+
+
+/* === instructor , Student Profile Form === */
+
+.form-control[readonly] {
+    border-color: transparent;
+    cursor: default;
+    padding-left: 0;
+}
+
+
+.btn-outline-orange {
+    color: #fd7e14;
+    border-color: #fd7e14;
+}
+
+    .btn-outline-orange:hover {
+        background-color: #fd7e14;
+        color: white;
+    }
+
+
+.form-editable {
+    border: 1px solid #e0e0e0 !important;
+    background-color: #ffffff !important; 
+    transition: all 0.3s ease;
+}
+
+    
+    .form-editable:focus {
+        border-color: var(--primary-orange) !important;
+        box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.1) !important;
+        background-color: #fffaf5 !important; 
+    }
+
+
+.form-control[readonly] {
+    background-color: #fdfdfd !important;
+    border-color: #f0f0f0 !important;
+    color: #6c757d;
+}
+
+
+/* === create Existing instructor  === */
+
+.border-orange {
+    border-color: var(--primary-orange) !important;
+}
+
+.input-group-text {
+    color: #6c757d;
+    border-color: #dee2e6;
+}
+
+.form-control:focus {
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.15);
+}
+
+.select2-container--bootstrap-5 .select2-selection {
+    border-radius: 0.375rem;
+    background-color: #f8f9fa;
+}
+
+/* === create New  instructor  === */
+
+.border-orange-left {
+    border-left: 4px solid var(--primary-orange);
+}
+
+.form-section-title {
+    color: var(--primary-orange);
+    font-weight: bold;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+    .form-section-title i {
+        margin-right: 10px;
+    }
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.form-control:focus {
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.1);
+}

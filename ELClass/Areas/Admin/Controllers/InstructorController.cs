@@ -1,21 +1,27 @@
-﻿using DataAccess.Repositories.IRepositories;
+﻿using DataAccess.Repositories;
+using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels.Instructor;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ELClass.Areas.Admin.Controllers
 {
+    [Authorize(Roles = "SuperAdmin,Admin")]
     [Area("Admin")]
     public class InstructorController : Controller
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly UserManager<ApplicationUser> userManager;
 
-        public InstructorController(IUnitOfWork unitOfWork , UserManager<ApplicationUser> userManager)
+        public InstructorController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
         {
             this.unitOfWork = unitOfWork;
             this.userManager = userManager;
@@ -26,78 +32,16 @@ namespace ELClass.Areas.Admin.Controllers
         }
 
 
-        [HttpPost]
-        public async Task<IActionResult> GetInstructors()
-        {
-            try
-            {
-
-                var draw = Request.Form["draw"].FirstOrDefault();
-                var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
-                var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
-                var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
-
-
-                var instructors = await unitOfWork.InstructorRepository.GetAsync();
-                var lang = HttpContext.Session.GetString("Language") ?? "en";
-
-
-                var data = instructors.Select(c => new
-                {
-                    id = c.Id,
-                    name = lang == "en" ? c.NameEn : c.NameAr,
-                    bio = lang == "en" ? c.BioEn : c.BioAr
-                }).ToList();
-
-
-                if (!string.IsNullOrEmpty(searchValue))
-                {
-                    data = data.Where(c =>
-                        (c.name != null && c.name.ToLower().Contains(searchValue.ToLower())) ||
-                        (c.bio != null && c.bio.ToLower().Contains(searchValue.ToLower()))
-                    ).ToList();
-                }
-
-
-                var recordsTotal = instructors.Count();
-                var recordsFiltered = data.Count();
-
-
-                var result = data
-                    .Skip(start)
-                    .Take(length)
-                    .ToList();
-
-                return Json(new
-                {
-                    draw = draw,
-                    recordsTotal = recordsTotal,
-                    recordsFiltered = recordsFiltered,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    draw = Request.Form["draw"].FirstOrDefault(),
-                    recordsTotal = 0,
-                    recordsFiltered = 0,
-                    data = new List<object>(),
-                    error = ex.Message
-                });
-            }
-        }
 
         public async Task<IActionResult> Details(string id)
         {
-            var instructor = unitOfWork.InstructorRepository.GetOne(e => e.Id == id , include: e=>e.Include(e=>e.ApplicationUser));
+            var instructor = await unitOfWork.InstructorRepository.GetOneAsync(e => e.Id == id, include: e => e.Include(e => e.ApplicationUser));
             if (instructor == null)
             {
                 return View("AdminNotFoundPage");
             }
 
-            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(filter:e=>e.InstructorId==id, include:e=>e.Include(e=>e.Course));
+            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Course));
             var students = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Student));
             var model = new InstructorDetailsVM()
             {
@@ -132,7 +76,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> AssignStudent(string studentId, string instructorId)
         {
-            if (studentId !=null && instructorId != null)
+            if (studentId != null && instructorId != null)
             {
                 var instructorStudent = new InstructorStudent
                 {
@@ -155,7 +99,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> RemoveCourse(int courseId, string instructorId)
         {
-            var course = unitOfWork.InstructorCourseRepository.GetOne(filter: e => e.InstructorId == instructorId && e.CourseId == courseId);
+            var course = await unitOfWork.InstructorCourseRepository.GetOneAsync(filter: e => e.InstructorId == instructorId && e.CourseId == courseId);
             if (course == null)
             {
                 return View("AdminNotFoundPage");
@@ -177,7 +121,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> RemoveStudent(string studentId, string instructorId)
         {
-            var student = unitOfWork.InstructorStudentRepository.GetOne(filter: e => e.InstructorId == instructorId && e.StudentId == studentId);
+            var student = await unitOfWork.InstructorStudentRepository.GetOneAsync(filter: e => e.InstructorId == instructorId && e.StudentId == studentId);
             if (student == null)
             {
                 return View("AdminNotFoundPage");
@@ -197,7 +141,7 @@ namespace ELClass.Areas.Admin.Controllers
             return BadRequest();
         }
 
-        
+
 
         public async Task<IActionResult> SearchStudents(string term, string instructorId)
         {
@@ -269,6 +213,45 @@ namespace ELClass.Areas.Admin.Controllers
             return Json(users);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GetInstructors()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+                var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+                var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
+                var lang = HttpContext.Session.GetString("Language") ?? "en";
+
+                Expression<Func<Instructor, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
+                    (c.NameEn.Contains(searchValue) || c.NameAr.Contains(searchValue) ||
+                     c.BioEn.Contains(searchValue) || c.BioAr.Contains(searchValue));
+
+                var instructors = await unitOfWork.InstructorRepository.GetAsync(
+                    filter: filter,
+                    skip: start,
+                    take: length,
+                    orderBy: q => q.OrderBy(i => i.Id)
+                );
+
+                var totalRecords = await unitOfWork.InstructorRepository.CountAsync();
+                var filteredRecords = await unitOfWork.InstructorRepository.CountAsync(filter: filter);
+
+                var result = instructors.Select(c => new
+                {
+                    id = c.Id,
+                    name = lang == "en" ? c.NameEn : c.NameAr,
+                    bio = lang == "en" ? c.BioEn : c.BioAr
+                }).ToList();
+
+                return Json(new { draw, recordsTotal = totalRecords, recordsFiltered = filteredRecords, data = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { draw = Request.Form["draw"].FirstOrDefault(), recordsTotal = 0, recordsFiltered = 0, data = new List<object>(), error = ex.Message });
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> GetInstructorCourses()
@@ -276,45 +259,31 @@ namespace ELClass.Areas.Admin.Controllers
             var draw = Request.Form["draw"].FirstOrDefault();
             var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
             var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
-            var searchValue = Request.Form["search[value]"].FirstOrDefault();
+            var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
             var instructorId = Request.Form["instructorId"].FirstOrDefault();
 
+            Expression<Func<InstructorCourse, bool>> filter = e => e.InstructorId == instructorId &&
+                (string.IsNullOrEmpty(searchValue) || e.Course.TitleEn.Contains(searchValue) || e.Course.TitleAr.Contains(searchValue));
+
             var courses = await unitOfWork.InstructorCourseRepository.GetAsync(
-                filter: e => e.InstructorId == instructorId,
+                filter: filter,
                 include: e => e.Include(x => x.Course),
-                orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue)
+                orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue),
+                skip: start,
+                take: length
             );
 
-            var data = courses.Select(c => new
+            var totalCount = await unitOfWork.InstructorCourseRepository.CountAsync(filter: e => e.InstructorId == instructorId);
+            var filteredCount = await unitOfWork.InstructorCourseRepository.CountAsync(filter: filter);
+
+            var result = courses.Select(c => new
             {
                 courseId = c.CourseId,
                 title = c.Course.TitleEn
             }).ToList();
 
-            if (!string.IsNullOrWhiteSpace(searchValue))
-            {
-                data = data
-                    .Where(x => x.title != null &&
-                                x.title.Contains(searchValue, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
-
-            var recordsTotal = data.Count;
-
-            var result = data
-                .Skip(start)
-                .Take(length)
-                .ToList();
-
-            return Json(new
-            {
-                draw,
-                recordsTotal,
-                recordsFiltered = recordsTotal,
-                data = result
-            });
+            return Json(new { draw, recordsTotal = totalCount, recordsFiltered = filteredCount, data = result });
         }
-
 
         [HttpPost]
         public async Task<IActionResult> GetInstructorStudents()
@@ -324,83 +293,156 @@ namespace ELClass.Areas.Admin.Controllers
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
                 var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
-                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
                 var instructorId = Request.Form["instructorId"].FirstOrDefault();
 
+                Expression<Func<InstructorStudent, bool>> filter = e => e.InstructorId == instructorId &&
+                    (string.IsNullOrEmpty(searchValue) || e.Student.NameEn.Contains(searchValue) || e.Student.NameAr.Contains(searchValue));
+
                 var students = await unitOfWork.InstructorStudentRepository.GetAsync(
-                    filter: e => e.InstructorId == instructorId,
+                    filter: filter,
                     include: e => e.Include(x => x.Student),
-                    orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue)
+                    orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue),
+                    skip: start,
+                    take: length
                 );
 
-                var data = students.Select(s => new
+                var totalCount = await unitOfWork.InstructorStudentRepository.CountAsync(filter: e => e.InstructorId == instructorId);
+                var filteredCount = await unitOfWork.InstructorStudentRepository.CountAsync(filter: filter);
+
+                var result = students.Select(s => new
                 {
                     studentId = s.StudentId,
                     name = s.Student.NameEn
                 }).ToList();
 
-                // 🔍 SEARCH (DataTable)
-                if (!string.IsNullOrWhiteSpace(searchValue))
-                {
-                    data = data
-                        .Where(x =>
-                            x.name != null &&
-                            x.name.Contains(searchValue, StringComparison.OrdinalIgnoreCase)
-                        )
-                        .ToList();
-                }
-
-                var recordsTotal = data.Count;
-
-                var result = data
-                    .Skip(start)
-                    .Take(length)
-                    .ToList();
-
-                return Json(new
-                {
-                    draw,
-                    recordsTotal,
-                    recordsFiltered = recordsTotal,
-                    data = result
-                });
+                return Json(new { draw, recordsTotal = totalCount, recordsFiltered = filteredCount, data = result });
             }
             catch (Exception ex)
             {
-                return Json(new
-                {
-                    draw = Request.Form["draw"].FirstOrDefault(),
-                    recordsTotal = 0,
-                    recordsFiltered = 0,
-                    data = new List<object>(),
-                    error = ex.Message
-                });
+                return Json(new { draw = Request.Form["draw"].FirstOrDefault(), recordsTotal = 0, recordsFiltered = 0, data = new List<object>(), error = ex.Message });
             }
+        }
+
+        public IActionResult CreateInstructorAccount()
+        {
+            return View();
         }
 
 
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateInstructorAccount(
+                Instructor ins,
+                string Password,
+                string ConfirmPassword)
+        {
+            ModelState.Remove("ApplicationUser.Student");
+            ModelState.Remove("ApplicationUser.Instructor");
+            ModelState.Remove("ApplicationUser.NameAR");
+            ModelState.Remove("ApplicationUser.NameEn");
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "Sorry, There is ");
+                return View(ins);
+            }
+
+            if (Password != ConfirmPassword)
+            {
+                ModelState.AddModelError("", "Failed to create user account");
+                return View(ins);
+            }
+
+
+            var email = ins.ApplicationUser.Email;
+            var userName = email!.Split('@')[0] + new Random().Next(10, 99);
+
+
+            var user = new ApplicationUser
+            {
+                UserName = userName,
+                Email = email,
+                PhoneNumber = ins.ApplicationUser.PhoneNumber,
+                AddressEN = ins.ApplicationUser.AddressEN,
+                AddressAR = ins.ApplicationUser.AddressAR,
+                EmailConfirmed = true
+            };
+
+
+            var result = await userManager.CreateAsync(user, Password);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+                TempData["Error"] = "Failed to create user account";
+                return View(ins);
+            }
+
+            await userManager.AddToRoleAsync(user, "Teacher");
+
+            ins.Id = user.Id;
+
+            await unitOfWork.InstructorRepository.CreateAsync(ins);
+
+            await unitOfWork.CommitAsync();
+
+
+            
+            TempData["Success"] = "Instructor account has been created successfully";
+
+            return RedirectToAction("Index");
+        }
+
 
         public IActionResult Create()
         {
-            
+
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(Instructor ins)
         {
-
             var lang = HttpContext.Session.GetString("Language") ?? "en";
 
             ModelState.Remove("ApplicationUser");
             ModelState.Remove("InstructorStudents");
             ModelState.Remove("InstructorCourses");
-            //ModelState.Remove("Id");
-            if (!ModelState.IsValid)
+
+            if (!ModelState.IsValid) return View(ins);
+
+
+            var user = await userManager.FindByIdAsync(ins.Id);
+            if (user == null)
             {
+                ModelState.AddModelError("", lang == "en" ? "User not found" : "المستخدم غير موجود");
                 return View(ins);
             }
+
+
+            var oldStudentCourses = await unitOfWork.StudentCourseRepository.GetAsync(sc => sc.StudentId == ins.Id);
+            foreach (var sc in oldStudentCourses)
+            {
+                await unitOfWork.StudentCourseRepository.DeleteAsync(sc);
+            }
+
+            
+            var oldInstructorStudents = await unitOfWork.InstructorStudentRepository.GetAsync(isd => isd.StudentId == ins.Id);
+            foreach (var isd in oldInstructorStudents)
+            {
+                await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
+            }
+
+            
+            var std = await unitOfWork.StudentRepository.GetOneAsync(s => s.Id == ins.Id);
+            if (std != null)
+            {
+                await unitOfWork.StudentRepository.DeleteAsync(std);
+            }
+
+
             var newInstructor = new Instructor
             {
                 Id = ins.Id,
@@ -408,71 +450,249 @@ namespace ELClass.Areas.Admin.Controllers
                 NameEn = ins.NameEn,
                 BioAr = ins.BioAr,
                 BioEn = ins.BioEn,
-
             };
+
+
             await unitOfWork.InstructorRepository.CreateAsync(newInstructor);
+
+
+
+            var roles = await userManager.GetRolesAsync(user);
+            if (roles.Contains("Student"))
+            {
+                await userManager.RemoveFromRoleAsync(user, "Student");
+            }
+
+            if (!roles.Contains("Teacher"))
+            {
+                await userManager.AddToRoleAsync(user, "Teacher");
+            }
+
+
             var commit = await unitOfWork.CommitAsync();
+
             if (!commit)
             {
-                ModelState.AddModelError("", "Something went wrong");
+                ModelState.AddModelError("", lang == "en" ? "Something went wrong during save" : "حدث خطأ أثناء الحفظ");
                 return View(ins);
             }
-            TempData["Success"] = lang == "en" ? " instructor has been added successfully" : "تمت إضافة المدرب بنجاح";
+
+            TempData["Success"] = lang == "en" ? "Instructor added successfully" : "تمت إضافة المدرب بنجاح";
             return RedirectToAction("Index");
         }
-        public IActionResult Edit(string id)
+       
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditInstructorDetails(InstructorDetailsVM model)
         {
-            var instructor = unitOfWork.InstructorRepository.GetOne(i => i.Id == id);
-            if (instructor == null)
+            var ins = model.Instructor;
+
+
+            ModelState.Remove("Instructor.ApplicationUser");
+            ModelState.Remove("InstructorCourses");
+            ModelState.Remove("InstructorStudents");
+            ModelState.Remove("Instructor.ApplicationUser.Student");
+            ModelState.Remove("Instructor.ApplicationUser.Instructor");
+
+            if (ModelState.IsValid)
             {
-                return View("AdminNotFoundPage");
+                try
+                {
+
+                    var instructorInDb = await unitOfWork.InstructorRepository.GetOneAsync(
+                        e => e.Id == ins.Id,
+                        include: query => query.Include(e => e.ApplicationUser)
+                    );
+
+                    if (instructorInDb == null) return NotFound();
+
+
+                    instructorInDb.NameEn = ins.NameEn;
+                    instructorInDb.NameAr = ins.NameAr;
+                    instructorInDb.BioEn = ins.BioEn;
+                    instructorInDb.BioAr = ins.BioAr;
+
+
+                    if (instructorInDb.ApplicationUser != null && ins.ApplicationUser != null)
+                    {
+                        var user = instructorInDb.ApplicationUser;
+                        user.Email = ins.ApplicationUser.Email;
+                        
+                        user.PhoneNumber = ins.ApplicationUser.PhoneNumber;
+                        user.AddressEN = ins.ApplicationUser.AddressEN;
+                        user.AddressAR = ins.ApplicationUser.AddressAR;
+
+
+                        await userManager.UpdateNormalizedEmailAsync(user);
+                        
+                    }
+
+                    await unitOfWork.CommitAsync();
+
+                    TempData["Success"] = "Instructor updated successfully";
+                    return RedirectToAction("Details", new { id = ins.Id });
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = "Error while saving: " + ex.Message;
+                }
             }
-            return View(instructor);
+
+
+            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(e => e.InstructorId == ins.Id, include: i => i.Include(c => c.Course));
+            var students = await unitOfWork.InstructorStudentRepository.GetAsync(e => e.InstructorId == ins.Id, include: i => i.Include(s => s.Student));
+
+            model.InstructorCourses = courses.ToList();
+            model.InstructorStudents = students.ToList();
+
+            if (TempData["error"] is null) TempData["error"] = "Please check the input data.";
+
+            return View("Details", model);
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Instructor ins)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeProfilePhoto(string instructorId, IFormFile photo)
         {
-            var lang = HttpContext.Session.GetString("Language") ?? "en";
-            ModelState.Remove("ApplicationUser");
-            ModelState.Remove("InstructorStudents");
-            ModelState.Remove("InstructorCourses");
-            if (!ModelState.IsValid)
+            if (photo == null || photo.Length == 0)
             {
-                return View(ins);
+                TempData["Error"] = "Please select a valid image.";
+                return RedirectToAction("Details", new { id = instructorId });
             }
-            await unitOfWork.InstructorRepository.EditAsync(ins);
-            var commit = await unitOfWork.CommitAsync();
-            if (!commit)
+
+            try
             {
-                var errorMessage = lang == "en" ? "Something went wrong, Failed To Edit Instructor" : "حدث خطأ ما، فشل في تعديل المدرب";
-                ModelState.AddModelError("", errorMessage);
-                return View(ins);
+
+                var instructor = await unitOfWork.InstructorRepository.GetOneAsync(
+                    u => u.Id == instructorId,
+                    include: e => e.Include(e => e.ApplicationUser));
+
+                if (instructor == null || instructor.ApplicationUser == null)
+                {
+                    TempData["Error"] = "Instructor not found.";
+                    return RedirectToAction("Index");
+                }
+
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(photo.FileName);
+                var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "users");
+
+
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                var filePath = Path.Combine(folderPath, fileName);
+
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await photo.CopyToAsync(stream);
+                }
+
+
+                if (!string.IsNullOrEmpty(instructor.ApplicationUser.Img))
+                {
+                    var oldPath = Path.Combine(folderPath, instructor.ApplicationUser.Img);
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+
+
+                instructor.ApplicationUser.Img = fileName;
+
+                await unitOfWork.CommitAsync();
+
+                TempData["Success"] = "Profile photo updated successfully!";
             }
-            TempData["success"] = lang == "en" ? "Instructor Edited Successfully" : "تم تعديل المدرب بنجاح";
-            return RedirectToAction("Index");
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred: " + ex.Message;
+            }
+
+            return RedirectToAction("Details", new { id = instructorId });
         }
+
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
-            var instructor = unitOfWork.InstructorRepository.GetOne(c => c.Id == id);
+            var instructor = await unitOfWork.InstructorRepository.GetOneAsync(
+                c => c.Id == id,
+                include: i => i.Include(u => u.ApplicationUser));
+
             if (instructor == null)
             {
-                return View("AdminNotFoundPage");
+                return Json(new { success = false, message = "Instructor not found" });
             }
 
-            var res = await unitOfWork.InstructorRepository.DeleteAsync(instructor);
-            if (!res)
+            var user = instructor.ApplicationUser;
+
+            try
             {
-                return BadRequest();
+                var instructorCourses = await unitOfWork.InstructorCourseRepository.GetAsync(ic => ic.InstructorId == id);
+                foreach (var ic in instructorCourses)
+                {
+                    await unitOfWork.InstructorCourseRepository.DeleteAsync(ic);
+                }
+
+                var instructorStudents = await unitOfWork.InstructorStudentRepository.GetAsync(isd => isd.InstructorId == id);
+                foreach (var isd in instructorStudents)
+                {
+                    await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
+                }
+
+                await unitOfWork.InstructorRepository.DeleteAsync(instructor);
+                await unitOfWork.CommitAsync();
+
+                if (user != null)
+                {
+                    DeleteUserImage(user.Img);
+                    var result = await userManager.DeleteAsync(user);
+                    if (!result.Succeeded)
+                    {
+                        return Json(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
+                    }
+                }
+
+                return Json(new { success = true });
             }
-            var suc = await unitOfWork.CommitAsync();
-            if (!suc)
+            catch (DbUpdateException)
             {
-                return BadRequest();
+                return Json(new
+                {
+                    success = false,
+                    message = "Cannot delete instructor. They are set as the creator of one or more courses. Please reassign or delete the courses first."
+                });
             }
-            return RedirectToAction("Index");
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+        private void DeleteUserImage(string? imageName)
+        {
+            if (string.IsNullOrEmpty(imageName)) return;
+
+            try
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "users", imageName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                
+                Console.WriteLine($"Error deleting image file: {ex.Message}");
+            }
         }
     }
 }
