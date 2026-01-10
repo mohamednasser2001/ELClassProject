@@ -65,8 +65,8 @@
                     <div class="position-relative d-inline-block mb-3">
                         <img id="profilePreview" class="rounded-circle img-thumbnail shadow-sm"
                              src="@(Model.Student.ApplicationUser.Img != null
-                                                                                            ? Url.Content("~/images/users/" + Model.Student.ApplicationUser.Img)
-                                                                                            : $"https://ui-avatars.com/api/?name={Model.Student.NameEn}&background=fffaf5&color=fd7e14&size=128")"
+                                ? Url.Content("~/images/users/" + Model.Student.ApplicationUser.Img)
+                                : $"https://ui-avatars.com/api/?name={Model.Student.NameEn}&background=fffaf5&color=fd7e14&size=128")"
                              style="width:160px; height:160px; border: 4px solid var(--soft-orange); object-fit: cover;">
                     </div>
 

@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace ELClass.Areas.Admin.Controllers
 {
+    [Authorize(Roles = "SuperAdmin,Admin")]
     [Area("Admin")]
     public class InstructorController : Controller
     {
@@ -625,59 +627,55 @@ namespace ELClass.Areas.Admin.Controllers
                 c => c.Id == id,
                 include: i => i.Include(u => u.ApplicationUser));
 
-            if (instructor == null) return View("AdminNotFoundPage");
+            if (instructor == null)
+            {
+                return Json(new { success = false, message = "Instructor not found" });
+            }
 
             var user = instructor.ApplicationUser;
 
             try
             {
-               
                 var instructorCourses = await unitOfWork.InstructorCourseRepository.GetAsync(ic => ic.InstructorId == id);
                 foreach (var ic in instructorCourses)
                 {
                     await unitOfWork.InstructorCourseRepository.DeleteAsync(ic);
                 }
 
-                
                 var instructorStudents = await unitOfWork.InstructorStudentRepository.GetAsync(isd => isd.InstructorId == id);
                 foreach (var isd in instructorStudents)
                 {
                     await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
                 }
 
-                
+                await unitOfWork.InstructorRepository.DeleteAsync(instructor);
+                await unitOfWork.CommitAsync();
+
                 if (user != null)
                 {
                     DeleteUserImage(user.Img);
-                }
-
-                
-                await unitOfWork.InstructorRepository.DeleteAsync(instructor);
-
-                
-                await unitOfWork.CommitAsync();
-
-                
-                if (user != null)
-                {
                     var result = await userManager.DeleteAsync(user);
                     if (!result.Succeeded)
                     {
-                        TempData["Error"] = "Instructor deleted, but user account removal failed.";
-                        return RedirectToAction("Index");
+                        return Json(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
                     }
                 }
 
-                TempData["Success"] = "Instructor deleted successfully.";
+                return Json(new { success = true });
+            }
+            catch (DbUpdateException)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Cannot delete instructor. They are set as the creator of one or more courses. Please reassign or delete the courses first."
+                });
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "An unexpected error occurred: " + ex.Message;
+                return Json(new { success = false, message = ex.Message });
             }
-
-            return RedirectToAction("Index");
         }
-
         private void DeleteUserImage(string? imageName)
         {
             if (string.IsNullOrEmpty(imageName)) return;
@@ -692,7 +690,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                // سجل الخطأ هنا إذا أردت، لكن لا توقف عملية المسح الأساسية
+                
                 Console.WriteLine($"Error deleting image file: {ex.Message}");
             }
         }

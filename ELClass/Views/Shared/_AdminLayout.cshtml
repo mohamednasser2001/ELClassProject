@@ -1,4 +1,14 @@
-﻿<!doctype html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Models
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+    var userImage = user?.Img;
+    var displayName = user?.NameEN ?? user?.UserName;
+}
+
+<!doctype html>
 <html lang="en">
 <!-- [Head] start -->
 <head>
@@ -111,14 +121,17 @@
                             <span class="pc-mtext">Students</span>
                         </a>
                     </li>
-                    <li class="pc-item">
-                        <a href="/admin/user/index" class="pc-link">
-                            <span class="pc-micon">
-                                <i class="fa-solid fa-users"></i>
-                            </span>
-                            <span class="pc-mtext">Users</span>
-                        </a>
-                    </li>
+                    @if(User.IsInRole("SuperAdmin"))
+                    {
+                        <li class="pc-item">
+                            <a href="/admin/user/index" class="pc-link">
+                                <span class="pc-micon">
+                                    <i class="fa-solid fa-users"></i>
+                                </span>
+                                <span class="pc-mtext">Users</span>
+                            </a>
+                        </li>
+                    }
                 </ul>
 
             </div>
@@ -231,7 +244,10 @@
                            role="button"
                            aria-haspopup="false"
                            aria-expanded="false">
-                            <img src="~/assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar" />
+                            <img src="@(!string.IsNullOrEmpty(userImage)
+                                                      ? Url.Content("~/images/users/" + userImage)
+                                                      : $"https://ui-avatars.com/api/?name={displayName}&background=fffaf5&color=fd7e14&size=128")"
+                                 alt="user-image" class="user-avtar" />
                             <span>
                                 <i class="ti ti-settings"></i>
                             </span>
@@ -239,18 +255,13 @@
                         <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
                             <div class="dropdown-header">
                                 <h4>
-                                    Good Morning,
-                                    <span class="small text-muted">John Doe</span>
+                                    Hello,
+                                    <span class="small text-muted">@displayName</span>
                                 </h4>
-                                <p class="text-muted">Project Admin</p>
-                                <hr />
+                                <p class="text-muted"> Admin Dashboard </p>
+                                
                                 <div class="profile-notification-scroll position-relative" style="max-height: calc(100vh - 280px)">
-                                    <div class="upgradeplan-block bg-light-warning rounded">
-                                        <h4>Explore full code</h4>
-                                        <p class="text-muted">Buy now to get full access of code files</p>
-                                        <a href="https://codedthemes.com/item/berry-bootstrap-5-admin-template/" target="_blank" class="btn btn-warning">Buy Now</a>
-                                    </div>
-                                    <hr />
+
                                     <a href="../application/account-profile-v1.html" class="dropdown-item">
                                         <i class="ti ti-settings"></i>
                                         <span>Account Settings</span>
@@ -259,9 +270,11 @@
                                         <i class="ti ti-user"></i>
                                         <span>Social Profile</span>
                                     </a>
-                                    <a href="../pages/login-v1.html" class="dropdown-item">
+                                    <a asp-action="Logout" asp-controller="Account" asp-area="Identity" class="dropdown-item">
                                         <i class="ti ti-logout"></i>
-                                        <span>Logout</span>
+                                        <span>  Logout </span>
+                                           
+                                        
                                     </a>
                                 </div>
                             </div>

@@ -9,6 +9,7 @@ using Models;
 using Models.Utilites;
 using Scalar;
 using Scalar.AspNetCore;
+using Utilities.DbIntializer;
 namespace ELClass
 {
     public class Program
@@ -27,8 +28,9 @@ namespace ELClass
             {
                 config.Password.RequiredLength = 8;
                 config.User.RequireUniqueEmail = true;
-                config.SignIn.RequireConfirmedEmail=false;
-                
+                config.SignIn.RequireConfirmedEmail = false;
+                config.Lockout.AllowedForNewUsers = true;
+
 
                 // ??????? ??? ?????? (Lockout)
                 config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
@@ -66,7 +68,8 @@ namespace ELClass
             builder.Services.AddScoped<IRepository<Student>,Repository<Student>>();
             builder.Services.AddScoped<IRepository<InstructorCourse>,Repository<InstructorCourse>>();
             builder.Services.AddScoped<IRepository<InstructorStudent>,Repository<InstructorStudent>>();
-            builder.Services.AddScoped<IRepository<StudentCourse>,Repository<StudentCourse>>();
+            builder.Services.AddScoped<IRepository<StudentCourse>, Repository<StudentCourse>>();
+            builder.Services.AddScoped<IDbIntializer, DbIntializer>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -91,25 +94,14 @@ namespace ELClass
                 pattern: "{area=Admin}/{controller=Home}/{action=Index}/{id?}")
                 .WithStaticAssets();
 
+            // Db Intializer
+
             using (var scope = app.Services.CreateScope())
             {
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-                string[] roleNames = { "Admin", "Teacher", "Student" };
-
-                foreach (var roleName in roleNames)
-                {
-                    // إذا كان الدور غير موجود، قم بإنشائه
-                 
-                    if (!await roleManager.RoleExistsAsync(roleName))
-                    {
-                        await roleManager.CreateAsync(new IdentityRole(roleName));
-                    }
-                }
-
-        
+                var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbIntializer>();
+                dbInitializer.Initialize();
             }
-       
+
 
             app.Run();
         }

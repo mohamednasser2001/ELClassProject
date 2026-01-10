@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
 {
-    //[Authorize]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     [Area("Admin")]
     public class CourseController : Controller
     {

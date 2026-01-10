@@ -1,8 +1,10 @@
 ﻿using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ELClass.Areas.Admin.Controllers
 {
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [Area("Admin")]
     public class HomeController : Controller
     {

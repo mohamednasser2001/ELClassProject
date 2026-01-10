@@ -203,16 +203,33 @@ namespace ELClass.Areas.Identity.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    // تم تغيير المعامل الأخير إلى true لتفعيل خاصية القفل (Lockout) عند المحاولات الخاطئة
+                    var user = await _userManager.FindByEmailAsync(loginVM.EmailOrUserName)
+                                        ?? await _userManager.FindByNameAsync(loginVM.EmailOrUserName);
+
+                    if (user == null)
+                    {
+                        ModelState.AddModelError("", "Invalid login attempt");
+                        return View(loginVM);
+                    }
+
                     var result = await _signInManager.PasswordSignInAsync
-                        (loginVM.EmailOrUserName, loginVM.Password, loginVM.RememberMe, true);
+                        (user, loginVM.Password, loginVM.RememberMe, true);
 
                     if (result.Succeeded)
                     {
+
                         var currentLang = HttpContext.Session.GetString("Language") ?? "en";
                         TempData["success-notifications"] = currentLang == "ar" ? "تم تسجيل الدخول بنجاح" : "Logged in successfully";
-
-                        return RedirectToAction("index", "Course", new { area = "admin" });
+                        //var user = await _userManager.FindByEmailAsync(loginVM.EmailOrUserName) ?? await _userManager.FindByNameAsync(loginVM.EmailOrUserName);
+                        var roles = await _userManager.GetRolesAsync(user!);
+                        if (roles.Contains("Admin") || roles.Contains("SuperAdmin"))
+                        {
+                            return RedirectToAction("index", "home", new { area = "admin" });
+                        }else if (roles.Contains("Teacher"))
+                        {
+                            return RedirectToAction("index", "Course", new { area = "Teachers" });
+                        }
+                        return RedirectToAction("index", "Home", new { area = "StudentArea" });
                     }
 
                     // جلب اللغة الحالية لتحديد لغة رسائل الخطأ

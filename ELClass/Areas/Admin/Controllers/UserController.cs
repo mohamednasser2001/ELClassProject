@@ -1,12 +1,17 @@
 ﻿using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using Models.ViewModels;
+using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
 {
+    [Authorize(Roles = "SuperAdmin")]
     [Area("Admin")]
+
     public class UserController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -29,7 +34,7 @@ namespace ELClass.Areas.Admin.Controllers
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
 
 
-                var query = _userManager.Users;
+                var query = _userManager.Users.Where(e=>e.UserName !="SuperAdmin123");
 
 
                 if (!string.IsNullOrEmpty(searchValue))
@@ -54,7 +59,7 @@ namespace ELClass.Areas.Admin.Controllers
                 var users = new List<object>();
                 foreach (var u in allUsers)
                 {
-
+                    var isBlocked = await _userManager.IsLockedOutAsync(u);
                     var roles = await _userManager.GetRolesAsync(u);
                     users.Add(new
                     {
@@ -62,7 +67,8 @@ namespace ELClass.Areas.Admin.Controllers
                         userName = u.UserName,
                         email = u.Email,
                         phoneNumber = u.PhoneNumber ?? "N/A",
-                        role = roles.Any() ? string.Join(',', roles) : "No Role"
+                        role = roles.Any() ? string.Join(',', roles) : "No Role",
+                        isBlocked = isBlocked
                     });
                 }
 
@@ -85,11 +91,139 @@ namespace ELClass.Areas.Admin.Controllers
             var user = _unitOfWork.InstructorRepository.GetOneAsync(u => u.Id == id);
             if (user == null)
             {
-                return RedirectToAction("Details", "Student" ,new { id = id });
+                return RedirectToAction("Details", "Student", new { id = id });
             }
             return RedirectToAction("Details", "Instructor", new { id = id });
         }
 
+        [HttpPost] 
+        public async Task<IActionResult> ToggleBlock(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return Json(new { success = false, message = "User not found" });
 
+
+            var isBlocked = await _userManager.IsLockedOutAsync(user);
+            IdentityResult result;
+
+            if (isBlocked)
+            {
+
+                result = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
+                if (result.Succeeded) await _userManager.ResetAccessFailedCountAsync(user);
+            }
+            else
+            {
+
+                await _userManager.SetLockoutEnabledAsync(user, true);
+                result = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+                if (result.Succeeded) await _userManager.UpdateSecurityStampAsync(user);
+            }
+
+            if (result.Succeeded)
+            {
+                return Json(new
+                {
+                    success = true,
+                    message = isBlocked ? "User Unblocked" : "User Blocked",
+                    newStatus = !isBlocked
+                });
+            }
+
+            return Json(new { success = false, message = "Error updating status" });
+        }
+
+        public async Task<IActionResult> Block(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return View("AdminNotFoundPage");
+            }
+            await _userManager.SetLockoutEnabledAsync(user, true);
+            var result = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+            if (result.Succeeded)
+            {
+                await _userManager.UpdateSecurityStampAsync(user);
+                TempData["success"] = "User has been blocked successfully";
+
+            }
+            else
+                TempData["Error"] = "Failed To Block User";
+
+            return RedirectToAction("index");
+        }
+        public async Task<IActionResult> Unblock(String id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return View("AdminNotFoundPage");
+            }
+            var result = await _userManager.SetLockoutEndDateAsync(user, DateTime.UtcNow);
+            if (result.Succeeded)
+            {
+                await _userManager.ResetAccessFailedCountAsync(user);
+
+                TempData["success"] = "User has been unblocked successfully";
+
+            }
+            else
+            {
+                TempData["Error"] = "Failed To Unblock User";
+            }
+            return RedirectToAction("index");
+        }
+        [HttpGet]
+        public async Task<IActionResult> ManageRole(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return View("AdminNotFoundPage");
+
+
+            var allRoles = new List<string> { "Admin", "SuperAdmin", };
+
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var model = new ManageUserRolesVM
+            {
+                UserId = id,
+                UserName = user.UserName,
+
+                SelectedRole = userRoles.FirstOrDefault(r => r == "Admin" || r == "SuperAdmin") ?? "None"
+            };
+
+            return View(model);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateRole(string userId, string selectedRole)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return Json(new { success = false });
+
+            
+            var adminRoles = new[] { "Admin", "SuperAdmin" };
+
+            
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            foreach (var role in adminRoles)
+            {
+                if (currentRoles.Contains(role))
+                {
+                    await _userManager.RemoveFromRoleAsync(user, role);
+                }
+            }
+
+            
+            if (selectedRole != "None")
+            {
+                await _userManager.AddToRoleAsync(user, selectedRole);
+            }
+
+            return RedirectToAction("Index");
+        }
     }
 }

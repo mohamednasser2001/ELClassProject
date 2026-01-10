@@ -18,9 +18,7 @@
                             <i class="fa fa-plus"></i>
                             <span>@(currentLang == "ar" ? " إضافة كورس جديد" : " Add New Course")</span>
                         </a>
-                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
-                            <i class="fa fa-language"></i>
-                        </button>
+                       
                     </div>
                 </div>
 
@@ -119,15 +117,7 @@
         });
 
         
-        function changeLanguage() {
-            var newLang = currentLang === 'ar' ? 'en' : 'ar';
-            $.ajax({
-                url: '@Url.Action("SetLanguage", "Home", new { area = "Admin" })',
-                type: 'POST',
-                data: { language: newLang },
-                success: function() { location.reload(); }
-            });
-        }
+        
 
         function deleteCourse(id) {
             Swal.fire({
