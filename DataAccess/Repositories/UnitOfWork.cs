@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories.IRepositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Models;
 using System;
 using System.Collections.Generic;
@@ -49,9 +50,13 @@ namespace DataAccess.Repositories
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-                
+
                 return false;
             }
+        }
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await context.Database.BeginTransactionAsync();
         }
         public void Dispose()
         {

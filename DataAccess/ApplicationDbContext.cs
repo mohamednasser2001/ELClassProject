@@ -30,16 +30,62 @@ namespace DataAccess
         public DbSet<InstructorStudent> InstructorStudents { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
+
+
+
         protected override void OnModelCreating(ModelBuilder builder)
+
         {
+
             base.OnModelCreating(builder);
 
+            
 
             builder.Entity<Course>()
+
                 .HasOne(c => c.ApplicationUser)
+
                 .WithMany()
+
                 .HasForeignKey(c => c.CreatedById)
-                .OnDelete(DeleteBehavior.SetNull); 
+
+                .OnDelete(DeleteBehavior.NoAction);
+
+
+
+            builder.Entity<InstructorCourse>()
+
+                .HasOne(ic => ic.ApplicationUser)
+
+                .WithMany()
+
+                .HasForeignKey(ic => ic.CreatedById)
+
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.Entity<InstructorStudent>()
+
+                .HasOne(ic => ic.ApplicationUser)
+
+                .WithMany()
+
+                .HasForeignKey(ic => ic.CreatedById)
+
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.Entity<StudentCourse>()
+
+                .HasOne(ic => ic.ApplicationUser)
+
+                .WithMany()
+
+                .HasForeignKey(ic => ic.CreatedById)
+
+                .OnDelete(DeleteBehavior.Cascade);
+
+            
 
         }
 

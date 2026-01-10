@@ -38,8 +38,7 @@ namespace ELClass.Areas.StudentArea.Controllers
             {
                 InstructorId = i.Id.ToString(),
                 InstructorNameEn = i.NameEn,
-                InstructorNameAr = i.NameAr,
-                InstructorImage = i.img
+                InstructorNameAr = i.NameAr
             }).ToList();
             var model = new StudentDashboardVM
             {

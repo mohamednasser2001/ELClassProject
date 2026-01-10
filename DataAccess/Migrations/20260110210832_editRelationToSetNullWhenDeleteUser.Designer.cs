@@ -4,6 +4,7 @@ using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260110210832_editRelationToSetNullWhenDeleteUser")]
+    partial class editRelationToSetNullWhenDeleteUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -263,7 +266,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("Models.Course", b =>
@@ -303,7 +306,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("Courses", (string)null);
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("Models.Instructor", b =>
@@ -329,7 +332,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Instructors", (string)null);
+                    b.ToTable("Instructors");
                 });
 
             modelBuilder.Entity("Models.InstructorCourse", b =>
@@ -355,7 +358,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("InstructorCourses", (string)null);
+                    b.ToTable("InstructorCourses");
                 });
 
             modelBuilder.Entity("Models.InstructorStudent", b =>
@@ -381,7 +384,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("InstructorStudents", (string)null);
+                    b.ToTable("InstructorStudents");
                 });
 
             modelBuilder.Entity("Models.Lesson", b =>
@@ -418,7 +421,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Lessons", (string)null);
+                    b.ToTable("Lessons");
                 });
 
             modelBuilder.Entity("Models.Student", b =>
@@ -436,7 +439,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Students", (string)null);
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("Models.StudentCourse", b =>
@@ -462,7 +465,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("StudentCourses", (string)null);
+                    b.ToTable("StudentCourses");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
