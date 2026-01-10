@@ -1,4 +1,5 @@
 ﻿using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
 {
+    [Authorize(Roles = "SuperAdmin,Admin")]
     [Area("Admin")]
     public class StudentController : Controller
     {
@@ -607,15 +609,28 @@ namespace ELClass.Areas.Admin.Controllers
                     if (!result.Succeeded)
                     {
                         TempData["Error"] = "Student profile deleted, but user account removal failed.";
-                        return RedirectToAction("Index");
+                        //return RedirectToAction("Index");
+                        return Json(new { success = true });
                     }
+                    var error = result.Errors.FirstOrDefault()?.Description ?? "An unexpected error occurred";
+                    return Json(new { success = false, message = error });
                 }
 
-                TempData["Success"] = "Student and all related data (courses/instructors) deleted successfully.";
+                //TempData["Success"] = "Student and all related data (courses/instructors) deleted successfully.";
+            }
+            catch (DbUpdateException)
+            {
+                
+                return Json(new
+                {
+                    success = false,
+                    message = "this user can't be deleted because there is related data (like courses or financial records)."
+                });
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "An unexpected error occurred: " + ex.Message;
+
+                return Json(new { success = false, message = "An unexpected error occurred: " + ex.Message });
             }
 
             return RedirectToAction("Index");

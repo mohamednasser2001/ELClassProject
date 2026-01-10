@@ -13,11 +13,7 @@
                         @(currentLang == "ar" ? "قائمة المستخدمين" : "Users List")
                     </h3>
 
-                    <div class="d-flex gap-2 align-items-center">
-                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
-                            <i class="fa fa-language"></i>
-                        </button>
-                    </div>
+                    
                 </div>
 
                 <div class="card-body p-2 p-md-4">
@@ -32,6 +28,7 @@
                                    
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
                                 </tr>
+                                @Html.AntiForgeryToken()
                             </thead>
                             <tbody></tbody>
                         </table>
@@ -99,24 +96,48 @@
                 className: 'd-none d-md-table-cell',
                 render: (data) => `<span class="small text-muted">${data}</span>`
             },
-            {
-                data: 'role',
-                className: ' d-md-table-cell',
-                render: (data) => `<span class="badge bg-light text-dark border">${data || ''}</span>`
-            },
-            {
-                data: 'id',
-                render: function (data, type, row) {
-                    var isStudent = row.role && row.role.indexOf('Student') !== -1;
-                    var controller = isStudent ? 'Student' : 'User';
+                    {
+            data: 'role',
+            className: 'd-md-table-cell',
+            render: function (data, type, row) {
+                
+                var badgeClass = "bg-light text-dark border";
+                if (data && data.indexOf('SuperAdmin') !== -1) badgeClass = "bg-primary text-white";
+                else if (data && data.indexOf('Admin') !== -1) badgeClass = "bg-info text-white";
 
-                    return `
-                        <div class="d-flex gap-1 justify-content-center">
-                            <a href="/Admin/user/Edit/${data}" class="btn btn-sm btn-light border text-warning"><i class="fa fa-edit"></i></a>
-                            <button class="btn btn-sm btn-light border text-danger" onclick="deleteUser('${data}')"><i class="fa fa-trash"></i></button>
-                        </div>`;
-                }
+                
+                return `
+                    <a href="/Admin/User/ManageRole/${row.id}" class="text-decoration-none">
+                        <span class="badge ${badgeClass} shadow-sm" style="cursor: pointer;">
+                            <i class="fas fa-user-shield me-1 small"></i> ${data || 'No Role'}
+                        </span>
+                    </a>`;
             }
+        },
+            {
+            data: 'id',
+            render: function (data, type, row) {
+                var actionText = row.isBlocked ? (currentLang === 'ar' ? 'إلغاء الحظر' : 'Unblock') : (currentLang === 'ar' ? 'حظر' : 'Block');
+                var iconClass = row.isBlocked ? 'fa-lock' : 'fa-lock-open';
+                var iconColor = row.isBlocked ? 'text-danger' : 'text-success';
+                var btnClass = row.isBlocked ? 'btn-outline-secondary' : 'btn-outline-danger';
+
+                
+                var safeUserName = row.userName;
+
+                return `
+                    <div class="d-flex gap-2 justify-content-center align-items-center">
+                        <button onclick="toggleBlock('${data}')" class="btn btn-sm ${btnClass}">
+                          <i class="fas ${iconClass} ${iconColor}" style="font-size: 1.1rem;"></i> ${actionText}
+                        </button>
+
+                        <button class="btn btn-sm btn-light border text-danger"
+                                onclick="deleteUser('${data}', '${safeUserName}', '${row.role}')">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>`;
+            }
+        }
         ],
             language: languageSettings[currentLang],
             pageLength: 10,
@@ -124,20 +145,20 @@
             });
         });
 
-        function changeLanguage() {
-            var newLang = currentLang === 'ar' ? 'en' : 'ar';
-            $.ajax({
-                url: '/Admin/Home/SetLanguage',
-                type: 'POST',
-                data: { language: newLang },
-                success: function() { location.reload(); }
-            });
-        }
+        
 
-        function deleteUser(id) {
+        function deleteUser(id, userName, role) {
+            
+            var isStudent = role && role.indexOf('Student') !== -1;
+            var targetUrl = isStudent ? '/Admin/Student/Delete' : '/Admin/Instructor/Delete';
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            
+            var titleMsg = currentLang === 'ar' ? `هل أنت متأكد من حذف ${userName}؟` : `Are you sure you want to delete ${userName}?`;
+            var textMsg = currentLang === 'ar' ? 'سيتم حذف كافة البيانات المرتبطة بهذا الحساب!' : 'All data associated with this account will be deleted!';
+
             Swal.fire({
-                title: currentLang === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?',
-                text: currentLang === 'ar' ? 'لن تتمكن من التراجع عن هذا!' : 'You won\'t be able to revert this!',
+                title: titleMsg,
+                text: textMsg,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -146,14 +167,59 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/Admin/User/Delete',
+                        url: targetUrl, 
                         type: 'POST',
-                        data: { id: id },
-                        success: function () {
-                            $('#usersTable').DataTable().ajax.reload(null, false);
-                            Swal.fire(currentLang === 'ar' ? 'تم الحذف!' : 'Deleted!', '', 'success');
+                        data: { id: id ,
+                        __RequestVerificationToken: token},
+                        success: function (response) {
+                            
+                            if (response.success !== false) {
+                                $('#usersTable').DataTable().ajax.reload(null, false);
+                                Swal.fire(
+                                    currentLang === 'ar' ? 'تم الحذف!' : 'Deleted!',
+                                    currentLang === 'ar' ? 'تم حذف المستخدم بنجاح.' : 'User deleted successfully.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire('Error!', response.message || 'Error deleting user', 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Something went wrong on the server', 'error');
                         }
                     });
+                }
+            });
+        }
+
+
+                function toggleBlock(id) {
+            $.ajax({
+                url: '/Admin/User/ToggleBlock',
+                type: 'POST',
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        
+                        $('#usersTable').DataTable().ajax.reload(null, false);
+
+                        
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: response.message
+                        });
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error!', 'Something went wrong', 'error');
                 }
             });
         }
