@@ -1,5 +1,8 @@
-﻿@using Models.ViewModels
-@model IEnumerable<StudentCoursesVM>
+﻿@using Models
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager
+
+@model Models.ViewModels.StudentDashboardVM
+
 
 @{
     Layout = "_StudentLayout";
@@ -15,19 +18,19 @@
                     <i class="fas fa-book-open me-2"></i> My Subjects
                 </div>
                 <div class="list-group list-group-flush">
-                    @if (Model != null && Model.Any())
+                    @if (Model.Courses != null && Model.Courses.Any())
                     {
-                        @foreach (var course in Model)
+                        @foreach (var coursesVM in Model.Courses)
                         {
                             @* هنا نجعل العنصر رابطاً يوجه إلى CourseController *@
                             <a asp-area="StudentArea"
                                asp-controller="Course"
                                asp-action="Details"
-                               asp-route-id="@course.CourseId"
+                               asp-route-id="@coursesVM.CourseId"
                                class="list-group-item list-group-item-action small py-3"
                                style="color: #d35400; cursor: pointer; text-decoration: none;">
                                 <i class="fas fa-chevron-right me-2" style="font-size: 0.8em;"></i>
-                                @course.CourseTitleEn @* أو CourseTitleAr حسب رغبتك *@
+                                @coursesVM.CourseTitleEn @* أو CourseTitleAr حسب رغبتك *@
                             </a>
                         }
                     }
@@ -170,3 +173,370 @@
         </div>
     </div>
 </div>
+@* //chat *@
+<div id="chat-circle">
+    <i class="fas fa-comment-dots fa-2x"></i>
+</div>
+
+<div id="chat-box" style="display:none;">
+    <div class="chat-box-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <button id="chat-back-btn" class="btn btn-sm text-white p-0 me-2" style="display:none;" onclick="backToInstructorsList()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h6 class="m-0" id="chat-header-title">
+                @(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "المدرسين" : "Instructors")
+            </h6>
+        </div>
+        <span id="close-chat" style="cursor:pointer; font-size: 20px;">&times;</span>
+    </div>
+
+    <div id="instructors-list-container" style="height: 340px; overflow-y: auto; padding: 0;">
+        <div class="list-group list-group-flush">
+            @if (Model.Instructors != null && Model.Instructors.Any())
+            {
+                @foreach (var teacher in Model.Instructors)
+                {
+                    // 1. تحديد الاسم حسب اللغة أولاً
+                    var instructorName = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar")
+                    ? teacher.InstructorNameAr
+                    : teacher.InstructorNameEn;
+
+                    // 2. منطق استخراج الحروف الأولى (Initials)
+                    var initials = "";
+                    if (!string.IsNullOrEmpty(instructorName))
+                    {
+                        var words = instructorName.Trim().Split(' ');
+                        if (words.Length >= 2)
+                            initials = words[0][0].ToString() + words[1][0].ToString();
+                        else if (words.Length == 1)
+                            initials = words[0][0].ToString();
+                    }
+
+                    <button class="list-group-item list-group-item-action border-0 d-flex align-items-center p-3"
+                            onclick="openPrivateChat('@teacher.InstructorId', '@instructorName')"
+                            style="border-bottom: 1px solid #f1f1f1 !important;">
+
+                        <div class="position-relative">
+                            @if (!string.IsNullOrEmpty(teacher.InstructorImage))
+                            {
+                                // لو الصورة موجودة بنعرضها، وبنضيف onerror عشان لو المسار غلط يقلب حروف
+                                <img src="@teacher.InstructorImage"
+                                     class="rounded-circle me-3"
+                                     style="width:45px; height:45px; object-fit:cover; border: 1px solid #eee;"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                                <div class="initials-avatar me-3" style="display:none;">@initials.ToUpper()</div>
+                            }
+                            else
+                            {
+                                // لو مفيش صورة أصلاً بنعرض الحروف فوراً
+                                <div class="initials-avatar me-3">@initials.ToUpper()</div>
+                            }
+                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle" style="right: 15px;"></span>
+                        </div>
+
+                        <div class="flex-grow-1 text-start">
+                            <div class="fw-bold text-dark" style="font-size: 0.9rem;">@instructorName</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                @(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "مدرس" : "Instructor")
+                            </small>
+                        </div>
+                    </button>
+                }
+            }
+            else
+            {
+                <div class="text-center mt-5 text-muted">
+                    <i class="fas fa-user-slash fa-2x mb-2"></i><br>
+                    @(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "لا يوجد مدرسين حالياً" : "No instructors found")
+                </div>
+            }
+        </div>
+    </div>
+
+    <div id="private-chat-area" style="display:none; height: 340px; flex-direction: column;">
+        <div id="messages-window" style="flex-grow: 1; overflow-y: auto; padding: 15px; background-color: #f8f9fa;">
+            <div id="chat-load-spinner" class="text-center mt-5 d-none">
+                <i class="fas fa-spinner fa-spin text-orange"></i>
+            </div>
+            <div id="chat-messages-body">
+                <div class="text-center text-muted mt-5 small">Start your conversation...</div>
+            </div>
+        </div>
+
+        <div class="p-2 border-top bg-white d-flex align-items-center" style="position: relative; z-index: 10;">
+            <input type="text" id="chat-input" class="form-control form-control-sm mx-1" placeholder="Type message..." style="flex-grow: 1;">
+            <button class="btn btn-orange btn-sm" id="send-msg-btn" style="min-width: 40px;">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        // 1. إعداد اتصال SignalR
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub") // تأكد من مطابقة المسار لـ Program.cs
+            .withAutomaticReconnect()
+            .build();
+
+        var currentReceiverId = "";
+
+        // بدء الاتصال
+        connection.start().then(function () {
+            console.log("SignalR Connected!");
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // 2. استقبال الرسائل "لايف" من السيرفر
+        connection.on("ReceiveMessage", function (senderId, message, timestamp) {
+            // لو الرسالة جاية من المدرس اللي أنا فاتح معاه الشات دلوقتي
+            if (senderId === currentReceiverId) {
+                var time = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                appendMessage(message, false, time, true); // أرسمها على الشمال
+                markMessagesAsRead(senderId); // علّم عليها إنها اتقرت
+            }
+        });
+
+        // 3. إدارة فتح وقفل صندوق الشات
+        document.getElementById("chat-circle").onclick = function() {
+            var chatBox = document.getElementById("chat-box");
+            if (chatBox.style.display === "none" || chatBox.style.display === "") {
+                chatBox.style.display = "block";
+                this.innerHTML = '<i class="fas fa-times fa-2x"></i>';
+            } else {
+                chatBox.style.display = "none";
+                this.innerHTML = '<i class="fas fa-comment-dots fa-2x"></i>';
+            }
+        };
+
+        document.getElementById("close-chat").onclick = function() {
+            document.getElementById("chat-box").style.display = "none";
+            document.getElementById("chat-circle").innerHTML = '<i class="fas fa-comment-dots fa-2x"></i>';
+        };
+
+        // 4. الدخول لشات مدرس معين
+        function openPrivateChat(instructorId, instructorName) {
+            currentReceiverId = instructorId;
+
+            document.getElementById("instructors-list-container").style.display = "none";
+            document.getElementById("private-chat-area").style.display = "flex";
+            document.getElementById("chat-header-title").innerText = instructorName;
+            document.getElementById("chat-back-btn").style.display = "block";
+            document.getElementById("chat-messages-body").innerHTML = "";
+
+            // أ. تحويل الرسائل لـ "مقروءة"
+            markMessagesAsRead(instructorId);
+
+            // ب. تحميل تاريخ المحادثة
+            loadChatHistory(instructorId);
+        }
+
+        // 5. العودة للقائمة
+        function backToInstructorsList() {
+            currentReceiverId = "";
+            document.getElementById("instructors-list-container").style.display = "block";
+            document.getElementById("private-chat-area").style.display = "none";
+            document.getElementById("chat-back-btn").style.display = "none";
+            document.getElementById("chat-header-title").innerText = "@(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "المدرسين" : "Instructors")";
+        }
+
+        // 6. دالة رسم الرسائل
+        function appendMessage(message, isMine, timestamp, isRead = false) {
+            var msgBody = document.getElementById("chat-messages-body");
+            var alignment = isMine ? "justify-content-end" : "justify-content-start";
+            var bgColor = isMine ? "#ff6600" : "#e9e9eb";
+            var textColor = isMine ? "white" : "black";
+            var borderRadius = isMine ? "18px 18px 0 18px" : "18px 18px 18px 0";
+
+            var checkDouble = isMine ?
+                `<i class="fas fa-check-double" style="font-size: 10px; margin-left: 3px; color: ${isRead ? '#00c853' : '#adb5bd'};"></i>`
+                : "";
+
+            var html = `
+                <div class="d-flex ${alignment} mb-3">
+                    <div class="msg-content shadow-sm" style="background-color: ${bgColor}; color: ${textColor}; padding: 10px 15px; border-radius: ${borderRadius}; max-width: 80%; font-size: 0.9rem;">
+                        ${message}
+                        <div style="font-size: 0.65rem; text-align: right; opacity: 0.7; margin-top: 4px;">
+                            ${timestamp} ${checkDouble}
+                        </div>
+                    </div>
+                </div>`;
+
+            msgBody.insertAdjacentHTML('beforeend', html);
+            scrollChatToBottom();
+        }
+
+        // 7. إرسال الرسالة (AJAX + SignalR)
+        document.getElementById("send-msg-btn").onclick = function() {
+            var input = document.getElementById("chat-input");
+            var messageContent = input.value.trim();
+
+            if (messageContent !== "" && currentReceiverId !== "") {
+                $.post("@Url.Action("SaveMessage", "Home", new { area = "StudentArea" })", { receiverId: currentReceiverId, content: messageContent }, function(response) {
+                    if (response.success) {
+                        var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        appendMessage(messageContent, true, time, false); // رسمها عندي
+                        input.value = "";
+
+                        // إرسال عبر SignalR ليظهر للمدرس "لايف"
+                        connection.invoke("SendMessage", currentReceiverId, messageContent).catch(function (err) {
+                            return console.error(err.toString());
+                        });
+                    }
+                });
+            }
+        };
+
+        // 8. تحميل التاريخ
+        function loadChatHistory(receiverId) {
+            if (currentReceiverId === "") return;
+            $.get("/StudentArea/Home/GetChatHistory", { instructorId: receiverId }, function(data) {
+                var msgBody = document.getElementById("chat-messages-body");
+                msgBody.innerHTML = "";
+                if (data && data.length > 0) {
+                    data.forEach(function(msg) {
+                        var isMine = msg.senderId === "@_userManager.GetUserId(User)";
+                        var time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        appendMessage(msg.message, isMine, time, msg.isRead);
+                    });
+                } else {
+                    msgBody.innerHTML = '<div class="text-center mt-5 small text-muted">Start your conversation...</div>';
+                }
+            });
+        }
+
+        function markMessagesAsRead(instructorId) {
+            $.post("/StudentArea/Home/MarkAsRead", { instructorId: instructorId });
+        }
+
+        function scrollChatToBottom() {
+            var msgWindow = document.getElementById("messages-window");
+            if(msgWindow) msgWindow.scrollTop = msgWindow.scrollHeight;
+        }
+
+        document.getElementById("chat-input").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                document.getElementById("send-msg-btn").click();
+            }
+        });
+    </script>
+}
+
+@functions {
+    public string GetInitials(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "I";
+        var words = name.Trim().Split(' '); // ضفنا Trim عشان لو في مسافات زيادة
+        if (words.Length >= 2)
+        {
+            return (words[0][0].ToString() + words[1][0].ToString()).ToUpper();
+        }
+        return words[0][0].ToString().ToUpper();
+    }
+}
+ 
+
+<style>
+    /* الدائرة البرتقالية */
+    #chat-circle {
+        background-color: #fd7e14 !important;
+        color: white !important;
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+        cursor: pointer;
+        z-index: 10001; /* خليناه أعلى من الـ Box بواحد */
+    }
+
+    /* صندوق الشات */
+    #chat-box {
+        display: none;
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 320px;
+        height: 400px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0px 5px 25px rgba(0,0,0,0.2);
+        z-index: 10000; /* أقل من الدائرة */
+        overflow: hidden;
+        border: 1px solid #eee;
+    }
+
+    .chat-box-header {
+        background: #fd7e14;
+        color: white;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    /* لون الزرار البرتقالي */
+    .btn-orange {
+        background-color: #ff6600 !important;
+        border-color: #ff6600 !important;
+        color: white !important;
+    }
+
+        .btn-orange:hover {
+            background-color: #e65c00 !important;
+        }
+
+    /* تنسيق الرسائل المرسلة (الطالب) */
+    .msg-sent {
+        background-color: #ff6600 !important; /* لون برتقالي */
+        color: white !important;
+        border-radius: 15px 15px 0 15px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        max-width: 80%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* تنسيق الرسائل المستلمة (المدرس) */
+    .msg-received {
+        background-color: #e9ecef !important; /* لون رمادي فاتح */
+        color: #333 !important;
+        border-radius: 15px 15px 15px 0;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        max-width: 80%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+  
+    .initials-avatar {
+        width: 45px;
+        height: 45px;
+        /* خلفية برتقالية واضحة */
+        background-color: #000000;
+        /* لون الحروف (خليته أبيض عشان يتباين مع البرتقالي) */
+        color: #FFFFFF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        /* إضافة حواف (Border) عشان تظهر بوضوح */
+        border: 2px solid #FFFFFF;
+        /* إضافة ظل خفيف (Shadow) عشان تدي عمق */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        text-transform: uppercase;
+    }
+
+</style>
+                               

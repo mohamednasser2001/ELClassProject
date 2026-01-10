@@ -206,7 +206,7 @@ namespace ELClass.Areas.Identity.Controllers
                         var currentLang = HttpContext.Session.GetString("Language") ?? "en";
                         TempData["success-notifications"] = currentLang == "ar" ? "تم تسجيل الدخول بنجاح" : "Logged in successfully";
 
-                        return RedirectToAction("index", "Course", new { area = "admin" });
+                        return RedirectToAction("index", "Home", new { area = "StudentArea" });
                     }
 
                     // جلب اللغة الحالية لتحديد لغة رسائل الخطأ

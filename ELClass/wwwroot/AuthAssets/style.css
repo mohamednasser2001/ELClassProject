@@ -147,6 +147,20 @@ body {
 .text-danger {
     color: #dc3545;
 }
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.btn-orange {
+    background-color: #fd7e14;
+    border: none;
+}
+/*//chat*/
+
+
+
+
+
 
 @media (max-width: 576px) {
     .auth-container {
@@ -167,3 +181,4 @@ body {
             width: 100%; /* تأكيد إن الحقول تاخد العرض كامل */
         }
 }
+
