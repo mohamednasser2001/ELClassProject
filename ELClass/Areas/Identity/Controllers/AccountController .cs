@@ -233,24 +233,24 @@ namespace ELClass.Areas.Identity.Controllers
                         return RedirectToAction("index", "Home", new { area = "StudentArea" });
                     }
 
-                    // جلب اللغة الحالية لتحديد لغة رسائل الخطأ
+                    
                     var lang = HttpContext.Session.GetString("Language") ?? "en";
 
-                    // 1. حالة الإيميل غير مؤكد (Email Not Confirmed)
+                    
                     if (result.IsNotAllowed)
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
                             ? "يجب تأكيد البريد الإلكتروني أولاً لتتمكن من الدخول."
                             : "You must confirm your email to log in.");
                     }
-                    // 2. حالة الحساب مقفل (Locked Out)
+                    
                     else if (result.IsLockedOut)
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
                             ? "هذا الحساب مغلق مؤقتاً بسبب محاولات دخول خاطئة كثيرة."
                             : "This account is locked out due to too many failed attempts.");
                     }
-                    // 3. حالة بيانات الدخول خاطئة (كلمة سر أو إيميل خطأ)
+                   
                     else
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
