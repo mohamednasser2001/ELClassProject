@@ -13,7 +13,7 @@ namespace Models
      
         public string Title { get; set; }
 
-      
+        public DateTime LectureDate { get; set; }= DateTime.Now;
         public string DriveLink { get; set; }
         public string LecturePdfUrl { get; set; } 
         public string AssignmentPdfUrl { get; set; } 

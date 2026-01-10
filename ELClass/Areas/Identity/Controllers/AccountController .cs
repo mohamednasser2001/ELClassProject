@@ -220,6 +220,7 @@ namespace ELClass.Areas.Identity.Controllers
 
                         var currentLang = HttpContext.Session.GetString("Language") ?? "en";
                         TempData["success-notifications"] = currentLang == "ar" ? "تم تسجيل الدخول بنجاح" : "Logged in successfully";
+
                         //var user = await _userManager.FindByEmailAsync(loginVM.EmailOrUserName) ?? await _userManager.FindByNameAsync(loginVM.EmailOrUserName);
                         var roles = await _userManager.GetRolesAsync(user!);
                         if (roles.Contains("Admin") || roles.Contains("SuperAdmin"))

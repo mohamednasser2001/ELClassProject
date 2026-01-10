@@ -15,14 +15,16 @@ namespace DataAccess
             _configuration = configuration;
         }
 
-        public ApplicationDbContext(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
+        //public ApplicationDbContext(IConfiguration configuration)
+        //{
+        //    _configuration = configuration;
+        //}
 
         public DbSet<Course> Courses { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Instructor> Instructors { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<StudentCourse> StudentCourses { get; set; }
         public DbSet<InstructorCourse> InstructorCourses { get; set; }
         public DbSet<InstructorStudent> InstructorStudents { get; set; }

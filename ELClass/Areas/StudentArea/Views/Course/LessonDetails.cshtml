@@ -1,0 +1,57 @@
+﻿
+
+@model Models.Lesson
+@{
+    Layout = "_StudentLayout";
+}
+
+<div class="container py-5">
+    <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="card-header bg-dark text-white p-4" style="border-radius: 20px 20px 0 0;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0 text-white"> <i class="fas fa-play-circle me-2"></i> @Model.Title</h3>
+                <a asp-action="Details" asp-route-id="@Model.CourseId" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-chevron-left"></i> Back to Lessons
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-5 bg-light">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center p-4 h-100 shadow-sm bg-white" style="border-radius: 15px; border-bottom: 5px solid #d35400;">
+                        <i class="fab fa-google-drive fa-3x mb-3" style="color: #d35400;"></i>
+                        <h5 class="fw-bold">Lecture Link</h5>
+                        <p class="text-muted small">Watch the recorded session on Google Drive</p>
+                        <a href="@Model.DriveLink" target="_blank" class="btn w-100 text-white" style="background-color: #d35400;">
+                            Open Video
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="text-center p-4 h-100 shadow-sm bg-white" style="border-radius: 15px; border-bottom: 5px solid #9dbfad;">
+                        <i class="fas fa-file-pdf fa-3x mb-3" style="color: #9dbfad;"></i>
+                        <h5 class="fw-bold">Study Notes</h5>
+                        <p class="text-muted small">Download or view the lecture PDF materials</p>
+                        <a href="@Model.LecturePdfUrl" target="_blank" class="btn w-100 text-white" style="background-color: #9dbfad;">
+                            View PDF
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="text-center p-4 h-100 shadow-sm bg-white" style="border-radius: 15px; border-bottom: 5px solid #2c3e50;">
+                        <i class="fas fa-tasks fa-3x mb-3" style="color: #2c3e50;"></i>
+                        <h5 class="fw-bold">Assignment</h5>
+                        <p class="text-muted small">Solve the tasks and check your understanding</p>
+                        <a href="@Model.AssignmentPdfUrl" target="_blank" class="btn w-100 text-white" style="background-color: #2c3e50;">
+                            Go to Tasks
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
