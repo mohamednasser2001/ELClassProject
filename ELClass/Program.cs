@@ -1,33 +1,43 @@
-﻿// ... الـ Usings زي ما هي
-
-using DataAccess;
+﻿using DataAccess;
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
 using ELClass.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Utilites;
 using Scalar.AspNetCore;
+using Utilities.DbIntializer;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add services to the container.
+// =======================
+// 1️⃣ Services
+// =======================
+
+// MVC
 builder.Services.AddControllersWithViews();
-builder.Services.AddSignalR(); // شغال تمام
 
-// 2. تعريف الـ DbContext (مرة واحدة فقط!)
+// SignalR
+builder.Services.AddSignalR();
+
+// DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-      options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
-// 3. Identity Configuration
+// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
 {
     config.Password.RequiredLength = 8;
     config.User.RequireUniqueEmail = true;
     config.SignIn.RequireConfirmedEmail = false;
+
     config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     config.Lockout.MaxFailedAccessAttempts = 5;
     config.Lockout.AllowedForNewUsers = true;
@@ -35,16 +45,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
+// Cookie paths
 builder.Services.ConfigureApplicationCookie(options =>
-using Utilities.DbIntializer;
-namespace ELClass
 {
     options.LoginPath = "/Identity/Account/Login";
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
 });
 
+// Email
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
+// Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -52,33 +63,43 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// 4. Dependency Injection
+// =======================
+// 2️⃣ Dependency Injection
+// =======================
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-// ملحوظة: لو الـ UnitOfWork جواها الـ Repositories دي، مش محتاج تسجلهم هنا تاني
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddSignalR();
-//builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+builder.Services.AddScoped<IDbIntializer, DbIntializer>();
+
+// =======================
+// 3️⃣ Build App
+// =======================
 var app = builder.Build();
 
-// 5. Configure the HTTP request pipeline.
+// =======================
+// 4️⃣ Middleware
+// =======================
 if (app.Environment.IsDevelopment())
 {
-    app.MapScalarApiReference(); // سكالر بيشتغل في الـ Dev بس أحسن
+    app.MapScalarApiReference();
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
-   app.UseHsts();
+    app.UseHsts();
 }
+
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // تأكد إنها قبل الـ Routing
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseSession();
-app.UseAuthentication(); // مهم جداً تضيف دي عشان الشات يعرف مين اللي باعت!
+app.UseAuthentication();
 app.UseAuthorization();
 
-// 6. Routes
+// =======================
+// 5️⃣ Routes
+// =======================
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
@@ -87,114 +108,32 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// 7. Seed Roles
+// =======================
+// 6️⃣ SignalR Hub
+// =======================
+app.MapHub<ChatHub>("/chatHub");
+
+// =======================
+// 7️⃣ Seed Roles + DB
+// =======================
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roleNames = { "Admin", "Teacher", "Student" };
-    foreach (var roleName in roleNames)
+    string[] roles = { "Admin", "Teacher", "Student" };
+
+    foreach (var role in roles)
     {
-        if (!await roleManager.RoleExistsAsync(roleName))
+        if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(new IdentityRole(roleName));
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
-
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
-            {
-                config.Password.RequiredLength = 8;
-                config.User.RequireUniqueEmail = true;
-                config.SignIn.RequireConfirmedEmail = false;
-                config.Lockout.AllowedForNewUsers = true;
-
-
-                // ??????? ??? ?????? (Lockout)
-                config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                config.Lockout.MaxFailedAccessAttempts = 5;
-                config.Lockout.AllowedForNewUsers = true;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-            // add identity to url 
-            builder.Services.ConfigureApplicationCookie(options =>
-            {
-                options.LoginPath = "/Identity/Account/Login";
-                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-            });
-            builder.Services.AddTransient<IEmailSender, EmailSender>();
-
-            // add the DbContext 
-
-            builder.Services.AddDbContext<ApplicationDbContext>(option =>
-            {
-                option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
-
-            builder.Services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
-
-            // add services to the container
-            builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
-            builder.Services.AddScoped<IRepository<Course>,Repository<Course>>();
-            builder.Services.AddScoped<IRepository<Instructor>,Repository<Instructor>>();
-            builder.Services.AddScoped<IRepository<Student>,Repository<Student>>();
-            builder.Services.AddScoped<IRepository<InstructorCourse>,Repository<InstructorCourse>>();
-            builder.Services.AddScoped<IRepository<InstructorStudent>,Repository<InstructorStudent>>();
-            builder.Services.AddScoped<IRepository<StudentCourse>, Repository<StudentCourse>>();
-            builder.Services.AddScoped<IDbIntializer, DbIntializer>();
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment() || app.Environment.IsProduction())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-                app.MapScalarApiReference();
-
-            }
-            app.UseSession();
-            app.UseStaticFiles();
-            app.UseHttpsRedirection();
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.MapStaticAssets();
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{area=Admin}/{controller=Home}/{action=Index}/{id?}")
-                .WithStaticAssets();
-
-            // Db Intializer
-
-            using (var scope = app.Services.CreateScope())
-            {
-                var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbIntializer>();
-                dbInitializer.Initialize();
-            }
-
-
-            app.Run();
+            await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+
+    var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbIntializer>();
+    dbInitializer.Initialize();
 }
-//signalR
 
-app.MapHub<ChatHub>("/chatHub");
-
-
-
-
-
-
+// =======================
 app.Run();
+
+
