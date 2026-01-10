@@ -102,11 +102,9 @@ app.UseAuthorization();
 // =======================
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+    pattern: "{area:admin}/{controller=Home}/{action=Index}/{id?}");
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 
 // =======================
 // 6️⃣ SignalR Hub
@@ -118,16 +116,7 @@ app.MapHub<ChatHub>("/chatHub");
 // =======================
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = { "Admin", "Teacher", "Student" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
-    }
+  
 
     var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbIntializer>();
     dbInitializer.Initialize();
