@@ -631,11 +631,17 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 return Json(new { success = false, message = "Instructor not found" });
             }
-
+            var userCourses = await unitOfWork.CourseRepository.GetAsync(c => c.CreatedById == instructor.Id);
+            
             var user = instructor.ApplicationUser;
-
+            using var transaction = await unitOfWork.BeginTransactionAsync();
             try
             {
+                foreach (var course in userCourses)
+                {
+                    course.CreatedById = null;
+                    await unitOfWork.CourseRepository.EditAsync(course);
+                }
                 var instructorCourses = await unitOfWork.InstructorCourseRepository.GetAsync(ic => ic.InstructorId == id);
                 foreach (var ic in instructorCourses)
                 {
@@ -660,11 +666,12 @@ namespace ELClass.Areas.Admin.Controllers
                         return Json(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
                     }
                 }
-
+                await transaction.CommitAsync();
                 return Json(new { success = true });
             }
             catch (DbUpdateException)
             {
+                await transaction.RollbackAsync();
                 return Json(new
                 {
                     success = false,

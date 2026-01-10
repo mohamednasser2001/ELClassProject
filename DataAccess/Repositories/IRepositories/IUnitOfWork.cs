@@ -1,4 +1,5 @@
-﻿using Models;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,7 +16,7 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<InstructorCourse> InstructorCourseRepository { get; }
         IRepository<InstructorStudent> InstructorStudentRepository { get; }
         IRepository<StudentCourse> StudentCourseRepository { get; }
-   
+        Task<IDbContextTransaction> BeginTransactionAsync();
         Task<bool> CommitAsync();
         void Dispose();
     }

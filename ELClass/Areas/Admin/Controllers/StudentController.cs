@@ -558,25 +558,28 @@ namespace ELClass.Areas.Admin.Controllers
             return RedirectToAction("Details", new { id = StudentId });
         }
 
-        [HttpPost] 
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
-           
+            
             var student = await unitOfWork.StudentRepository.GetOneAsync(
                 c => c.Id == id,
                 include: i => i.Include(u => u.ApplicationUser));
 
             if (student == null)
             {
-                return View("AdminNotFoundPage");
+                return Json(new { success = false, message = "Student not found" });
             }
 
             var user = student.ApplicationUser;
 
+            using var transaction = await unitOfWork.BeginTransactionAsync();
+
             try
             {
-               
+                
                 var studentCourses = await unitOfWork.StudentCourseRepository.GetAsync(sc => sc.StudentId == id);
                 foreach (var sc in studentCourses)
                 {
@@ -591,12 +594,6 @@ namespace ELClass.Areas.Admin.Controllers
                 }
 
                 
-                if (user != null)
-                {
-                    DeleteUserImage(user.Img);
-                }
-
-                
                 await unitOfWork.StudentRepository.DeleteAsync(student);
 
                 
@@ -608,32 +605,28 @@ namespace ELClass.Areas.Admin.Controllers
                     var result = await userManager.DeleteAsync(user);
                     if (!result.Succeeded)
                     {
-                        TempData["Error"] = "Student profile deleted, but user account removal failed.";
-                        //return RedirectToAction("Index");
-                        return Json(new { success = true });
+                        await transaction.RollbackAsync();
+                        var error = result.Errors.FirstOrDefault()?.Description ?? "Failed to delete user account";
+                        return Json(new { success = false, message = error });
                     }
-                    var error = result.Errors.FirstOrDefault()?.Description ?? "An unexpected error occurred";
-                    return Json(new { success = false, message = error });
+
+                   
+                    if (!string.IsNullOrEmpty(user.Img))
+                    {
+                        DeleteUserImage(user.Img);
+                    }
                 }
 
-                //TempData["Success"] = "Student and all related data (courses/instructors) deleted successfully.";
-            }
-            catch (DbUpdateException)
-            {
                 
-                return Json(new
-                {
-                    success = false,
-                    message = "this user can't be deleted because there is related data (like courses or financial records)."
-                });
+                await transaction.CommitAsync();
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {
-
-                return Json(new { success = false, message = "An unexpected error occurred: " + ex.Message });
+                
+                await transaction.RollbackAsync();
+                return Json(new { success = false, message = "An error occurred: " + ex.Message });
             }
-
-            return RedirectToAction("Index");
         }
 
         private void DeleteUserImage(string? imageName)

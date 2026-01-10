@@ -95,7 +95,7 @@ namespace ELClass.Areas.Identity.Controllers
                     NameEN = registerVM.NameEN,
                     NameAR = registerVM.NameAR,
                     Email = registerVM.Email,
-                    UserName = registerVM.Email,
+                    UserName = registerVM.Email.Split('@')[0] + new Random().Next(100, 99).ToString(),
                 };
 
                 var result = await _userManager.CreateAsync(applicationUser, registerVM.Password);
@@ -171,16 +171,16 @@ namespace ELClass.Areas.Identity.Controllers
         {
             if (string.IsNullOrEmpty(email)) return RedirectToAction("Login");
 
-            // 1. البحث عن المستخدم
+           
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null) return RedirectToAction("Login");
 
-            // 2. توليد رابط تفعيل جديد
+            
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var confirmationLink = Url.Action("ConfirmEmail", "Account",
                 new { userId = user.Id, token = token }, Request.Scheme);
 
-            // 3. إرسال الإيميل باستخدام الـ EmailSender اللي عملناه
+           
             var lang = HttpContext.Session.GetString("Language") ?? "en";
             await _emailSender.SendEmailAsync(user.Email,
                 lang == "ar" ? "تفعيل الحساب" : "Confirm Your Email",

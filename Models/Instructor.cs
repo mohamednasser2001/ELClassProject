@@ -16,7 +16,7 @@ namespace Models
          [Required(ErrorMessage = "you have to enter a name")]
         public string NameEn { get; set; } = string.Empty;
         [Required(ErrorMessage = " السيرة الذاتية مطلوبة")]
-        public string? img { get; set; } = string.Empty;
+
         public string BioAr { get; set; } = string.Empty;
         [Required(ErrorMessage = "the bio is required")]
         public string BioEn { get; set; } = string.Empty;
