@@ -111,10 +111,10 @@
             <h4 class="text-white fw-bold"><span style="color:var(--primary-orange)">E-</span>Learn</h4>
         </div>
         <div class="nav flex-column">
-            <a asp-area="Teachers" asp-controller="Course" asp-action="Index" class="nav-link active">
+            <a asp-area="Instructor" asp-controller="Course" asp-action="Index" class="nav-link active">
                 <i class="fa-solid fa-layer-group"></i> @(isAr ? "كورساتي" : "My Courses")
             </a>
-            <a asp-area="Teachers" asp-controller="Student" asp-action="Index" class="nav-link">
+            <a asp-area="Instructor" asp-controller="Student" asp-action="Index" class="nav-link">
                 <i class="fa-solid fa-user-graduate"></i> @(isAr ? "الطلاب" : "Students")
             </a>
         </div>

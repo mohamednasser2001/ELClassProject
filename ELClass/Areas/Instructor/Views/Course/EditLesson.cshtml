@@ -1,0 +1,87 @@
+﻿@using Models
+@model Lesson
+
+@{
+    ViewData["Title"] = "Edit New Lesson";
+}
+
+
+
+<div class="bg-white dark:bg-slate-900 min-h-screen">
+
+    <div class="w-full px-2 sm:px-6 py-4">
+
+        <div class="flex items-center gap-4 mb-6 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+            <a asp-action="Details" asp-route-id="@Model.CourseId" class="p-2 bg-white dark:bg-slate-700 rounded-full shadow-sm hover:text-primary transition-colors flex items-center justify-center">
+                <span class="material-icons">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">Edit Lesson @Model.Title </h1>
+                <p class="text-slate-500 text-xs md:text-sm">Course Resource Management</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <form asp-action="EditLesson" method="post" class="p-4 md:p-6 space-y-5">
+
+                @* Hidden CourseId *@
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CourseId" />
+
+                <div>
+                    <label asp-for="Title" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Lesson Title</label>
+                    <input asp-for="Title" placeholder="Enter lesson name..."
+                           class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary text-sm" />
+                    <span asp-validation-for="Title" class="text-red-500 text-[11px] mt-1"></span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label asp-for="LectureDate" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Lecture Date</label>
+                        <input asp-for="LectureDate" type="date"
+                               class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary text-sm" />
+                    </div>
+
+                    <div>
+                        <label asp-for="DriveLink" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Google Drive Link</label>
+                        <input asp-for="DriveLink" placeholder="Paste link here..."
+                               class="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary text-sm" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label asp-for="LecturePdfUrl" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Lecture PDF URL</label>
+                        <div class="relative">
+                            <span class="material-icons absolute left-3 top-2.5 text-slate-400 text-sm">picture_as_pdf</span>
+                            <input asp-for="LecturePdfUrl" placeholder="Link to PDF"
+                                   class="w-full pl-10 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary text-sm" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label asp-for="AssignmentPdfUrl" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Assignment PDF URL</label>
+                        <div class="relative">
+                            <span class="material-icons absolute left-3 top-2.5 text-slate-400 text-sm">assignment</span>
+                            <input asp-for="AssignmentPdfUrl" placeholder="Link to Task"
+                                   class="w-full pl-10 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary text-sm" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-5 border-t border-slate-100 dark:border-slate-700">
+                    <a asp-action="Details" asp-route-id="@Model.CourseId" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white text-sm font-medium transition-colors">Cancel</a>
+                    <button type="submit" class="bg-primary hover:bg-orange-600 text-white px-6 py-2 rounded-md font-bold shadow-md transition-all active:scale-95 text-sm">
+                        Update Lesson
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

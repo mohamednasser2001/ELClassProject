@@ -1,0 +1,33 @@
+﻿/*--------------------------------------------------------------------------*/
+/* Course Details*/
+
+.custom-scrollbar::-webkit-scrollbar {
+    height: 8px !important;
+    width: 8px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 10px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #f97316 !important; 
+    border-radius: 10px !important;
+}
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #ea580c !important;
+    }
+
+
+.pc-container {
+    background-color: #f8fafc; 
+}
+
+
+.material-icons {
+    display: inline-flex !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+}

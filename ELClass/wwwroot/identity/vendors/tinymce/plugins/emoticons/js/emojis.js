@@ -1140,13 +1140,13 @@ window.tinymce.Resource.add("tinymce.plugins.emoticons", {
     fitzpatrick_scale: true,
     category: "people"
   },
-  woman_teacher: {
+  woman_Instructor: {
     keywords: [ "instructor", "professor", "woman", "human" ],
     char: "\ud83d\udc69\u200d\ud83c\udfeb",
     fitzpatrick_scale: true,
     category: "people"
   },
-  man_teacher: {
+  man_Instructor: {
     keywords: [ "instructor", "professor", "man", "human" ],
     char: "\ud83d\udc68\u200d\ud83c\udfeb",
     fitzpatrick_scale: true,

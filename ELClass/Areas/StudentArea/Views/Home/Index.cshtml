@@ -105,7 +105,7 @@
                                     <tr class="text-muted">
                                         <th>TIME</th>
                                         <th>subjects</th>
-                                        <th>Teacher</th>
+                                        <th>Instructor</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -195,12 +195,12 @@
         <div class="list-group list-group-flush">
             @if (Model.Instructors != null && Model.Instructors.Any())
             {
-                @foreach (var teacher in Model.Instructors)
+                @foreach (var Instructor in Model.Instructors)
                 {
                     // 1. تحديد الاسم حسب اللغة أولاً
                     var instructorName = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar")
-                    ? teacher.InstructorNameAr
-                    : teacher.InstructorNameEn;
+                    ? Instructor.InstructorNameAr
+                    : Instructor.InstructorNameEn;
 
                     // 2. منطق استخراج الحروف الأولى (Initials)
                     var initials = "";
@@ -214,14 +214,14 @@
                     }
 
                     <button class="list-group-item list-group-item-action border-0 d-flex align-items-center p-3"
-                            onclick="openPrivateChat('@teacher.InstructorId', '@instructorName')"
+                            onclick="openPrivateChat('@Instructor.InstructorId', '@instructorName')"
                             style="border-bottom: 1px solid #f1f1f1 !important;">
 
                         <div class="position-relative">
-                            @if (!string.IsNullOrEmpty(teacher.InstructorImage))
+                            @if (!string.IsNullOrEmpty(Instructor.InstructorImage))
                             {
                                 // لو الصورة موجودة بنعرضها، وبنضيف onerror عشان لو المسار غلط يقلب حروف
-                                <img src="@teacher.InstructorImage"
+                                <img src="@Instructor.InstructorImage"
                                      class="rounded-circle me-3"
                                      style="width:45px; height:45px; object-fit:cover; border: 1px solid #eee;"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

@@ -95,7 +95,7 @@ namespace ELClass.Areas.Identity.Controllers
                     NameEN = registerVM.NameEN,
                     NameAR = registerVM.NameAR,
                     Email = registerVM.Email,
-                    UserName = registerVM.Email.Split('@')[0] + new Random().Next(100, 99).ToString(),
+                    UserName = registerVM.Email.Split('@')[0] + new Random().Next(10, 99).ToString(),
                 };
 
                 var result = await _userManager.CreateAsync(applicationUser, registerVM.Password);
@@ -182,7 +182,7 @@ namespace ELClass.Areas.Identity.Controllers
 
            
             var lang = HttpContext.Session.GetString("Language") ?? "en";
-            await _emailSender.SendEmailAsync(user.Email,
+            await _emailSender.SendEmailAsync(user.Email!,
                 lang == "ar" ? "تفعيل الحساب" : "Confirm Your Email",
                 lang == "ar" ? $"رابط التفعيل الجديد: <a href='{confirmationLink}'>إضغط هنا</a>"
                              : $"New activation link: <a href='{confirmationLink}'>Click here</a>.");
@@ -226,9 +226,9 @@ namespace ELClass.Areas.Identity.Controllers
                         if (roles.Contains("Admin") || roles.Contains("SuperAdmin"))
                         {
                             return RedirectToAction("index", "home", new { area = "admin" });
-                        }else if (roles.Contains("Teacher"))
+                        }else if (roles.Contains("Instructor"))
                         {
-                            return RedirectToAction("index", "Course", new { area = "Teachers" });
+                            return RedirectToAction("index", "Course", new { area = "Instructor" });
                         }
                         return RedirectToAction("index", "Home", new { area = "StudentArea" });
                     }

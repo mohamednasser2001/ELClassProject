@@ -224,7 +224,7 @@ namespace ELClass.Areas.Admin.Controllers
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
                 var lang = HttpContext.Session.GetString("Language") ?? "en";
 
-                Expression<Func<Instructor, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
+                Expression<Func<Models.Instructor, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
                     (c.NameEn.Contains(searchValue) || c.NameAr.Contains(searchValue) ||
                      c.BioEn.Contains(searchValue) || c.BioAr.Contains(searchValue));
 
@@ -334,7 +334,7 @@ namespace ELClass.Areas.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateInstructorAccount(
-                Instructor ins,
+                Models.Instructor ins,
                 string Password,
                 string ConfirmPassword)
         {
@@ -380,7 +380,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return View(ins);
             }
 
-            await userManager.AddToRoleAsync(user, "Teacher");
+            await userManager.AddToRoleAsync(user, "Instructor");
 
             ins.Id = user.Id;
 
@@ -403,7 +403,7 @@ namespace ELClass.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Instructor ins)
+        public async Task<IActionResult> Create(Models.Instructor ins)
         {
             var lang = HttpContext.Session.GetString("Language") ?? "en";
 
@@ -443,7 +443,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
 
 
-            var newInstructor = new Instructor
+            var newInstructor = new Models.Instructor
             {
                 Id = ins.Id,
                 NameAr = ins.NameAr,
@@ -463,9 +463,9 @@ namespace ELClass.Areas.Admin.Controllers
                 await userManager.RemoveFromRoleAsync(user, "Student");
             }
 
-            if (!roles.Contains("Teacher"))
+            if (!roles.Contains("Instructor"))
             {
-                await userManager.AddToRoleAsync(user, "Teacher");
+                await userManager.AddToRoleAsync(user, "Instructor");
             }
 
 
