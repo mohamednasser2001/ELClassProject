@@ -107,7 +107,7 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{area=admin}/{controller=Home}/{action=Index}/{id?}");
+    pattern: "{area=identity}/{controller=account}/{action=login}/{id?}");
 
 
 

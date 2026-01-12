@@ -2227,11 +2227,11 @@
   content: '\eb26';
   margin-left: -1em;
 }
-.ph-duotone.ph-chalkboard-teacher:before {
+.ph-duotone.ph-chalkboard-Instructor:before {
   content: '\eb27';
   opacity: 0.2;
 }
-.ph-duotone.ph-chalkboard-teacher:after {
+.ph-duotone.ph-chalkboard-Instructor:after {
   content: '\eb28';
   margin-left: -1em;
 }

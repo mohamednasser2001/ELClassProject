@@ -44,7 +44,7 @@
 
 @section scripts {
     <script>
-        // الكود البرمجي (JavaScript) يبقى كما هو بدون أي تغيير لضمان عمل الـ AJAX والـ DataTable
+       
         var currentLang = '@currentLang';
         var currentDir = '@direction';
 
@@ -93,7 +93,7 @@
                     },
                     {
                         data: 'description',
-                        className: 'd-none d-md-table-cell', // إخفاء الوصف في الموبايل لتقليل الزحام
+                        className: 'd-none d-md-table-cell', 
                         render: function (data) {
                             return `<span class="text-muted small">${data.length > 50 ? data.substring(0, 50) + '...' : data}</span>`;
                         }

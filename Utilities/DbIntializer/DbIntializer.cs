@@ -37,7 +37,7 @@ namespace Utilities.DbIntializer
                 {
                     _roleManager.CreateAsync(new("SuperAdmin")).GetAwaiter().GetResult();
                     _roleManager.CreateAsync(new("Admin")).GetAwaiter().GetResult();
-                    _roleManager.CreateAsync(new("Teacher")).GetAwaiter().GetResult();
+                    _roleManager.CreateAsync(new("Instructor")).GetAwaiter().GetResult();
                     _roleManager.CreateAsync(new("Student")).GetAwaiter().GetResult();
                 }
 

@@ -10,27 +10,26 @@
             <div class="card custom-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">
-                        <i class="fas fa-chalkboard-Instructor icon-primary"></i>
-                        @(currentLang == "ar" ? "قائمة المدربين" : "Instructors List")
+                        <i class="fas fa-user-graduate icon-primary"></i>
+                        @(currentLang == "ar" ? "قائمة الطلاب" : "Students List")
                     </h3>
 
                     <div class="d-flex gap-2 align-items-center language-toggle">
-                        <a href="/Admin/Instructor/Create" class="btn btn-sm btn-success-custom">
+                        <a href="/Admin/Student/Create" class="btn btn-sm btn-success-custom">
                             <i class="fas fa-user-plus"></i>
-                            <span> @(currentLang == "ar" ? "إضافة مدرب جديد" : "Add New Instructor")</span>
+                            <span> @(currentLang == "ar" ? "إضافة طالب جديد" : "Add New Student")</span>
                         </a>
-                        
+
                     </div>
                 </div>
 
                 <div class="card-body p-2 p-md-4">
                     <div class="table-responsive">
-                        <table id="InstructorsTable" class="table">
+                        <table id="StudentsTable" class="table">
                             <thead>
                                 <tr>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "الاسم" : "Name")</th>
-                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "السيرة الذاتية" : "Biography")</th>
                                     <th style="text-align: center">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
                                 </tr>
                             </thead>
@@ -48,7 +47,6 @@
 
     <script>
         var currentLang = '@currentLang';
-        var currentDir = '@direction';
 
         var languageSettings = {
             ar: {
@@ -70,13 +68,14 @@
         };
 
         $(document).ready(function () {
-            $('#InstructorsTable').DataTable({
+            $('#StudentsTable').DataTable({
                 processing: true,
                 serverSide: true,
                 stateSave: true,
                 ordering: true,
+                stateSave: true,
                 ajax: {
-                    url: '@Url.Action("GetInstructors", "Instructor", new { area = "Admin" })',
+                    url: '@Url.Action("GetStudents", "Student", new { area = "Instructor" })',
                     type: 'POST',
                     data: function(d) { d.language = currentLang; }
                 },
@@ -90,17 +89,9 @@
                     {
                         data: 'name',
                         render: function (data, type, row) {
-                            return `<a href="/Admin/Instructor/Details/${row.id}" class="instructor-link">
-                                    <i class="fas fa-chalkboard-Instructor me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                            return `<a href="/Admin/Student/Details/${row.id}" class="student-link">
+                                    <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
                                     </a>`;
-                        }
-                    },
-                    {
-                        data: 'bio',
-                        className: 'd-none d-md-table-cell',
-                        render: function(data) {
-                            if (!data) return '<span class="text-muted">-</span>';
-                            return `<span class="text-muted small">${data.length > 60 ? data.substring(0, 60) + '...' : data}</span>`;
                         }
                     },
                     {
@@ -108,8 +99,8 @@
                         render: function (data) {
                             return `
                                 <div class="d-flex gap-1 justify-content-center">
-                                    <a href="/Admin/Instructor/Details/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteInstructor('${data}')"><i class="fas fa-trash"></i></button>
+                                    <a href="/Admin/Student/Details/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-eye"></i></a>
+                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteStudent('${data}')"><i class="fas fa-trash"></i></button>
                                 </div>`;
                         }
                     }
@@ -121,18 +112,9 @@
             });
         });
 
-        // دوال الـ AJAX تبقى كما هي لضمان عمل السيستم
-        function changeLanguage() {
-            var newLang = currentLang === 'ar' ? 'en' : 'ar';
-            $.ajax({
-                url: '@Url.Action("SetLanguage", "Home", new { area = "Admin" })',
-                type: 'POST',
-                data: { language: newLang },
-                success: function() { location.reload(); }
-            });
-        }
 
-        function deleteInstructor(id) {
+
+        function deleteStudent(id) {
             Swal.fire({
                 title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
                 icon: 'warning',
@@ -142,12 +124,12 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/Admin/Instructor/Delete',
+                        url: '/Instructor/Student/Delete',
                         type: 'POST',
                         data: { id: id },
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                         success: function () {
-                            $('#InstructorsTable').DataTable().ajax.reload(null, false);
+                            $('#StudentsTable').DataTable().ajax.reload(null, false);
                             Swal.fire({ icon: 'success', title: currentLang === 'ar' ? 'تم' : 'Done', timer: 1000, showConfirmButton: false });
                         }
                     });

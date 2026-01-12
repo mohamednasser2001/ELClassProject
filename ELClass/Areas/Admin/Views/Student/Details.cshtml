@@ -13,7 +13,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4 header-section">
         <div>
-            <h2 class="fw-bold mb-1 fs-3"><i class="fas fa-chalkboard-teacher text-orange me-2"></i> Student Management</h2>
+            <h2 class="fw-bold mb-1 fs-3"><i class="fas fa-chalkboard-Instructor text-orange me-2"></i> Student Management</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="/Admin/Student" class="text-muted text-decoration-none">Students</a></li>
@@ -47,7 +47,7 @@
 
         <div class="col-6 col-md-6 col-xl-3 mb-3">
             <div class="stat-card text-center">
-                <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                <i class="fas fa-chalkboard-Instructor fa-2x mb-2"></i>
                 <h3>@Model.InstructorStudents.Count()</h3>
                 <p>@(currentLang == "ar" ? "المدربين" : "Instructors")</p>
             </div>
@@ -206,7 +206,7 @@
     <div class="card custom-card mt-4">
         <div class="card-header">
             <h5 class="card-title">
-                <i class="fas fa-chalkboard-teacher icon-primary"></i>
+                <i class="fas fa-chalkboard-Instructor icon-primary"></i>
                 @(currentLang == "ar" ? "المدربين" : "Assigned Instructors")
             </h5>
         </div>
@@ -325,7 +325,7 @@
                     },
                     { data: 'name',
                         render: function (data, type, row) {
-                            return ` <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i> <a href="/Admin/Instructor/Details/${row.instructorId}" class="instructor-link">${data}</a>`;
+                            return ` <i class="fas fa-chalkboard-Instructor me-1 icon-primary" style="opacity:0.7"></i> <a href="/Admin/Instructor/Details/${row.instructorId}" class="instructor-link">${data}</a>`;
                         }
                     },
                     {

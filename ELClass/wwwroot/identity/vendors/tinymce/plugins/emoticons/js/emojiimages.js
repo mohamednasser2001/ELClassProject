@@ -1153,13 +1153,13 @@ window.tinymce.Resource.add("tinymce.plugins.emoticons", {
     fitzpatrick_scale: true,
     category: "people"
   },
-  woman_teacher: {
+  woman_Instructor: {
     keywords: [ "instructor", "professor", "woman", "human" ],
     char: '<img data-emoticon="true" style="width:1em;height:1em;margin:0 .05em 0 .1em;vertical-align:-.1em" draggable="false" alt="\ud83d\udc69\u200d\ud83c\udfeb" src="1f469-200d-1f3eb.png"/>',
     fitzpatrick_scale: true,
     category: "people"
   },
-  man_teacher: {
+  man_Instructor: {
     keywords: [ "instructor", "professor", "man", "human" ],
     char: '<img data-emoticon="true" style="width:1em;height:1em;margin:0 .05em 0 .1em;vertical-align:-.1em" draggable="false" alt="\ud83d\udc68\u200d\ud83c\udfeb" src="1f468-200d-1f3eb.png"/>',
     fitzpatrick_scale: true,
