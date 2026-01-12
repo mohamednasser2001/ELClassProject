@@ -61,6 +61,24 @@ namespace DataAccess.Repositories
             }
         }
 
+        public async Task<bool> DeleteAllAsync(IEnumerable<T> entities)
+        {
+            try
+            {
+
+                _dbSet.RemoveRange(entities);
+                await _context.SaveChangesAsync();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"{ex.Message}");
+                return false;
+
+            }
+        }
         public async Task<bool> DeleteAsync(T entity)
         {
             try

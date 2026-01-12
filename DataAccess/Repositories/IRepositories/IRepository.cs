@@ -13,7 +13,7 @@ namespace DataAccess.Repositories.IRepositories
         Task<bool> EditAsync(T entity);
 
         Task<bool> DeleteAsync(T entity);
-
+        Task<bool> DeleteAllAsync(IEnumerable<T> entities);
         Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>>? filter = null,
             Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, bool tracked = true
             , int? skip = null, int? take = null,
