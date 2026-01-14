@@ -8,6 +8,11 @@
 
   <ItemGroup>
   
+<<<<<<< HEAD
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.1" />
+  
+=======
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />

@@ -27,6 +27,17 @@ namespace ELClass.Areas.StudentArea.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = _userManager.GetUserId(User);
+<<<<<<< HEAD
+
+            bool isEnrolled = await _unitOfWork.StudentCourseRepository.GetOneAsync(
+                sc => sc.StudentId == userId && sc.CourseId == id
+            ) != null;
+
+            if (!isEnrolled)
+            {
+                return Forbid();
+            }
+=======
             bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOneAsync(sc =>
             sc.StudentId == userId && sc.CourseId == id) != null;
 
@@ -37,14 +48,38 @@ namespace ELClass.Areas.StudentArea.Controllers
             }
 
             var course = _unitOfWork.CourseRepository.GetOneAsync(e => e.Id == id, q => q.Include(c => c.Lessons));
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 
+           
+            var course = await _unitOfWork.CourseRepository.GetOneAsync(
+                e => e.Id == id,
+                q => q.Include(c => c.Lessons)
+            );
 
             if (course == null)
             {
                 return NotFound();
             }
 
-            return View(course); // هنبعت موديل الكورس للـ View
+            return View(course); 
+        }
+
+        public async Task<IActionResult> LessonDetails(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+           
+            var lesson = await _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id);
+            if (lesson == null) return NotFound();
+
+      
+            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOneAsync(e =>
+                e.StudentId == userId && e.CourseId == lesson.Id) != null;
+
+            if (!isEnrolled) return Forbid();
+
+          
+
+            return View(lesson);
         }
 
         public IActionResult  LessonDetails(int id)

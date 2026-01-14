@@ -195,12 +195,21 @@
         <div class="list-group list-group-flush">
             @if (Model.Instructors != null && Model.Instructors.Any())
             {
+<<<<<<< HEAD
                 @foreach (var Instructor in Model.Instructors)
                 {
                     // 1. تحديد الاسم حسب اللغة أولاً
                     var instructorName = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar")
                     ? Instructor.InstructorNameAr
                     : Instructor.InstructorNameEn;
+=======
+                @foreach (var teacher in Model.Instructors)
+                {
+                    // 1. تحديد الاسم حسب اللغة أولاً
+                    var instructorName = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar")
+                    ? teacher.InstructorNameAr
+                    : teacher.InstructorNameEn;
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 
                     // 2. منطق استخراج الحروف الأولى (Initials)
                     var initials = "";
@@ -214,6 +223,7 @@
                     }
 
                     <button class="list-group-item list-group-item-action border-0 d-flex align-items-center p-3"
+<<<<<<< HEAD
                             onclick="openPrivateChat('@Instructor.InstructorId', '@instructorName')"
                             style="border-bottom: 1px solid #f1f1f1 !important;">
 
@@ -222,6 +232,16 @@
                             {
                                 // لو الصورة موجودة بنعرضها، وبنضيف onerror عشان لو المسار غلط يقلب حروف
                                 <img src="@Instructor.InstructorImage"
+=======
+                            onclick="openPrivateChat('@teacher.InstructorId', '@instructorName')"
+                            style="border-bottom: 1px solid #f1f1f1 !important;">
+
+                        <div class="position-relative">
+                            @if (!string.IsNullOrEmpty(Instructor.InstructorImage))
+                            {
+                                // لو الصورة موجودة بنعرضها، وبنضيف onerror عشان لو المسار غلط يقلب حروف
+                                <img src="@teacher.InstructorImage"
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                                      class="rounded-circle me-3"
                                      style="width:45px; height:45px; object-fit:cover; border: 1px solid #eee;"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

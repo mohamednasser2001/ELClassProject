@@ -48,44 +48,7 @@ namespace DataAccess
                 .WithMany()
 
                 .HasForeignKey(c => c.CreatedById)
-
-                .OnDelete(DeleteBehavior.NoAction);
-
-
-
-            builder.Entity<InstructorCourse>()
-
-                .HasOne(ic => ic.ApplicationUser)
-
-                .WithMany()
-
-                .HasForeignKey(ic => ic.CreatedById)
-
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-            builder.Entity<InstructorStudent>()
-
-                .HasOne(ic => ic.ApplicationUser)
-
-                .WithMany()
-
-                .HasForeignKey(ic => ic.CreatedById)
-
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-            builder.Entity<StudentCourse>()
-
-                .HasOne(ic => ic.ApplicationUser)
-
-                .WithMany()
-
-                .HasForeignKey(ic => ic.CreatedById)
-
-                .OnDelete(DeleteBehavior.Cascade);
-
-            
+                .OnDelete(DeleteBehavior.SetNull); 
 
         }
 

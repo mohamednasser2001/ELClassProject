@@ -27,7 +27,7 @@
             padding: 8px 20px;
         }
 
-        /* لضمان توسيط العناصر بشكل حقيقي */
+        
         .nav-center-container {
             flex-grow: 1;
             display: flex;
@@ -48,7 +48,7 @@
                 color: var(--std-teal) !important;
             }
 
-        /* تنسيق اللوجو - جربت لك مسارين لضمان الظهور */
+      /* تنسيق اللوجو */
         .navbar-brand img {
             max-height: 45px;
             width: auto;
@@ -56,7 +56,7 @@
         }
 
         .side-width {
-            width: 250px; /* مساحة ثابتة لليمين والشمال عشان اللي في النص يتوسطن */
+            width: 250px; 
         }
     </style>
 </head>
@@ -67,9 +67,13 @@
 
             <div class="side-width">
                 <a class="navbar-brand d-flex align-items-center fw-bold text-white" href="#">
-                    @* المسار الأول من غير علامة ~ لو منفعش *@
+                 
                     <img src="~/Images/logos-04.png" alt="Logo" onerror="this.src='../Images/logos-04.png';">
+<<<<<<< HEAD
+                  
+=======
                     @* <span class="ms-2">ElClass</span> *@
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                 </a>
             </div>
 
@@ -79,8 +83,23 @@
 
             <div class="collapse navbar-collapse nav-center-container" id="studentNav">
                 <ul class="navbar-nav gap-4">
-                    <li class="nav-item"><a class="nav-link"><i class="fas fa-home"></i> Home</a></li>
-                    <li class="nav-item"><a class="nav-link"><i class="fas fa-book"></i> Courses</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           asp-area="StudentArea"
+                           asp-controller="Home"
+                           asp-action="Index">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           asp-area="StudentArea"
+                           asp-controller="Course"
+                           asp-action="Details">
+                            <i class="fas fa-home"></i> Courses
+                        </a>
+                    </li>
+                   
                     <li class="nav-item"><a class="nav-link"><i class="fas fa-video"></i> Lectures</a></li>
                     <li class="nav-item"><a class="nav-link"><i class="fas fa-clipboard-list"></i> Tests</a></li>
                 </ul>
@@ -88,11 +107,20 @@
 
             <div class="d-flex align-items-center justify-content-end gap-3 side-width border-start ps-3">
                 <i class="fas fa-bell" style="cursor:pointer"></i>
+
                 <div class="dropdown">
-                    <div class="d-flex align-items-center gap-2" style="cursor:pointer" data-bs-toggle="dropdown">
-                        <span class="small d-none d-sm-block text-white">Account</span>
+                  
+                    <button class="btn btn-dark d-flex align-items-center gap-2" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="small d-none d-sm-block">Account</span>
                         <img src="https://ui-avatars.com/api/?name=ST&background=9dbfad&color=fff" class="rounded-circle" width="32">
-                    </div>
+                        <i class="fas fa-caret-down ms-1"></i> 
+                    </button>
+
+             
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                        <li><a class="dropdown-item" href="/StudentArea/Home/MyProfile">MyProfile</a></li>
+                       
+                    </ul>
                 </div>
             </div>
 

@@ -1,10 +1,13 @@
 ﻿using System.Threading.Tasks;
+using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels;
+using Models.ViewModels.Student;
 
 namespace ELClass.Areas.StudentArea.Controllers
 {
@@ -19,6 +22,7 @@ namespace ELClass.Areas.StudentArea.Controllers
             this._unitOfWork = unitOfWork;
             this._userManager = userManager;
         }
+   
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
@@ -129,6 +133,117 @@ namespace ELClass.Areas.StudentArea.Controllers
             return Ok();
         }
 
+<<<<<<< HEAD
+        [HttpGet]
+        public async Task<IActionResult> MyProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            var model = new StudentProfileVM
+            {
+                Id = user.Id,
+                FullName = user.NameEN,       
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                ProfileImageUrl = user.Img   
+            };
+
+            return View(model);
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MyProfile(StudentProfileVM model)
+        {
+          
+            ModelState.Remove(nameof(StudentProfileVM.ProfileImageUrl));
+            ModelState.Remove(nameof(StudentProfileVM.Initials));
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            try
+            {
+                var studentInDb = await _unitOfWork.StudentRepository.GetOneAsync(
+                    e => e.Id == model.Id,
+                    query => query.Include(e => e.ApplicationUser)
+                );
+
+                if (studentInDb == null)
+                    return NotFound();
+
+                
+                studentInDb.NameEn = model.FullName;
+
+                if (studentInDb.ApplicationUser != null)
+                {
+                    var user = studentInDb.ApplicationUser;
+
+                   
+                    user.PhoneNumber = model.PhoneNumber;
+                    user.NameEN = model.FullName;   
+                    user.UserName = user.Email;
+
+                    if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
+                    {
+                        var fileName = Guid.NewGuid() + Path.GetExtension(model.ProfilePicture.FileName);
+                        var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "users");
+
+                        if (!Directory.Exists(folderPath))
+                            Directory.CreateDirectory(folderPath);
+
+                        var filePath = Path.Combine(folderPath, fileName);
+
+                        using var stream = new FileStream(filePath, FileMode.Create);
+                        await model.ProfilePicture.CopyToAsync(stream);
+
+                        
+                        if (!string.IsNullOrEmpty(user.Img))
+                        {
+                            var oldPath = Path.Combine(folderPath, user.Img);
+                            if (System.IO.File.Exists(oldPath))
+                                System.IO.File.Delete(oldPath);
+                        }
+
+                        user.Img = fileName;
+                    }
+
+                    
+                    if (!string.IsNullOrWhiteSpace(model.NewPassword))
+                    {
+                        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                        var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+
+                        if (!result.Succeeded)
+                        {
+                            foreach (var error in result.Errors)
+                                ModelState.AddModelError("", error.Description);
+
+                            return View(model);
+                        }
+                    }
+                }
+
+                await _unitOfWork.CommitAsync();
+
+                TempData["Success"] = "Profile updated successfully";
+                return RedirectToAction(nameof(MyProfile));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
+        }
+
+
+=======
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 
     }
 }

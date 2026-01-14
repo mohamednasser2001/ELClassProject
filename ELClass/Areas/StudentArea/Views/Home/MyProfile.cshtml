@@ -1,0 +1,164 @@
+﻿@using Models.ViewModels.Student
+@model StudentProfileVM
+
+@{
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var direction = currentLang == "ar" ? "rtl" : "ltr";
+}
+
+<div class="container py-5" style="direction:@direction">
+
+    <div class="page-header mb-4">
+        <h2 class="fw-bold">
+            <i class="fas fa-user-circle text-orange me-2"></i>
+            @(currentLang == "ar" ? "ملفي الشخصي" : "My Profile")
+        </h2>
+    </div>
+
+    <form asp-area="StudentArea"
+          asp-controller="Home"
+          asp-action="MyProfile"
+          method="post"
+          enctype="multipart/form-data"
+          id="profileForm">
+
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Email" />
+
+        <div class="row">
+
+            <!-- ===== LEFT SIDE (IMAGE + EMAIL) ===== -->
+            <div class="col-12 col-xl-4 mb-4">
+                <div class="card border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+
+                        <div class="position-relative d-inline-block mb-3">
+                            <img id="profilePreview"
+                                 class="rounded-circle img-thumbnail shadow-sm"
+                                 src="@(string.IsNullOrEmpty(Model.ProfileImageUrl)
+                                                                     ? $"https://ui-avatars.com/api/?name={Model.FullName}&background=fffaf5&color=fd7e14&size=160"
+                                                                     : Url.Content("~/images/users/" + Model.ProfileImageUrl))"
+                                 style="width:160px;height:160px;object-fit:cover;border:4px solid #fff5eb;">
+                        </div>
+
+                        <input asp-for="ProfilePicture"
+                               type="file"
+                               id="photoInput"
+                               accept="image/png,image/jpeg"
+                               hidden />
+
+                        <button type="button"
+                                class="btn btn-outline-orange btn-sm w-100 mb-3"
+                                onclick="document.getElementById('photoInput').click();">
+                            <i class="fas fa-camera me-2"></i>
+                            @(currentLang == "ar" ? "تغيير الصورة" : "Change Photo")
+                        </button>
+
+                        <span asp-validation-for="ProfilePicture" class="text-danger small"></span>
+
+                        <hr>
+
+                        <label class="small fw-bold text-muted">
+                            @(currentLang == "ar" ? "البريد الإلكتروني" : "Email")
+                        </label>
+                        <p class="text-orange fw-bold">@Model.Email</p>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== RIGHT SIDE (FORM) ===== -->
+            <div class="col-12 col-xl-8">
+                <div class="card border-0 shadow-sm p-4">
+
+                    <h5 class="fw-bold text-muted mb-3">
+                        <i class="fas fa-edit text-orange me-2"></i>
+                        @(currentLang == "ar" ? "تعديل البيانات" : "Edit Information")
+                    </h5>
+
+                    <!-- Full Name -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Full Name</label>
+                        <input asp-for="FullName" class="form-control shadow-sm">
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control shadow-sm">
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-lock text-orange me-2"></i>
+                        @(currentLang == "ar" ? "الأمان" : "Security")
+                    </h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted">New Password</label>
+                            <input asp-for="NewPassword" type="password" class="form-control shadow-sm">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted">Confirm Password</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control shadow-sm">
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-orange-custom px-5 shadow-sm">
+                            <i class="fas fa-save me-2"></i>
+                            @(currentLang == "ar" ? "حفظ التغييرات" : "Save Changes")
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Preview image + validation
+        document.getElementById("photoInput").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const allowed = ["image/jpeg", "image/png"];
+            if (!allowed.includes(file.type)) {
+                Swal.fire("Error", "Only JPG or PNG images allowed", "error");
+                e.target.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById("profilePreview").src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        @if (TempData["Success"] != null)
+        {
+                <text>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: '@TempData["Success"]',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                </text>
+        }
+    </script>
+}

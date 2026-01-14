@@ -263,7 +263,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("Models.Course", b =>
@@ -521,7 +521,7 @@ namespace DataAccess.Migrations
                     b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
                         .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("ApplicationUser");
                 });
