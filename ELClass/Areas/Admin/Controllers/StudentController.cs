@@ -605,6 +605,7 @@ namespace ELClass.Areas.Admin.Controllers
                     var result = await userManager.DeleteAsync(user);
                     if (!result.Succeeded)
                     {
+<<<<<<< HEAD
                         await transaction.RollbackAsync();
                         var error = result.Errors.FirstOrDefault()?.Description ?? "Failed to delete user account";
                         return Json(new { success = false, message = error });
@@ -614,9 +615,17 @@ namespace ELClass.Areas.Admin.Controllers
                     if (!string.IsNullOrEmpty(user.Img))
                     {
                         DeleteUserImage(user.Img);
+=======
+                        TempData["Error"] = "Student profile deleted, but user account removal failed.";
+                        //return RedirectToAction("Index");
+                        return Json(new { success = true });
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                     }
+                    var error = result.Errors.FirstOrDefault()?.Description ?? "An unexpected error occurred";
+                    return Json(new { success = false, message = error });
                 }
 
+<<<<<<< HEAD
                 
                 await transaction.CommitAsync();
                 return Json(new { success = true });
@@ -626,6 +635,23 @@ namespace ELClass.Areas.Admin.Controllers
                 
                 await transaction.RollbackAsync();
                 return Json(new { success = false, message = "An error occurred: " + ex.Message });
+=======
+                //TempData["Success"] = "Student and all related data (courses/instructors) deleted successfully.";
+            }
+            catch (DbUpdateException)
+            {
+                
+                return Json(new
+                {
+                    success = false,
+                    message = "this user can't be deleted because there is related data (like courses or financial records)."
+                });
+            }
+            catch (Exception ex)
+            {
+
+                return Json(new { success = false, message = "An unexpected error occurred: " + ex.Message });
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
             }
         }
 

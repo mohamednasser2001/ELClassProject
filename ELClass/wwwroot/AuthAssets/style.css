@@ -190,6 +190,26 @@ body {
     align-items: center;
 }
 
+<<<<<<< HEAD
+=======
+.text-danger {
+    color: #dc3545;
+}
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.btn-orange {
+    background-color: #fd7e14;
+    border: none;
+}
+/*//chat*/
+
+
+
+
+
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 
 
     .input-group-forget i {
@@ -328,3 +348,4 @@ body {
     max-width: 800px !important;
     width: 100% !important;
 }
+

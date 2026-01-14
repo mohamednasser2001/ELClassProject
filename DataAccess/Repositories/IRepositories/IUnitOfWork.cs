@@ -16,7 +16,11 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<InstructorCourse> InstructorCourseRepository { get; }
         IRepository<InstructorStudent> InstructorStudentRepository { get; }
         IRepository<StudentCourse> StudentCourseRepository { get; }
+<<<<<<< HEAD
         Task<IDbContextTransaction> BeginTransactionAsync();
+=======
+   
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
         Task<bool> CommitAsync();
         void Dispose();
     }

@@ -36,6 +36,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
 {
     config.Password.RequiredLength = 8;
     config.User.RequireUniqueEmail = true;
+<<<<<<< HEAD
     config.SignIn.RequireConfirmedEmail = true;
 
     config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
@@ -85,6 +86,48 @@ builder.Services.AddScoped<IDbIntializer, DbIntializer>();
 var app = builder.Build();
 
 // =======================
+=======
+    config.SignIn.RequireConfirmedEmail = false;
+
+    config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    config.Lockout.MaxFailedAccessAttempts = 5;
+    config.Lockout.AllowedForNewUsers = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// Cookie paths
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
+
+// Email
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+// Session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// =======================
+// 2️⃣ Dependency Injection
+// =======================
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IDbIntializer, DbIntializer>();
+
+// =======================
+// 3️⃣ Build App
+// =======================
+var app = builder.Build();
+
+// =======================
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 // 4️⃣ Middleware
 // =======================
 if (app.Environment.IsDevelopment())
@@ -106,6 +149,7 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+<<<<<<< HEAD
 
 app.MapHub<ChatHub>("/chatHub");
 
@@ -119,6 +163,21 @@ app.MapControllerRoute(
     pattern: "{area=identity}/{controller=account}/{action=login}/{id?}");
 
 
+=======
+// =======================
+// 5️⃣ Routes
+// =======================
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:admin}/{controller=Home}/{action=Index}/{id?}");
+
+
+
+// =======================
+// 6️⃣ SignalR Hub
+// =======================
+app.MapHub<ChatHub>("/chatHub");
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 
 // =======================
 // 7️⃣ Seed Roles + DB

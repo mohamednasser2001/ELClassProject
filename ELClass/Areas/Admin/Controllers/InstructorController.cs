@@ -631,17 +631,24 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 return Json(new { success = false, message = "Instructor not found" });
             }
+<<<<<<< HEAD
             var userCourses = await unitOfWork.CourseRepository.GetAsync(c => c.CreatedById == instructor.Id);
             
+=======
+
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
             var user = instructor.ApplicationUser;
             using var transaction = await unitOfWork.BeginTransactionAsync();
             try
             {
+<<<<<<< HEAD
                 foreach (var course in userCourses)
                 {
                     course.CreatedById = null;
                     await unitOfWork.CourseRepository.EditAsync(course);
                 }
+=======
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                 var instructorCourses = await unitOfWork.InstructorCourseRepository.GetAsync(ic => ic.InstructorId == id);
                 foreach (var ic in instructorCourses)
                 {
@@ -666,12 +673,19 @@ namespace ELClass.Areas.Admin.Controllers
                         return Json(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
                     }
                 }
+<<<<<<< HEAD
                 await transaction.CommitAsync();
+=======
+
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                 return Json(new { success = true });
             }
             catch (DbUpdateException)
             {
+<<<<<<< HEAD
                 await transaction.RollbackAsync();
+=======
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                 return Json(new
                 {
                     success = false,

@@ -257,9 +257,15 @@ namespace ELClass.Areas.Identity.Controllers
                         if (roles.Contains("Admin") || roles.Contains("SuperAdmin"))
                         {
                             return RedirectToAction("index", "home", new { area = "admin" });
+<<<<<<< HEAD
                         }else if (roles.Contains("Instructor"))
                         {
                             return RedirectToAction("index", "Course", new { area = "Instructor" });
+=======
+                        }else if (roles.Contains("Teacher"))
+                        {
+                            return RedirectToAction("index", "Course", new { area = "Teachers" });
+>>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                         }
                         return RedirectToAction("index", "Home", new { area = "StudentArea" });
                     }
