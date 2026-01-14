@@ -263,11 +263,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-<<<<<<< HEAD
-                    b.ToTable("ChatMessages", (string)null);
-=======
                     b.ToTable("ChatMessages");
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                 });
 
             modelBuilder.Entity("Models.Course", b =>
@@ -328,10 +324,6 @@ namespace DataAccess.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NameEn")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("img")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -426,11 +418,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CourseId");
 
-<<<<<<< HEAD
                     b.ToTable("Lessons", (string)null);
-=======
-                    b.ToTable("Lessons");
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                 });
 
             modelBuilder.Entity("Models.Student", b =>
@@ -533,11 +521,7 @@ namespace DataAccess.Migrations
                     b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
                         .HasForeignKey("CreatedById")
-<<<<<<< HEAD
-                        .OnDelete(DeleteBehavior.Restrict);
-=======
                         .OnDelete(DeleteBehavior.SetNull);
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 
                     b.Navigation("ApplicationUser");
                 });

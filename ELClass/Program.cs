@@ -149,7 +149,6 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-<<<<<<< HEAD
 
 app.MapHub<ChatHub>("/chatHub");
 
@@ -163,21 +162,6 @@ app.MapControllerRoute(
     pattern: "{area=identity}/{controller=account}/{action=login}/{id?}");
 
 
-=======
-// =======================
-// 5️⃣ Routes
-// =======================
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:admin}/{controller=Home}/{action=Index}/{id?}");
-
-
-
-// =======================
-// 6️⃣ SignalR Hub
-// =======================
-app.MapHub<ChatHub>("/chatHub");
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
 
 // =======================
 // 7️⃣ Seed Roles + DB

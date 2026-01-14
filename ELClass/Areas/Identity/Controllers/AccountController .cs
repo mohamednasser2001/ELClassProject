@@ -264,8 +264,7 @@ namespace ELClass.Areas.Identity.Controllers
 =======
                         }else if (roles.Contains("Teacher"))
                         {
-                            return RedirectToAction("index", "Course", new { area = "Teachers" });
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
+                            return RedirectToAction("index", "Course", new { area = "Instructor" });
                         }
                         return RedirectToAction("index", "Home", new { area = "StudentArea" });
                     }
