@@ -6276,14 +6276,14 @@
         "isMulticolor": true,
         "isMulticolor2": true,
         "grid": 0,
-        "tags": ["chalkboard-teacher-duotone"],
+        "tags": ["chalkboard-Instructor-duotone"],
         "colorPermutations": { "16868681": [{ "f": 1 }, { "f": 1 }] }
       },
       "attrs": [{ "fill": "rgb(68, 68, 68)", "opacity": 0.2 }, { "fill": "rgb(68, 68, 68)" }],
       "properties": {
         "order": 31009,
         "id": 971,
-        "name": "chalkboard-teacher-duotone",
+        "name": "chalkboard-Instructor-duotone",
         "prevSize": 16,
         "code": 60199,
         "codes": [60199, 60200]

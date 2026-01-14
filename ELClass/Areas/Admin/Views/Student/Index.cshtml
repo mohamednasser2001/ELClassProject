@@ -19,10 +19,7 @@
                             <i class="fas fa-user-plus"></i>
                             <span> @(currentLang == "ar" ? "إضافة طالب جديد" : "Add New Student")</span>
                         </a>
-                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
-                            <i class="fas fa-language"></i>
-                            
-                        </button>
+                        
                     </div>
                 </div>
 
@@ -74,7 +71,9 @@
             $('#StudentsTable').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ordering: true,
+                stateSave: true,
                 ajax: {
                     url: '@Url.Action("GetStudents", "Student", new { area = "Admin" })',
                     type: 'POST',
@@ -113,12 +112,7 @@
             });
         });
 
-        function changeLanguage() {
-            var newLang = currentLang === 'ar' ? 'en' : 'ar';
-            $.post('@Url.Action("SetLanguage", "Home", new { area = "Admin" })', { language: newLang }, function() {
-                location.reload();
-            });
-        }
+       
 
         function deleteStudent(id) {
             Swal.fire({

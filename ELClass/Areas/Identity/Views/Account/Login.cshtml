@@ -2,7 +2,7 @@
 @model LoginVM
 
 @{
-    Layout = null; // سنستخدم التصميم الجديد بالكامل بدون Layout قديم
+    Layout = null;
     var currentLang = Context.Session.GetString("Language") ?? "en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
@@ -14,8 +14,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(currentLang == "ar" ? "تسجيل الدخول" : "Login") - ELClass</title>
 
-    <!-- ELClass Color System -->
-    <link rel="stylesheet" href="~/css/color-tokens.css" />
     <link rel="stylesheet" href="~/AuthAssets/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
@@ -23,7 +21,10 @@
 <body>
 
     <div class="auth-container">
-        <div style="text-align: end; margin-bottom: 10px;">
+        <div class="auth-top-nav">
+            <div class="logo">
+                <span style="color:#f28b00; font-weight: bold; font-size: 24px;">EL</span><span style="color:#ffffff; font-weight: bold; font-size: 24px;">-CLASS</span>
+            </div>
             <button type="button" class="btn-change-lang" onclick="changeLanguage()">
                 <i class="fas fa-globe"></i> @(currentLang == "ar" ? "English" : "العربية")
             </button>
@@ -34,7 +35,7 @@
                 <h2>@(currentLang == "ar" ? "تسجيل الدخول" : "Log in")</h2>
                 <p>
                     @(currentLang == "ar" ? "أو" : "or")
-                    <a href="/Identity/Account/Register" style="color:var(--primary-color); font-weight:bold;">
+                    <a href="/Identity/Account/Register" class="auth-link">
                         @(currentLang == "ar" ? "إنشاء حساب جديد" : "Create an account")
                     </a>
                 </p>
@@ -46,47 +47,56 @@
                 <div class="form-group">
                     <label class="form-label">@(currentLang == "ar" ? "اسم المستخدم" : "Username / Email")</label>
                     <input class="form-control" type="text" id="EmailOrUserName"
-                           placeholder="@(currentLang == "ar" ? "البريد الإلكتروني أو اسم المستخدم" : "Email address Or UserName")"
+                           placeholder="@(currentLang == "ar" ? "البريد الإلكتروني أو اسم المستخدم" : "Email or Username")"
                            asp-for="EmailOrUserName" />
                     <span class="text-danger fs--1" asp-validation-for="EmailOrUserName"></span>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">@(currentLang == "ar" ? "كلمة المرور" : "Password")</label>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label class="form-label">@(currentLang == "ar" ? "كلمة المرور" : "Password")</label>
+                        <a href="/Identity/Account/ForgotPassword" class="forgot-link">@(currentLang == "ar" ? "نسيت كلمة المرور؟" : "ForgotPassword?")</a>
+                    </div>
                     <input class="form-control" type="password"
-                           placeholder="@(currentLang == "ar" ? "كلمة المرور" : "Password")"
+                           placeholder="********"
                            asp-for="Password" />
                     <span class="text-danger fs--1" asp-validation-for="Password"></span>
                 </div>
 
-                <div class="auth-links">
-                    <div class="form-check">
-                        <input type="checkbox" id="remember-me" asp-for="RememberMe" />
-                        <label for="remember-me">@(currentLang == "ar" ? "تذكرني" : "Remember me")</label>
-                    </div>
-                    <a href="/Identity/Account/ForgotPassword">@(currentLang == "ar" ? "نسيت كلمة المرور؟" : "Forgot Password?")</a>
+                <div class="form-check mb-4">
+                    <input type="checkbox" id="remember-me" asp-for="RememberMe" />
+                    <label for="remember-me" class="check-label">@(currentLang == "ar" ? "تذكرني على هذا الجهاز" : "Remember me on this device")</label>
                 </div>
 
-                <button class="btn-auth mt-3" type="submit">
+                <button class="btn-auth" type="submit">
                     @(currentLang == "ar" ? "دخول" : "Log in")
                 </button>
             </form>
 
-            <div class="social-login">
-                <p>@(currentLang == "ar" ? "أو الدخول بواسطة" : "or log in with")</p>
-                <div style="display:flex; gap:10px;">
-                    <a href="#" class="btn-auth btn-google" style="flex:1; text-decoration:none; display:flex; align-items:center; justify-content:center;">
-                        <i class="fab fa-google me-2"></i> Google
-                    </a>
-                    <a href="#" class="btn-auth" style="flex:1; background:#1877f2; text-decoration:none; display:flex; align-items:center; justify-content:center;">
-                        <i class="fab fa-facebook-f me-2"></i> Facebook
-                    </a>
-                </div>
+            <div class="social-separator">
+                <span>@(currentLang == "ar" ? "أو الدخول بواسطة" : "or log in with")</span>
             </div>
 
-            <div class="text-center mt-4">
-                <a href="javascript:void(0)" onclick="resendEmail()" class="text-muted" style="font-size:13px; text-decoration:underline;">
-                    <i class="fas fa-envelope-open-text"></i> @(currentLang == "ar" ? "إعادة إرسال رابط التفعيل؟" : "Resend activation link?")
+            <div class="social-login">
+                <a asp-controller="Account"
+                   asp-action="ExternalLogin"
+                   asp-route-provider="Google"
+                   class="btn-google-login">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                         class="bi bi-browser-chrome" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                              d="M16 8a8 8 0 0 1-7.022 7.94l1.902-7.098a3 3 0 0 0 .05-1.492A3 3 0 0 0 10.237 6h5.511A8 8 0 0 1 16 8M0 8a8 8 0 0 0 7.927 8l1.426-5.321a3 3 0 0 1-.723.255 3 3 0 0 1-1.743-.147 3 3 0 0 1-1.043-.7L.633 4.876A8 8 0 0 0 0 8m5.004-.167L1.108 3.936A8.003 8.003 0 0 1 15.418 5H8.066a3 3 0 0 0-1.252.243 2.99 2.99 0 0 0-1.81 2.59M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4" />
+                    </svg>
+
+                    <span>Continue with Google</span>
+                </a>
+            </div>
+
+            <div class="resend-container">
+                <p>@(currentLang == "ar" ? "لم يصلك كود التفعيل؟" : "Didn't get the code?")</p>
+                <a href="javascript:void(0)" onclick="resendEmail()">
+                    @(currentLang == "ar" ? "إعادة إرسال الرابط" : "Resend activation link")
                 </a>
             </div>
         </div>
@@ -97,39 +107,22 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        // تغيير اللغة بنفس الـ Logic بتاعك
         function changeLanguage() {
             var newLang = '@currentLang' === 'ar' ? 'en' : 'ar';
             $.ajax({
-                url: '/Identity/Account/SetLanguage',
-                type: 'POST',
-                data: { language: newLang },
-                success: function () {
-                    location.reload();
-                }
+                url: '/Identity/Account/SetLanguage', type: 'POST', data: { language: newLang },
+                success: function () { location.reload(); }
             });
         }
 
-        // إعادة إرسال الإيميل
         function resendEmail() {
             var email = document.getElementById("EmailOrUserName").value;
             if (email === "") {
-                var msg = "@(currentLang == "ar" ? "يرجى كتابة البريد الإلكتروني أولاً" : "Please enter your email first")";
-                toastr.error(msg);
+                toastr.error("@(currentLang == "ar" ? "اكتب البريد الإلكتروني أولاً" : "Enter email first")");
                 return;
             }
             window.location.href = "/Identity/Account/ResendConfirmationEmail?email=" + email;
         }
     </script>
-
-    @* عرض التنبيهات *@
-    @if (TempData["success-notifications"] != null)
-    {
-        <script>toastr.success('@TempData["success-notifications"]')</script>
-    }
-    @if (TempData["error-notifications"] != null)
-    {
-        <script>toastr.error('@TempData["error-notifications"]')</script>
-    }
 </body>
 </html>

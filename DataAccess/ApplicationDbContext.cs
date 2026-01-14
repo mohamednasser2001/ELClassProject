@@ -15,20 +15,79 @@ namespace DataAccess
             _configuration = configuration;
         }
 
-        public ApplicationDbContext(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
+        //public ApplicationDbContext(IConfiguration configuration)
+        //{
+        //    _configuration = configuration;
+        //}
 
         public DbSet<Course> Courses { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Instructor> Instructors { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<StudentCourse> StudentCourses { get; set; }
         public DbSet<InstructorCourse> InstructorCourses { get; set; }
         public DbSet<InstructorStudent> InstructorStudents { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
 
+
+
+        protected override void OnModelCreating(ModelBuilder builder)
+
+        {
+
+            base.OnModelCreating(builder);
+
+            
+
+            builder.Entity<Course>()
+
+                .HasOne(c => c.ApplicationUser)
+
+                .WithMany()
+
+                .HasForeignKey(c => c.CreatedById)
+
+                .OnDelete(DeleteBehavior.NoAction);
+
+
+
+            builder.Entity<InstructorCourse>()
+
+                .HasOne(ic => ic.ApplicationUser)
+
+                .WithMany()
+
+                .HasForeignKey(ic => ic.CreatedById)
+
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.Entity<InstructorStudent>()
+
+                .HasOne(ic => ic.ApplicationUser)
+
+                .WithMany()
+
+                .HasForeignKey(ic => ic.CreatedById)
+
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.Entity<StudentCourse>()
+
+                .HasOne(ic => ic.ApplicationUser)
+
+                .WithMany()
+
+                .HasForeignKey(ic => ic.CreatedById)
+
+                .OnDelete(DeleteBehavior.Cascade);
+
+            
+
+        }
 
     }
 }

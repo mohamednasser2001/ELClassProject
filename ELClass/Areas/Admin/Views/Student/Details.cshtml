@@ -13,7 +13,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4 header-section">
         <div>
-            <h2 class="fw-bold mb-1 fs-3"><i class="fas fa-chalkboard-teacher text-orange me-2"></i> Student Management</h2>
+            <h2 class="fw-bold mb-1 fs-3"><i class="fas fa-chalkboard-Instructor text-orange me-2"></i> Student Management</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="/Admin/Student" class="text-muted text-decoration-none">Students</a></li>
@@ -47,7 +47,7 @@
 
         <div class="col-6 col-md-6 col-xl-3 mb-3">
             <div class="stat-card text-center">
-                <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                <i class="fas fa-chalkboard-Instructor fa-2x mb-2"></i>
                 <h3>@Model.InstructorStudents.Count()</h3>
                 <p>@(currentLang == "ar" ? "المدربين" : "Instructors")</p>
             </div>
@@ -65,8 +65,8 @@
                     <div class="position-relative d-inline-block mb-3">
                         <img id="profilePreview" class="rounded-circle img-thumbnail shadow-sm"
                              src="@(Model.Student.ApplicationUser.Img != null
-                                                                                            ? Url.Content("~/images/users/" + Model.Student.ApplicationUser.Img)
-                                                                                            : $"https://ui-avatars.com/api/?name={Model.Student.NameEn}&background=fffaf5&color=fd7e14&size=128")"
+                                ? Url.Content("~/images/users/" + Model.Student.ApplicationUser.Img)
+                                : $"https://ui-avatars.com/api/?name={Model.Student.NameEn}&background=fffaf5&color=fd7e14&size=128")"
                              style="width:160px; height:160px; border: 4px solid var(--soft-orange); object-fit: cover;">
                     </div>
 
@@ -88,6 +88,7 @@
 
                     <div class="text-start px-3">
                         <p class="small text-muted mb-2"><i class="fas fa-envelope me-2"></i> @Model.Student.ApplicationUser.Email</p>
+                        <p class="small text-muted mb-2"><i class="fas fa-user-pen me-2"></i> @Model.Student.ApplicationUser.UserName</p>
                         <p class="small text-muted mb-0"><i class="fas fa-phone me-2"></i> @(Model.Student.ApplicationUser.PhoneNumber ?? "No Phone")</p>
                     </div>
                 </div>
@@ -205,7 +206,7 @@
     <div class="card custom-card mt-4">
         <div class="card-header">
             <h5 class="card-title">
-                <i class="fas fa-chalkboard-teacher icon-primary"></i>
+                <i class="fas fa-chalkboard-Instructor icon-primary"></i>
                 @(currentLang == "ar" ? "المدربين" : "Assigned Instructors")
             </h5>
         </div>
@@ -263,6 +264,7 @@
                 processing: true,
                 serverSide: true,
                 ordering: false,
+                stateSave: true,
                 responsive: true,
                 autoWidth: false,
                 ajax: {
@@ -306,6 +308,7 @@
                 processing: true,
                 serverSide: true,
                 ordering: false,
+                stateSave: true,
                 responsive: true,
                 autoWidth: false,
                 ajax: {
@@ -322,7 +325,7 @@
                     },
                     { data: 'name',
                         render: function (data, type, row) {
-                            return ` <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i> <a href="/Admin/Instructor/Details/${row.instructorId}" class="instructor-link">${data}</a>`;
+                            return ` <i class="fas fa-chalkboard-Instructor me-1 icon-primary" style="opacity:0.7"></i> <a href="/Admin/Instructor/Details/${row.instructorId}" class="instructor-link">${data}</a>`;
                         }
                     },
                     {

@@ -235,6 +235,37 @@ namespace DataAccess.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChatMessages", (string)null);
+                });
+
             modelBuilder.Entity("Models.Course", b =>
                 {
                     b.Property<int>("Id")
@@ -272,7 +303,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("Models.Instructor", b =>
@@ -298,7 +329,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Instructors");
+                    b.ToTable("Instructors", (string)null);
                 });
 
             modelBuilder.Entity("Models.InstructorCourse", b =>
@@ -324,7 +355,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("InstructorCourses");
+                    b.ToTable("InstructorCourses", (string)null);
                 });
 
             modelBuilder.Entity("Models.InstructorStudent", b =>
@@ -350,7 +381,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("InstructorStudents");
+                    b.ToTable("InstructorStudents", (string)null);
                 });
 
             modelBuilder.Entity("Models.Lesson", b =>
@@ -372,6 +403,9 @@ namespace DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("LectureDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("LecturePdfUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -384,7 +418,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Lesson");
+                    b.ToTable("Lessons", (string)null);
                 });
 
             modelBuilder.Entity("Models.Student", b =>
@@ -402,7 +436,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("Models.StudentCourse", b =>
@@ -428,7 +462,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("StudentCourses");
+                    b.ToTable("StudentCourses", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -486,7 +520,8 @@ namespace DataAccess.Migrations
                 {
                     b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("CreatedById");
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ApplicationUser");
                 });
@@ -512,7 +547,8 @@ namespace DataAccess.Migrations
 
                     b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("CreatedById");
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Models.Instructor", "Instructor")
                         .WithMany("InstructorCourses")
@@ -531,7 +567,8 @@ namespace DataAccess.Migrations
                 {
                     b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("CreatedById");
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Models.Instructor", "Instructor")
                         .WithMany("InstructorStudents")
@@ -584,7 +621,8 @@ namespace DataAccess.Migrations
 
                     b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("CreatedById");
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Models.Student", "Student")
                         .WithMany("StudentCourses")

@@ -15,9 +15,9 @@ namespace Models
         [MinLength(3, ErrorMessage = " title must be more than 3 letters")]
         public string TitleEn { get; set; }
         [Required(ErrorMessage =" من فضلك ادخل وصف")]
-        public string DescriptionAr { get; set; }
+        public string? DescriptionAr { get; set; }
         [Required(ErrorMessage ="please, Enter a Description")]
-        public string DescriptionEn { get; set; }
+        public string? DescriptionEn { get; set; }
         public ICollection<InstructorCourse> InstructorCourses { get; set; }
         public ICollection<StudentCourse> StudentCourses { get; set; }
         public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();

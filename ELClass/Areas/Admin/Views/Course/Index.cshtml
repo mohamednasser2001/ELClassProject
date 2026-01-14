@@ -18,9 +18,7 @@
                             <i class="fa fa-plus"></i>
                             <span>@(currentLang == "ar" ? " إضافة كورس جديد" : " Add New Course")</span>
                         </a>
-                        <button class="btn btn-sm btn-orange-outline" onclick="changeLanguage()">
-                            <i class="fa fa-language"></i>
-                        </button>
+                       
                     </div>
                 </div>
 
@@ -46,7 +44,7 @@
 
 @section scripts {
     <script>
-        // الكود البرمجي (JavaScript) يبقى كما هو بدون أي تغيير لضمان عمل الـ AJAX والـ DataTable
+       
         var currentLang = '@currentLang';
         var currentDir = '@direction';
 
@@ -73,6 +71,7 @@
             $('#coursesTable').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ordering: true,
                 ajax: {
                     url: '@Url.Action("GetCourses", "Course", new { area = "Admin" })',
@@ -94,7 +93,7 @@
                     },
                     {
                         data: 'description',
-                        className: 'd-none d-md-table-cell', // إخفاء الوصف في الموبايل لتقليل الزحام
+                        className: 'd-none d-md-table-cell', 
                         render: function (data) {
                             return `<span class="text-muted small">${data.length > 50 ? data.substring(0, 50) + '...' : data}</span>`;
                         }
@@ -117,16 +116,8 @@
             });
         });
 
-        // دوال الحذف وتغيير اللغة (نفس الكود الأصلي)
-        function changeLanguage() {
-            var newLang = currentLang === 'ar' ? 'en' : 'ar';
-            $.ajax({
-                url: '@Url.Action("SetLanguage", "Home", new { area = "Admin" })',
-                type: 'POST',
-                data: { language: newLang },
-                success: function() { location.reload(); }
-            });
-        }
+        
+        
 
         function deleteCourse(id) {
             Swal.fire({

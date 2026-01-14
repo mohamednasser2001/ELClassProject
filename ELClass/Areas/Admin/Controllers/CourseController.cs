@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ELClass.Areas.Admin.Controllers
 {
-    //[Authorize]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     [Area("Admin")]
     public class CourseController : Controller
     {
@@ -22,7 +22,7 @@ namespace ELClass.Areas.Admin.Controllers
         {
             this.unitOfWork = unitOfWork;
         }
-        [Authorize(Roles = "Admin")]
+        
         public IActionResult Index()
         {
             
@@ -387,10 +387,30 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 return View("AdminNotFoundPage");
             }
+               var transaction = await unitOfWork.BeginTransactionAsync();
+            try
+            {
 
-            await unitOfWork.CourseRepository.DeleteAsync(course);
-            await unitOfWork.CommitAsync();
-            return RedirectToAction("Index");
+               
+                var relatedLessons = await unitOfWork.LessonRepository.GetAsync(c => c.CourseId == id);
+                if (relatedLessons.Any())
+                {
+                    await unitOfWork.LessonRepository.DeleteAllAsync(relatedLessons);
+                }
+
+                // Delete the course
+                await unitOfWork.CourseRepository.DeleteAsync(course);
+
+                await unitOfWork.CommitAsync();
+                await transaction.CommitAsync();
+                return RedirectToAction("Index");
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync() ; 
+                                                  
+                return View("Error");
+            }
         }
     }
 }

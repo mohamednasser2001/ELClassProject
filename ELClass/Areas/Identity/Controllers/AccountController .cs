@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using Models;
 using Models.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+
+using System.Security.Claims;
 //using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
 
 namespace ELClass.Areas.Identity.Controllers
@@ -51,15 +54,21 @@ namespace ELClass.Areas.Identity.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public IActionResult Register(string? email = null)
         {
+            
+            ViewBag.GoogleEmail = email;
             return View();
         }
+
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterVM registerVM)
+        public async Task<IActionResult> Register(RegisterVM registerVM, string? returnUrl = null)
         {
             try
             {
+                returnUrl ??= Url.Content("~/");
+
+                // التحقق من النموذج
                 if (!ModelState.IsValid)
                     return View(registerVM);
 
@@ -79,7 +88,10 @@ namespace ELClass.Areas.Identity.Controllers
                 {
                     ModelState.AddModelError("Email", "Email is required");
                 }
-                if (string.IsNullOrWhiteSpace(registerVM.Password))
+
+                // لو المستخدم جاي من Google، Password ممكن يكون فاضي
+                var info = await _signInManager.GetExternalLoginInfoAsync();
+                if (info == null && string.IsNullOrWhiteSpace(registerVM.Password))
                 {
                     ModelState.AddModelError("Password", "Password is required");
                 }
@@ -95,25 +107,49 @@ namespace ELClass.Areas.Identity.Controllers
                     NameEN = registerVM.NameEN,
                     NameAR = registerVM.NameAR,
                     Email = registerVM.Email,
-                    UserName = registerVM.Email,
+                    UserName = registerVM.Email.Split('@')[0] + new Random().Next(10, 99).ToString(),
                 };
 
-                var result = await _userManager.CreateAsync(applicationUser, registerVM.Password);
+                IdentityResult result;
+
+                if (info != null)
+                {
+                    // المستخدم جاي من Google → نسجل بدون باسورد
+                    result = await _userManager.CreateAsync(applicationUser);
+                }
+                else
+                {
+                    // التسجيل العادي
+                    result = await _userManager.CreateAsync(applicationUser, registerVM.Password);
+                }
 
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(applicationUser, "Student");
 
-                    var std = new Student() { Id = applicationUser.Id ,NameAr = applicationUser.NameAR ?? "", NameEn = applicationUser.NameEN ?? "" };
+                    var std = new Student()
+                    {
+                        Id = applicationUser.Id,
+                        NameAr = applicationUser.NameAR ?? "",
+                        NameEn = applicationUser.NameEN ?? ""
+                    };
                     await unitOfWork.StudentRepository.CreateAsync(std);
                     await unitOfWork.CommitAsync();
+
+                    // لو المستخدم جاي من Google → نربط الحساب
+                    if (info != null)
+                    {
+                        await _userManager.AddLoginAsync(applicationUser, info);
+                        await _signInManager.SignInAsync(applicationUser, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+
+                    // التسجيل العادي → تأكيد الإيميل
                     var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser);
 
-                    
                     var confirmationLink = Url.Action("ConfirmEmail", "Account",
                         new { userId = applicationUser.Id, token = token }, Request.Scheme);
 
-                    
                     await _emailSender.SendEmailAsync(applicationUser.Email,
                         lang == "ar" ? "تأكيد الحساب" : "Confirm Your Email",
                         lang == "ar" ? $"برجاء تأكيد حسابك من خلال <a href='{confirmationLink}'>الضغط هنا</a>"
@@ -127,7 +163,6 @@ namespace ELClass.Areas.Identity.Controllers
                 }
                 else
                 {
-                  
                     foreach (var error in result.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
@@ -137,15 +172,11 @@ namespace ELClass.Areas.Identity.Controllers
             }
             catch (Exception ex)
             {
-               
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return View(registerVM);
             }
-
-
-
-
         }
+
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId,string token)
         {
@@ -171,18 +202,18 @@ namespace ELClass.Areas.Identity.Controllers
         {
             if (string.IsNullOrEmpty(email)) return RedirectToAction("Login");
 
-            // 1. البحث عن المستخدم
+           
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null) return RedirectToAction("Login");
 
-            // 2. توليد رابط تفعيل جديد
+            
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var confirmationLink = Url.Action("ConfirmEmail", "Account",
                 new { userId = user.Id, token = token }, Request.Scheme);
 
-            // 3. إرسال الإيميل باستخدام الـ EmailSender اللي عملناه
+           
             var lang = HttpContext.Session.GetString("Language") ?? "en";
-            await _emailSender.SendEmailAsync(user.Email,
+            await _emailSender.SendEmailAsync(user.Email!,
                 lang == "ar" ? "تفعيل الحساب" : "Confirm Your Email",
                 lang == "ar" ? $"رابط التفعيل الجديد: <a href='{confirmationLink}'>إضغط هنا</a>"
                              : $"New activation link: <a href='{confirmationLink}'>Click here</a>.");
@@ -203,36 +234,54 @@ namespace ELClass.Areas.Identity.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    // تم تغيير المعامل الأخير إلى true لتفعيل خاصية القفل (Lockout) عند المحاولات الخاطئة
+                    var user = await _userManager.FindByEmailAsync(loginVM.EmailOrUserName)
+                                        ?? await _userManager.FindByNameAsync(loginVM.EmailOrUserName);
+
+                    if (user == null)
+                    {
+                        ModelState.AddModelError("", "Invalid login attempt");
+                        return View(loginVM);
+                    }
+
                     var result = await _signInManager.PasswordSignInAsync
-                        (loginVM.EmailOrUserName, loginVM.Password, loginVM.RememberMe, true);
+                        (user, loginVM.Password, loginVM.RememberMe, true);
 
                     if (result.Succeeded)
                     {
+
                         var currentLang = HttpContext.Session.GetString("Language") ?? "en";
                         TempData["success-notifications"] = currentLang == "ar" ? "تم تسجيل الدخول بنجاح" : "Logged in successfully";
 
-                        return RedirectToAction("index", "Course", new { area = "admin" });
+                        //var user = await _userManager.FindByEmailAsync(loginVM.EmailOrUserName) ?? await _userManager.FindByNameAsync(loginVM.EmailOrUserName);
+                        var roles = await _userManager.GetRolesAsync(user!);
+                        if (roles.Contains("Admin") || roles.Contains("SuperAdmin"))
+                        {
+                            return RedirectToAction("index", "home", new { area = "admin" });
+                        }else if (roles.Contains("Instructor"))
+                        {
+                            return RedirectToAction("index", "Course", new { area = "Instructor" });
+                        }
+                        return RedirectToAction("index", "Home", new { area = "StudentArea" });
                     }
 
-                    // جلب اللغة الحالية لتحديد لغة رسائل الخطأ
+                    
                     var lang = HttpContext.Session.GetString("Language") ?? "en";
 
-                    // 1. حالة الإيميل غير مؤكد (Email Not Confirmed)
+                    
                     if (result.IsNotAllowed)
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
                             ? "يجب تأكيد البريد الإلكتروني أولاً لتتمكن من الدخول."
                             : "You must confirm your email to log in.");
                     }
-                    // 2. حالة الحساب مقفل (Locked Out)
+                    
                     else if (result.IsLockedOut)
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
                             ? "هذا الحساب مغلق مؤقتاً بسبب محاولات دخول خاطئة كثيرة."
                             : "This account is locked out due to too many failed attempts.");
                     }
-                    // 3. حالة بيانات الدخول خاطئة (كلمة سر أو إيميل خطأ)
+                   
                     else
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
@@ -267,13 +316,13 @@ namespace ELClass.Areas.Identity.Controllers
 
             var user = await _userManager.FindByEmailAsync(email);
 
-            // حتى لو المستخدم غير موجود، لا نخبر المخترقين بذلك (أمان)
+          
             if (user != null && await _userManager.IsEmailConfirmedAsync(user))
             {
-                // توليد توكن إعادة تعيين كلمة المرور
+                
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-                // إنشاء الرابط الذي سيوجه المستخدم لصفحة كتابة الباسوورد الجديد
+              
                 var callbackUrl = Url.Action("ResetPassword", "Account",
                     new { userId = user.Id, token = token }, Request.Scheme);
 
@@ -281,7 +330,7 @@ namespace ELClass.Areas.Identity.Controllers
                     $"لإعادة تعيين كلمة المرور، اضغط هنا: <a href='{callbackUrl}'>Reset Password</a>");
             }
 
-            // نظهر رسالة نجاح دائماً لزيادة الأمان
+         
             TempData["success-notifications"] = "Check your email to reset your password.";
             return RedirectToAction("Login");
         }
@@ -294,7 +343,7 @@ namespace ELClass.Areas.Identity.Controllers
                 return RedirectToAction("Login");
             }
 
-            // نقوم بتجهيز الـ VM بالبيانات القادمة من الرابط
+        
             var model = new ResetPasswordVM
             {
                 UserId = userId,
@@ -311,7 +360,7 @@ namespace ELClass.Areas.Identity.Controllers
             var user = await _userManager.FindByIdAsync(resetPasswordVM.UserId);
             if (user == null) return RedirectToAction("Login");
 
-            // السطر السحري الذي يغير الباسوورد في قاعدة البيانات باستخدام التوكن
+   
             var result = await _userManager.ResetPasswordAsync(user, resetPasswordVM.Token, resetPasswordVM.NewPassword);
 
             if (result.Succeeded)
@@ -323,5 +372,94 @@ namespace ELClass.Areas.Identity.Controllers
             foreach (var error in result.Errors) ModelState.AddModelError("", error.Description);
             return View(resetPasswordVM);
         }
+        //login by google
+        [HttpGet]
+        public async Task<IActionResult> ExternalLogin(string provider, string? returnUrl = null)
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return Challenge(properties, provider);
+        }
+
+        [HttpGet]
+      
+        public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null, string? remoteError = null)
+        {
+            returnUrl ??= Url.Content("~/");
+
+            if (remoteError != null)
+            {
+                ModelState.AddModelError(string.Empty, $"Error from external provider: {remoteError}");
+                return RedirectToAction("Login");
+            }
+
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            // محاولة تسجيل دخول لو الحساب مربوط قبل كده فقط
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(
+                info.LoginProvider,
+                info.ProviderKey,
+                isPersistent: false,
+                bypassTwoFactor: true);
+
+            if (signInResult.Succeeded)
+            {
+                return LocalRedirect(returnUrl ?? "/");
+            }
+
+            // لو الحساب جديد، نرسل المستخدم لصفحة GoogleResponse للتحقق
+            return RedirectToAction("GoogleResponse", new { returnUrl });
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GoogleResponse(string returnUrl = null)
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+                return RedirectToAction(nameof(Login));
+
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(
+                info.LoginProvider,
+                info.ProviderKey,
+                isPersistent: false,
+                bypassTwoFactor: true);
+
+            if (signInResult.Succeeded)
+                return LocalRedirect(returnUrl ?? "/");
+
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user != null)
+                {
+                    var result = await _userManager.AddLoginAsync(user, info);
+                    if (result.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl ?? "/");
+                    }
+                }
+                else
+                {
+                    // المستخدم جديد → نوديه على صفحة Register مع تمرير الإيميل
+                    return RedirectToAction("Register", "Account", new { Email = email });
+                }
+            }
+
+            return RedirectToAction(nameof(Login));
+        }
+
+
+
     }
 }

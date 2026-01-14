@@ -25,7 +25,7 @@
     <div class="row mb-4">
         <div class="col-6 col-md-3">
             <div class="stat-card text-center">
-                <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                <i class="fas fa-chalkboard-Instructor fa-2x mb-2"></i>
                 <h3>@Model.InstructorCourses.Count()</h3>
                 <p>Instructors</p>
             </div>
@@ -42,7 +42,7 @@
     <!-- Assigned Instructors Section -->
     <div class="card custom-card mb-4">
         <div class="card-header">
-            <h5 class="card-title"><i class="fas fa-chalkboard-teacher icon-primary"></i> Assigned Instructors</h5>
+            <h5 class="card-title"><i class="fas fa-chalkboard-Instructor icon-primary"></i> Assigned Instructors</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive mb-3">
@@ -122,6 +122,7 @@
                 processing: true,
                 serverSide: true,
                 ordering: false,
+                stateSave: true,
                 responsive: true,
                 ajax: {
                     url: '/Admin/Course/GetCourseInstructors',
@@ -132,7 +133,7 @@
                     { data: null, render: (d, t, r, m) => m.row + 1 + m.settings._iDisplayStart },
                     { data: 'name', render: function (data, type, row) {
                     return `<a href="/Admin/Instructor/Details/${row.instructorId}" class="Instructor-link">
-                        <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                        <i class="fas fa-chalkboard-Instructor me-1 icon-primary" style="opacity:0.7"></i> ${data}
                         </a>`;
                      }
                     
@@ -154,6 +155,7 @@
                 processing: true,
                 serverSide: true,
                 ordering: false,
+                stateSave: true,
                 responsive: true,
                 ajax: {
                     url: '/Admin/Course/GetCourseStudents',

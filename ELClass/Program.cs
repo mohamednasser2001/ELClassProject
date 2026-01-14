@@ -1,117 +1,137 @@
-﻿using System.Threading.Tasks;
-using DataAccess;
+﻿using DataAccess;
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using ELClass.Hubs; 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Utilites;
-using Scalar;
 using Scalar.AspNetCore;
-namespace ELClass
+using Utilities.DbIntializer;
+
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+// =======================
+// 1️⃣ Services
+// =======================
+
+// MVC
+builder.Services.AddControllersWithViews();
+
+// SignalR
+builder.Services.AddSignalR();
+
+// DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
+
+// Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
 {
-    public class Program
+    config.Password.RequiredLength = 8;
+    config.User.RequireUniqueEmail = true;
+    config.SignIn.RequireConfirmedEmail = true;
+
+    config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    config.Lockout.MaxFailedAccessAttempts = 5;
+    config.Lockout.AllowedForNewUsers = true;
+})
+
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+//loginbygoogle
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
     {
-        public static async Task Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    });
 
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
+// Cookie paths
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Email
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
-            {
-                config.Password.RequiredLength = 8;
-                config.User.RequireUniqueEmail = true;
-                config.SignIn.RequireConfirmedEmail=false;
-                
+// Session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
-                // ??????? ??? ?????? (Lockout)
-                config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                config.Lockout.MaxFailedAccessAttempts = 5;
-                config.Lockout.AllowedForNewUsers = true;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-            // add identity to url 
-            builder.Services.ConfigureApplicationCookie(options =>
-            {
-                options.LoginPath = "/Identity/Account/Login";
-                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-            });
-            builder.Services.AddTransient<IEmailSender, EmailSender>();
+// =======================
+// 2️⃣ Dependency Injection
+// =======================
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IDbIntializer, DbIntializer>();
 
-            // add the DbContext 
+// =======================
+// 3️⃣ Build App
+// =======================
+var app = builder.Build();
 
-            builder.Services.AddDbContext<ApplicationDbContext>(option =>
-            {
-                option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
-
-            builder.Services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
-
-            // add services to the container
-            builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
-            builder.Services.AddScoped<IRepository<Course>,Repository<Course>>();
-            builder.Services.AddScoped<IRepository<Instructor>,Repository<Instructor>>();
-            builder.Services.AddScoped<IRepository<Student>,Repository<Student>>();
-            builder.Services.AddScoped<IRepository<InstructorCourse>,Repository<InstructorCourse>>();
-            builder.Services.AddScoped<IRepository<InstructorStudent>,Repository<InstructorStudent>>();
-            builder.Services.AddScoped<IRepository<StudentCourse>,Repository<StudentCourse>>();
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment() || app.Environment.IsProduction())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-                app.MapScalarApiReference();
-
-            }
-            app.UseSession();
-            app.UseStaticFiles();
-            app.UseHttpsRedirection();
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.MapStaticAssets();
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{area=Admin}/{controller=Home}/{action=Index}/{id?}")
-                .WithStaticAssets();
-
-            using (var scope = app.Services.CreateScope())
-            {
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-                string[] roleNames = { "Admin", "Teacher", "Student" };
-
-                foreach (var roleName in roleNames)
-                {
-                    // إذا كان الدور غير موجود، قم بإنشائه
-                 
-                    if (!await roleManager.RoleExistsAsync(roleName))
-                    {
-                        await roleManager.CreateAsync(new IdentityRole(roleName));
-                    }
-                }
-
-        
-            }
-       
-
-            app.Run();
-        }
-    }
+// =======================
+// 4️⃣ Middleware
+// =======================
+if (app.Environment.IsDevelopment())
+{
+    app.MapScalarApiReference();
 }
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+app.MapHub<ChatHub>("/chatHub");
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{area=identity}/{controller=account}/{action=login}/{id?}");
+
+
+
+// =======================
+// 7️⃣ Seed Roles + DB
+// =======================
+using (var scope = app.Services.CreateScope())
+{
+  
+
+    var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbIntializer>();
+    dbInitializer.Initialize();
+}
+
+// =======================
+app.Run();
+
+
