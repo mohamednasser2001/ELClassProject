@@ -193,29 +193,21 @@
 
     <div id="instructors-list-container" style="height: 340px; overflow-y: auto; padding: 0;">
         <div class="list-group list-group-flush">
+
             @if (Model.Instructors != null && Model.Instructors.Any())
             {
-<<<<<<< HEAD
                 @foreach (var Instructor in Model.Instructors)
                 {
                     // 1. تحديد الاسم حسب اللغة أولاً
                     var instructorName = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar")
-                    ? Instructor.InstructorNameAr
-                    : Instructor.InstructorNameEn;
-=======
-                @foreach (var teacher in Model.Instructors)
-                {
-                    // 1. تحديد الاسم حسب اللغة أولاً
-                    var instructorName = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar")
-                    ? teacher.InstructorNameAr
-                    : teacher.InstructorNameEn;
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
+                        ? Instructor.InstructorNameAr
+                        : Instructor.InstructorNameEn;
 
                     // 2. منطق استخراج الحروف الأولى (Initials)
                     var initials = "";
                     if (!string.IsNullOrEmpty(instructorName))
                     {
-                        var words = instructorName.Trim().Split(' ');
+                        var words = instructorName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         if (words.Length >= 2)
                             initials = words[0][0].ToString() + words[1][0].ToString();
                         else if (words.Length == 1)
@@ -223,37 +215,26 @@
                     }
 
                     <button class="list-group-item list-group-item-action border-0 d-flex align-items-center p-3"
-<<<<<<< HEAD
                             onclick="openPrivateChat('@Instructor.InstructorId', '@instructorName')"
                             style="border-bottom: 1px solid #f1f1f1 !important;">
 
                         <div class="position-relative">
                             @if (!string.IsNullOrEmpty(Instructor.InstructorImage))
                             {
-                                // لو الصورة موجودة بنعرضها، وبنضيف onerror عشان لو المسار غلط يقلب حروف
                                 <img src="@Instructor.InstructorImage"
-=======
-                            onclick="openPrivateChat('@teacher.InstructorId', '@instructorName')"
-                            style="border-bottom: 1px solid #f1f1f1 !important;">
-
-                        <div class="position-relative">
-                            @if (!string.IsNullOrEmpty(Instructor.InstructorImage))
-                            {
-                                // لو الصورة موجودة بنعرضها، وبنضيف onerror عشان لو المسار غلط يقلب حروف
-                                <img src="@teacher.InstructorImage"
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
                                      class="rounded-circle me-3"
                                      style="width:45px; height:45px; object-fit:cover; border: 1px solid #eee;"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
 
                                 <div class="initials-avatar me-3" style="display:none;">@initials.ToUpper()</div>
                             }
                             else
                             {
-                                // لو مفيش صورة أصلاً بنعرض الحروف فوراً
                                 <div class="initials-avatar me-3">@initials.ToUpper()</div>
                             }
-                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle" style="right: 15px;"></span>
+
+                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle"
+                                  style="right: 15px;"></span>
                         </div>
 
                         <div class="flex-grow-1 text-start">
@@ -268,12 +249,14 @@
             else
             {
                 <div class="text-center mt-5 text-muted">
-                    <i class="fas fa-user-slash fa-2x mb-2"></i><br>
+                    <i class="fas fa-user-slash fa-2x mb-2"></i><br />
                     @(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "لا يوجد مدرسين حالياً" : "No instructors found")
                 </div>
             }
+
         </div>
     </div>
+
 
     <div id="private-chat-area" style="display:none; height: 340px; flex-direction: column;">
         <div id="messages-window" style="flex-grow: 1; overflow-y: auto; padding: 15px; background-color: #f8f9fa;">

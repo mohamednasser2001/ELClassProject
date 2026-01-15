@@ -133,7 +133,7 @@ namespace ELClass.Areas.StudentArea.Controllers
             return Ok();
         }
 
-<<<<<<< HEAD
+
         [HttpGet]
         public async Task<IActionResult> MyProfile()
         {
@@ -242,8 +242,7 @@ namespace ELClass.Areas.StudentArea.Controllers
         }
 
 
-=======
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
+
 
     }
 }

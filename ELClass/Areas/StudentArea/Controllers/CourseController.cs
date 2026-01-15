@@ -27,7 +27,7 @@ namespace ELClass.Areas.StudentArea.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = _userManager.GetUserId(User);
-<<<<<<< HEAD
+
 
             bool isEnrolled = await _unitOfWork.StudentCourseRepository.GetOneAsync(
                 sc => sc.StudentId == userId && sc.CourseId == id
@@ -37,18 +37,10 @@ namespace ELClass.Areas.StudentArea.Controllers
             {
                 return Forbid();
             }
-=======
-            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOneAsync(sc =>
-            sc.StudentId == userId && sc.CourseId == id) != null;
 
-            if (!isEnrolled)
-            {
-                // لو مش مشترك، نرجعه لصفحة ممنوع الدخول أو الصفحة الرئيسية
-                return Forbid();
-            }
+       
 
-            var course = _unitOfWork.CourseRepository.GetOneAsync(e => e.Id == id, q => q.Include(c => c.Lessons));
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
+
 
            
             var course = await _unitOfWork.CourseRepository.GetOneAsync(
@@ -82,22 +74,6 @@ namespace ELClass.Areas.StudentArea.Controllers
             return View(lesson);
         }
 
-        public IActionResult  LessonDetails(int id)
-        {
-            var userId = _userManager.GetUserId(User);
-            // بنجيب الدرس بناءً على الـ Id بتاعه
-            var lesson =  _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id);
-            if (lesson == null) return NotFound();
-
-            // نتحقق إن الطالب ده مسجل في الكورس اللي بيتبع له الدرس ده
-            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOneAsync(e =>
-                e.StudentId == userId && e.CourseId == lesson.Id) != null;
-
-            if (!isEnrolled) return Forbid();
-
-          
-
-            return View(lesson);
-        }
+     
     }
 }
