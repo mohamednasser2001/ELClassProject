@@ -1,7 +1,7 @@
 ﻿using DataAccess;
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
-using ELClass.Hubs; 
+using ELClass.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +9,6 @@ using Models;
 using Models.Utilites;
 using Scalar.AspNetCore;
 using Utilities.DbIntializer;
-
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,23 +34,23 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
 {
     config.Password.RequiredLength = 8;
     config.User.RequireUniqueEmail = true;
-<<<<<<< HEAD
+
     config.SignIn.RequireConfirmedEmail = true;
 
     config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     config.Lockout.MaxFailedAccessAttempts = 5;
     config.Lockout.AllowedForNewUsers = true;
 })
-
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-//loginbygoogle
+// Google Authentication
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
     });
 
 // Cookie paths
@@ -73,62 +71,18 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// =======================
-// 2️⃣ Dependency Injection
-// =======================
+// Dependency Injection
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IDbIntializer, DbIntializer>();
 
 // =======================
-// 3️⃣ Build App
+// 2️⃣ Build App
 // =======================
 var app = builder.Build();
 
 // =======================
-=======
-    config.SignIn.RequireConfirmedEmail = false;
-
-    config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-    config.Lockout.MaxFailedAccessAttempts = 5;
-    config.Lockout.AllowedForNewUsers = true;
-})
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
-
-// Cookie paths
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Identity/Account/Login";
-    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-});
-
-// Email
-builder.Services.AddTransient<IEmailSender, EmailSender>();
-
-// Session
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-// =======================
-// 2️⃣ Dependency Injection
-// =======================
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IDbIntializer, DbIntializer>();
-
-// =======================
-// 3️⃣ Build App
-// =======================
-var app = builder.Build();
-
-// =======================
->>>>>>> 21059d53a3fcba0dcba9805a914dd4af4ec8f05b
-// 4️⃣ Middleware
+// 3️⃣ Middleware
 // =======================
 if (app.Environment.IsDevelopment())
 {
@@ -149,7 +103,9 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+// =======================
+// 4️⃣ Endpoints
+// =======================
 app.MapHub<ChatHub>("/chatHub");
 
 app.MapControllerRoute(
@@ -157,24 +113,14 @@ app.MapControllerRoute(
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{area=identity}/{controller=account}/{action=login}/{id?}");
 
 
-
-// =======================
-// 7️⃣ Seed Roles + DB
+// 5️⃣ Seed DB
 // =======================
 using (var scope = app.Services.CreateScope())
 {
-  
-
     var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbIntializer>();
     dbInitializer.Initialize();
 }
 
-// =======================
 app.Run();
-
-
