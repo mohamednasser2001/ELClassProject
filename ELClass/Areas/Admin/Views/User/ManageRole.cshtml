@@ -1,27 +1,58 @@
-﻿<form asp-action="UpdateRole" method="post">
-    <input type="hidden" name="userId" value="@Model.UserId" />
+﻿@{
+    var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+    var isAr = currentLang == "ar";
+    var direction = isAr ? "rtl" : "ltr";
+}
 
-    <div class="card">
-        <div class="card-body">
-            <h5>Manage Permissions for @Model.UserName</h5>
+<div class="container py-4" style="direction: @direction; text-align: @(isAr ? "right" : "left");">
+    <form asp-action="UpdateRole" method="post">
+        <input type="hidden" name="userId" value="@Model.UserId" />
 
-            <div class="form-check">
-                <input class="form-check-input" type="radio" id="none" name="selectedRole" value="None" @(Model.SelectedRole == "None" ? "checked" : "")>
-                <label class="form-check-label" for="none">Regular User</label>
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-user-shield text-orange me-2"></i>
+                    @(isAr ? $"إدارة صلاحيات {Model.UserName}" : $"Manage Permissions for {Model.UserName}")
+                </h5>
             </div>
 
-            <div class="form-check">
-                <input class="form-check-input" id="Admin" type="radio" name="selectedRole" value="Admin" @(Model.SelectedRole == "Admin" ? "checked" : "")>
-                <label class="form-check-label" for="Admin">Admin</label>
+            <div class="card-body p-4">
+                <div class="d-flex flex-column gap-3">
+                    <div class="form-check p-3 border rounded-2 bg-light">
+                        <input class="form-check-input ms-0 me-2" type="radio" id="none" name="selectedRole" value="None" @(Model.SelectedRole == "None" ? "checked" : "")>
+                        <label class="form-check-label fw-bold" for="none">
+                            @(isAr ? "مستخدم عادي" : "Regular User")
+                            <small class="text-muted d-block fw-normal">@(isAr ? "صلاحيات محدودة للتصفح فقط" : "Limited permissions for browsing only")</small>
+                        </label>
+                    </div>
+
+                    <div class="form-check p-3 border rounded-2 bg-light">
+                        <input class="form-check-input ms-0 me-2" id="Admin" type="radio" name="selectedRole" value="Admin" @(Model.SelectedRole == "Admin" ? "checked" : "")>
+                        <label class="form-check-label fw-bold" for="Admin">
+                            @(isAr ? "مدير (Admin)" : "Admin")
+                            <small class="text-muted d-block fw-normal">@(isAr ? "صلاحيات كاملة لإدارة المحتوى والمستخدمين" : "Full permissions to manage content and users")</small>
+                        </label>
+                    </div>
+
+                    <div class="form-check p-3 border rounded-2 bg-light">
+                        <input class="form-check-input ms-0 me-2" id="SuperAdmin" type="radio" name="selectedRole" value="SuperAdmin" @(Model.SelectedRole == "SuperAdmin" ? "checked" : "")>
+                        <label class="form-check-label fw-bold" for="SuperAdmin">
+                            @(isAr ? "مدير عام (SuperAdmin)" : "SuperAdmin")
+                            <small class="text-muted d-block fw-normal">@(isAr ? "كافة الصلاحيات بما فيها إعدادات النظام" : "All permissions including system settings")</small>
+                        </label>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-check">
-                <input class="form-check-input" id="SuperAdmin" type="radio" name="selectedRole" value="SuperAdmin" @(Model.SelectedRole == "SuperAdmin" ? "checked" : "")>
-                <label class="form-check-label" for="SuperAdmin">SuperAdmin</label>
+            <div class="card-footer bg-white py-3 border-top d-flex gap-2">
+                <button type="submit" class="btn btn-orange-custom px-4 shadow-sm">
+                    <i class="fas fa-check-circle me-1"></i>
+                    @(isAr ? "حفظ التغييرات" : "Save Changes")
+                </button>
+                <a href="/Admin/User" class="btn btn-light border px-4">
+                    @(isAr ? "إلغاء" : "Cancel")
+                </a>
             </div>
         </div>
-        <div class="card-footer">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-        </div>
-    </div>
-</form>
+    </form>
+</div>

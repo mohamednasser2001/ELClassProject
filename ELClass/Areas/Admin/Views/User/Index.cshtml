@@ -1,5 +1,5 @@
 ﻿@{
-    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
@@ -12,8 +12,6 @@
                         <i class="fa fa-users me-2 icon-primary"></i>
                         @(currentLang == "ar" ? "قائمة المستخدمين" : "Users List")
                     </h3>
-
-                    
                 </div>
 
                 <div class="card-body p-2 p-md-4">
@@ -24,8 +22,7 @@
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "اسم المستخدم" : "User Name")</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "البريد الإلكتروني" : "Email")</th>
-                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "الدور" : "role")</th>
-                                   
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "الدور" : "Role")</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
                                 </tr>
                                 @Html.AntiForgeryToken()
@@ -70,89 +67,77 @@
                 stateSave: true,
                 responsive: true,
                 ajax: {
-                    url: '/Admin/User/GetUsers', 
+                    url: '/Admin/User/GetUsers',
                     type: 'POST'
                 },
-                        columns: [
-            {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return `<span class="text-muted small">${meta.row + meta.settings._iDisplayStart + 1}</span>`;
-                }
-            },
-            {
-                data: 'userName',
-                render: function (data, type, row) {
-                   
-                    var isStudent = row.role && row.role.indexOf('Student') !== -1;
-                    var controller = isStudent ? 'Student' : 'Instructor';
-
-                    return `<i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i>
-                            <a href="/Admin/user/Details/${row.id}" class="course-link">${data}</a>`;
-                }
-            },
-            {
-                data: 'email',
-                className: 'd-none d-md-table-cell',
-                render: (data) => `<span class="small text-muted">${data}</span>`
-            },
+                columns: [
                     {
-            data: 'role',
-            className: 'd-md-table-cell',
-            render: function (data, type, row) {
-                
-                var badgeClass = "bg-light text-dark border";
-                if (data && data.indexOf('SuperAdmin') !== -1) badgeClass = "bg-primary text-white";
-                else if (data && data.indexOf('Admin') !== -1) badgeClass = "bg-info text-white";
+                        data: null,
+                        render: function (data, type, row, meta) {
+                            return `<span class="text-muted small">${meta.row + meta.settings._iDisplayStart + 1}</span>`;
+                        }
+                    },
+                    {
+                        data: 'userName',
+                        render: function (data, type, row) {
+                            return `<i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i>
+                                    <a href="/Admin/user/Details/${row.id}" class="course-link">${data}</a>`;
+                        }
+                    },
+                    {
+                        data: 'email',
+                        className: 'd-none d-md-table-cell',
+                        render: (data) => `<span class="small text-muted">${data}</span>`
+                    },
+                    {
+                        data: 'role',
+                        className: 'd-md-table-cell',
+                        render: function (data, type, row) {
+                            var badgeClass = "bg-light text-dark border";
+                            if (data && data.indexOf('SuperAdmin') !== -1) badgeClass = "bg-primary text-white";
+                            else if (data && data.indexOf('Admin') !== -1) badgeClass = "bg-info text-white";
 
-                
-                return `
-                    <a href="/Admin/User/ManageRole/${row.id}" class="text-decoration-none">
-                        <span class="badge ${badgeClass} shadow-sm" style="cursor: pointer;">
-                            <i class="fas fa-user-shield me-1 small"></i> ${data || 'No Role'}
-                        </span>
-                    </a>`;
-            }
-        },
-            {
-            data: 'id',
-            render: function (data, type, row) {
-                var actionText = row.isBlocked ? (currentLang === 'ar' ? 'إلغاء الحظر' : 'Unblock') : (currentLang === 'ar' ? 'حظر' : 'Block');
-                var iconClass = row.isBlocked ? 'fa-lock' : 'fa-lock-open';
-                var iconColor = row.isBlocked ? 'text-danger' : 'text-success';
-                var btnClass = row.isBlocked ? 'btn-outline-secondary' : 'btn-outline-danger';
+                            return `
+                                <a href="/Admin/User/ManageRole/${row.id}" class="text-decoration-none">
+                                    <span class="badge ${badgeClass} shadow-sm" style="cursor: pointer;">
+                                        <i class="fas fa-user-shield me-1 small"></i> ${data || 'No Role'}
+                                    </span>
+                                </a>`;
+                        }
+                    },
+                    {
+                        data: 'id',
+                        render: function (data, type, row) {
+                            var actionText = row.isBlocked ? (currentLang === 'ar' ? 'إلغاء الحظر' : 'Unblock') : (currentLang === 'ar' ? 'حظر' : 'Block');
+                            var iconClass = row.isBlocked ? 'fa-lock' : 'fa-lock-open';
+                            var iconColor = row.isBlocked ? 'text-danger' : 'text-success';
+                            var btnClass = row.isBlocked ? 'btn-outline-secondary' : 'btn-outline-danger';
 
-                
-                var safeUserName = row.userName;
+                            return `
+                                <div class="d-flex gap-2 justify-content-center align-items-center">
+                                    <button onclick="toggleBlock('${data}')" class="btn btn-sm ${btnClass} text-nowrap">
+                                      <i class="fas ${iconClass} ${iconColor} me-1" style="font-size: 1.1rem;"></i> ${actionText}
+                                    </button>
 
-                return `
-                    <div class="d-flex gap-2 justify-content-center align-items-center">
-                        <button onclick="toggleBlock('${data}')" class="btn btn-sm ${btnClass}">
-                          <i class="fas ${iconClass} ${iconColor}" style="font-size: 1.1rem;"></i> ${actionText}
-                        </button>
-
-                        <button class="btn btn-sm btn-light border text-danger"
-                                onclick="deleteUser('${data}', '${safeUserName}', '${row.role}')">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </div>`;
-            }
-        }
-        ],
-            language: languageSettings[currentLang],
-            pageLength: 10,
-            dom: '<"d-flex justify-content-between mb-2"lf>rt<"d-flex justify-content-between mt-2"ip>'
+                                    <button class="btn btn-sm btn-light border text-danger"
+                                            onclick="deleteUser('${data}', '${row.userName}', '${row.role}')">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>`;
+                        }
+                    }
+                ],
+                language: languageSettings[currentLang],
+                pageLength: 10,
+                dom: '<"d-flex justify-content-between mb-2"lf>rt<"d-flex justify-content-between mt-2"ip>'
             });
         });
 
-        
-
         function deleteUser(id, userName, role) {
-            
             var isStudent = role && role.indexOf('Student') !== -1;
             var targetUrl = isStudent ? '/Admin/Student/Delete' : '/Admin/Instructor/Delete';
             var token = $('input[name="__RequestVerificationToken"]').val();
-            
+
             var titleMsg = currentLang === 'ar' ? `هل أنت متأكد من حذف ${userName}؟` : `Are you sure you want to delete ${userName}?`;
             var textMsg = currentLang === 'ar' ? 'سيتم حذف كافة البيانات المرتبطة بهذا الحساب!' : 'All data associated with this account will be deleted!';
 
@@ -167,12 +152,10 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: targetUrl, 
+                        url: targetUrl,
                         type: 'POST',
-                        data: { id: id ,
-                        __RequestVerificationToken: token},
+                        data: { id: id , __RequestVerificationToken: token},
                         success: function (response) {
-                            
                             if (response.success !== false) {
                                 $('#usersTable').DataTable().ajax.reload(null, false);
                                 Swal.fire(
@@ -192,18 +175,14 @@
             });
         }
 
-
-                function toggleBlock(id) {
+        function toggleBlock(id) {
             $.ajax({
                 url: '/Admin/User/ToggleBlock',
                 type: 'POST',
                 data: { id: id },
                 success: function (response) {
                     if (response.success) {
-                        
                         $('#usersTable').DataTable().ajax.reload(null, false);
-
-                        
                         const Toast = Swal.mixin({
                             toast: true,
                             position: 'top-end',

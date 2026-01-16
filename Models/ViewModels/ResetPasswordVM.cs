@@ -8,19 +8,19 @@ namespace Models.ViewModels
     public class ResetPasswordVM
     {
         [Required]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         [Required]
-        public string Token { get; set; }
+        public string Token { get; set; } =string.Empty;
 
         [Required(ErrorMessage = "Password is required")]
         [DataType(DataType.Password)]
         [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
-        public string NewPassword { get; set; }
+        public string NewPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Confirm Password is required")]
         [DataType(DataType.Password)]
         [Compare("NewPassword", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; }
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

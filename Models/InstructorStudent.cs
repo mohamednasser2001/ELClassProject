@@ -8,10 +8,10 @@ namespace Models
     [PrimaryKey("InstructorId", "StudentId")]
     public class InstructorStudent : AuditLogging
     {
-        public string InstructorId { get; set; }
-        public Instructor Instructor { get; set; }
+        public string InstructorId { get; set; } = string.Empty;
+        public Instructor Instructor { get; set; } = null!;
 
-        public string StudentId { get; set; }
-        public Student Student { get; set; }
+        public string StudentId { get; set; } = string.Empty;
+        public Student Student { get; set; } = null!;
     }
 }

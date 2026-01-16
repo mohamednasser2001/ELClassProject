@@ -87,7 +87,7 @@ namespace ELClass.Areas.StudentArea.Controllers
 
                 return BadRequest("Failed to save the message");
             }
-            catch (Exception ex)
+            catch 
             {
                 // يفضل هنا عمل Log للـ ex.Message
                 return StatusCode(500, "Internal server error occurred while saving the message");
@@ -145,8 +145,8 @@ namespace ELClass.Areas.StudentArea.Controllers
             var model = new StudentProfileVM
             {
                 Id = user.Id,
-                FullName = user.NameEN,       
-                Email = user.Email,
+                FullName = user.NameEN!,       
+                Email = user.Email!,
                 PhoneNumber = user.PhoneNumber,
                 ProfileImageUrl = user.Img   
             };

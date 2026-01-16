@@ -1,97 +1,125 @@
 ﻿@model Models.Student
 
 @{
-    ViewData["Title"] = "Create Student Account";
+    var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+    var direction = currentLang == "ar" ? "rtl" : "ltr";
+    ViewData["Title"] = currentLang == "ar" ? "إنشاء حساب طالب جديد" : "Create Student Account";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold mb-0 fs-3">
-        <i class="fas fa-user-plus text-orange me-2"></i>Create Student Account
-    </h2>
-    <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Back to List
-    </a>
+<div class="container-fluid py-3" style="direction: @direction; text-align: @(currentLang == "ar" ? "right" : "left");">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0 fs-3">
+            <i class="fas fa-user-plus text-orange me-2"></i>
+            @(currentLang == "ar" ? "إنشاء حساب طالب" : "Create Student Account")
+        </h2>
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
+            <i class="fas @(currentLang == "ar" ? "fa-arrow-right" : "fa-arrow-left") me-1"></i>
+            @(currentLang == "ar" ? "العودة للقائمة" : "Back to List")
+        </a>
+    </div>
+
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-1">
+                <div class="card border-orange-left shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="form-section-title mb-4">
+                            <i class="fas fa-lock text-orange"></i>
+                            @(currentLang == "ar" ? "بيانات الحساب" : "Account Credentials")
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "البريد الإلكتروني" : "Email Address")</label>
+                                <input type="email" asp-for="ApplicationUser.Email" class="form-control" placeholder="example@mail.com" required>
+                                <span asp-validation-for="ApplicationUser.Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "كلمة المرور" : "Password")</label>
+                                <input type="password" name="Password" class="form-control" placeholder="********" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "تأكيد كلمة المرور" : "Confirm Password")</label>
+                                <input type="password" name="ConfirmPassword" class="form-control" placeholder="********" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12 mb-1">
+                <div class="card border-orange-left shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="form-section-title mb-4">
+                            <i class="fas fa-id-card text-orange"></i>
+                            @(currentLang == "ar" ? "المعلومات الشخصية" : "Personal Information")
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NameEn" class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "الاسم بالكامل (إنجليزي)" : "Full Name (English)")</label>
+                                <input asp-for="NameEn" class="form-control" placeholder="Full Name">
+                                <span asp-validation-for="NameEn" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NameAr" class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "الاسم بالكامل (عربي)" : "Full Name (Arabic)")</label>
+                                <input asp-for="NameAr" class="form-control" placeholder="الاسم ثلاثي">
+                                <span asp-validation-for="NameAr" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "رقم الهاتف" : "Phone Number")</label>
+                                <input type="text" asp-for="ApplicationUser.PhoneNumber" class="form-control" placeholder="01xxxxxxxxx">
+                                <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ApplicationUser.AddressEN" class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "العنوان (إنجليزي - اختياري)" : "Address EN (Optional)")</label>
+                                <input type="text" asp-for="ApplicationUser.AddressEN" class="form-control" placeholder="City, Country">
+                                <span asp-validation-for="ApplicationUser.AddressEN" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ApplicationUser.AddressAR" class="small mb-1 fw-bold text-muted">@(currentLang == "ar" ? "العنوان (عربي - اختياري)" : "Address AR (Optional)")</label>
+                                <input type="text" asp-for="ApplicationUser.AddressAR" class="form-control" placeholder="المدينة، الدولة">
+                                <span asp-validation-for="ApplicationUser.AddressAR" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-orange-custom px-5 py-2 shadow-sm">
+                <i class="fas fa-check-circle me-1"></i>
+                @(currentLang == "ar" ? "إنشاء الحساب" : "Create Account")
+            </button>
+            <button type="reset" class="btn btn-light px-4 py-2 border">
+                @(currentLang == "ar" ? "مسح البيانات" : "Clear Form")
+            </button>
+        </div>
+    </form>
 </div>
-
-<form asp-action="Create" method="post">
-    <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-    <div class="row">
-        <div class="col-lg-12 mb-1">
-            <div class="card border-orange-left">
-                <div class="card-body">
-                    <h5 class="form-section-title"><i class="fas fa-lock"></i> Account Credentials</h5>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Email Address</label>
-                            <input type="email" asp-for="ApplicationUser.Email" class="form-control" placeholder="example@mail.com" required>
-                            <span asp-validation-for="ApplicationUser.Email" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Password</label>
-                            <input type="password" name="Password" class="form-control" placeholder="Password" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Confirm Password</label>
-                            <input type="password" name="ConfirmPassword" class="form-control" placeholder="Confirm Password" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-12 mb-1">
-            <div class="card border-orange-left">
-                <div class="card-body">
-                    <h5 class="form-section-title"><i class="fas fa-id-card"></i> Personal Information</h5>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="NameEn" class="small mb-1 fw-bold text-muted">Full Name (English)</label>
-                            <input asp-for="NameEn" class="form-control" placeholder="Full Name">
-                            <span asp-validation-for="NameEn" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="NameAr" class="small mb-1 fw-bold text-muted d-block text-end">الاسم بالكامل (عربي)</label>
-                            <input asp-for="NameAr" class="form-control text-end" placeholder="الاسم ثلاثي">
-                            <span asp-validation-for="NameAr" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label name="PhoneNumber" class="small mb-1 fw-bold text-muted">Phone Number</label>
-                            <input type="text" asp-for="ApplicationUser.PhoneNumber" class="form-control" placeholder="xxxxxxxxxxx">
-                            <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="ApplicationUser.AddressEN" class="small mb-1 fw-bold text-muted">Address (Optional)</label>
-                            <input type="text" asp-for="ApplicationUser.AddressEN" class="form-control" placeholder="City, Country">
-                            <span asp-validation-for="ApplicationUser.AddressEN" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="ApplicationUser.AddressAR" class="small mb-1 fw-bold text-muted">العنوان (اختياري)</label>
-                            <input type="text" asp-for="ApplicationUser.AddressAR" class="form-control" placeholder="المدينة، الدولة">
-                            <span asp-validation-for="ApplicationUser.AddressAR" class="text-danger small"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-       
-        
-    </div>
-
-    <div class="d-flex gap-1">
-        <button type="submit" class="btn btn-orange-custom px-5 py-2 shadow-sm">
-            <i class="fas fa-check-circle me-2"></i> Create Account
-        </button>
-        <button type="reset" class="btn btn-light px-4 py-2 border">
-            Clear Form
-        </button>
-    </div>
-</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        
+        @if (TempData["Success"] != null)
+        {
+                <text>
+                Swal.fire({
+                    icon: 'success',
+                    title: '@(currentLang == "ar" ? "تم بنجاح" : "Success")',
+                    text: '@TempData["Success"]',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+                </text>
+        }
+    </script>
 }

@@ -259,7 +259,7 @@ namespace ELClass.Areas.Identity.Controllers
                             return RedirectToAction("index", "home", new { area = "admin" });
 
 
-                        }else if (roles.Contains("Teacher"))
+                        }else if (roles.Contains("Instructor"))
                         {
                             return RedirectToAction("index", "Course", new { area = "Instructor" });
                         }
@@ -461,7 +461,23 @@ namespace ELClass.Areas.Identity.Controllers
             return RedirectToAction(nameof(Login));
         }
 
+        public IActionResult AccessDenied(string returnUrl)
+        {
+            
+            string areaName = "";
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                var segments = returnUrl.Split('/');
+                
+                if (segments.Length > 1)
+                {
+                    areaName = segments[1];
+                }
+            }
 
+            ViewData["CurrentArea"] = areaName;
+            return View();
+        }
 
     }
 }

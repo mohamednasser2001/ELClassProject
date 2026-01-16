@@ -6,6 +6,7 @@
     var user = await UserManager.GetUserAsync(User);
     var userImage = user?.Img;
     var displayName = user?.NameEN ?? user?.UserName;
+    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
 }
 
 <!doctype html>
@@ -164,18 +165,23 @@
                             </form>
                         </div>
                     </li>
-                    <li class="pc-h-item d-none d-md-inline-flex">
-                        <form class="header-search">
-                            <i data-feather="search" class="icon-search"></i>
-                            <input type="search" class="form-control" placeholder="Search here. . ." />
-                            <button class="btn btn-light-secondary btn-search"><i class="ti ti-adjustments-horizontal"></i></button>
-                        </form>
-                    </li>
+
                 </ul>
             </div>
             <!-- [Mobile Media Block end] -->
             <div class="ms-auto">
-                <ul class="list-unstyled">
+                <ul class="list-unstyled ">
+                    
+                    <li class="pc-h-item">
+                        <a href="/Home/SetLanguage?culture=@(isArabic ? "en-US" : "ar-EG")&returnUrl=@Context.Request.Path"
+                           class="pc-head-link head-link-secondary d-flex align-items-center justify-content-center"
+                           style="width: 40px; height: 40px; text-decoration: none;">
+                            <span class="fw-bold" style="font-size: 0.75rem; color: var(--pc-heading-color);">
+                                @(isArabic ? "EN" : "AR")
+                            </span>
+                        </a>
+                    </li>
+
                     <li class="dropdown pc-h-item">
                         <a class="pc-head-link head-link-secondary dropdown-toggle arrow-none me-0"
                            data-bs-toggle="dropdown"

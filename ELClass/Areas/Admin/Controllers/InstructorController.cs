@@ -334,30 +334,29 @@ namespace ELClass.Areas.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateInstructorAccount(
-                Models.Instructor ins,
-                string Password,
-                string ConfirmPassword)
+        Models.Instructor ins,
+        string Password,
+        string ConfirmPassword)
         {
             ModelState.Remove("ApplicationUser.Student");
             ModelState.Remove("ApplicationUser.Instructor");
             ModelState.Remove("ApplicationUser.NameAR");
             ModelState.Remove("ApplicationUser.NameEn");
+
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Sorry, There is ");
+                ModelState.AddModelError("", "عفواً، هناك خطأ في البيانات المدخلة | Sorry, there is an error in the input data");
                 return View(ins);
             }
 
             if (Password != ConfirmPassword)
             {
-                ModelState.AddModelError("", "Failed to create user account");
+                ModelState.AddModelError("", "كلمة المرور غير متطابقة | Passwords do not match");
                 return View(ins);
             }
 
-
             var email = ins.ApplicationUser.Email;
             var userName = email!.Split('@')[0] + new Random().Next(10, 99);
-
 
             var user = new ApplicationUser
             {
@@ -369,14 +368,14 @@ namespace ELClass.Areas.Admin.Controllers
                 EmailConfirmed = true
             };
 
-
             var result = await userManager.CreateAsync(user, Password);
 
             if (!result.Succeeded)
             {
                 foreach (var error in result.Errors)
                     ModelState.AddModelError("", error.Description);
-                TempData["Error"] = "Failed to create user account";
+
+                TempData["Error"] = "فشل إنشاء حساب المستخدم | Failed to create user account";
                 return View(ins);
             }
 
@@ -385,16 +384,12 @@ namespace ELClass.Areas.Admin.Controllers
             ins.Id = user.Id;
 
             await unitOfWork.InstructorRepository.CreateAsync(ins);
-
             await unitOfWork.CommitAsync();
 
-
-            
-            TempData["Success"] = "Instructor account has been created successfully";
+            TempData["Success"] = "تم إنشاء حساب المحاضر بنجاح | Instructor account has been created successfully";
 
             return RedirectToAction("Index");
         }
-
 
         public IActionResult Create()
         {
@@ -411,8 +406,11 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("InstructorStudents");
             ModelState.Remove("InstructorCourses");
 
-            if (!ModelState.IsValid) return View(ins);
-
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", lang == "en" ? "Please correct the errors in the form" : "يرجى تصحيح الأخطاء في النموذج");
+                return View(ins);
+            }
 
             var user = await userManager.FindByIdAsync(ins.Id);
             if (user == null)
@@ -421,27 +419,23 @@ namespace ELClass.Areas.Admin.Controllers
                 return View(ins);
             }
 
-
             var oldStudentCourses = await unitOfWork.StudentCourseRepository.GetAsync(sc => sc.StudentId == ins.Id);
             foreach (var sc in oldStudentCourses)
             {
                 await unitOfWork.StudentCourseRepository.DeleteAsync(sc);
             }
 
-            
             var oldInstructorStudents = await unitOfWork.InstructorStudentRepository.GetAsync(isd => isd.StudentId == ins.Id);
             foreach (var isd in oldInstructorStudents)
             {
                 await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
             }
 
-            
             var std = await unitOfWork.StudentRepository.GetOneAsync(s => s.Id == ins.Id);
             if (std != null)
             {
                 await unitOfWork.StudentRepository.DeleteAsync(std);
             }
-
 
             var newInstructor = new Models.Instructor
             {
@@ -452,10 +446,7 @@ namespace ELClass.Areas.Admin.Controllers
                 BioEn = ins.BioEn,
             };
 
-
             await unitOfWork.InstructorRepository.CreateAsync(newInstructor);
-
-
 
             var roles = await userManager.GetRolesAsync(user);
             if (roles.Contains("Student"))
@@ -468,7 +459,6 @@ namespace ELClass.Areas.Admin.Controllers
                 await userManager.AddToRoleAsync(user, "Instructor");
             }
 
-
             var commit = await unitOfWork.CommitAsync();
 
             if (!commit)
@@ -480,14 +470,13 @@ namespace ELClass.Areas.Admin.Controllers
             TempData["Success"] = lang == "en" ? "Instructor added successfully" : "تمت إضافة المدرب بنجاح";
             return RedirectToAction("Index");
         }
-       
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditInstructorDetails(InstructorDetailsVM model)
         {
+            var lang = HttpContext.Session.GetString("Language") ?? "en";
             var ins = model.Instructor;
-
 
             ModelState.Remove("Instructor.ApplicationUser");
             ModelState.Remove("InstructorCourses");
@@ -499,7 +488,6 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 try
                 {
-
                     var instructorInDb = await unitOfWork.InstructorRepository.GetOneAsync(
                         e => e.Id == ins.Id,
                         include: query => query.Include(e => e.ApplicationUser)
@@ -507,38 +495,32 @@ namespace ELClass.Areas.Admin.Controllers
 
                     if (instructorInDb == null) return NotFound();
 
-
                     instructorInDb.NameEn = ins.NameEn;
                     instructorInDb.NameAr = ins.NameAr;
                     instructorInDb.BioEn = ins.BioEn;
                     instructorInDb.BioAr = ins.BioAr;
 
-
                     if (instructorInDb.ApplicationUser != null && ins.ApplicationUser != null)
                     {
                         var user = instructorInDb.ApplicationUser;
                         user.Email = ins.ApplicationUser.Email;
-                        
                         user.PhoneNumber = ins.ApplicationUser.PhoneNumber;
                         user.AddressEN = ins.ApplicationUser.AddressEN;
                         user.AddressAR = ins.ApplicationUser.AddressAR;
 
-
                         await userManager.UpdateNormalizedEmailAsync(user);
-                        
                     }
 
                     await unitOfWork.CommitAsync();
 
-                    TempData["Success"] = "Instructor updated successfully";
+                    TempData["Success"] = lang == "en" ? "Instructor updated successfully" : "تم تحديث بيانات المحاضر بنجاح";
                     return RedirectToAction("Details", new { id = ins.Id });
                 }
                 catch (Exception ex)
                 {
-                    TempData["error"] = "Error while saving: " + ex.Message;
+                    TempData["error"] = (lang == "en" ? "Error while saving: " : "حدث خطأ أثناء الحفظ: ") + ex.Message;
                 }
             }
-
 
             var courses = await unitOfWork.InstructorCourseRepository.GetAsync(e => e.InstructorId == ins.Id, include: i => i.Include(c => c.Course));
             var students = await unitOfWork.InstructorStudentRepository.GetAsync(e => e.InstructorId == ins.Id, include: i => i.Include(s => s.Student));
@@ -546,11 +528,13 @@ namespace ELClass.Areas.Admin.Controllers
             model.InstructorCourses = courses.ToList();
             model.InstructorStudents = students.ToList();
 
-            if (TempData["error"] is null) TempData["error"] = "Please check the input data.";
+            if (TempData["error"] is null)
+            {
+                TempData["error"] = lang == "en" ? "Please check the input data." : "يرجى التحقق من البيانات المدخلة.";
+            }
 
             return View("Details", model);
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]

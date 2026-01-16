@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ELClass.Areas.Admin.Controllers
@@ -16,7 +17,7 @@ namespace ELClass.Areas.Admin.Controllers
         }
         public IActionResult Index()
         {
-            
+
             return View();
         }
 
@@ -28,5 +29,7 @@ namespace ELClass.Areas.Admin.Controllers
 
             return Json(new { success = true });
         }
+
+        
     }
 }

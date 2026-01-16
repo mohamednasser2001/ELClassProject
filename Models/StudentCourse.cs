@@ -9,9 +9,9 @@ namespace Models
     public class StudentCourse : AuditLogging
     {
         public string StudentId { get; set; } = string.Empty;
-        public Student Student { get; set; }
+        public Student Student { get; set; } = null!;
 
         public int CourseId { get; set; }
-        public Course Course { get; set; }
+        public Course Course { get; set; } = null!;
     }
 }

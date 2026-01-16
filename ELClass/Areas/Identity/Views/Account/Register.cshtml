@@ -3,8 +3,9 @@
 
 @{
     Layout = null;
-    var currentLang = Context.Session.GetString("Language") ?? "en";
-    var direction = currentLang == "ar" ? "rtl" : "ltr";
+    var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+    var isArabic = currentLang == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
     var isGoogleUser = !string.IsNullOrEmpty(ViewBag.GoogleEmail?.ToString());
 }
 
@@ -13,7 +14,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(currentLang == "ar" ? "إنشاء حساب" : "Register") - ElClass</title>
+    <title>@(isArabic ? "إنشاء حساب" : "Register") - ElClass</title>
 
     <link rel="stylesheet" href="~/AuthAssets/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -26,25 +27,26 @@
             <div class="logo">
                 <span style="color:#f28b00; font-weight: bold; font-size: 24px;">EL</span><span style="color:#ffffff; font-weight: bold; font-size: 24px;">-CLASS</span>
             </div>
-            <button type="button" class="btn-change-lang" onclick="changeLanguage()">
-                <i class="fas fa-globe"></i> @(currentLang == "ar" ? "English" : "العربية")
-            </button>
+            <a href="/Home/SetLanguage?culture=@(isArabic ? "en-US" : "ar-EG")&returnUrl=@Context.Request.Path"
+               class="btn-change-lang" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-globe"></i> @(isArabic ? "English" : "العربية")
+            </a>
         </div>
 
         <div class="auth-card">
             <div class="auth-header">
-                <h2>@(currentLang == "ar" ? "إنشاء حساب جديد" : "Register")</h2>
+                <h2>@(isArabic ? "إنشاء حساب جديد" : "Register")</h2>
                 <p>
-                    @(currentLang == "ar"
-                        ? "من خلال منصتنا يمكنك التركيز على التعلم فقط"
-                        : "With our platform, you can focus only on learning")
+                    @(isArabic
+                                        ? "من خلال منصتنا يمكنك التركيز على التعلم فقط"
+                                        : "With our platform, you can focus only on learning")
                 </p>
             </div>
 
             <form method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-size: 13px;"></div>
 
-                @if (currentLang == "en")
+                @if (!isArabic)
                 {
                     <div class="form-group">
                         <label class="form-label">Name (English)</label>
@@ -62,7 +64,7 @@
                 }
 
                 <div class="form-group">
-                    <label class="form-label">@(currentLang == "ar" ? "البريد الإلكتروني" : "Email Address")</label>
+                    <label class="form-label">@(isArabic ? "البريد الإلكتروني" : "Email Address")</label>
                     <input class="form-control" type="email" asp-for="Email" placeholder="test@gmail.com" value="@(ViewBag.GoogleEmail ?? "")" readonly="@(isGoogleUser ? "readonly" : null)" />
                     <span class="text-danger fs--1" asp-validation-for="Email"></span>
                 </div>
@@ -71,12 +73,12 @@
                 {
                     <div class="form-row">
                         <div class="form-group flex-1">
-                            <label class="form-label">@(currentLang == "ar" ? "كلمة المرور" : "Password")</label>
+                            <label class="form-label">@(isArabic ? "كلمة المرور" : "Password")</label>
                             <input class="form-control" type="password" asp-for="Password" placeholder="********" />
                             <span class="text-danger fs--1" asp-validation-for="Password"></span>
                         </div>
                         <div class="form-group flex-1">
-                            <label class="form-label">@(currentLang == "ar" ? "تأكيد كلمة المرور" : "Confirm")</label>
+                            <label class="form-label">@(isArabic ? "تأكيد كلمة المرور" : "Confirm")</label>
                             <input class="form-control" type="password" asp-for="ConfirmPassword" placeholder="********" />
                             <span class="text-danger fs--1" asp-validation-for="ConfirmPassword"></span>
                         </div>
@@ -86,20 +88,20 @@
                 <div class="form-check mb-3">
                     <input type="checkbox" id="terms" required />
                     <label for="terms" class="check-label">
-                        @(currentLang == "ar" ? "أوافق على الشروط وسياسة الخصوصية" : "I accept the terms and privacy policy")
+                        @(isArabic ? "أوافق على الشروط وسياسة الخصوصية" : "I accept the terms and privacy policy")
                     </label>
                 </div>
 
                 <button class="btn-auth mt-2" type="submit">
-                    @(currentLang == "ar" ? "إنشاء حساب" : "Register")
+                    @(isArabic ? "إنشاء حساب" : "Register")
                 </button>
             </form>
 
             <div class="text-center mt-4">
                 <p class="footer-text">
-                    @(currentLang == "ar" ? "لديك حساب بالفعل؟" : "Already have an account?")
+                    @(isArabic ? "لديك حساب بالفعل؟" : "Already have an account?")
                     <a href="/Identity/Account/Login" class="auth-link">
-                        @(currentLang == "ar" ? "تسجيل الدخول" : "Log In")
+                        @(isArabic ? "تسجيل الدخول" : "Log In")
                     </a>
                 </p>
             </div>
@@ -109,20 +111,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <partial name="_ValidationScriptsPartial" />
-
-    <script>
-        function changeLanguage() {
-            var newLang = '@currentLang' === 'ar' ? 'en' : 'ar';
-            $.ajax({
-                url: '/Identity/Account/SetLanguage',
-                type: 'POST',
-                data: { language: newLang },
-                success: function () {
-                    location.reload();
-                }
-            });
-        }
-    </script>
 
     @if (TempData["success-notifications"] != null)
     {

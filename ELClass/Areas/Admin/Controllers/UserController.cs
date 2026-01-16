@@ -41,7 +41,7 @@ namespace ELClass.Areas.Admin.Controllers
                 {
                     query = query.Where(u => u.UserName!.Contains(searchValue) ||
                                              u.Email!.Contains(searchValue) ||
-                                             u.PhoneNumber.Contains(searchValue));
+                                             u.PhoneNumber!.Contains(searchValue));
                 }
 
 
@@ -190,7 +190,7 @@ namespace ELClass.Areas.Admin.Controllers
             var model = new ManageUserRolesVM
             {
                 UserId = id,
-                UserName = user.UserName,
+                UserName = user.UserName!,
 
                 SelectedRole = userRoles.FirstOrDefault(r => r == "Admin" || r == "SuperAdmin") ?? "None"
             };

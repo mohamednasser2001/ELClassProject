@@ -2,8 +2,9 @@
 @model CourseDetailsVM
 
 @{
-    var currentLang = Context.Session.GetString("Language") ?? "en";
-    var direction = currentLang == "ar" ? "rtl" : "ltr";
+    var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+    var isArabic = currentLang == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
 }
 
 <div class="container-fluid py-4" style="direction:@direction">
@@ -12,12 +13,12 @@
     <div class="page-header mb-4">
         <h2>
             <i class="fas fa-book-open icon-primary me-2"></i>
-            @Model.Course.TitleEn
+            @(isArabic? Model.Course.TitleAr : Model.Course.TitleEn)
         </h2>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="/Admin/Course" class="text-muted">Courses</a></li>
-                <li class="breadcrumb-item active text-orange">Details</li>
+                <li class="breadcrumb-item"><a href="/Admin/Course" class="text-muted">@(isArabic ? "الكورسات" : "Courses")</a></li>
+                <li class="breadcrumb-item active text-orange">@(isArabic ? "التفاصيل" : "Details")</li>
             </ol>
         </nav>
     </div>
@@ -25,33 +26,35 @@
     <div class="row mb-4">
         <div class="col-6 col-md-3">
             <div class="stat-card text-center">
-                <i class="fas fa-chalkboard-Instructor fa-2x mb-2"></i>
+                <i class="fas fa-chalkboard-instructor fa-2x mb-2"></i>
                 <h3>@Model.InstructorCourses.Count()</h3>
-                <p>Instructors</p>
+                <p>@(isArabic ? "المحاضرين" : "Instructors")</p>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-card text-center">
                 <i class="fas fa-user-graduate fa-2x mb-2"></i>
                 <h3>@Model.StudentCourses.Count()</h3>
-                <p>Students</p>
+                <p>@(isArabic ? "الطلاب" : "Students")</p>
             </div>
         </div>
     </div>
 
-    <!-- Assigned Instructors Section -->
     <div class="card custom-card mb-4">
         <div class="card-header">
-            <h5 class="card-title"><i class="fas fa-chalkboard-Instructor icon-primary"></i> Assigned Instructors</h5>
+            <h5 class="card-title">
+                <i class="fas fa-chalkboard-instructor icon-primary"></i>
+                @(isArabic ? "المحاضرين المعينين" : "Assigned Instructors")
+            </h5>
         </div>
         <div class="card-body">
             <div class="table-responsive mb-3">
                 <table id="instructorsCourseTable" class="table admin-table w-100">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th class="text-center">Actions</th>
+                            <th style="text-align: @(isArabic ? "right" : "left")">#</th>
+                            <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "الاسم" : "Name")</th>
+                            <th class="text-center">@(isArabic ? "التحكم" : "Actions")</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -59,14 +62,14 @@
             </div>
 
             <div class="assign-section mt-3">
-                <label class="fw-bold small mb-2"><i class="fas fa-plus-circle text-orange"></i> Assign Instructor</label>
+                <label class="fw-bold small mb-2"><i class="fas fa-plus-circle text-orange"></i> @(isArabic ? "تعيين محاضر" : "Assign Instructor")</label>
                 <div class="row g-2">
                     <div class="col-md-9">
                         <select id="instructorSelect" class="form-control"></select>
                     </div>
                     <div class="col-md-3">
                         <button id="assignInstructorBtn" class="btn btn-orange-custom w-100">
-                            <i class="fas fa-plus"></i> Assign
+                            <i class="fas fa-plus"></i> @(isArabic ? "تعيين" : "Assign")
                         </button>
                     </div>
                 </div>
@@ -74,19 +77,21 @@
         </div>
     </div>
 
-    <!-- Enrolled Students Section -->
     <div class="card custom-card">
         <div class="card-header">
-            <h5 class="card-title"><i class="fas fa-user-graduate icon-primary"></i> Enrolled Students</h5>
+            <h5 class="card-title">
+                <i class="fas fa-user-graduate icon-primary"></i>
+                @(isArabic ? "الطلاب المسجلين" : "Enrolled Students")
+            </h5>
         </div>
         <div class="card-body">
             <div class="table-responsive mb-3">
                 <table id="studentsCourseTable" class="table admin-table w-100">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th class="text-center">Actions</th>
+                            <th style="text-align: @(isArabic ? "right" : "left")">#</th>
+                            <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "الاسم" : "Name")</th>
+                            <th class="text-center">@(isArabic ? "التحكم" : "Actions")</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -94,14 +99,14 @@
             </div>
 
             <div class="assign-section mt-3">
-                <label class="fw-bold small mb-2"><i class="fas fa-user-plus text-orange"></i> Enroll Student</label>
+                <label class="fw-bold small mb-2"><i class="fas fa-user-plus text-orange"></i> @(isArabic ? "تسجيل طالب" : "Enroll Student")</label>
                 <div class="row g-2">
                     <div class="col-md-9">
                         <select id="studentSelect" class="form-control"></select>
                     </div>
                     <div class="col-md-3">
                         <button id="enrollStudentBtn" class="btn btn-orange-custom w-100">
-                            <i class="fas fa-plus"></i> Enroll
+                            <i class="fas fa-plus"></i> @(isArabic ? "تسجيل" : "Enroll")
                         </button>
                     </div>
                 </div>
@@ -116,14 +121,17 @@
     <script>
         $(document).ready(function () {
             const courseId = $('#courseId').val();
+            const isAr = @isArabic.ToString().ToLower();
 
-            // Instructors Table Initialization
             const insTable = $('#instructorsCourseTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ordering: false,
                 stateSave: true,
                 responsive: true,
+                language: {
+                    url: isAr ? "//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json" : ""
+                },
                 ajax: {
                     url: '/Admin/Course/GetCourseInstructors',
                     type: 'POST',
@@ -133,10 +141,9 @@
                     { data: null, render: (d, t, r, m) => m.row + 1 + m.settings._iDisplayStart },
                     { data: 'name', render: function (data, type, row) {
                     return `<a href="/Admin/Instructor/Details/${row.instructorId}" class="Instructor-link">
-                        <i class="fas fa-chalkboard-Instructor me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                        <i class="fas fa-chalkboard-instructor me-1 icon-primary" style="opacity:0.7"></i> ${data}
                         </a>`;
                      }
-                    
                     },
                     {
                         data: 'instructorId',
@@ -150,13 +157,15 @@
                 ]
             });
 
-            // Students Table Initialization
             const stdTable = $('#studentsCourseTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ordering: false,
                 stateSave: true,
                 responsive: true,
+                language: {
+                    url: isAr ? "//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json" : ""
+                },
                 ajax: {
                     url: '/Admin/Course/GetCourseStudents',
                     type: 'POST',
@@ -183,9 +192,8 @@
                 ]
             });
 
-            // Select2 Initialization for Instructor and Student
             $('#instructorSelect').select2({
-                placeholder: "Search Instructor...",
+                placeholder: isAr ? "ابحث عن محاضر..." : "Search Instructor...",
                 width: '100%',
                 ajax: {
                     url: '/Admin/Course/SearchInstructors',
@@ -196,7 +204,7 @@
             });
 
             $('#studentSelect').select2({
-                placeholder: "Search Student...",
+                placeholder: isAr ? "ابحث عن طالب..." : "Search Student...",
                 width: '100%',
                 ajax: {
                     url: '/Admin/Course/SearchStudents',
@@ -206,26 +214,24 @@
                 }
             });
 
-            // Assign Instructor
             $('#assignInstructorBtn').click(() => {
                 const id = $('#instructorSelect').val();
                 if (!id) return;
                 $.post('/Admin/Course/AssignInstructor', { courseId, InstructorId: id }, res => {
                     if (res.success) {
-                        Swal.fire({ icon: 'success', title: 'Done!', text: 'Instructor assigned successfully', timer: 1500, showConfirmButton: false });
+                        Swal.fire({ icon: 'success', title: isAr ? 'تم!' : 'Done!', text: isAr ? 'تم تعيين المحاضر بنجاح' : 'Instructor assigned successfully', timer: 1500, showConfirmButton: false });
                         insTable.ajax.reload();
                         $('#instructorSelect').val(null).trigger('change');
                     }
                 });
             });
 
-            // Enroll Student
             $('#enrollStudentBtn').click(() => {
                 const id = $('#studentSelect').val();
                 if (!id) return;
                 $.post('/Admin/Course/AssignStudent', { courseId, studentId: id }, res => {
                     if (res.success) {
-                        Swal.fire({ icon: 'success', title: 'Done!', text: 'Student enrolled successfully', timer: 1500, showConfirmButton: false });
+                        Swal.fire({ icon: 'success', title: isAr ? 'تم!' : 'Done!', text: isAr ? 'تم تسجيل الطالب بنجاح' : 'Student enrolled successfully', timer: 1500, showConfirmButton: false });
                         stdTable.ajax.reload();
                         $('#studentSelect').val(null).trigger('change');
                     }
@@ -233,41 +239,41 @@
             });
         });
 
-        // Remove Instructor
         function removeInstructor(id) {
+            const isAr = @isArabic.ToString().ToLower();
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You want to remove this instructor?",
+                title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+                text: isAr ? 'هل تريد إزالة هذا المحاضر؟' : "You want to remove this instructor?",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: isAr ? 'نعم، احذف!' : 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.get(`/Admin/Course/RemoveInstructor?instructorId=${id}&courseId=${$('#courseId').val()}`, function () {
                         $('#instructorsCourseTable').DataTable().ajax.reload();
-                        Swal.fire('Deleted!', 'Instructor removed successfully.', 'success');
+                        Swal.fire(isAr ? 'تم الحذف!' : 'Deleted!', isAr ? 'تمت إزالة المحاضر بنجاح.' : 'Instructor removed successfully.', 'success');
                     });
                 }
             });
         }
 
-        // Remove Student
         function removeStudent(id) {
+            const isAr = @isArabic.ToString().ToLower();
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You want to remove this student?",
+                title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+                text: isAr ? 'هل تريد إزالة هذا الطالب؟' : "You want to remove this student?",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, remove!'
+                confirmButtonText: isAr ? 'نعم، إزالة!' : 'Yes, remove!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.get(`/Admin/Course/RemoveStudent?studentId=${id}&courseId=${$('#courseId').val()}`, function () {
                         $('#studentsCourseTable').DataTable().ajax.reload();
-                        Swal.fire('Removed!', 'Student removed successfully.', 'success');
+                        Swal.fire(isAr ? 'تمت الإزالة!' : 'Removed!', isAr ? 'تمت إزالة الطالب بنجاح.' : 'Student removed successfully.', 'success');
                     });
                 }
             });

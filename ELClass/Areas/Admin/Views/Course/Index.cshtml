@@ -1,6 +1,7 @@
 ﻿@{
-    var currentLang = Context.Session.GetString("Language") ?? "en";
-    var direction = currentLang == "ar" ? "rtl" : "ltr";
+    var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+    var isArabic = currentLang == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
 }
 
 <div class="container-fluid" style="direction: @direction;">
@@ -10,15 +11,14 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">
                         <i class="fa fa-book-open me-2 icon-primary"></i>
-                        @(currentLang == "ar" ? "قائمة الكورسات" : "Courses List")
+                        @(isArabic ? "قائمة الكورسات" : "Courses List")
                     </h3>
 
                     <div class="d-flex gap-2 align-items-center">
                         <a href="/Admin/Course/Create" class="btn btn-sm btn-success-custom text-white">
                             <i class="fa fa-plus"></i>
-                            <span>@(currentLang == "ar" ? " إضافة كورس جديد" : " Add New Course")</span>
+                            <span>@(isArabic ? " إضافة كورس جديد" : " Add New Course")</span>
                         </a>
-                       
                     </div>
                 </div>
 
@@ -27,10 +27,10 @@
                         <table id="coursesTable" class="table w-100">
                             <thead>
                                 <tr>
-                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
-                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "العنوان" : "Title")</th>
-                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "الوصف" : "Description")</th>
-                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
+                                    <th style="text-align: @(isArabic ? "right" : "left")">#</th>
+                                    <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "العنوان" : "Title")</th>
+                                    <th style="text-align: @(isArabic ? "right" : "left")" class="d-none d-md-table-cell">@(isArabic ? "الوصف" : "Description")</th>
+                                    <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "التحكم" : "Actions")</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -44,7 +44,6 @@
 
 @section scripts {
     <script>
-       
         var currentLang = '@currentLang';
         var currentDir = '@direction';
 
@@ -93,7 +92,7 @@
                     },
                     {
                         data: 'description',
-                        className: 'd-none d-md-table-cell', 
+                        className: 'd-none d-md-table-cell',
                         render: function (data) {
                             return `<span class="text-muted small">${data.length > 50 ? data.substring(0, 50) + '...' : data}</span>`;
                         }
@@ -115,9 +114,6 @@
                 dom: '<"d-flex justify-content-between mb-2"lf>rt<"d-flex justify-content-between mt-2"ip>'
             });
         });
-
-        
-        
 
         function deleteCourse(id) {
             Swal.fire({

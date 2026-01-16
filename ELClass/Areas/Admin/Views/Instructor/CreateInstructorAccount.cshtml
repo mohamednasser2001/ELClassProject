@@ -1,115 +1,128 @@
 ﻿@model Models.Instructor
 
 @{
-    ViewData["Title"] = "Create Instructor Account";
+    var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+    var isAr = currentLang == "ar";
+    var direction = isAr ? "rtl" : "ltr";
+    ViewData["Title"] = isAr ? "إنشاء حساب محاضر جديد" : "Create Instructor Account";
 }
 
+<div class="container-fluid py-3" style="direction: @direction; text-align: @(isAr ? "right" : "left");">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0 fs-3">
+            <i class="fas fa-user-plus text-orange me-2"></i>
+            @(isAr ? "إنشاء حساب محاضر" : "Create Instructor Account")
+        </h2>
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
+            <i class="fas @(isAr ? "fa-arrow-right" : "fa-arrow-left") me-1"></i>
+            @(isAr ? "العودة للقائمة" : "Back to List")
+        </a>
+    </div>
 
+    <form asp-action="CreateInstructorAccount" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold mb-0 fs-3">
-        <i class="fas fa-user-plus text-orange me-2"></i>Create Instructor Account
-    </h2>
-    <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Back to List
-    </a>
+        <div class="row">
+            <div class="col-lg-12 mb-1">
+                <div class="card border-orange-left shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="form-section-title mb-4">
+                            <i class="fas fa-lock text-orange"></i>
+                            @(isAr ? "بيانات الحساب" : "Account Credentials")
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "البريد الإلكتروني" : "Email Address")</label>
+                                <input type="email" asp-for="ApplicationUser.Email" class="form-control" placeholder="example@mail.com" required>
+                                <span asp-validation-for="ApplicationUser.Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "كلمة المرور" : "Password")</label>
+                                <input type="password" name="Password" class="form-control" placeholder="********" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "تأكيد كلمة المرور" : "Confirm Password")</label>
+                                <input type="password" name="ConfirmPassword" class="form-control" placeholder="********" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12 mb-1">
+                <div class="card border-orange-left shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="form-section-title mb-4">
+                            <i class="fas fa-id-card text-orange"></i>
+                            @(isAr ? "المعلومات الشخصية" : "Personal Information")
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NameEn" class="small mb-1 fw-bold text-muted">@(isAr ? "الاسم بالكامل (إنجليزي)" : "Full Name (English)")</label>
+                                <input asp-for="NameEn" class="form-control" placeholder="Full Name">
+                                <span asp-validation-for="NameEn" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NameAr" class="small mb-1 fw-bold text-muted">@(isAr ? "الاسم بالكامل (عربي)" : "Full Name (Arabic)")</label>
+                                <input asp-for="NameAr" class="form-control @(isAr ? "text-end" : "")" placeholder="الاسم ثلاثي">
+                                <span asp-validation-for="NameAr" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "رقم الهاتف" : "Phone Number")</label>
+                                <input type="text" asp-for="ApplicationUser.PhoneNumber" class="form-control" placeholder="01xxxxxxxxx">
+                                <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ApplicationUser.AddressEN" class="small mb-1 fw-bold text-muted">@(isAr ? "العنوان (إنجليزي)" : "Address (English)")</label>
+                                <input type="text" asp-for="ApplicationUser.AddressEN" class="form-control" placeholder="City, Country">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ApplicationUser.AddressAR" class="small mb-1 fw-bold text-muted">@(isAr ? "العنوان (عربي)" : "Address (Arabic)")</label>
+                                <input type="text" asp-for="ApplicationUser.AddressAR" class="form-control @(isAr ? "text-end" : "")" placeholder="المدينة، الدولة">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12 mb-3">
+                <div class="card border-orange-left shadow-sm">
+                    <div class="card-body">
+                        <h5 class="form-section-title mb-4">
+                            <i class="fas fa-file-alt text-orange"></i>
+                            @(isAr ? "السيرة الذاتية المهنية" : "Professional Bio")
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BioEn" class="small mb-1 fw-bold text-muted">@(isAr ? "السيرة الذاتية (إنجليزي)" : "Bio (English)")</label>
+                                <textarea asp-for="BioEn" class="form-control" rows="4" placeholder="Description..."></textarea>
+                                <span asp-validation-for="BioEn" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BioAr" class="small mb-1 fw-bold text-muted">@(isAr ? "السيرة الذاتية (عربي)" : "Bio (Arabic)")</label>
+                                <textarea asp-for="BioAr" class="form-control @(isAr ? "text-end" : "")" rows="4" dir="@(isAr ? "rtl" : "ltr")" placeholder="نبذة عنك..."></textarea>
+                                <span asp-validation-for="BioAr" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-orange-custom px-5 py-2 shadow-sm">
+                <i class="fas fa-check-circle me-1"></i>
+                @(isAr ? "إنشاء الحساب" : "Create Account")
+            </button>
+            <button type="reset" class="btn btn-light px-4 py-2 border">
+                @(isAr ? "مسح البيانات" : "Clear Form")
+            </button>
+        </div>
+    </form>
 </div>
-
-<form asp-action="CreateInstructorAccount" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <div class="row">
-        <div class="col-lg-12 mb-1">
-            <div class="card border-orange-left">
-                <div class="card-body">
-                    <h5 class="form-section-title"><i class="fas fa-lock"></i> Account Credentials</h5>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Email Address</label>
-                            <input type="email" asp-for="ApplicationUser.Email" class="form-control" placeholder="example@mail.com" required>
-                            <span asp-validation-for="ApplicationUser.Email" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Password</label>
-                            <input type="password" name="Password" class="form-control" placeholder="Password" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="small mb-1 fw-bold text-muted">Confirm Password</label>
-                            <input type="password" name="ConfirmPassword" class="form-control" placeholder="Confirm Password" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-12 mb-1">
-            <div class="card border-orange-left">
-                <div class="card-body">
-                    <h5 class="form-section-title"><i class="fas fa-id-card"></i> Personal Information</h5>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="NameEn" class="small mb-1 fw-bold text-muted">Full Name (English)</label>
-                            <input asp-for="NameEn" class="form-control" placeholder="Full Name">
-                            <span asp-validation-for="NameEn" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="NameAr" class="small mb-1 fw-bold text-muted d-block text-end">الاسم بالكامل (عربي)</label>
-                            <input asp-for="NameAr" class="form-control text-end" placeholder="الاسم ثلاثي">
-                            <span asp-validation-for="NameAr" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label name="PhoneNumber" class="small mb-1 fw-bold text-muted">Phone Number</label>
-                            <input type="text" asp-for="ApplicationUser.PhoneNumber" class="form-control" placeholder="xxxxxxxxxxx">
-                            <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="ApplicationUser.AddressEN" class="small mb-1 fw-bold text-muted">Address (Optional)</label>
-                            <input type="text" asp-for="ApplicationUser.AddressEN" class="form-control" placeholder="City, Country">
-                            <span asp-validation-for="ApplicationUser.AddressEN" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="ApplicationUser.AddressAR" class="small mb-1 fw-bold text-muted">العنوان (اختياري)</label>
-                            <input type="text" asp-for="ApplicationUser.AddressAR" class="form-control" placeholder="المدينة، الدولة">
-                            <span asp-validation-for="ApplicationUser.AddressAR" class="text-danger small"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-12 ">
-            <div class="card border-orange-left">
-                <div class="card-body">
-                    <h5 class="form-section-title"><i class="fas fa-file-alt"></i> Professional Bio</h5>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="BioEn" class="small mb-1 fw-bold text-muted">Bio (English)</label>
-                            <textarea asp-for="BioEn" class="form-control" rows="4" placeholder="Briefly describe the professional background..."></textarea>
-                            <span asp-validation-for="BioEn" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="BioAr" class="small mb-1 fw-bold text-muted d-block text-end">السيرة الذاتية (عربي)</label>
-                            <textarea asp-for="BioAr" class="form-control text-end" rows="4" dir="rtl" placeholder="نبذة مختصرة عن المسار المهني..."></textarea>
-                            <span asp-validation-for="BioAr" class="text-danger small"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="d-flex gap-1">
-        <button type="submit" class="btn btn-orange-custom px-5 py-2 shadow-sm">
-            <i class="fas fa-check-circle me-2"></i> Create Account
-        </button>
-        <button type="reset" class="btn btn-light px-4 py-2 border">
-            Clear Form
-        </button>
-    </div>
-</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
