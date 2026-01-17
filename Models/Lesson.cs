@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Models
 {
-    public class Lesson
+    public class Lesson : AuditLogging
     {
         public int Id { get; set; }
 

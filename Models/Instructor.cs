@@ -7,9 +7,9 @@ using System.Text;
 namespace Models
 {
     
-    public class Instructor
+    public class Instructor : AuditLogging
     {
-        [ForeignKey("ApplicationUser")]
+        [Key, ForeignKey("ApplicationUser")]
         public string Id { get; set; } = string.Empty;
         [Required(ErrorMessage ="يجب عليك ادخال اسم")]
         public string NameAr { get; set; } = string.Empty;

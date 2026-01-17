@@ -382,7 +382,9 @@ namespace ELClass.Areas.Admin.Controllers
             await userManager.AddToRoleAsync(user, "Instructor");
 
             ins.Id = user.Id;
-
+            ins.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ins.CreatedAt = DateTime.Now;
+            
             await unitOfWork.InstructorRepository.CreateAsync(ins);
             await unitOfWork.CommitAsync();
 
@@ -444,6 +446,8 @@ namespace ELClass.Areas.Admin.Controllers
                 NameEn = ins.NameEn,
                 BioAr = ins.BioAr,
                 BioEn = ins.BioEn,
+                CreatedById= User.FindFirstValue(ClaimTypes.NameIdentifier),
+                CreatedAt = DateTime.Now
             };
 
             await unitOfWork.InstructorRepository.CreateAsync(newInstructor);
@@ -621,6 +625,14 @@ namespace ELClass.Areas.Admin.Controllers
             using var transaction = await unitOfWork.BeginTransactionAsync();
             try
             {
+
+                var relatedInstructors = await unitOfWork.InstructorRepository.GetAsync(isd => isd.CreatedById == id);
+                foreach (var ins in relatedInstructors)
+                {
+                    ins.CreatedById = null;
+                    await unitOfWork.InstructorRepository.EditAsync(ins);
+                }
+
                 foreach (var course in userCourses)
                 {
                     course.CreatedById = null;

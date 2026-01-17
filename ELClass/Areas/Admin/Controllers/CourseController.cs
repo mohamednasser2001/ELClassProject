@@ -379,7 +379,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return View(crs);
             }
 
-            crs.UpdatedAT = DateTime.Now;
+            crs.UpdatedAt = DateTime.Now;
 
             await unitOfWork.CourseRepository.EditAsync(crs);
             var commit = await unitOfWork.CommitAsync();

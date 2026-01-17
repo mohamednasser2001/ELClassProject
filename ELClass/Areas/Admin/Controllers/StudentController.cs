@@ -584,7 +584,13 @@ namespace ELClass.Areas.Admin.Controllers
 
             try
             {
-                
+                var relatedInstructors = await unitOfWork.InstructorRepository.GetAsync(isd => isd.CreatedById == id);
+                foreach (var instructor in relatedInstructors)
+                {
+                    instructor.CreatedById = null;
+                    await unitOfWork.InstructorRepository.EditAsync(instructor);
+                }
+
                 var studentCourses = await unitOfWork.StudentCourseRepository.GetAsync(sc => sc.StudentId == id);
                 foreach (var sc in studentCourses)
                 {

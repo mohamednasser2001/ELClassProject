@@ -9,10 +9,10 @@ namespace Models
     {
        
         public DateTime? CreatedAt { get; set; } = DateTime.Now;
-        public string? CreatedById { get; set; }
+        public string? CreatedById { get; set; } = null;
         [ForeignKey(nameof(CreatedById))]
-        public ApplicationUser? ApplicationUser { get; set; }
-       
-        public DateTime? UpdatedAT { get; set; }
+        public ApplicationUser? CreatedByUser { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
     }
 }
