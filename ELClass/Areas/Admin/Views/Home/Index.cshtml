@@ -39,10 +39,10 @@
                         <i class="ti ti-users" style="color: var(--color-primary);"></i>
                     </div>
                     <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-primary);">
-                        1,247 <i class="ti ti-trending-up opacity-50"></i>
+                        @ViewBag.TotalStudents <i class="ti ti-trending-up opacity-50"></i>
                     </span>
                     <p class="mb-0 text-muted">@(isAr ? "إجمالي الطلاب" : "Total Students")</p>
-                    <small class="text-success"><i class="ti ti-arrow-up"></i> 12% @(isAr ? "هذا الشهر" : "this month")</small>
+                    <small class="text-success"><i class="ti ti-arrow-up"></i> @ViewBag.StudentsGrowth% @(isAr ? "هذا الشهر" : "this month")</small>
                 </div>
             </div>
         </div>
@@ -56,10 +56,10 @@
                         <i class="ti ti-book" style="color: var(--color-accent);"></i>
                     </div>
                     <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-accent);">
-                        342 <i class="ti ti-book-2 opacity-50"></i>
+                        @ViewBag.newStudents <i class="ti ti-book-2 opacity-50"></i>
                     </span>
-                    <p class="mb-0 text-muted">@(isAr ? "الدروس النشطة" : "Active Lessons")</p>
-                    <small class="text-success"><i class="ti ti-arrow-up"></i> 8 @(isAr ? "جديد هذا الأسبوع" : "new this week")</small>
+                    <p class="mb-0 text-muted">@(isAr ? "الطلاب الجدد" : "New Students")</p>
+                    <small class="text-success"><i class="ti ti-arrow-up"></i> @ViewBag.NewLessonsThisWeek @(isAr ? "جديد هذا الأسبوع" : "new this week")</small>
                 </div>
             </div>
         </div>
@@ -73,7 +73,7 @@
                         <i class="ti ti-school" style="color: var(--color-secondary-dark);"></i>
                     </div>
                     <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-secondary-dark);">
-                        28 <i class="ti ti-books opacity-50"></i>
+                        @ViewBag.TotalSubjects <i class="ti ti-books opacity-50"></i>
                     </span>
                     <p class="mb-0 text-muted">@(isAr ? "إجمالي المواد" : "Total Subjects")</p>
                     <small class="text-muted">@(isAr ? "عبر جميع المراحل" : "Across all grades")</small>
@@ -90,10 +90,10 @@
                         <i class="ti ti-user-check" style="color: var(--color-warning-dark);"></i>
                     </div>
                     <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-warning-dark);">
-                        67 <i class="ti ti-chalkboard opacity-50"></i>
+                        @ViewBag.ActiveInstructors <i class="ti ti-chalkboard opacity-50"></i>
                     </span>
                     <p class="mb-0 text-muted">@(isAr ? "المدرسون النشطون" : "Active Instructors")</p>
-                    <small class="text-success"><i class="ti ti-arrow-up"></i> 3 @(isAr ? "انضموا حديثاً" : "joined recently")</small>
+                    <small class="text-success"><i class="ti ti-arrow-up"></i> @ViewBag.NewInstructors @(isAr ? "انضموا حديثاً" : "joined recently")</small>
                 </div>
             </div>
         </div>
@@ -151,7 +151,7 @@
                     <div class="row mb-3 align-items-center">
                         <div class="col">
                             <small class="text-muted">@(isAr ? "نمو تسجيل الطلاب" : "Student Enrollment Growth")</small>
-                            <h3 style="color: var(--color-primary);">+156 @(isAr ? "طالب" : "Students")</h3>
+                            <h3 style="color: var(--color-primary);">+@ViewBag.StudentsGrowth @(isAr ? "طالب" : "Students")</h3>
                         </div>
                         <div class="col-auto">
                             <select class="form-select border-primary">
@@ -186,35 +186,21 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="rounded p-3 mb-3" style="background-color: var(--color-primary-light);">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0 text-primary fw-bold"><i class="ti ti-math me-1"></i>@(isAr ? "الرياضيات" : "Mathematics")</h6>
-                                <small class="text-muted">456 @(isAr ? "طالب مسجل" : "enrolled students")</small>
-                            </div>
-                            <span class="badge bg-success">95%</span>
-                        </div>
-                    </div>
                     <ul class="list-group list-group-flush">
-                        @{
-                            var subjects = new[] {
-                                                new { Icon = "ti-flask", Color = "var(--color-accent)", TitleAr = "العلوم", TitleEn = "Science", Count = 423, Rate = "92%" },
-                                                new { Icon = "ti-language", Color = "var(--color-secondary-dark)", TitleAr = "الإنجليزية", TitleEn = "English", Count = 398, Rate = "89%" },
-                                                new { Icon = "ti-world", Color = "var(--color-accent)", TitleAr = "التاريخ", TitleEn = "History", Count = 312, Rate = "85%" },
-                                                new { Icon = "ti-device-desktop", Color = "var(--color-primary)", TitleAr = "علوم الحاسب", TitleEn = "Computer Science", Count = 287, Rate = "88%" }
-                                                };
-                        }
-                        @foreach (var sub in subjects)
+                        @if (Model != null)
                         {
-                            <li class="list-group-item px-0 border-0">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-0"><i class="@sub.Icon me-1" style="color: @sub.Color;"></i>@(isAr? sub.TitleAr: sub.TitleEn)</h6>
-                                        <small class="text-success">@sub.Count @(isAr ? "طالب" : "students")</small>
+                            foreach (var sub in Model)
+                            {
+                                <li class="list-group-item px-0 border-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            @* <h6 class="mb-0"><i class="@sub.Icon me-1" style="color: @sub.Color;"></i>@(isAr? sub.TitleAr: sub.TitleEn)</h6> *@
+                                            <small class="text-success">@sub.Count @(isAr ? "طالب" : "students")</small>
+                                        </div>
+                                        <span class="badge bg-success">@sub.Rate <i class="ti ti-arrow-up ms-1"></i></span>
                                     </div>
-                                    <span class="badge bg-success">@sub.Rate <i class="ti ti-arrow-up ms-1"></i></span>
-                                </div>
-                            </li>
+                                </li>
+                            }
                         }
                     </ul>
                     <div class="text-center mt-4">

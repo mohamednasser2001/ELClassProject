@@ -152,6 +152,8 @@ namespace ELClass.Areas.Instructor.Controllers
             ModelState.Remove("Course");
             if (ModelState.IsValid)
             {
+                lsn.CreatedAt = DateTime.Now;
+                lsn.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 await _unitOfWork.LessonRepository.CreateAsync(lsn);
                 await _unitOfWork.CommitAsync();
                 TempData["success"] = "Lesson created successfully";
@@ -177,6 +179,7 @@ namespace ELClass.Areas.Instructor.Controllers
             ModelState.Remove("Course");
             if (ModelState.IsValid)
             {
+                lsn.UpdatedAt = DateTime.Now;
                 await _unitOfWork.LessonRepository.EditAsync(lsn);
                 await _unitOfWork.CommitAsync();
                 TempData["success"] = "Lesson updated successfully";
