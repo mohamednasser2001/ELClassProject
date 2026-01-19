@@ -32,6 +32,7 @@ namespace DataAccess
         public DbSet<InstructorCourse> InstructorCourses { get; set; }
         public DbSet<InstructorStudent> InstructorStudents { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        public DbSet<ContactUs> ContactUs { get; set; }
 
 
 

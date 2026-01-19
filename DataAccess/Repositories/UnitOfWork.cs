@@ -15,6 +15,10 @@ namespace DataAccess.Repositories
         private readonly ApplicationDbContext context;
 
         public UnitOfWork(IRepository<Course> courseRepository, IRepository<Instructor> instructorRepository,
+           IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository,IRepository<ChatMessage> ChatMessageRepositories, ApplicationDbContext context , IRepository<InstructorCourse> instructorCourseRepository ,
+           IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository ,
+           IRepository<ContactUs> contactUsRepository
+           )
            IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository,
            IRepository<CHMessage> chMessageRepository,IRepository<Conversation> conversationRepository, 
            ApplicationDbContext context , IRepository<InstructorCourse> instructorCourseRepository ,
@@ -30,6 +34,7 @@ namespace DataAccess.Repositories
             InstructorCourseRepository = instructorCourseRepository;
             InstructorStudentRepository = instructorStudentRepository;
             StudentCourseRepository = studentCourseRepository;
+            ContactUsRepository = contactUsRepository;
         }
         public IRepository<Course> CourseRepository { get; }
         public IRepository<Instructor> InstructorRepository { get; }
@@ -40,6 +45,8 @@ namespace DataAccess.Repositories
         public IRepository<InstructorCourse> InstructorCourseRepository { get; }
         public IRepository<InstructorStudent> InstructorStudentRepository { get; }
         public IRepository<StudentCourse> StudentCourseRepository { get; }
+        public IRepository<ContactUs> ContactUsRepository { get; }
+
         public async Task<bool> CommitAsync()
         {
             try

@@ -1,0 +1,231 @@
+﻿.hero-features li {
+    font-size: 18px;
+    color: #6c757d;
+    margin-bottom: 12px;
+}
+
+.tutor-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    width: 200px;
+}
+
+    .tutor-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 15px;
+        margin-bottom: 15px;
+    }
+
+.tutors-swiper {
+    overflow: hidden;
+    padding-bottom: 10px;
+}
+
+.swiper-wrapper {
+    transition-timing-function: linear !important;
+}
+
+.swiper-slide {
+    width: 220px;
+}
+
+.tutor-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform .3s ease;
+}
+
+    .tutor-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .tutor-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 15px;
+        margin-bottom: 12px;
+    }
+
+.swiper-wrapper {
+    transition-timing-function: linear !important;
+}
+
+/* container of subjects and shcools and grades*/
+.subject-systems-grades {
+        background: #82daff;
+}
+.subjects-section {
+    /*    background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);*/
+
+    padding: 80px 0 60px;
+    margin: 60px 0 0 0;
+}
+
+    .subjects-section h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 50px;
+        font-weight: 700;
+    }
+
+/* Systems Section Background */
+.systems-section {
+/*    background: #ff716b;*/
+    padding: 30px 0;
+    margin: 10px 0;
+}
+
+    .systems-section h2 {
+        text-align: center;
+        font-size: 2.4rem;
+        color: #2c3e50;
+        margin-bottom: 55px;
+        font-weight: 700;
+    }
+
+/* ---------------------------------------------------- subject section */
+.svgContainer{
+    height:250px;
+}
+
+
+.subjects-swiper .swiper-slide {
+   margin: 80px !important;
+}
+
+
+
+
+
+
+/* Swiper Container */
+.systems-swiper {
+    overflow: hidden;
+    padding: 20px 0;
+}
+
+    .systems-swiper .swiper-wrapper {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Swiper Slides */
+    .systems-swiper .swiper-slide {
+        width: auto !important;
+        flex-shrink: 0;
+        margin-right: 15px;
+    }
+
+        .systems-swiper .swiper-slide > div {
+            padding: 15px 30px !important;
+            margin: 0 !important;
+            background: #fff;
+            border-radius: 50px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+            .systems-swiper .swiper-slide > div:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+                border-color: #ccc;
+            }
+
+        .systems-swiper .swiper-slide h5 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin: 0;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .systems-swiper .swiper-slide svg {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+        }
+
+
+/* Grades Section - Static */
+.grades-section {
+    background: transparent;
+    padding: 60px 20px;
+}
+
+    .grades-section h2 {
+        text-align: center;
+        font-size: 2.2rem;
+        color: #2c3e50;
+        margin-bottom: 50px;
+        font-weight: 700;
+    }
+
+.grades-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.grade-card {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    width: auto;
+    
+    text-align: center;
+    transition: none;
+}
+
+    .grade-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+.grade-icon {
+    width: 170px; 
+    height: 170px; 
+    margin: 0 auto 22px;
+}
+
+    .grade-icon svg {
+        width: 100%;
+        height: 100%;
+    }
+
+
+.grades-container {
+    gap: 70px;
+}
+
+
+
+.grade-card h5 {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 0;
+}
+
+
+
+/*small grades section */
+

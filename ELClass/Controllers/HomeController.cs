@@ -1,14 +1,24 @@
-﻿using Microsoft.AspNetCore.Localization;
+﻿using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Models;
+using Models.ViewModels;
+using System.Threading.Tasks;
 
 namespace ELClass.Controllers
 {
-    
-    public class HomeController : Controller
+
+    public class HomeController(IUnitOfWork unitOfWork) : Controller
     {
-        public IActionResult Index()
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+
+        public async Task<IActionResult> Index()
         {
-            return RedirectToAction("Login", "Account", new { area = "Identity" });
+            var instructors = await _unitOfWork.InstructorRepository.GetAsync(include: e => e.Include(e => e.ApplicationUser));
+            HomePageIndexVM model = new HomePageIndexVM() { Instructors = instructors.ToList() };
+            return View(model);
+            //return RedirectToAction("Login", "Account", new { area = "Identity" });
         }
 
         [HttpGet]
@@ -27,5 +37,18 @@ namespace ELClass.Controllers
             }
             return Redirect("/");
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ContactUs(ContactUs contactUs)
+        {
+            if (ModelState.IsValid)
+            {
+                await _unitOfWork.ContactUsRepository.CreateAsync(contactUs);
+                await _unitOfWork.CommitAsync();
+            }
+            return RedirectToAction("Index");
+
+        }
+
     }
 }
