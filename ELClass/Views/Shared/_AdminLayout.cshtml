@@ -187,7 +187,9 @@
                                 <p class="text-muted">@(isArabic ? "لوحة تحكم المشرف" : "Admin Dashboard")</p>
 
                                 <div class="profile-notification-scroll position-relative" style="max-height: calc(100vh - 280px)">
-                                    <a href="#" class="dropdown-item">
+
+                                    <a asp-area="StudentArea" asp-controller="Home" asp-action="MyProfile" class="dropdown-item">
+                                   
                                         <i class="ti ti-settings"></i>
                                         <span>@(isArabic ? "إعدادات الحساب" : "Account Settings")</span>
                                     </a>

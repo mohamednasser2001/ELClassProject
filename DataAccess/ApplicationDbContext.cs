@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using System.Reflection.Emit;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Models;
@@ -23,8 +24,10 @@ namespace DataAccess
         public DbSet<Course> Courses { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Instructor> Instructors { get; set; }
-        public DbSet<Lesson> Lessons { get; set; }
-        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<Lesson> Lesson { get; set; }
+      
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<CHMessage> CHMessages { get; set; }
         public DbSet<StudentCourse> StudentCourses { get; set; }
         public DbSet<InstructorCourse> InstructorCourses { get; set; }
         public DbSet<InstructorStudent> InstructorStudents { get; set; }
@@ -61,6 +64,27 @@ namespace DataAccess
 
                 .HasForeignKey(c => c.CreatedById)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            //Conversation
+
+
+            builder.Entity<Conversation>()
+                .HasOne(c => c.Student)
+                .WithMany() 
+                .HasForeignKey(c => c.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Conversation>()
+                .HasOne(c => c.Instructor)
+                .WithMany() 
+                .HasForeignKey(c => c.InstructorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CHMessage>()
+                .HasOne(m => m.Conversation)
+                .WithMany(c => c.CHMessages)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Lesson>()
                 .HasOne(i => i.CreatedByUser)

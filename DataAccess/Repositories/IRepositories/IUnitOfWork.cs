@@ -12,7 +12,8 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<Instructor> InstructorRepository { get; }
         IRepository<Student> StudentRepository { get; }
         IRepository<Lesson> LessonRepository { get; }
-        IRepository<ChatMessage> ChatMessageRepository { get; }
+        IRepository<CHMessage> CHMessageRepository { get; }
+        IRepository<Conversation> ConversationRepository { get; }
         IRepository<InstructorCourse> InstructorCourseRepository { get; }
         IRepository<InstructorStudent> InstructorStudentRepository { get; }
         IRepository<StudentCourse> StudentCourseRepository { get; }

@@ -1,6 +1,9 @@
-﻿@model Models.ViewModels.Instructor.InstructorIndexDashboardVM
+﻿@using Models
+@model Models.ViewModels.Instructor.InstructorIndexDashboardVM
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager
 @{
     ViewData["Title"] = "Instructor Dashboard";
+    Layout = "_InstrcutorLayout";
 }
 
 <div class="row mb-4">
@@ -251,3 +254,890 @@
         </div>
     </div>
 </div>
+
+@* Instructor Chat Widget *@
+<button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
+    <span class="chat-fab-icon" aria-hidden="true">
+        <i class="fab fa-whatsapp"></i>
+    </span>
+    <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
+</button>
+
+
+<div id="chatWidget" class="chat-widget" aria-hidden="true">
+    <div class="chat-header">
+        <div class="header-left">
+            <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
+            <div class="title" id="chatHeaderTitle">Chats</div>
+        </div>
+        <div class="actions">
+            <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">✕</button>
+        </div>
+    </div>
+
+    @* Screen 1: Students list *@
+    <div class="chat-screen" id="screenList">
+        <div class="chat-search">
+            <input id="chatSearch" type="text" placeholder="Search students..." autocomplete="off" />
+        </div>
+        <div class="chat-items" id="chatItems"></div>
+    </div>
+
+    @* Screen 2: Thread *@
+    <div class="chat-screen hidden" id="screenThread">
+        <div class="messages" id="messagesBox"></div>
+
+        <div class="composer">
+            <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+            <button id="sendBtn" type="button" aria-label="Send">➤</button>
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+
+    <script>
+        // =========================
+        // URLs (Instructor area)
+        // =========================
+        const API = {
+            conversations: '@Url.Action("GetInstructorConversations","Home", new { area="Instructor" })',
+            history: '@Url.Action("GetChatHistory","Home", new { area="Instructor" })',
+            save: '@Url.Action("SaveMessage","Home", new { area="Instructor" })',
+            markRead: '@Url.Action("MarkAsRead","Home", new { area="Instructor" })'
+        };
+
+        // =========================
+        // Elements
+        // =========================
+        const chatFab = document.getElementById('chatFab');
+        const chatFabBadge = document.getElementById('chatFabBadge'); // ✅ NEW
+        const chatWidget = document.getElementById('chatWidget');
+        const chatCloseBtn = document.getElementById('chatCloseBtn');
+        const chatBackBtn = document.getElementById('chatBackBtn');
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+
+        const screenList = document.getElementById('screenList');
+        const screenThread = document.getElementById('screenThread');
+
+        const chatSearch = document.getElementById('chatSearch');
+        const chatItemsBox = document.getElementById('chatItems');
+
+        const messagesBox = document.getElementById('messagesBox');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // =========================
+        // State
+        // =========================
+        const state = {
+            isOpen: false,
+            currentStudentId: null,
+            currentStudentName: '',
+            conversationId: null,
+            hasMore: false,
+            oldestMessageId: null,
+            conversationsCache: []
+        };
+
+        // =========================
+        // Helpers
+        // =========================
+        function escapeHtml(str) {
+            return (str ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", "&#039;");
+        }
+
+        function toTime(sentAt) {
+            if (!sentAt) return '';
+            const d = new Date(sentAt);
+            if (Number.isNaN(d.getTime())) return '';
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function initials(name) {
+            const s = (name ?? '').trim();
+            if (!s) return 'ST';
+            const parts = s.split(/\s+/).filter(Boolean);
+            const first = parts[0]?.[0] ?? 'S';
+            const second = (parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1]) ?? 'T';
+            return (first + second).toUpperCase();
+        }
+
+        // =========================
+        // FAB Badge + Pulse (NEW)
+        // =========================
+        function setFabUnread(count) {
+            const n = Math.max(0, parseInt(count || 0));
+            if (!chatFabBadge) return;
+
+            if (n === 0) {
+                chatFabBadge.classList.add('hidden');
+                chatFab.classList.remove('pulse');
+                chatFabBadge.textContent = '0';
+            } else {
+                chatFabBadge.classList.remove('hidden');
+                chatFabBadge.textContent = (n > 99) ? '99+' : String(n);
+                chatFab.classList.add('pulse');
+            }
+        }
+
+        function calcTotalUnread() {
+            return (state.conversationsCache || []).reduce((sum, c) => sum + (c.unread || 0), 0);
+        }
+
+        function syncFabUnreadFromList() {
+            setFabUnread(calcTotalUnread());
+        }
+
+        // =========================
+        // Open / Close (UPDATED to use .open)
+        // =========================
+        function showWidget() {
+            state.isOpen = true;
+
+            // ✅ بدل display
+            chatWidget.classList.add('open');
+            chatWidget.setAttribute('aria-hidden', 'false');
+            chatFab.style.display = 'none';
+
+            showListScreen();
+            loadConversations();
+        }
+
+        function hideWidget() {
+            state.isOpen = false;
+
+            // ✅ بدل display
+            chatWidget.classList.remove('open');
+            chatWidget.setAttribute('aria-hidden', 'true');
+            chatFab.style.display = 'block';
+
+            // reset
+            state.currentStudentId = null;
+            state.currentStudentName = '';
+            state.conversationId = null;
+            state.oldestMessageId = null;
+            state.hasMore = false;
+
+            messagesBox.innerHTML = '';
+            chatInput.value = '';
+            chatSearch.value = '';
+        }
+
+        function showListScreen() {
+            screenThread.classList.add('hidden');
+            screenList.classList.remove('hidden');
+            chatBackBtn.classList.add('hidden');
+            chatHeaderTitle.textContent = 'Chats';
+
+            state.currentStudentId = null;
+            state.currentStudentName = '';
+            state.conversationId = null;
+            state.oldestMessageId = null;
+            state.hasMore = false;
+            messagesBox.innerHTML = '';
+        }
+
+        function showThreadScreen(name) {
+            screenList.classList.add('hidden');
+            screenThread.classList.remove('hidden');
+            chatBackBtn.classList.remove('hidden');
+            chatHeaderTitle.textContent = name || 'Chat';
+        }
+
+        function findItem(studentId) {
+            return document.querySelector(`.chat-item[data-student-id="${CSS.escape(studentId)}"]`);
+        }
+
+        function removeBadge(studentId) {
+            const item = findItem(studentId);
+            if (!item) return;
+            const badge = item.querySelector('.badge');
+            if (badge) badge.remove();
+        }
+
+        function incrementBadge(studentId) {
+            const item = findItem(studentId);
+            if (!item) return;
+
+            let badge = item.querySelector('.badge');
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.className = 'badge';
+                badge.textContent = '1';
+                item.appendChild(badge);
+            } else {
+                badge.textContent = (parseInt(badge.textContent || '0') + 1).toString();
+            }
+        }
+
+        function setActive(studentId) {
+            document.querySelectorAll('.chat-item').forEach(x => {
+                x.classList.toggle('active', x.dataset.studentId === studentId);
+            });
+        }
+
+        // =========================
+        // Conversations list
+        // =========================
+        async function loadConversations() {
+            try {
+                const res = await fetch(API.conversations);
+                const data = await res.json();
+
+                state.conversationsCache = Array.isArray(data) ? data : [];
+                renderConversations(state.conversationsCache);
+
+                // ✅ NEW: update FAB unread + pulse
+                syncFabUnreadFromList();
+
+                // keep active highlight
+                if (state.currentStudentId) setActive(state.currentStudentId);
+
+            } catch (e) {
+                console.error(e);
+                chatItemsBox.innerHTML = `<div class="empty">Failed to load chats</div>`;
+            }
+        }
+
+        function renderConversations(list) {
+            chatItemsBox.innerHTML = '';
+
+            if (!list || list.length === 0) {
+                chatItemsBox.innerHTML = `<div class="empty">No chats yet</div>`;
+                return;
+            }
+
+            for (const c of list) {
+                const name = c.studentName ?? c.name ?? 'Student';
+                const preview = c.lastMessage ?? '';
+                const unread = c.unread ?? 0;
+
+                const avatarHtml = c.photoUrl
+                    ? `<img class="avatar-img" src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(name)}" />`
+                    : `<div class="avatar-text">${escapeHtml(initials(name))}</div>`;
+
+                const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
+
+                chatItemsBox.insertAdjacentHTML('beforeend', `
+                    <div class="chat-item"
+                         data-student-id="${escapeHtml(c.studentId)}"
+                         data-student-name="${escapeHtml(name)}">
+                        <div class="avatar">${avatarHtml}</div>
+                        <div class="meta">
+                            <div class="name">${escapeHtml(name)}</div>
+                            <div class="preview">${escapeHtml(preview)}</div>
+                        </div>
+                        ${unreadHtml}
+                    </div>
+                `);
+            }
+        }
+
+        // click list (delegation)
+        chatItemsBox.addEventListener('click', (e) => {
+            const item = e.target.closest('.chat-item');
+            if (!item) return;
+
+            openChat(item.dataset.studentId, item.dataset.studentName);
+        });
+
+        // search
+        chatSearch.addEventListener('input', () => {
+            const q = (chatSearch.value ?? '').trim().toLowerCase();
+            const filtered = !q
+                ? state.conversationsCache
+                : state.conversationsCache.filter(x => ((x.studentName ?? x.name ?? '').toLowerCase().includes(q)));
+            renderConversations(filtered);
+        });
+
+        // =========================
+        // Thread (history + paging)
+        // =========================
+        async function openChat(studentId, studentName) {
+            state.currentStudentId = studentId;
+            state.currentStudentName = studentName;
+
+            setActive(studentId);
+            showThreadScreen(studentName);
+
+            await loadHistory(studentId);
+
+            await markAsRead(studentId);
+            removeBadge(studentId);
+
+            // ✅ NEW: بعد القراءة، حدّث القائمة + FAB unread الحقيقي
+            await loadConversations();
+        }
+
+        async function loadHistory(studentId) {
+            try {
+                const res = await fetch(`${API.history}?studentId=${encodeURIComponent(studentId)}&take=20`);
+                const data = await res.json();
+
+                const list = Array.isArray(data) ? data : (data.messages ?? []);
+                state.conversationId = data.conversationId ?? null;
+                state.hasMore = data.hasMore === true;
+
+                messagesBox.innerHTML = '';
+
+                if (!list || list.length === 0) {
+                    messagesBox.innerHTML = `<div class="empty">No messages yet</div>`;
+                    state.oldestMessageId = null;
+                    return;
+                }
+
+                for (const m of list) renderMessage(m);
+
+                state.oldestMessageId = list[0]?.id ?? null;
+                messagesBox.scrollTop = messagesBox.scrollHeight;
+            } catch (e) {
+                console.error(e);
+                messagesBox.innerHTML = `<div class="empty">Failed to load messages</div>`;
+            }
+        }
+
+        // optional: load older on scroll top
+        messagesBox.addEventListener('scroll', async () => {
+            if (!state.currentStudentId) return;
+            if (!state.hasMore) return;
+            if (messagesBox.scrollTop > 10) return; // near top only
+            if (!state.oldestMessageId) return;
+
+            const prevHeight = messagesBox.scrollHeight;
+
+            try {
+                const res = await fetch(`${API.history}?studentId=${encodeURIComponent(state.currentStudentId)}&take=20&beforeId=${state.oldestMessageId}`);
+                const data = await res.json();
+                const list = data.messages ?? [];
+                state.hasMore = data.hasMore === true;
+
+                if (!list.length) return;
+
+                // prepend
+                const frag = document.createDocumentFragment();
+                for (const m of list) frag.appendChild(messageNode(m));
+                messagesBox.prepend(frag);
+
+                state.oldestMessageId = list[0]?.id ?? state.oldestMessageId;
+
+                // keep scroll position
+                const newHeight = messagesBox.scrollHeight;
+                messagesBox.scrollTop = newHeight - prevHeight;
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        function messageNode(m) {
+            const senderId = m.senderId ?? m.SenderId;
+            const receiverId = m.receiverId ?? m.ReceiverId;
+            const content = m.content ?? m.Content ?? '';
+            const sentAt = m.sentAt ?? m.SentAt;
+
+            // ✅ المدرس = أنا -> mine لما receiverId == currentStudentId
+            const isMine = receiverId === state.currentStudentId;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
+            wrapper.innerHTML = `
+                <div class="bubble">
+                    ${escapeHtml(content)}
+                    <span class="time">${escapeHtml(toTime(sentAt))}</span>
+                </div>
+            `;
+            return wrapper;
+        }
+
+        function renderMessage(m) {
+            messagesBox.appendChild(messageNode(m));
+        }
+
+        // =========================
+        // Mark read
+        // =========================
+        async function markAsRead(studentId) {
+            try {
+                await fetch(API.markRead, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: new URLSearchParams({ studentId })
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // =========================
+        // Send message
+        // =========================
+        async function sendMessage() {
+            const text = (chatInput.value || '').trim();
+            if (!state.currentStudentId || !text) return;
+
+            // optimistic
+            const nowIso = new Date().toISOString();
+            renderMessage({ receiverId: state.currentStudentId, content: text, sentAt: nowIso });
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+            chatInput.value = '';
+
+            // update preview
+            const item = findItem(state.currentStudentId);
+            if (item) {
+                const prev = item.querySelector('.preview');
+                if (prev) prev.textContent = text;
+            }
+
+            try {
+                const res = await fetch(API.save, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: new URLSearchParams({ receiverId: state.currentStudentId, content: text })
+                });
+
+                const data = await res.json();
+                if (!data || data.success !== true) {
+                    console.log('Save failed:', data);
+                    return;
+                }
+
+                // realtime
+                await sendRealtimeToStudent(state.currentStudentId, text);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // =========================
+        // Open/Close/Back
+        // =========================
+        chatFab.addEventListener('click', showWidget);
+        chatCloseBtn.addEventListener('click', hideWidget);
+        chatBackBtn.addEventListener('click', showListScreen);
+
+        // =========================
+        // SignalR (Instructor)
+        // =========================
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start()
+            .then(() => console.log("SignalR Connected (Instructor)!"))
+            .catch(err => console.error(err.toString()));
+
+        // ✅ مهم: handler ده لازم يبقى مرة واحدة هنا (مش جوه ReceiveMessage)
+        connection.on("UpdateConversationList", function () {
+            loadConversations();
+        });
+
+        connection.on("ReceiveMessage", async function(senderId, message, timestamp) {
+            // senderId هنا = studentId
+
+            const sameOpenChat = state.isOpen && state.currentStudentId && senderId === state.currentStudentId;
+
+            if (sameOpenChat) {
+                renderMessage({ senderId, receiverId: 'me', content: message, sentAt: timestamp });
+                messagesBox.scrollTop = messagesBox.scrollHeight;
+
+                await markAsRead(senderId);
+                removeBadge(senderId);
+
+                // بعد القراءة: sync
+                await loadConversations();
+                return;
+            }
+
+            // update preview + badge
+            const item = findItem(senderId);
+            if (item) {
+                const prev = item.querySelector('.preview');
+                if (prev) prev.textContent = message;
+
+                incrementBadge(senderId);
+            }
+
+            // ✅ NEW: حتى لو الودجت مقفول، حدّث FAB unread/pulse من السيرفر
+            await loadConversations();
+        });
+
+        async function sendRealtimeToStudent(studentId, message) {
+            try {
+                await connection.invoke("SendMessage", studentId, message);
+            } catch (e) {
+                console.error(e.toString());
+            }
+        }
+    </script>
+}
+
+
+
+
+<style>
+    .chat-widget {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 360px;
+    max-width: calc(100vw - 36px);
+    height: 560px;
+    max-height: calc(100vh - 36px);
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 14px 36px rgba(0,0,0,.18);
+    overflow: hidden;
+    z-index: 9999;
+
+    /* ✅ لازم يبقى flex دايمًا */
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+
+    /* ✅ مقفول افتراضيًا (بـ opacity مش display:none) */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(14px) scale(.98);
+    transform-origin: bottom right;
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+/* ✅ مفتوح */
+.chat-widget.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.chat-header {
+    background: #0ea85f;
+    color: #fff;
+    padding: 12px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.chat-header .title {
+    font-weight: 800;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-btn-icon {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: rgba(255,255,255,.18);
+    color: #fff;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-screen {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.chat-search {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.chat-search input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e7e7e7;
+    border-radius: 12px;
+    outline: none;
+    font-size: 13px;
+}
+
+.chat-items {
+    overflow: auto;
+    padding: 8px;
+    flex: 1;
+}
+
+.chat-item {
+    padding: 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    position: relative;
+}
+
+.chat-item:hover {
+    background: #f6f7f7;
+}
+
+.chat-item.active {
+    background: #e9fbf2;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: #e7e7e7;
+    flex: 0 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-text {
+    font-weight: 800;
+    font-size: 13px;
+    color: #2b2b2b;
+}
+
+.chat-item .meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-item .name {
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-item .preview {
+    font-size: 12px;
+    color: #6f6f6f;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.badge {
+    min-width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #00c853;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    padding: 0 6px;
+    font-weight: 800;
+}
+
+.messages {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 12px;
+    background: #f3f5f4;
+}
+
+.msg-row {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.msg-row.mine {
+    justify-content: flex-end;
+}
+
+.bubble {
+    max-width: 85%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #000;
+    font-size: 13px;
+    line-height: 1.35;
+    box-shadow: 0 6px 14px rgba(0,0,0,.06);
+}
+
+.mine .bubble {
+    background: #0ea85f;
+    color: #fff;
+}
+
+.bubble .time {
+    display: block;
+    font-size: 10px;
+    opacity: .85;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.composer {
+    border-top: 1px solid #eee;
+    padding: 10px;
+    display: flex;
+    gap: 8px;
+    background: #fff;
+}
+
+.composer input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid #e7e7e7;
+    outline: none;
+    font-size: 13px;
+}
+
+.composer button {
+    width: 44px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    background: #0ea85f;
+    color: #fff;
+    font-size: 16px;
+}
+
+/* ===== WhatsApp FAB ===== */
+.chat-fab {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #25D366;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 26px rgba(0,0,0,.22);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.chat-fab:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 14px 34px rgba(0,0,0,.28);
+    filter: brightness(1.03);
+}
+
+/* ✅ تحسين شكل الأيقونة (نفس تعديل HTML الجديد) */
+.chat-fab-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+.chat-fab-icon i {
+    font-size: 28px;
+    transform: translateY(1px);
+}
+
+/* ===== Pulse Animation ===== */
+@@keyframes chatPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 10px 26px rgba(0,0,0,.22);
+    }
+    70% {
+        box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+    }
+}
+
+.chat-fab.pulse {
+    animation: chatPulse 1.4s ease-out infinite;
+}
+
+/* ===== FAB Badge ===== */
+.chat-fab-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #ff3b30;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+}
+
+.empty {
+    padding: 14px;
+    color: #777;
+    font-size: 13px;
+    text-align: center;
+}
+
+@@media (max-width: 520px) {
+    .chat-widget {
+        width: 100%;
+        height: 100%;
+        right: 0;
+        bottom: 0;
+        border-radius: 0;
+        transform-origin: bottom right;
+    }
+
+    .chat-fab {
+        right: 14px;
+        bottom: 14px;
+    }
+}
+
+</style>
+
+

@@ -124,9 +124,13 @@ namespace DataAccess.Repositories
             {
                 entities = entities.AsNoTracking();
             }
-            if (skip is not null && take is not null)
+            if (skip is not null)
             {
-                entities = entities.Skip(skip.Value).Take(take.Value);
+                entities = entities.Skip(skip.Value);
+            }
+            if (take is not null)
+            {
+                entities = entities.Take(take.Value);
             }
             return (await entities.ToListAsync());
         }
