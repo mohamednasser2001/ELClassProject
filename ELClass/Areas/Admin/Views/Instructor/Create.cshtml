@@ -1,108 +1,122 @@
 ﻿@model Models.Instructor
 
 @{
-    ViewData["Title"] = "Create Instructor";
+    var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+    var isAr = currentLang == "ar";
+    var direction = isAr ? "rtl" : "ltr";
+    ViewData["Title"] = isAr ? "إنشاء محاضر" : "Create Instructor";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold mb-1 fs-3">
-            <i class="fas fa-user-plus text-orange me-2"></i>Instructor Management
-        </h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="/Admin/Instructor" class="text-muted text-decoration-none">Instructors</a></li>
-                <li class="breadcrumb-item active text-orange" aria-current="page">Create New</li>
-            </ol>
-        </nav>
+<div class="container-fluid py-2" style="direction: @direction; text-align: @(isAr ? "right" : "left");">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 fs-3">
+                <i class="fas fa-user-plus text-orange me-2"></i>
+                @(isAr ? "إدارة المحاضرين" : "Instructor Management")
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Instructor" class="text-muted text-decoration-none">@(isAr ? "المحاضرين" : "Instructors")</a></li>
+                    <li class="breadcrumb-item active text-orange" aria-current="page">@(isAr ? "إضافة جديد" : "Create New")</li>
+                </ol>
+            </nav>
+        </div>
+
+        <a href="/Admin/Instructor/CreateInstructorAccount" class="btn btn-orange-custom shadow-sm px-4">
+            <i class="fas fa-plus me-2"></i>
+            @(isAr ? "إنشاء حساب محاضر جديد" : "Create New Instructor Account")
+        </a>
     </div>
 
-    <a href="/Admin/Instructor/CreateInstructorAccount" class="btn btn-orange-custom shadow-sm px-4">
-        <i class="fas fa-plus me-2"></i>Create New Instructor Account
-    </a>
-</div>
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<div class="card shadow-sm border-0 rounded-3">
-    <div class="card-body p-4">
-        <form asp-action="Create" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-            <div class="form-group mb-4 p-3 bg-light rounded-2 border-start border-4 border-orange">
-                <label asp-for="Id" class="form-label fw-bold">
-                    <i class="fas fa-user-shield text-orange"></i> Select User Account
-                </label>
-                <select asp-for="Id" class="form-control select2-user" id="select2-user"></select>
-                <span asp-validation-for="Id" class="text-danger"></span>
-                <div class="form-text mt-2">
-                    <i class="fas fa-info-circle text-muted"></i> Search for an existing user (Email or Name) to assign as instructor.
-                </div>
-            </div>
-
-            <hr class="my-4 text-muted opacity-25">
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="small mb-2 fw-bold text-muted">Name (English)</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-font text-orange"></i></span>
-                        <input class="form-control bg-light border-start-0" asp-for="NameEn" type="text" placeholder="Enter English Name">
+                <div class="form-group mb-4 p-3 bg-light rounded-2 border-start border-4 border-orange">
+                    <label asp-for="Id" class="form-label fw-bold">
+                        <i class="fas fa-user-shield text-orange"></i>
+                        @(isAr ? "اختر حساب المستخدم" : "Select User Account")
+                    </label>
+                    <select asp-for="Id" class="form-control select2-user" id="select2-user"></select>
+                    <span asp-validation-for="Id" class="text-danger"></span>
+                    <div class="form-text mt-2">
+                        <i class="fas fa-info-circle text-muted"></i>
+                        @(isAr ? "ابحث عن مستخدم موجود (بالبريد أو الاسم) لتعيينه كمحاضر." : "Search for an existing user (Email or Name) to assign as instructor.")
                     </div>
-                    <span class="text-danger" asp-validation-for="NameEn"></span>
                 </div>
-                <div class="col-md-6 mb-3 text-end">
-                    <label class="small mb-2 fw-bold text-muted">الأسم (بالعربية)</label>
-                    <div class="input-group" dir="rtl">
-                        <span class="input-group-text bg-white border-start-0"><i class="fas fa-signature text-orange"></i></span>
-                        <input class="form-control bg-light border-end-0" type="text" asp-for="NameAr" style="text-align:right" placeholder="أدخل الاسم بالعربي">
+
+                <hr class="my-4 text-muted opacity-25">
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "الاسم (بالإنجليزي)" : "Name (English)")</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-font text-orange"></i></span>
+                            <input class="form-control bg-light border-start-0" asp-for="NameEn" type="text" placeholder="@(isAr ? "أدخل الاسم بالإنجليزي" : "Enter English Name")">
+                        </div>
+                        <span class="text-danger" asp-validation-for="NameEn"></span>
                     </div>
-                    <span class="text-danger" asp-validation-for="NameAr"></span>
+                    <div class="col-md-6 mb-3">
+                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "الاسم (بالعربي)" : "Name (Arabic)")</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white @(isAr ? "border-start-0" : "border-end-0")"><i class="fas fa-signature text-orange"></i></span>
+                            <input class="form-control bg-light @(isAr ? "border-end-0 text-end" : "border-start-0")" type="text" asp-for="NameAr" placeholder="@(isAr ? "أدخل الاسم بالعربي" : "Enter Arabic Name")">
+                        </div>
+                        <span class="text-danger" asp-validation-for="NameAr"></span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="small mb-2 fw-bold text-muted">Bio (English)</label>
-                    <textarea class="form-control bg-light" asp-for="BioEn" rows="4" placeholder="Tell us about the instructor..."></textarea>
-                    <span class="text-danger" asp-validation-for="BioEn"></span>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "السيرة الذاتية (بالإنجليزي)" : "Bio (English)")</label>
+                        <textarea class="form-control bg-light" asp-for="BioEn" rows="4" placeholder="@(isAr ? "نبذة عن المحاضر..." : "Tell us about the instructor...")"></textarea>
+                        <span class="text-danger" asp-validation-for="BioEn"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "السيرة الذاتية (بالعربي)" : "Bio (Arabic)")</label>
+                        <textarea class="form-control bg-light @(isAr ? "text-end" : "")" asp-for="BioAr" rows="4" dir="@(isAr ? "rtl" : "ltr")" placeholder="@(isAr ? "اكتب نبذة عن المحاضر..." : "Tell us about the instructor in Arabic...")"></textarea>
+                        <span class="text-danger" asp-validation-for="BioAr"></span>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3 text-end">
-                    <label class="small mb-2 fw-bold text-muted">السيرة الذاتية (بالعربية)</label>
-                    <textarea class="form-control bg-light" asp-for="BioAr" rows="4" style="text-align:right; direction:rtl;" placeholder="اكتب نبذة عن المدرب..."></textarea>
-                    <span class="text-danger" asp-validation-for="BioAr"></span>
-                </div>
-            </div>
 
-            <div class="mt-4 pt-2 border-top">
-                <button class="btn btn-orange-custom btn-lg px-4 shadow-sm" type="submit">
-                    <i class="fas fa-plus-circle me-2"></i>Create Instructor
-                </button>
-                <a href="/Admin/Instructor" class="btn btn-light btn px-3 ms-2">Cancel</a>
-            </div>
-        </form>
+                <div class="mt-4 pt-2 border-top">
+                    <button class="btn btn-orange-custom btn-lg px-4 shadow-sm" type="submit">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        @(isAr ? "إنشاء المحاضر" : "Create Instructor")
+                    </button>
+                    <a href="/Admin/Instructor" class="btn btn-light btn px-3 ms-2">@(isAr ? "إلغاء" : "Cancel")</a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
-
-
-
-
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
-    <!-- Add Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <script>
         $(document).ready(function () {
-            // Initialize Select2 for user search
             $('.select2-user').select2({
-                placeholder: "Search user by name or email...",
+                placeholder: "@(isAr ? "" : "Search user by name or email...")",
                 allowClear: true,
                 minimumInputLength: 2,
                 width: '100%',
+                dir: "@direction",
+                language: {
+                    inputTooShort: function () {
+                        return "@(isAr ? "يرجى إدخال حرفين أو أكثر" : "Please enter 2 or more characters")";
+                    },
+                    searching: function () {
+                        return "@(isAr ? "جاري البحث..." : "Searching...")";
+                    },
+                    noResults: function () {
+                        return "@(isAr ? "لا توجد نتائج" : "No results found")";
+                    }
+                },
                 templateResult: formatUserResult,
                 templateSelection: formatUserSelection,
                 ajax: {
@@ -110,9 +124,7 @@
                     dataType: 'json',
                     delay: 300,
                     data: function (params) {
-                        return {
-                            term: params.term
-                        };
+                        return { term: params.term };
                     },
                     processResults: function (data) {
                         return {
@@ -126,27 +138,15 @@
                 }
             });
 
-            // Format user display in dropdown
             function formatUserResult(user) {
-                if (!user.id) {
-                    return user.text;
-                }
-
-                var $result = $(
-                    '<div>' +
-                        '<strong>' + user.text + '</strong>' +
-                        '<br><small class="text-muted">' + (user.email || '') + '</small>' +
-                    '</div>'
-                );
-                return $result;
+                if (!user.id) return user.text;
+                var textAlign = "@(isAr ? "right" : "left")";
+                return $('<div style="text-align:' + textAlign + '"><strong>' + user.text + '</strong><br><small class="text-muted">' + (user.email || '') + '</small></div>');
             }
 
             function formatUserSelection(user) {
                 return user.text;
             }
-
-            // Add orange color class for dynamic use
-            // text-orange class now uses CSS variables from color-tokens.css
         });
     </script>
 }

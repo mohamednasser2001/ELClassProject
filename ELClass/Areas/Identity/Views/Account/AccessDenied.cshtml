@@ -1,0 +1,82 @@
+﻿@{
+    string currentArea = ViewData["CurrentArea"] as string;
+    bool isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+
+    if (currentArea == "Instructor")
+    {
+        Layout = "~/views/shared/_InstrcutorLayout.cshtml";
+    }
+    else if (currentArea == "Admin")
+    {
+        Layout = "~/views/shared/_AdminLayout.cshtml";
+    }
+    else if (currentArea == "Student")
+    {
+        Layout = "~/views/shared/_StudentLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/views/shared/_InstrcutorLayout.cshtml";
+    }
+
+    ViewData["Title"] = isArabic ? "غير مسموح بالدخول" : "Access Denied";
+}
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<div dir="@(isArabic ? "rtl" : "ltr")" class="min-h-[70vh] flex items-center justify-center px-4 bg-white dark:bg-slate-900 transition-colors duration-200">
+    <div class="max-w-md w-full text-center">
+
+        <div class="mb-6 inline-flex items-center justify-center w-24 h-24 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 animate-pulse">
+            <span class="material-icons text-6xl">gpp_maybe</span>
+        </div>
+
+        <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white mb-2 tracking-tight">
+            @(isArabic ? "دخول غير مصرح به" : "Access Denied")
+        </h1>
+
+        <div class="h-1 w-20 bg-primary mx-auto mb-6 rounded-full"></div>
+
+        <p class="text-slate-600 dark:text-slate-400 text-lg mb-8 leading-relaxed">
+            @if (isArabic)
+            {
+                <span>عذراً، ليس لديك الصلاحيات الكافية للوصول إلى هذه الصفحة. يرجى التواصل مع الإدارة إذا كنت تعتقد أن هذا خطأ.</span>
+            }
+            else
+            {
+                <span>Sorry, you don't have the required permissions to access this page. Please contact administration if you believe this is an error.</span>
+            }
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="javascript:history.back()"
+               class="flex items-center justify-center gap-2 px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg font-semibold hover:bg-slate-300 dark:hover:bg-slate-700 transition-all active:scale-95 no-underline">
+                <span class="material-icons text-sm @(isArabic ? "rotate-180" : "")">arrow_back</span>
+                @(isArabic ? "الرجوع للخلف" : "Go Back")
+            </a>
+
+            <a class="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold shadow-lg shadow-orange-500/30 hover:bg-orange-600 hover:scale-105 transition-all active:scale-95 no-underline"
+               href="/Identity/Home/Index">
+                <span class="material-icons text-sm">home</span>
+                @(isArabic ? "الرئيسية" : "Home")
+            </a>
+        </div>
+
+        <p class="mt-12 text-sm text-slate-400 dark:text-slate-500 italic font-mono">
+            Error Code: 403 - Forbidden
+        </p>
+    </div>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#f97316',
+                }
+            }
+        }
+    }
+</script>

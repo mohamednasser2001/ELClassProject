@@ -108,6 +108,7 @@ namespace ELClass.Areas.Identity.Controllers
                     NameAR = registerVM.NameAR,
                     Email = registerVM.Email,
                     UserName = registerVM.Email.Split('@')[0] + new Random().Next(10, 99).ToString(),
+                    
                 };
 
                 IdentityResult result;
@@ -131,7 +132,8 @@ namespace ELClass.Areas.Identity.Controllers
                     {
                         Id = applicationUser.Id,
                         NameAr = applicationUser.NameAR ?? "",
-                        NameEn = applicationUser.NameEN ?? ""
+                        NameEn = applicationUser.NameEN ?? "",
+                        CreatedDate = DateTime.Now
                     };
                     await unitOfWork.StudentRepository.CreateAsync(std);
                     await unitOfWork.CommitAsync();
@@ -473,7 +475,23 @@ namespace ELClass.Areas.Identity.Controllers
             return RedirectToAction(nameof(Login));
         }
 
+        public IActionResult AccessDenied(string returnUrl)
+        {
+            
+            string areaName = "";
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                var segments = returnUrl.Split('/');
+                
+                if (segments.Length > 1)
+                {
+                    areaName = segments[1];
+                }
+            }
 
+            ViewData["CurrentArea"] = areaName;
+            return View();
+        }
 
     }
 }

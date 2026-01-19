@@ -16,7 +16,6 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="wwwroot\Images\Users\" />
     <Folder Include="wwwroot\js\Admin\Course\" />
   </ItemGroup>

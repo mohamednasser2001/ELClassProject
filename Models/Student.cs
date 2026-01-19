@@ -14,6 +14,7 @@ namespace Models
         public string NameAr { get; set; } = string.Empty;
         [Required(ErrorMessage = "you have to enter a name")]
         public string NameEn { get; set; } = string.Empty;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public ApplicationUser ApplicationUser { get; set; } = null!;
         public ICollection<InstructorStudent> InstructorStudents { get; set; } = new List<InstructorStudent>();
         public ICollection<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();

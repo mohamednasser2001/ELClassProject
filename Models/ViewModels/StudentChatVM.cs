@@ -6,9 +6,9 @@ namespace Models.ViewModels
 {
     public class StudentChatVM
     {
-        public string StudentId { get; set; }
-        public string StudentName { get; set; }
-        public string LastMessage { get; set; }
+        public string StudentId { get; set; }  = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public string LastMessage { get; set; } = string.Empty;
         public DateTime LastMessageTime { get; set; }
 
         // ده العداد اللي هيظهر للمدرس عشان يعرف فيه كام رسالة جديدة من الطالب ده

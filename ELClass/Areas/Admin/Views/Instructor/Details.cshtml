@@ -2,112 +2,91 @@
 @model InstructorDetailsVM
 
 @{
-    var currentLang = Context.Session.GetString("Language") ?? "en";
-    var direction = currentLang == "ar" ? "rtl" : "ltr";
+    var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+    var isArabic = currentLang == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
 }
 
-
-
-
-
 <div class="container-fluid py-4" style="direction:@direction">
-
     <input type="hidden" id="instructorId" value="@Model.Instructor.Id" />
 
-
-
-
-    <!-- ================= INSTRUCTOR PROFILE ================= -->
     <div class="d-flex justify-content-between align-items-center mb-4 header-section">
         <div>
-            <h2 class="fw-bold mb-1 fs-3"><i class="fas fa-chalkboard-Instructor text-orange me-2"></i> Instructor Management</h2>
+            <h2 class="fw-bold mb-1 fs-3">
+                <i class="fas fa-chalkboard-instructor text-orange me-2"></i>
+                @(isArabic ? "إدارة المدرب" : "Instructor Management")
+            </h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/Admin/Instructor" class="text-muted text-decoration-none">Instructors</a></li>
-                    <li class="breadcrumb-item active text-orange" aria-current="page">@Model.Instructor.NameEn</li>
+                    <li class="breadcrumb-item"><a href="/Admin/Instructor" class="text-muted text-decoration-none">@(isArabic ? "المدربين" : "Instructors")</a></li>
+                    <li class="breadcrumb-item active text-orange" aria-current="page">@(isArabic? Model.Instructor.NameAr : Model.Instructor.NameEn)</li>
                 </ol>
             </nav>
         </div>
-
     </div>
 
-
-    <!-- ================= HEADER ================= -->
-    <div class="page-header">
-        <h2>
-            <i class="fas fa-chalkboard-Instructor icon-primary me-2"></i>
-            @Model.Instructor.NameEn
-        </h2>
-
-    </div>
-
+    @* --- قسم الإحصائيات --- *@
     <div class="row mb-4">
-
         <div class="col-6 col-md-6 col-xl-3 mb-3">
             <div class="stat-card text-center">
                 <i class="fas fa-book fa-2x mb-2"></i>
-                <h3>@Model.InstructorCourses.Count()</h3>
-                <p>@(currentLang == "ar" ? "الكورسات" : "Courses")</p>
+                <h3 id="coursesCountDisp">@Model.InstructorCourses.Count()</h3>
+                <p>@(isArabic ? "الكورسات" : "Courses")</p>
             </div>
         </div>
-
         <div class="col-6 col-md-6 col-xl-3 mb-3">
             <div class="stat-card text-center">
                 <i class="fas fa-users fa-2x mb-2"></i>
-                <h3>@Model.InstructorStudents.Count()</h3>
-                <p>@(currentLang == "ar" ? "الطلاب" : "Students")</p>
+                <h3 id="studentsCountDisp">@Model.InstructorStudents.Count()</h3>
+                <p>@(isArabic ? "الطلاب" : "Students")</p>
             </div>
         </div>
-
     </div>
 
-
     <div class="row">
+        @* --- الكارت الجانبي (الصورة والبيانات السريعة) --- *@
         <div class="col-12 col-xl-4">
             <div class="card custom-card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom-0 pb-0">
-                    <h5 class="card-title"><i class="fas fa-image" style="color:var(--primary-orange)"></i> Profile Photo</h5>
+                    <h5 class="card-title"><i class="fas fa-image" style="color:var(--primary-orange)"></i> @(isArabic ? "الصورة الشخصية" : "Profile Photo")</h5>
                 </div>
                 <div class="card-body text-center">
                     <div class="position-relative d-inline-block mb-3">
                         <img id="profilePreview" class="rounded-circle img-thumbnail shadow-sm"
                              src="@(Model.Instructor.ApplicationUser.Img != null
-                                                               ? Url.Content("~/images/users/" + Model.Instructor.ApplicationUser.Img)
-                                                               : $"https://ui-avatars.com/api/?name={Model.Instructor.NameEn}&background=fffaf5&color=fd7e14&size=128")"
+                                     ? Url.Content("~/images/users/" + Model.Instructor.ApplicationUser.Img)
+                                     : $"https://ui-avatars.com/api/?name={Model.Instructor.NameEn}&background=fffaf5&color=fd7e14&size=128")"
                              style="width:160px; height:160px; border: 4px solid var(--soft-orange); object-fit: cover;">
                     </div>
-
                     <form asp-action="ChangeProfilePhoto" method="post" enctype="multipart/form-data">
                         <input type="hidden" name="instructorId" value="@Model.Instructor.Id" />
                         <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none;" />
-
                         <div class="px-3">
                             <button class="btn btn-orange-custom w-100 mb-2" type="button" onclick="document.getElementById('photoInput').click();">
-                                <i class="fas fa-camera me-2"></i>Change Photo
+                                <i class="fas fa-camera me-2"></i>@(isArabic ? "تغيير الصورة" : "Change Photo")
                             </button>
                             <button id="savePhotoBtn" class="btn btn-success w-100 d-none" type="submit">
-                                <i class="fas fa-check me-2"></i>Confirm New Photo
+                                <i class="fas fa-check me-2"></i>@(isArabic ? "تأكيد الصورة الجديدة" : "Confirm New Photo")
                             </button>
                         </div>
                     </form>
-
                     <hr class="mx-3 my-4 opacity-25">
-
-                    <div class="text-start px-3">
+                    <div class="text-start px-3 @(isArabic ? "text-end" : "")">
                         <p class="small text-muted mb-2"><i class="fas fa-envelope me-2"></i> @Model.Instructor.ApplicationUser.Email</p>
                         <p class="small text-muted mb-2"><i class="fas fa-user-pen me-2"></i> @Model.Instructor.ApplicationUser.UserName</p>
-                        <p class="small text-muted mb-0"><i class="fas fa-phone me-2"></i> @(Model.Instructor.ApplicationUser.PhoneNumber ?? "No Phone")</p>
+                        <p class="small text-muted mb-0"><i class="fas fa-phone me-2"></i> @(Model.Instructor.ApplicationUser.PhoneNumber ?? (isArabic ? "لا يوجد هاتف" : "No Phone"))</p>
                     </div>
                 </div>
             </div>
         </div>
 
+        @* --- الكارت الرئيسي (فورم بيانات المستخدم كاملة بدون حذف) --- *@
         <div class="col-12 col-xl-8" style="color:var(--primary-orange)">
             <div class="card custom-card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                    <h5 class="card-title mb-0"><i class="fas fa-user-circle" style="color:var(--primary-orange)"></i> Instructor Profile</h5>
+                    <h5 class="card-title mb-0"><i class="fas fa-user-circle" style="color:var(--primary-orange)"></i> @(isArabic ? "ملف المدرب" : "Instructor Profile")</h5>
                     <button type="button" id="enableEditBtn" class="btn btn-outline-orange btn-sm shadow-sm">
-                        <i class="fas fa-edit me-1"></i> Edit Profile
+                        <i class="fas fa-edit me-1"></i> @(isArabic ? "تعديل البيانات" : "Edit Profile")
                     </button>
                 </div>
                 <div class="card-body p-4">
@@ -118,12 +97,10 @@
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">Full Name (EN)</label>
                                 <input class="form-control form-editable bg-light border-0 py-2" asp-for="Instructor.NameEn" type="text" readonly>
-                                <span class="text-danger" asp-validation-for="Instructor.NameEn"></span>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted text-end d-block">الاسم بالكامل (AR)</label>
+                                <label class="form-label small fw-bold text-muted @(isArabic ? "text-start" : "text-end") d-block">الاسم بالكامل (AR)</label>
                                 <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.NameAr" style="text-align:right" readonly>
-                                <span class="text-danger" asp-validation-for="Instructor.NameAr"></span>
                             </div>
                         </div>
 
@@ -133,7 +110,7 @@
                                 <input class="form-control form-editable bg-light border-0 py-2" type="email" asp-for="Instructor.ApplicationUser.Email" readonly>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted">Phone Number</label>
+                                <label class="form-label small fw-bold text-muted">@(isArabic ? "رقم الهاتف" : "Phone Number")</label>
                                 <input class="form-control form-editable bg-light border-0 py-2" asp-for="Instructor.ApplicationUser.PhoneNumber" readonly>
                             </div>
                         </div>
@@ -144,17 +121,17 @@
                                 <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.ApplicationUser.AddressEN" readonly>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted text-end d-block">العنوان (AR)</label>
+                                <label class="form-label small fw-bold text-muted @(isArabic ? "text-start" : "text-end") d-block">العنوان (AR)</label>
                                 <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.ApplicationUser.AddressAR" style="text-align:right" readonly>
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="mb-4  col-md-6">
+                            <div class="mb-4 col-md-6">
                                 <label class="form-label small fw-bold text-muted">About / Bio (EN)</label>
                                 <textarea class="form-control form-editable bg-light border-0" asp-for="Instructor.BioEn" rows="3" readonly></textarea>
                             </div>
-                            <div class="mb-4  col-md-6 text-end">
+                            <div class="mb-4 col-md-6 @(isArabic ? "text-start" : "text-end")">
                                 <label class="form-label small fw-bold text-muted">السيرة الذاتية (AR)</label>
                                 <textarea class="form-control form-editable bg-light border-0" asp-for="Instructor.BioAr" rows="3" style="text-align:right; direction:rtl;" readonly></textarea>
                             </div>
@@ -162,10 +139,10 @@
 
                         <div id="formActions" class="d-none gap-2 mt-4 pt-3 border-top">
                             <button class="btn btn-orange-custom px-4 shadow-sm" type="submit">
-                                <i class="fas fa-save me-2"></i> Save Changes
+                                <i class="fas fa-save me-2"></i> @(isArabic ? "حفظ التغييرات" : "Save Changes")
                             </button>
                             <button class="btn btn-light px-4 border" type="button" id="cancelEditBtn">
-                                Cancel
+                                @(isArabic ? "إلغاء" : "Cancel")
                             </button>
                         </div>
                     </form>
@@ -174,467 +151,188 @@
         </div>
     </div>
 
-    
-
-    <!-- ================= COURSES ================= -->
-    <div class="card custom-card">
-        <div class="card-header">
-            <h5 class="card-title">
-                <i class="fas fa-layer-group icon-primary"></i>
-                @(currentLang == "ar" ? "الكورسات" : "Managed Courses")
-            </h5>
-        </div>
-
-        <div class="card-body">
-
-            <div class="table-responsive mb-3">
-                <table id="InstructorCoursesTable" class="table admin-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>@(currentLang == "ar" ? "اسم الكورس" : "Course Name")</th>
-                            <th class="text-center">@((currentLang == "ar") ? "التحكم" : "Actions")</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-
-            <!-- Assign Course -->
-            <div class="assign-section">
-                <label class="fw-bold small mb-2">
-                    <i class="fas fa-plus-circle text-orange"></i>
-                    @(currentLang == "ar" ? "إضافة كورس" : "Assign New Course")
-                </label>
-
-                <div class="row g-2">
-                    <div class="col-md-9">
-                        <select id="courseSelect" class="form-control"></select>
-                    </div>
-                    <div class="col-md-3">
-                        <button id="assignCourseBtn" class="btn btn-orange-custom w-100">
-                            <i class="fas fa-plus"></i> Assign
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ================= STUDENTS ================= -->
+    @* --- جداول الكورسات والطلاب --- *@
     <div class="card custom-card mt-4">
         <div class="card-header">
-            <h5 class="card-title">
-                <i class="fas fa-user-graduate icon-primary"></i>
-                @(currentLang == "ar" ? "الطلاب" : "Students")
-            </h5>
+            <h5 class="card-title"><i class="fas fa-layer-group icon-primary"></i> @(isArabic ? "الكورسات المسؤولة" : "Managed Courses")</h5>
         </div>
-
         <div class="card-body">
-
             <div class="table-responsive mb-3">
-                <table id="InstructorStudentsTable" class="table admin-table">
+                <table id="InstructorCoursesTable" class="table admin-table w-100">
                     <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>@(currentLang == "ar" ? "اسم الطالب" : "Student Name")</th>
-                            <th class="text-center">@((currentLang == "ar") ? "التحكم" : "Actions")</th>
-                        </tr>
+                        <tr><th>#</th><th>@(isArabic ? "اسم الكورس" : "Course Name")</th><th class="text-center">@(isArabic ? "التحكم" : "Actions")</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-
-            <!-- Assign Student -->
             <div class="assign-section">
-                <label class="fw-bold small mb-2">
-                    <i class="fas fa-user-plus text-orange"></i>
-                    @(currentLang == "ar" ? "إضافة طالب" : "Assign New Student")
-                </label>
-
+                <label class="fw-bold small mb-2"><i class="fas fa-plus-circle text-orange"></i> @(isArabic ? "إسناد كورس جديد" : "Assign New Course")</label>
                 <div class="row g-2">
-                    <div class="col-md-9">
-                        <select id="studentSelect" class="form-control"></select>
-                    </div>
-                    <div class="col-md-3">
-                        <button id="assignStudentBtn" class="btn btn-orange-custom w-100">
-                            <i class="fas fa-user-plus"></i> Assign
-                        </button>
-                    </div>
+                    <div class="col-md-9"><select id="courseSelect" class="form-control"></select></div>
+                    <div class="col-md-3"><button id="assignCourseBtn" class="btn btn-orange-custom w-100"><i class="fas fa-plus"></i> @(isArabic ? "إضافة" : "Assign")</button></div>
                 </div>
             </div>
-
         </div>
     </div>
 
+    <div class="card custom-card mt-4">
+        <div class="card-header">
+            <h5 class="card-title"><i class="fas fa-user-graduate icon-primary"></i> @(isArabic ? "الطلاب التابعين" : "Assigned Students")</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive mb-3">
+                <table id="InstructorStudentsTable" class="table admin-table w-100">
+                    <thead>
+                        <tr><th>#</th><th>@(isArabic ? "اسم الطالب" : "Student Name")</th><th class="text-center">@(isArabic ? "التحكم" : "Actions")</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="assign-section">
+                <label class="fw-bold small mb-2"><i class="fas fa-user-plus text-orange"></i> @(isArabic ? "إسناد طالب جديد" : "Assign New Student")</label>
+                <div class="row g-2">
+                    <div class="col-md-9"><select id="studentSelect" class="form-control"></select></div>
+                    <div class="col-md-3"><button id="assignStudentBtn" class="btn btn-orange-custom w-100"><i class="fas fa-user-plus"></i> @(isArabic ? "إضافة" : "Assign")</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-   
     <script>
         $(document).ready(function () {
-
             const instructorId = $('#instructorId').val();
+            const isAr = '@isArabic' === 'True';
 
-            /* ================= COURSES TABLE ================= */
-                   const coursesTable = $('#InstructorCoursesTable').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    ordering: false,
-                    responsive: true,
-                    stateSave: true,
-                    autoWidth: false,
-                    ajax: {
-                        url: '/Admin/Instructor/GetInstructorCourses',
-                        type: 'POST',
-                        data: function (d) {
-                            d.instructorId = instructorId;
-                        }
-                    },
-                    columns: [
-                        {
-                            data: null,
-                            render: (d, t, r, m) =>
-                                `<span class="text-muted">${m.row + 1}</span>`
-                        },
-                        { data: 'title', render: function (data, type, row) {
-                            return `<a href="/Admin/Course/Details/${row.courseId}" class="course-link">
-                                <i class="fas fa-book me-1 icon-primary" style="opacity:0.7"></i> ${data}
-                                </a>`;
-                        }},
-                        {
-                            data: 'courseId',
-                            className: 'text-center',
-                            render: function (id, type, row) {
-                                return `
-                                <div class="action-buttons justify-content-center">
-                                    <a href="/Admin/Course/Details/${id}" class="btn btn-sm btn-light border">
-                                        <i class="fas fa-eye text-primary"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-light border"
-                                        onclick="confirmRemoveCourse('${id}', '${row.title}')">
-                                        <i class="fas fa-trash text-danger"></i>
-                                    </button>
-                                </div>`;
-                            }
-                        }
-                    ]
-                });
+            const langDt = {
+                processing: isAr ? "جاري التحميل..." : "Loading...",
+                search: isAr ? "بحث:" : "Search:",
+                lengthMenu: isAr ? "عرض _MENU_" : "Show _MENU_",
+                info: isAr ? "عرض _START_ إلى _END_ من _TOTAL_" : "Showing _START_ to _END_ of _TOTAL_",
+                zeroRecords: isAr ? "لم يتم العثور على نتائج" : "No records found",
+                paginate: { next: "»", previous: "«" }
+            };
 
-
-            /* ================= STUDENTS TABLE ================= */
-                    const studentsTable = $('#InstructorStudentsTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ordering: false,
-                responsive: true,
-                stateSave: true,
-                autoWidth: false,       
-                ajax: {
-                    url: '/Admin/Instructor/GetInstructorStudents',
-                    type: 'POST',
-                    data: function (d) {
-                        d.instructorId = instructorId;
-                    }
-                },
+            // حل مشكلة الـ NaN وثبات الجدول
+            var coursesTable = $('#InstructorCoursesTable').DataTable({
+                processing: true, serverSide: true, ordering: false, language: langDt,
+                ajax: { url: '/Admin/Instructor/GetInstructorCourses', type: 'POST', data: d => { d.instructorId = instructorId; } },
                 columns: [
-                    {
-                        data: null,
-                        render: (d, t, r, m) =>
-                            `<span class="text-muted">${m.row + 1}</span>`
-                    },
-                    {
-                        data: 'name',
-                        render: function (data, type, row) {
-                            return `<a href="/Admin/Student/Details/${row.studentId}" class="student-link">
-                                <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
-                                </a>`;
-                        }
-                    },
-                    {
-                        data: 'studentId',
-                        className: 'text-center',
-                        render: function (id, type, row) {
-                            return `
-                                <div class="action-buttons justify-content-center">
-                                    <a href="/Admin/Student/Details/${id}"
-                                       class="btn btn-sm btn-light border">
-                                        <i class="fas fa-eye text-primary"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-light border"
-                                        onclick="confirmRemoveStudent('${id}', '${row.name}')">
-                                        <i class="fas fa-trash text-danger"></i>
-                                    </button>
-                                </div>`;
-                        }
-                    }
-                ],
-                columnDefs: [
-                    {
-                        targets: 0,
-                        responsivePriority: 3   
-                    },
-                    {
-                        targets: 1,
-                        responsivePriority: 1   
-                    },
-                    {
-                        targets: -1,
-                        responsivePriority: 2  
+                    { data: null, render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
+                    { data: 'title', render: (data, t, row) => `<a href="/Admin/Course/Details/${row.courseId}" class="course-link">${data}</a>` },
+                    { data: 'courseId', className: 'text-center', render: (id, t, row) => `
+                        <button class="btn btn-sm btn-light border" onclick="confirmRemoveCourse('${id}', '${row.title.replace(/'/g, "\\'")}')"><i class="fas fa-trash text-danger"></i></button>`
                     }
                 ]
             });
 
-                    $(window).on('resize', function () {
-            $('#InstructorCoursesTable').DataTable().columns.adjust().responsive.recalc();
-            $('#InstructorStudentsTable').DataTable().columns.adjust().responsive.recalc();
-             });
-
-            /* ================= SELECT2 ================= */
-            $('#courseSelect').select2({
-                placeholder: 'Search course...',
-                minimumInputLength: 2,
-                width: '100%',
-                dropdownParent: $('#courseSelect').closest('.assign-section'),
-                ajax: {
-                    url: '/Admin/Instructor/SearchCourses',
-                    delay: 300,
-                    data: function (params) {
-                        return {
-                            term: params.term,
-                            instructorId: instructorId
-                        };
-                    },
-                    processResults: function (data) {
-                        return { results: data };
+            var studentsTable = $('#InstructorStudentsTable').DataTable({
+                processing: true, serverSide: true, ordering: false, language: langDt,
+                ajax: { url: '/Admin/Instructor/GetInstructorStudents', type: 'POST', data: d => { d.instructorId = instructorId; } },
+                columns: [
+                    { data: null, render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
+                    { data: 'name', render: (data, t, row) => `<a href="/Admin/Student/Details/${row.studentId}" class="student-link">${data}</a>` },
+                    { data: 'studentId', className: 'text-center', render: (id, t, row) => `
+                        <button class="btn btn-sm btn-light border" onclick="confirmRemoveStudent('${id}', '${row.name.replace(/'/g, "\\'")}')"><i class="fas fa-trash text-danger"></i></button>`
                     }
-                }
+                ]
             });
 
-            $('#studentSelect').select2({
-                placeholder: 'Search student...',
-                minimumInputLength: 2,
-                width: '100%',
-                dropdownParent: $('#studentSelect').closest('.assign-section'),
-                ajax: {
-                    url: '/Admin/Instructor/SearchStudents',
-                    delay: 300,
-                    data: function (params) {
-                        return {
-                            term: params.term,
-                            instructorId: instructorId
-                        };
-                    },
-                    processResults: function (data) {
-                        return { results: data };
-                    }
-                }
-            });
+            function initSelect2() {
+                $('#courseSelect').select2({
+                    placeholder: isAr ? 'ابحث عن كورس...' : 'Search course...',
+                    minimumInputLength: 2, width: '100%',
+                    ajax: { url: '/Admin/Instructor/SearchCourses', data: params => ({ term: params.term, instructorId: instructorId }), processResults: data => ({ results: data }) }
+                });
+                $('#studentSelect').select2({
+                    placeholder: isAr ? 'ابحث عن طالب...' : 'Search student...',
+                    minimumInputLength: 2, width: '100%',
+                    ajax: { url: '/Admin/Instructor/SearchStudents', data: params => ({ term: params.term, instructorId: instructorId }), processResults: data => ({ results: data }) }
+                });
+            }
+            initSelect2();
 
-            /* ================= ASSIGN BUTTONS ================= */
+            // الإضافة بدون Reload
             $('#assignCourseBtn').on('click', function () {
-                assign(
-                    '/Admin/Instructor/AssignCourse',
-                    {
-                        instructorId: instructorId,
-                        courseId: $('#courseSelect').val()
-                    },
-                    'Course assigned successfully.'
-                );
+                const courseId = $('#courseSelect').val();
+                if (!courseId) return;
+                $.post('/Admin/Instructor/AssignCourse', { instructorId, courseId }, function (res) {
+                    if (res.success) {
+                        coursesTable.ajax.reload(null, false);
+                        $('#courseSelect').val(null).trigger('change');
+                        Swal.fire({ icon: 'success', title: isAr ? 'تم' : 'Done', timer: 1000, showConfirmButton: false });
+                    }
+                });
             });
 
             $('#assignStudentBtn').on('click', function () {
-                assign(
-                    '/Admin/Instructor/AssignStudent',
-                    {
-                        instructorId: instructorId,
-                        studentId: $('#studentSelect').val()
-                    },
-                    'Student assigned successfully.'
-                );
-            });
-
-        });
-
-        /* ================= ASSIGN FUNCTION ================= */
-        function assign(url, data, successMessage) {
-
-            const value = Object.values(data)[1];
-            if (!value) {
-                Swal.fire('Wait', 'Please select an item first.', 'warning');
-                return;
-            }
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: data,
-                beforeSend: function () {
-                    Swal.fire({
-                        title: 'Saving...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-                },
-                success: function (res) {
-
-                    if (res && res.success === true) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Done!',
-                            text: successMessage,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-
-                        $('#InstructorCoursesTable').DataTable().ajax.reload(null, false);
-                        $('#InstructorStudentsTable').DataTable().ajax.reload(null, false);
-
-                        $('#courseSelect').val(null).trigger('change');
+                const studentId = $('#studentSelect').val();
+                if (!studentId) return;
+                $.post('/Admin/Instructor/AssignStudent', { instructorId, studentId }, function (res) {
+                    if (res.success) {
+                        studentsTable.ajax.reload(null, false);
                         $('#studentSelect').val(null).trigger('change');
+                        Swal.fire({ icon: 'success', title: isAr ? 'تم' : 'Done', timer: 1000, showConfirmButton: false });
                     }
-                    else {
-                        Swal.fire('Error', 'Operation failed.', 'error');
-                    }
-                },
-                error: function () {
-                    Swal.fire('Error', 'Server error occurred.', 'error');
-                }
+                });
             });
-        }
 
-        /* ================= REMOVE COURSE ================= */
-        function confirmRemoveCourse(courseId, courseName) {
-            Swal.fire({
-                title: 'Remove Course?',
-                html: `<p>You are about to remove:</p><strong class="text-orange">${courseName}</strong>`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, remove',
-                cancelButtonText: 'Cancel'
-            }).then(result => {
-                if (result.isConfirmed) {
-                    removeCourse(courseId);
-                }
+            // تعديل البيانات وتغيير الصورة (سكريبتك الأصلي)
+            $('#enableEditBtn').on('click', function() {
+                $('.form-editable').removeAttr('readonly').removeClass('bg-light');
+                $('#formActions').removeClass('d-none').addClass('d-flex');
+                $(this).hide();
             });
-        }
-
-        function removeCourse(courseId) {
-            $.ajax({
-                url: '/Admin/Instructor/RemoveCourse',
-                type: 'GET',
-                data: {
-                    courseId: courseId,
-                    instructorId: $('#instructorId').val()
-                },
-                beforeSend: function () {
-                    Swal.fire({
-                        title: 'Removing...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-                },
-                success: function () {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Removed!',
-                        timer: 1200,
-                        showConfirmButton: false
-                    });
-
-                    $('#InstructorCoursesTable').DataTable().ajax.reload(null, false);
-                },
-                error: function () {
-                    Swal.fire('Error', 'Failed to remove course.', 'error');
-                }
-            });
-        }
-
-        /* ================= REMOVE STUDENT ================= */
-        function confirmRemoveStudent(studentId, studentName) {
-            Swal.fire({
-                title: 'Unassign Student?',
-                html: `<p>You are about to remove:</p><strong class="text-orange">${studentName}</strong>`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, remove',
-                cancelButtonText: 'Cancel'
-            }).then(result => {
-                if (result.isConfirmed) {
-                    removeStudent(studentId);
-                }
-            });
-        }
-
-        function removeStudent(studentId) {
-            $.ajax({
-                url: '/Admin/Instructor/RemoveStudent',
-                type: 'GET',
-                data: {
-                    studentId: studentId,
-                    instructorId: $('#instructorId').val()
-                },
-                beforeSend: function () {
-                    Swal.fire({
-                        title: 'Removing...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-                },
-                success: function () {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Removed!',
-                        timer: 1200,
-                        showConfirmButton: false
-                    });
-
-                    $('#InstructorStudentsTable').DataTable().ajax.reload(null, false);
-                },
-                error: function () {
-                    Swal.fire('Error', 'Failed to remove student.', 'error');
-                }
-            });
-        }
-
-        /* Form */
-
-                
-        $('#enableEditBtn').on('click', function() {
-            
-            $('.form-editable').removeAttr('readonly').removeClass('bg-light');
-           
-            $('#formActions').removeClass('d-none').addClass('d-flex');
-            $(this).hide();
-        });
-
-        
-        $('#cancelEditBtn').on('click', function() {
-            location.reload(); 
-        });
-
-        // img 
+            $('#cancelEditBtn').on('click', () => location.reload());
 
             $('#photoInput').on('change', function (e) {
-            const file = e.target.files[0];
-            if (file) {
-                
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    $('#profilePreview').attr('src', event.target.result);
-                };
-                reader.readAsDataURL(file);
-
-                
-                $('#savePhotoBtn').removeClass('d-none');
-            }
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = e => $('#profilePreview').attr('src', e.target.result);
+                    reader.readAsDataURL(file);
+                    $('#savePhotoBtn').removeClass('d-none');
+                }
+            });
         });
+
+        // الحذف مع SweetAlert المعدل
+        function confirmRemoveCourse(id, name) {
+            const isAr = '@isArabic' === 'True';
+            Swal.fire({
+                title: isAr ? 'متأكد؟' : 'Sure?',
+                text: isAr ? `سيتم حذف كورس "${name}"` : `Remove course "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true
+            }).then(result => {
+                if (result.isConfirmed) {
+                    $.get('/Admin/Instructor/RemoveCourse', { courseId: id, instructorId: $('#instructorId').val() }, () => {
+                        $('#InstructorCoursesTable').DataTable().ajax.reload(null, false);
+                    });
+                }
+            });
+        }
+
+        function confirmRemoveStudent(id, name) {
+            const isAr = '@isArabic' === 'True';
+            Swal.fire({
+                title: isAr ? 'متأكد؟' : 'Sure?',
+                text: isAr ? `سيتم حذف الطالب "${name}"` : `Remove student "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true
+            }).then(result => {
+                if (result.isConfirmed) {
+                    $.get('/Admin/Instructor/RemoveStudent', { studentId: id, instructorId: $('#instructorId').val() }, () => {
+                        $('#InstructorStudentsTable').DataTable().ajax.reload(null, false);
+                    });
+                }
+            });
+        }
     </script>
-
-
 }

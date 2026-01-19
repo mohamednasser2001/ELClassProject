@@ -263,7 +263,7 @@ namespace ELClass.Areas.Admin.Controllers
 
                 Expression<Func<Course, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
                     (c.TitleEn.Contains(searchValue) || c.TitleAr.Contains(searchValue) ||
-                     c.DescriptionEn.Contains(searchValue) || c.DescriptionAr.Contains(searchValue));
+                     c.DescriptionEn!.Contains(searchValue) || c.DescriptionAr!.Contains(searchValue));
 
                 Func<IQueryable<Course>, IOrderedQueryable<Course>> orderBy = q =>
                 {
@@ -319,6 +319,9 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("StudentCourses");
             ModelState.Remove("InstructorCourses");
 
+            var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            bool isArabic = currentLang == "ar";
+
             if (!ModelState.IsValid)
             {
                 return View(crs);
@@ -330,17 +333,22 @@ namespace ELClass.Areas.Admin.Controllers
                 TitleEn = crs.TitleEn,
                 DescriptionAr = crs.DescriptionAr,
                 DescriptionEn = crs.DescriptionEn,
-                CreatedAt = DateTime.Now, 
-                CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                CreatedAt = DateTime.Now,
+                CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier)
             };
 
             await unitOfWork.CourseRepository.CreateAsync(course);
             var commit = await unitOfWork.CommitAsync();
+
             if (!commit)
             {
-                ModelState.AddModelError("", "Something went wrong");
+                string errorMessage = isArabic ? "حدث خطأ ما أثناء إضافة الكورس" : "Something went wrong while adding the course";
+                ModelState.AddModelError("", errorMessage);
                 return View(crs);
             }
+
+            TempData["success-notifications"] = isArabic ? "تم إضافة الكورس بنجاح" : "Course created successfully.";
+
             return RedirectToAction("Index");
         }
 
@@ -362,23 +370,31 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("StudentCourses");
             ModelState.Remove("InstructorCourses");
 
+            
+            var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            bool isArabic = currentLang == "ar";
+
             if (!ModelState.IsValid)
             {
                 return View(crs);
             }
 
-            crs.UpdatedAT = DateTime.Now; 
+            crs.UpdatedAt = DateTime.Now;
 
             await unitOfWork.CourseRepository.EditAsync(crs);
             var commit = await unitOfWork.CommitAsync();
+
             if (!commit)
             {
-                ModelState.AddModelError("", "Something went wrong");
+                string errorMessage = isArabic ? "حدث خطأ ما أثناء الحفظ" : "Something went wrong during save";
+                ModelState.AddModelError("", errorMessage);
                 return View(crs);
             }
+
+            TempData["success-notifications"] = isArabic ? "تم تحديث الكورس بنجاح" : "Course updated successfully.";
+
             return RedirectToAction("Index");
         }
-
 
         public async Task<IActionResult> Delete(int id) 
         {
@@ -398,7 +414,7 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.LessonRepository.DeleteAllAsync(relatedLessons);
                 }
 
-                // Delete the course
+                
                 await unitOfWork.CourseRepository.DeleteAsync(course);
 
                 await unitOfWork.CommitAsync();

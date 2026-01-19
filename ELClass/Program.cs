@@ -16,6 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 // =======================
 // 1️⃣ Services
 // =======================
+// cultures
+var supportedCultures = new[] { "en-US", "ar-EG" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0]) // الإنجليزية كافتراضي
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
 
 // MVC
 builder.Services.AddControllersWithViews();
@@ -101,6 +107,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+// localization
+app.UseRequestLocalization(localizationOptions);
 
 app.UseSession();
 app.UseAuthentication();
@@ -115,6 +123,10 @@ app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 
 

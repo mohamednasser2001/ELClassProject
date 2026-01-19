@@ -42,11 +42,23 @@ namespace DataAccess
 
             base.OnModelCreating(builder);
 
-            
+
+            builder.Entity<ApplicationUser>()
+            .HasOne(u => u.Instructor)
+            .WithOne(i => i.ApplicationUser)
+            .HasForeignKey<Instructor>(i => i.Id); 
+
+
+                builder.Entity<Instructor>()
+                .HasOne(i => i.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(i => i.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             builder.Entity<Course>()
 
-                .HasOne(c => c.ApplicationUser)
+                .HasOne(c => c.CreatedByUser)
 
                 .WithMany()
 
@@ -73,6 +85,12 @@ namespace DataAccess
                 .WithMany(c => c.CHMessages)
                 .HasForeignKey(m => m.ConversationId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Lesson>()
+                .HasOne(i => i.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(i => i.CreatedById)
+                .OnDelete(DeleteBehavior.SetNull);
 
         }
 

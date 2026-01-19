@@ -59,7 +59,7 @@ namespace ELClass.Areas.Instructor.Controllers
                     c.InstructorCourses.Any(ic => ic.InstructorId == userId) &&
                     (string.IsNullOrEmpty(searchValue) ||
                     (c.TitleEn.Contains(searchValue) || c.TitleAr.Contains(searchValue) ||
-                     c.DescriptionEn.Contains(searchValue) || c.DescriptionAr.Contains(searchValue)));
+                     c.DescriptionEn!.Contains(searchValue) || c.DescriptionAr!.Contains(searchValue)));
 
 
                 Func<IQueryable<Course>, IOrderedQueryable<Course>> orderBy = q =>
@@ -122,6 +122,23 @@ namespace ELClass.Areas.Instructor.Controllers
             return View(lessons);
         }
 
+        public async Task<IActionResult> GetStudents(int id)
+        {
+            var course = await _unitOfWork.CourseRepository.GetOneAsync(c => c.Id == id);
+            if (course == null) return NotFound();
+
+            ViewData["CourseId"] = course.Id;
+            ViewData["CourseTitle"] = course.TitleEn;
+
+            
+            var registrations = await _unitOfWork.StudentCourseRepository.GetAsync(
+                filter: r => r.CourseId == id,
+                include: e=>e.Include(e=>e.Student).ThenInclude(e=>e.ApplicationUser) 
+            );
+
+            return View(registrations);
+        }
+
         public IActionResult createLesson(int CourseId)
         {
 
@@ -135,6 +152,8 @@ namespace ELClass.Areas.Instructor.Controllers
             ModelState.Remove("Course");
             if (ModelState.IsValid)
             {
+                lsn.CreatedAt = DateTime.Now;
+                lsn.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 await _unitOfWork.LessonRepository.CreateAsync(lsn);
                 await _unitOfWork.CommitAsync();
                 TempData["success"] = "Lesson created successfully";
@@ -160,6 +179,7 @@ namespace ELClass.Areas.Instructor.Controllers
             ModelState.Remove("Course");
             if (ModelState.IsValid)
             {
+                lsn.UpdatedAt = DateTime.Now;
                 await _unitOfWork.LessonRepository.EditAsync(lsn);
                 await _unitOfWork.CommitAsync();
                 TempData["success"] = "Lesson updated successfully";

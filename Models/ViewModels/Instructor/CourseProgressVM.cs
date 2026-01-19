@@ -2,8 +2,8 @@
 {
     public class CourseProgressVM
     {
-        public string CourseName { get; set; }
+        public string CourseName { get; set; } = string.Empty;
         public int EnrolledStudents { get; set; }
-        public int SuccessRate { get; set; } // نسبة مئوية افتراضية
+        public int SuccessRate { get; set; } 
     }
 }

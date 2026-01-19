@@ -352,23 +352,22 @@ namespace ELClass.Areas.Admin.Controllers
 
         [ValidateAntiForgeryToken]
         [HttpPost]
-        
         public async Task<IActionResult> Create(Student std, string Password, string ConfirmPassword)
         {
-            
+            var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+
             ModelState.Remove("ApplicationUser.Instructor");
             ModelState.Remove("ApplicationUser.Student");
-            
 
             if (!ModelState.IsValid)
             {
                 return View(std);
             }
 
-           
             if (Password != ConfirmPassword)
             {
-                ModelState.AddModelError("ConfirmPassword", "Passwords do not match.");
+                var passError = currentLang == "ar" ? "كلمات المرور غير متطابقة." : "Passwords do not match.";
+                ModelState.AddModelError("ConfirmPassword", passError);
                 return View(std);
             }
 
@@ -377,7 +376,6 @@ namespace ELClass.Areas.Admin.Controllers
                 var email = std.ApplicationUser.Email;
                 var userName = std.ApplicationUser.Email!.Split('@')[0] + new Random().Next(10, 99);
 
-               
                 var user = new ApplicationUser
                 {
                     UserName = userName,
@@ -388,7 +386,6 @@ namespace ELClass.Areas.Admin.Controllers
                     EmailConfirmed = true
                 };
 
-                
                 var result = await userManager.CreateAsync(user, Password);
 
                 if (!result.Succeeded)
@@ -396,27 +393,27 @@ namespace ELClass.Areas.Admin.Controllers
                     foreach (var error in result.Errors)
                         ModelState.AddModelError("", error.Description);
 
-                    TempData["Error"] = "Failed to create user account";
+                    TempData["Error"] = currentLang == "ar" ? "فشل في إنشاء حساب المستخدم" : "Failed to create user account";
                     return View(std);
                 }
 
-                
                 await userManager.AddToRoleAsync(user, "Student");
 
-                
                 std.Id = user.Id;
-                
                 std.ApplicationUser = null!;
 
                 await unitOfWork.StudentRepository.CreateAsync(std);
                 await unitOfWork.CommitAsync();
 
-                TempData["Success"] = "Student account has been created successfully";
+                TempData["Success"] = currentLang == "ar"
+                    ? "تم إنشاء حساب الطالب بنجاح"
+                    : "Student account has been created successfully";
+
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "An error occurred: " + ex.Message;
+                TempData["Error"] = (currentLang == "ar" ? "حدث خطأ: " : "An error occurred: ") + ex.Message;
                 return View(std);
             }
         }
@@ -427,8 +424,10 @@ namespace ELClass.Areas.Admin.Controllers
         public async Task<IActionResult> EditStudentDetails(StudentDetailsVM model)
         {
             var std = model.Student;
+          
+            var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
 
-
+           
             ModelState.Remove("Student.ApplicationUser");
             ModelState.Remove("Student.ApplicationUser.Student");
             ModelState.Remove("Student.ApplicationUser.instructor");
@@ -439,7 +438,6 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 try
                 {
-
                     var studentInDb = await unitOfWork.StudentRepository.GetOneAsync(
                         e => e.Id == std.Id,
                         include: query => query.Include(e => e.ApplicationUser)
@@ -450,44 +448,54 @@ namespace ELClass.Areas.Admin.Controllers
                         return NotFound();
                     }
 
-
+                
                     studentInDb.NameEn = std.NameEn;
                     studentInDb.NameAr = std.NameAr;
-
 
                     if (studentInDb.ApplicationUser != null && std.ApplicationUser != null)
                     {
                         var user = studentInDb.ApplicationUser;
                         user.Email = std.ApplicationUser.Email;
-                       
+                        user.UserName = std.ApplicationUser.Email; 
                         user.PhoneNumber = std.ApplicationUser.PhoneNumber;
                         user.AddressEN = std.ApplicationUser.AddressEN;
                         user.AddressAR = std.ApplicationUser.AddressAR;
 
-
+                     
                         await userManager.UpdateNormalizedEmailAsync(user);
-                        
+                        await userManager.UpdateNormalizedUserNameAsync(user);
                     }
 
                     await unitOfWork.CommitAsync();
 
-                    TempData["Success"] = "Student updated successfully";
+                  
+                    TempData["Success"] = currentLang == "ar"
+                        ? "تم تحديث بيانات الطالب بنجاح"
+                        : "Student updated successfully";
+
                     return RedirectToAction("Details", new { id = std.Id });
                 }
                 catch (Exception ex)
                 {
-                    TempData["error"] = "Error: " + ex.Message;
+                    TempData["error"] = currentLang == "ar"
+                        ? "حدث خطأ أثناء الحفظ: " + ex.Message
+                        : "Error during save: " + ex.Message;
                 }
             }
 
-
-            var courses = await unitOfWork.StudentCourseRepository.GetAsync(e => e.StudentId == std.Id, include: i => i.Include(c => c.Course));
+            
+            var courses = await unitOfWork.StudentCourseRepository.GetAsync(
+                e => e.StudentId == std.Id,
+                include: i => i.Include(c => c.Course));
 
             model.StudentCourses = courses.ToList();
 
+            
             if (TempData["error"] is null)
             {
-                TempData["error"] = "Please correct the errors and try again.";
+                TempData["error"] = currentLang == "ar"
+                    ? "يرجى تصحيح الأخطاء والمحاولة مرة أخرى"
+                    : "Please correct the errors and try again.";
             }
 
             return View("Details", model);
@@ -498,25 +506,25 @@ namespace ELClass.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangeProfilePhoto(string StudentId, IFormFile photo)
         {
+            var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+
             if (photo == null || photo.Length == 0)
             {
-                TempData["Error"] = "Please select a valid image.";
+                TempData["Error"] = currentLang == "ar" ? "يرجى اختيار صورة صالحة." : "Please select a valid image.";
                 return RedirectToAction("Details", new { id = StudentId });
             }
 
             try
             {
-
                 var student = await unitOfWork.StudentRepository.GetOneAsync(
                     u => u.Id == StudentId,
                     include: e => e.Include(e => e.ApplicationUser));
 
                 if (student == null || student.ApplicationUser == null)
                 {
-                    TempData["Error"] = "Student not found.";
+                    TempData["Error"] = currentLang == "ar" ? "الطالب غير موجود." : "Student not found.";
                     return RedirectToAction("Index");
                 }
-
 
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(photo.FileName);
                 var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "users");
@@ -533,7 +541,6 @@ namespace ELClass.Areas.Admin.Controllers
                     await photo.CopyToAsync(stream);
                 }
 
-
                 if (!string.IsNullOrEmpty(student.ApplicationUser.Img))
                 {
                     var oldPath = Path.Combine(folderPath, student.ApplicationUser.Img);
@@ -543,16 +550,14 @@ namespace ELClass.Areas.Admin.Controllers
                     }
                 }
 
-
                 student.ApplicationUser.Img = fileName;
-
                 await unitOfWork.CommitAsync();
 
-                TempData["Success"] = "Profile photo updated successfully!";
+                TempData["Success"] = currentLang == "ar" ? "تم تحديث الصورة الشخصية بنجاح!" : "Profile photo updated successfully!";
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "An error occurred: " + ex.Message;
+                TempData["Error"] = (currentLang == "ar" ? "حدث خطأ: " : "An error occurred: ") + ex.Message;
             }
 
             return RedirectToAction("Details", new { id = StudentId });
@@ -579,7 +584,13 @@ namespace ELClass.Areas.Admin.Controllers
 
             try
             {
-                
+                var relatedInstructors = await unitOfWork.InstructorRepository.GetAsync(isd => isd.CreatedById == id);
+                foreach (var instructor in relatedInstructors)
+                {
+                    instructor.CreatedById = null;
+                    await unitOfWork.InstructorRepository.EditAsync(instructor);
+                }
+
                 var studentCourses = await unitOfWork.StudentCourseRepository.GetAsync(sc => sc.StudentId == id);
                 foreach (var sc in studentCourses)
                 {

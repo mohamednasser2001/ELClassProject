@@ -10,16 +10,16 @@ namespace Models
         public int Id { get; set; }
         [Required(ErrorMessage = "من فضلك أدخل عنوان")]
         [MinLength(3 , ErrorMessage = " العنوان يجب ان يكون اكثر من 3 حروف")]
-        public string TitleAr { get; set; }
+        public string TitleAr { get; set; } = string.Empty;
         [Required(ErrorMessage ="Please, Enter a title")]
         [MinLength(3, ErrorMessage = " title must be more than 3 letters")]
-        public string TitleEn { get; set; }
+        public string TitleEn { get; set; } = string.Empty;
         [Required(ErrorMessage =" من فضلك ادخل وصف")]
-        public string? DescriptionAr { get; set; }
+        public string? DescriptionAr { get; set; } = string.Empty;
         [Required(ErrorMessage ="please, Enter a Description")]
-        public string? DescriptionEn { get; set; }
-        public ICollection<InstructorCourse> InstructorCourses { get; set; }
-        public ICollection<StudentCourse> StudentCourses { get; set; }
+        public string? DescriptionEn { get; set; } = string.Empty;
+        public ICollection<InstructorCourse> InstructorCourses { get; set; } =new List<InstructorCourse>();
+        public ICollection<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();
         public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
 
     }
