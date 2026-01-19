@@ -25,7 +25,7 @@ namespace DataAccess
         public DbSet<Student> Students { get; set; }
         public DbSet<Instructor> Instructors { get; set; }
         public DbSet<Lesson> Lesson { get; set; }
-      
+
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<CHMessage> CHMessages { get; set; }
         public DbSet<StudentCourse> StudentCourses { get; set; }
@@ -35,65 +35,112 @@ namespace DataAccess
         public DbSet<ContactUs> ContactUs { get; set; }
 
 
-
-
         protected override void OnModelCreating(ModelBuilder builder)
-
         {
-
             base.OnModelCreating(builder);
 
+            const int idMaxLength = 255;
 
-            builder.Entity<ApplicationUser>()
-            .HasOne(u => u.Instructor)
-            .WithOne(i => i.ApplicationUser)
-            .HasForeignKey<Instructor>(i => i.Id); 
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                entity.Property(u => u.Id).HasMaxLength(idMaxLength);
+            });
 
+            builder.Entity<Instructor>(entity =>
+            {
+                entity.Property(i => i.Id).HasMaxLength(idMaxLength);
+                entity.Property(i => i.CreatedById).HasMaxLength(idMaxLength);
 
-                builder.Entity<Instructor>()
-                .HasOne(i => i.CreatedByUser)
-                .WithMany()
-                .HasForeignKey(i => i.CreatedById)
-                .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(i => i.ApplicationUser)
+                    .WithOne(u => u.Instructor)
+                    .HasForeignKey<Instructor>(i => i.Id);
 
+                entity.HasOne(i => i.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(i => i.CreatedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-            builder.Entity<Course>()
+            builder.Entity<Student>(entity =>
+            {
+                entity.Property(s => s.Id).HasMaxLength(idMaxLength);
+            });
 
-                .HasOne(c => c.CreatedByUser)
+            builder.Entity<Course>(entity =>
+            {
+                entity.Property(c => c.CreatedById).HasMaxLength(idMaxLength);
+                entity.HasOne(c => c.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(c => c.CreatedById)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
 
-                .WithMany()
+            builder.Entity<Lesson>(entity =>
+            {
+                entity.Property(l => l.CreatedById).HasMaxLength(idMaxLength);
+                entity.HasOne(i => i.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(i => i.CreatedById)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
 
-                .HasForeignKey(c => c.CreatedById)
-                .OnDelete(DeleteBehavior.SetNull);
+            builder.Entity<Conversation>(entity =>
+            {
+                entity.Property(c => c.StudentId).HasMaxLength(idMaxLength);
+                entity.Property(c => c.InstructorId).HasMaxLength(idMaxLength);
 
-            //Conversation
+                entity.HasOne(c => c.Student)
+                    .WithMany()
+                    .HasForeignKey(c => c.StudentId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
+                entity.HasOne(c => c.Instructor)
+                    .WithMany()
+                    .HasForeignKey(c => c.InstructorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-            builder.Entity<Conversation>()
-                .HasOne(c => c.Student)
-                .WithMany() 
-                .HasForeignKey(c => c.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<CHMessage>(entity =>
+            {
+                entity.Property(m => m.SenderId).HasMaxLength(idMaxLength);
+                entity.Property(m => m.ReceiverId).HasMaxLength(idMaxLength);
 
-            builder.Entity<Conversation>()
-                .HasOne(c => c.Instructor)
-                .WithMany() 
-                .HasForeignKey(c => c.InstructorId)
-                .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(m => m.Conversation)
+                    .WithMany(c => c.CHMessages)
+                    .HasForeignKey(m => m.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
-            builder.Entity<CHMessage>()
-                .HasOne(m => m.Conversation)
-                .WithMany(c => c.CHMessages)
-                .HasForeignKey(m => m.ConversationId)
-                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<InstructorStudent>(entity =>
+            {
+                entity.HasKey(e => new { e.InstructorId, e.StudentId });
+                entity.Property(e => e.InstructorId).HasMaxLength(idMaxLength);
+                entity.Property(e => e.StudentId).HasMaxLength(idMaxLength);
 
-            builder.Entity<Lesson>()
-                .HasOne(i => i.CreatedByUser)
-                .WithMany()
-                .HasForeignKey(i => i.CreatedById)
-                .OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(e => e.Instructor)
+                    .WithMany()
+                    .HasForeignKey(e => e.InstructorId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
+                entity.HasOne(e => e.Student)
+                    .WithMany()
+                    .HasForeignKey(e => e.StudentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<StudentCourse>(entity =>
+            {
+                entity.HasKey(sc => new { sc.StudentId, sc.CourseId });
+                entity.Property(sc => sc.StudentId).HasMaxLength(idMaxLength);
+            });
+
+            builder.Entity<InstructorCourse>(entity =>
+            {
+                entity.HasKey(ic => new { ic.InstructorId, ic.CourseId });
+                entity.Property(ic => ic.InstructorId).HasMaxLength(idMaxLength);
+            });
         }
 
+       
     }
 }

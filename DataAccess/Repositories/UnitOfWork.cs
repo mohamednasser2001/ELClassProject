@@ -15,21 +15,18 @@ namespace DataAccess.Repositories
         private readonly ApplicationDbContext context;
 
         public UnitOfWork(IRepository<Course> courseRepository, IRepository<Instructor> instructorRepository,
-           IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository,IRepository<ChatMessage> ChatMessageRepositories, ApplicationDbContext context , IRepository<InstructorCourse> instructorCourseRepository ,
-           IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository ,
+           IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository, IRepository<CHMessage> ChatMessageRepositories
+           , IRepository<Conversation> conversationRepository, ApplicationDbContext context, IRepository<InstructorCourse> instructorCourseRepository,
+           IRepository<InstructorStudent> instructorStudentRepository, IRepository<StudentCourse> studentCourseRepository,
            IRepository<ContactUs> contactUsRepository
            )
-           IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository,
-           IRepository<CHMessage> chMessageRepository,IRepository<Conversation> conversationRepository, 
-           ApplicationDbContext context , IRepository<InstructorCourse> instructorCourseRepository ,
-           IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository)
-        {
+           {
             CourseRepository = courseRepository;
             InstructorRepository = instructorRepository;
             StudentRepository = studentRepository;
             LessonRepository = lessonRepository;
             ConversationRepository = conversationRepository;
-            CHMessageRepository = chMessageRepository;
+            CHMessageRepository = ChatMessageRepositories;
             this.context = context;
             InstructorCourseRepository = instructorCourseRepository;
             InstructorStudentRepository = instructorStudentRepository;
