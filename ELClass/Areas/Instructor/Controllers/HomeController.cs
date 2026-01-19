@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Models;
 using Models.ViewModels.Instructor;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ELClass.Areas.Instructor.Controllers
 {
@@ -21,7 +22,7 @@ namespace ELClass.Areas.Instructor.Controllers
 
         public async Task<IActionResult> Index()
         {
-            
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var viewModel = new InstructorIndexDashboardVM
@@ -54,5 +55,6 @@ namespace ELClass.Areas.Instructor.Controllers
 
             return View(viewModel);
         }
+        
     }
 }

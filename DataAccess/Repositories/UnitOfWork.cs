@@ -16,7 +16,9 @@ namespace DataAccess.Repositories
 
         public UnitOfWork(IRepository<Course> courseRepository, IRepository<Instructor> instructorRepository,
            IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository,IRepository<ChatMessage> ChatMessageRepositories, ApplicationDbContext context , IRepository<InstructorCourse> instructorCourseRepository ,
-           IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository)
+           IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository ,
+           IRepository<ContactUs> contactUsRepository
+           )
         {
             CourseRepository = courseRepository;
             InstructorRepository = instructorRepository;
@@ -27,6 +29,7 @@ namespace DataAccess.Repositories
             InstructorCourseRepository = instructorCourseRepository;
             InstructorStudentRepository = instructorStudentRepository;
             StudentCourseRepository = studentCourseRepository;
+            ContactUsRepository = contactUsRepository;
         }
         public IRepository<Course> CourseRepository { get; }
         public IRepository<Instructor> InstructorRepository { get; }
@@ -39,6 +42,8 @@ namespace DataAccess.Repositories
         public IRepository<InstructorCourse> InstructorCourseRepository { get; }
         public IRepository<InstructorStudent> InstructorStudentRepository { get; }
         public IRepository<StudentCourse> StudentCourseRepository { get; }
+        public IRepository<ContactUs> ContactUsRepository { get; }
+
         public async Task<bool> CommitAsync()
         {
             try

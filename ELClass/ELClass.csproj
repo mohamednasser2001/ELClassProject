@@ -16,8 +16,15 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="wwwroot\HomePageAssets\Images\Home\" />
     <Folder Include="wwwroot\Images\Users\" />
     <Folder Include="wwwroot\js\Admin\Course\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="wwwroot\HomePageAssets\assets\.DS_Store" />
+    <None Include="wwwroot\HomePageAssets\assets\img\.DS_Store" />
+    <None Include="wwwroot\HomePageAssets\assets\img\about\.DS_Store" />
+    <None Include="wwwroot\HomePageAssets\assets\js\.DS_Store" />
   </ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />

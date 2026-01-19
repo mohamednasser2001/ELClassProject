@@ -1,0 +1,118 @@
+﻿@using Models
+@model IEnumerable<ContactUs>
+
+@{
+    ViewData["Title"] = "Contact Messages";
+    int index = 1;
+    
+    bool isArabic = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="bg-white dark:bg-slate-900 min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-200" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="w-full px-2 sm:px-4 py-4">
+
+        <header class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+            <nav class="flex items-center space-x-2 @(isArabic ? "space-x-reverse" : "") text-sm md:text-base font-medium">
+                <span class="text-slate-900 dark:text-white font-bold text-xl">
+                    <i class="material-icons align-middle">email</i>
+                    @(isArabic ? "رسائل التواصل" : "Contact Messages")
+                </span>
+            </nav>
+            <div class="text-slate-500 text-sm">
+                @(isArabic ? "إجمالي الرسائل:" : "Total Messages:") <strong>@Model.Count()</strong>
+            </div>
+        </header>
+
+        <div class="bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden rounded-md">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left @(isArabic ? "text-right" : "") border-collapse min-w-[1000px]">
+                    <thead>
+                        <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600">
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">No.</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "المرسل" : "Sender")</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "الموضوع" : "Topic")</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "التواصل" : "Contact Info")</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الرسالة" : "Message")</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-blue-50/50 dark:hover:bg-slate-700/40 transition-colors group @(!item.IsReaded ? "bg-blue-50/30 dark:bg-blue-900/10" : "")">
+                                <td class="px-4 py-4 text-sm text-slate-500 font-medium">@(index++)</td>
+                                <td class="px-4 py-4 text-sm">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-800 dark:text-slate-100">@item.Name</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <span class="text-slate-600 dark:text-slate-300 font-medium">@item.Topic</span>
+                                    <p class="text-xs text-slate-400 truncate max-w-[200px]">@item.Message</p>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <div class="flex flex-col gap-1 text-xs">
+                                        <span class="flex items-center gap-1"><i class="material-icons text-xs">email</i> @item.Email</span>
+                                        <span class="flex items-center gap-1"><i class="material-icons text-xs">phone</i> @item.PhoneNumber</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    <p>@item.Message</p>
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    <div class="flex justify-center gap-2">
+                                        
+
+                                        <button type="button"
+                                                onclick="confirmDelete('@item.Id')"
+                                                class="p-1.5 rounded-full hover:bg-red-100 text-red-400 hover:text-red-600 transition-all border-none bg-transparent cursor-pointer">
+                                            <span class="material-icons text-xl">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: '@(isArabic ? "هل أنت متأكد؟" : "Are you sure?")',
+                text: '@(isArabic ? "سيتم حذف هذه الرسالة نهائياً!" : "This message will be permanently deleted!")',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '@(isArabic ? "نعم، احذفها" : "Yes, delete it!")',
+                cancelButtonText: '@(isArabic ? "إلغاء" : "Cancel")'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/Admin/ContactUs/Delete/' + id; 
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '__RequestVerificationToken';
+                    tokenInput.value = token;
+
+                    form.appendChild(tokenInput);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            })
+        }
+    </script>
+}
