@@ -1,6 +1,9 @@
-﻿using DataAccess.Repositories.IRepositories;
+﻿using System.Security.Claims;
+using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels.Instructor;
 using System.Security.Claims;
@@ -51,7 +54,16 @@ namespace ELClass.Areas.Instructor.Controllers
                         EnrolledStudents = 0, // يمكنك ربطها بجدول StudentCourses لاحقاً
                         SuccessRate = 90 // قيمة افتراضية
                     }).ToList()
+
             };
+
+         
+            viewModel.Students = (await _unitOfWork.InstructorStudentRepository.GetAsync(
+                       e => e.InstructorId == userId, e => e.Include(x => x.Student).ThenInclude(s => s.ApplicationUser)
+                       )).Select(e => e.Student).ToList();
+
+
+
 
             return View(viewModel);
         }

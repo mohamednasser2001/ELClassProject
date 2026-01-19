@@ -84,7 +84,9 @@
             </div>
 
             <div class="social-login">
-                <a asp-controller="Account"
+                <a 
+                   asp-area="Identity"
+                   asp-controller="Account"
                    asp-action="ExternalLogin"
                    asp-area="Identity"
                    asp-route-provider="Google"

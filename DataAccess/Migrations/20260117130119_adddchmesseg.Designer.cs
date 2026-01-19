@@ -4,6 +4,7 @@ using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260117130119_adddchmesseg")]
+    partial class adddchmesseg
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -317,48 +320,10 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("InstructorId");
-
                     b.HasIndex("StudentId", "InstructorId")
                         .IsUnique();
 
                     b.ToTable("Conversations");
-                });
-
-            modelBuilder.Entity("Models.ContactUs", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsReaded")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Topic")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ContactUs");
                 });
 
             modelBuilder.Entity("Models.Course", b =>
@@ -391,7 +356,7 @@ namespace DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAT")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -414,12 +379,6 @@ namespace DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedById")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("NameAr")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -428,12 +387,7 @@ namespace DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedById");
 
                     b.ToTable("Instructors");
                 });
@@ -452,7 +406,7 @@ namespace DataAccess.Migrations
                     b.Property<string>("CreatedById")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAT")
                         .HasColumnType("datetime2");
 
                     b.HasKey("InstructorId", "CourseId");
@@ -478,7 +432,7 @@ namespace DataAccess.Migrations
                     b.Property<string>("CreatedById")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAT")
                         .HasColumnType("datetime2");
 
                     b.HasKey("InstructorId", "StudentId");
@@ -505,12 +459,6 @@ namespace DataAccess.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedById")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("DriveLink")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -526,25 +474,17 @@ namespace DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId");
 
-                    b.HasIndex("CreatedById");
-
-                    b.ToTable("Lessons");
+                    b.ToTable("Lesson");
                 });
 
             modelBuilder.Entity("Models.Student", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("NameAr")
                         .IsRequired()
@@ -573,7 +513,7 @@ namespace DataAccess.Migrations
                     b.Property<string>("CreatedById")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAT")
                         .HasColumnType("datetime2");
 
                     b.HasKey("StudentId", "CourseId");
@@ -647,42 +587,18 @@ namespace DataAccess.Migrations
                     b.Navigation("Conversation");
                 });
 
-            modelBuilder.Entity("Models.Conversation", b =>
-                {
-                    b.HasOne("Models.Instructor", "Instructor")
-                        .WithMany()
-                        .HasForeignKey("InstructorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Models.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Instructor");
-
-                    b.Navigation("Student");
-                });
-
             modelBuilder.Entity("Models.Course", b =>
                 {
-                    b.HasOne("Models.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("ApplicationUser");
                 });
 
             modelBuilder.Entity("Models.Instructor", b =>
                 {
-                    b.HasOne("Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithOne("Instructor")
                         .HasForeignKey("Models.Instructor", "Id")
@@ -690,8 +606,6 @@ namespace DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
-
-                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("Models.InstructorCourse", b =>
@@ -702,7 +616,7 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Models.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
                         .HasForeignKey("CreatedById");
 
@@ -712,16 +626,16 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Course");
+                    b.Navigation("ApplicationUser");
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("Course");
 
                     b.Navigation("Instructor");
                 });
 
             modelBuilder.Entity("Models.InstructorStudent", b =>
                 {
-                    b.HasOne("Models.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
                         .HasForeignKey("CreatedById");
 
@@ -737,7 +651,7 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("ApplicationUser");
 
                     b.Navigation("Instructor");
 
@@ -752,14 +666,7 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Course");
-
-                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("Models.Student", b =>
@@ -781,7 +688,7 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Models.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
                         .HasForeignKey("CreatedById");
 
@@ -791,9 +698,9 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Course");
+                    b.Navigation("ApplicationUser");
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("Course");
 
                     b.Navigation("Student");
                 });

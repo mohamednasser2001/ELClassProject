@@ -11,7 +11,7 @@ namespace DataAccess.Repositories
 {
     public class UnitOfWork : IUnitOfWork
     {
-      
+        private readonly IRepository<Conversation> conversationRepository;
         private readonly ApplicationDbContext context;
 
         public UnitOfWork(IRepository<Course> courseRepository, IRepository<Instructor> instructorRepository,
@@ -19,12 +19,17 @@ namespace DataAccess.Repositories
            IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository ,
            IRepository<ContactUs> contactUsRepository
            )
+           IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository,
+           IRepository<CHMessage> chMessageRepository,IRepository<Conversation> conversationRepository, 
+           ApplicationDbContext context , IRepository<InstructorCourse> instructorCourseRepository ,
+           IRepository<InstructorStudent> instructorStudentRepository , IRepository<StudentCourse> studentCourseRepository)
         {
             CourseRepository = courseRepository;
             InstructorRepository = instructorRepository;
             StudentRepository = studentRepository;
             LessonRepository = lessonRepository;
-            ChatMessageRepository = ChatMessageRepositories;
+            ConversationRepository = conversationRepository;
+            CHMessageRepository = chMessageRepository;
             this.context = context;
             InstructorCourseRepository = instructorCourseRepository;
             InstructorStudentRepository = instructorStudentRepository;
@@ -35,10 +40,8 @@ namespace DataAccess.Repositories
         public IRepository<Instructor> InstructorRepository { get; }
         public IRepository<Student> StudentRepository { get; }
          public IRepository<Lesson> LessonRepository { get; }
-        public IRepository<ChatMessage> ChatMessageRepository { get; }
-
-
-
+        public IRepository<CHMessage> CHMessageRepository { get; }
+        public IRepository<Conversation> ConversationRepository { get; }
         public IRepository<InstructorCourse> InstructorCourseRepository { get; }
         public IRepository<InstructorStudent> InstructorStudentRepository { get; }
         public IRepository<StudentCourse> StudentCourseRepository { get; }

@@ -6,9 +6,10 @@ namespace Models.ViewModels
 {
     public class InstructorChatVM
     {
-        public string InstructorId { get; set; } = string.Empty;
-        public string InstructorNameEn { get; set; } = string.Empty;
-        public string InstructorNameAr { get; set; } = string.Empty;
-        public string InstructorImage { get; set; } = string.Empty;
+        public string InstructorId { get; set; }
+        public string InstructorNameEn { get; set; }
+        public string InstructorNameAr { get; set; }
+        public string InstructorImage { get; set; }
+        public ApplicationUser? ApplicationUser { get; set; }
     }
 }
