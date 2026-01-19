@@ -1,17 +1,20 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
-namespace ELClass.Hubs
+[Authorize]
+public class ChatHub : Hub
 {
-    public class ChatHub:Hub
+    public async Task SendMessage(string receiverId, string message)
     {
-        public async Task SendMessage(string receiverId, string message)
-        {
-            // Context.UserIdentifier هو الـ UserId بتاع الشخص اللي باعت حالياً
-            var senderId = Context.UserIdentifier;
-            var timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+        var senderId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(senderId)) return;
 
-            // إرسال الرسالة للمستلم فقط (Receiver)
-            await Clients.User(receiverId).SendAsync("ReceiveMessage", senderId, message, timestamp);
-        }
+        var time = DateTime.UtcNow;
+
+        await Clients.User(receiverId).SendAsync("ReceiveMessage", senderId, message, time);
+        await Clients.Users(receiverId, senderId).SendAsync("UpdateConversationList");
+
     }
 }
+

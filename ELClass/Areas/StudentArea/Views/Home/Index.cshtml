@@ -173,373 +173,959 @@
         </div>
     </div>
 </div>
-@* //chat *@
-<div id="chat-circle">
-    <i class="fas fa-comment-dots fa-2x"></i>
-</div>
 
-<div id="chat-box" style="display:none;">
-    <div class="chat-box-header d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-            <button id="chat-back-btn" class="btn btn-sm text-white p-0 me-2" style="display:none;" onclick="backToInstructorsList()">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <h6 class="m-0" id="chat-header-title">
-                @(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "المدرسين" : "Instructors")
-            </h6>
+@* Chat Widget (Student) *@
+<button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
+    <span class="chat-fab-icon" aria-hidden="true">
+        <i class="fab fa-whatsapp"></i>
+    </span>
+    <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
+</button>
+
+
+<div id="chatWidget" class="chat-widget" aria-hidden="true">
+    <div class="chat-header">
+        <div class="header-left">
+            <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
+            <div class="title" id="chatHeaderTitle">Chats</div>
         </div>
-        <span id="close-chat" style="cursor:pointer; font-size: 20px;">&times;</span>
-    </div>
-
-    <div id="instructors-list-container" style="height: 340px; overflow-y: auto; padding: 0;">
-        <div class="list-group list-group-flush">
-
-            @if (Model.Instructors != null && Model.Instructors.Any())
-            {
-                @foreach (var Instructor in Model.Instructors)
-                {
-                    // 1. تحديد الاسم حسب اللغة أولاً
-                    var instructorName = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar")
-                        ? Instructor.InstructorNameAr
-                        : Instructor.InstructorNameEn;
-
-                    // 2. منطق استخراج الحروف الأولى (Initials)
-                    var initials = "";
-                    if (!string.IsNullOrEmpty(instructorName))
-                    {
-                        var words = instructorName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (words.Length >= 2)
-                            initials = words[0][0].ToString() + words[1][0].ToString();
-                        else if (words.Length == 1)
-                            initials = words[0][0].ToString();
-                    }
-
-                    <button class="list-group-item list-group-item-action border-0 d-flex align-items-center p-3"
-                            onclick="openPrivateChat('@Instructor.InstructorId', '@instructorName')"
-                            style="border-bottom: 1px solid #f1f1f1 !important;">
-
-                        <div class="position-relative">
-                            @if (!string.IsNullOrEmpty(Instructor.InstructorImage))
-                            {
-                                <img src="@Instructor.InstructorImage"
-                                     class="rounded-circle me-3"
-                                     style="width:45px; height:45px; object-fit:cover; border: 1px solid #eee;"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-
-                                <div class="initials-avatar me-3" style="display:none;">@initials.ToUpper()</div>
-                            }
-                            else
-                            {
-                                <div class="initials-avatar me-3">@initials.ToUpper()</div>
-                            }
-
-                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle"
-                                  style="right: 15px;"></span>
-                        </div>
-
-                        <div class="flex-grow-1 text-start">
-                            <div class="fw-bold text-dark" style="font-size: 0.9rem;">@instructorName</div>
-                            <small class="text-muted" style="font-size: 0.75rem;">
-                                @(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "مدرس" : "Instructor")
-                            </small>
-                        </div>
-                    </button>
-                }
-            }
-            else
-            {
-                <div class="text-center mt-5 text-muted">
-                    <i class="fas fa-user-slash fa-2x mb-2"></i><br />
-                    @(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "لا يوجد مدرسين حالياً" : "No instructors found")
-                </div>
-            }
-
+        <div class="actions">
+            <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">✕</button>
         </div>
     </div>
 
-
-    <div id="private-chat-area" style="display:none; height: 340px; flex-direction: column;">
-        <div id="messages-window" style="flex-grow: 1; overflow-y: auto; padding: 15px; background-color: #f8f9fa;">
-            <div id="chat-load-spinner" class="text-center mt-5 d-none">
-                <i class="fas fa-spinner fa-spin text-orange"></i>
-            </div>
-            <div id="chat-messages-body">
-                <div class="text-center text-muted mt-5 small">Start your conversation...</div>
-            </div>
+    @* Screen 1: List *@
+    <div class="chat-screen" id="screenList">
+        <div class="chat-search">
+            <input id="chatSearch" type="text" placeholder="Search instructors..." autocomplete="off" />
         </div>
+        <div class="chat-items" id="chatItems"></div>
+    </div>
 
-        <div class="p-2 border-top bg-white d-flex align-items-center" style="position: relative; z-index: 10;">
-            <input type="text" id="chat-input" class="form-control form-control-sm mx-1" placeholder="Type message..." style="flex-grow: 1;">
-            <button class="btn btn-orange btn-sm" id="send-msg-btn" style="min-width: 40px;">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+    @* Screen 2: Thread *@
+    <div class="chat-screen hidden" id="screenThread">
+        <div class="messages" id="messagesBox"></div>
+
+        <div class="composer">
+            <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+            <button id="sendBtn" type="button" aria-label="Send">➤</button>
         </div>
     </div>
 </div>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+
+    <input type="hidden" id="currentUserId" value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
+
     <script>
-        // 1. إعداد اتصال SignalR
-        var connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chatHub") // تأكد من مطابقة المسار لـ Program.cs
-            .withAutomaticReconnect()
-            .build();
+        // =========================
+        // Config (endpoints)
+        // =========================
+        const API = {
+            conversations: '/StudentArea/Home/GetMyConversations',
+            history: '/StudentArea/Home/GetChatHistory',   // ✅ لازم يدعم beforeId + take
+            save: '/StudentArea/Home/SaveMessage',
+            markRead: '/StudentArea/Home/MarkAsRead'
+        };
 
-        var currentReceiverId = "";
+        // =========================
+        // Elements
+        // =========================
+        const chatFab = document.getElementById('chatFab');
+        const chatFabBadge = document.getElementById('chatFabBadge'); // ✅ NEW
+        const chatWidget = document.getElementById('chatWidget');
+        const chatCloseBtn = document.getElementById('chatCloseBtn');
+        const chatBackBtn = document.getElementById('chatBackBtn');
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
 
-        // بدء الاتصال
-        connection.start().then(function () {
-            console.log("SignalR Connected!");
-        }).catch(function (err) {
-            return console.error(err.toString());
-        });
+        const screenList = document.getElementById('screenList');
+        const screenThread = document.getElementById('screenThread');
 
-        // 2. استقبال الرسائل "لايف" من السيرفر
-        connection.on("ReceiveMessage", function (senderId, message, timestamp) {
-            // لو الرسالة جاية من المدرس اللي أنا فاتح معاه الشات دلوقتي
-            if (senderId === currentReceiverId) {
-                var time = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                appendMessage(message, false, time, true); // أرسمها على الشمال
-                markMessagesAsRead(senderId); // علّم عليها إنها اتقرت
+        const chatSearch = document.getElementById('chatSearch');
+        const chatItemsBox = document.getElementById('chatItems');
+
+        const messagesBox = document.getElementById('messagesBox');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        const currentUserId = document.getElementById('currentUserId')?.value;
+
+        // =========================
+        // State
+        // =========================
+        const state = {
+            isOpen: false,
+            currentInstructorId: null,
+            currentInstructorName: '',
+            conversationId: null,
+            conversationsCache: [],
+
+            // ✅ paging state
+            take: 10,
+            hasMore: true,
+            oldestId: null,
+            isLoadingOlder: false
+        };
+
+        // =========================
+        // Audio (NEW) - WebAudio Beep
+        // =========================
+        let audioReady = false;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (audioReady) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioReady = true;
+            } catch {
+                audioReady = false;
             }
-        });
+        }
 
-        // 3. إدارة فتح وقفل صندوق الشات
-        document.getElementById("chat-circle").onclick = function() {
-            var chatBox = document.getElementById("chat-box");
-            if (chatBox.style.display === "none" || chatBox.style.display === "") {
-                chatBox.style.display = "block";
-                this.innerHTML = '<i class="fas fa-times fa-2x"></i>';
+      
+
+        // =========================
+        // FAB Badge + Pulse (NEW)
+        // =========================
+        function setFabUnread(count) {
+            const n = Math.max(0, parseInt(count || 0));
+            if (!chatFabBadge) return;
+
+            if (n === 0) {
+                chatFabBadge.classList.add('hidden');
+                chatFab.classList.remove('pulse');
+                chatFabBadge.textContent = '0';
             } else {
-                chatBox.style.display = "none";
-                this.innerHTML = '<i class="fas fa-comment-dots fa-2x"></i>';
+                chatFabBadge.classList.remove('hidden');
+                chatFabBadge.textContent = (n > 99) ? '99+' : String(n);
+                chatFab.classList.add('pulse');
             }
-        };
-
-        document.getElementById("close-chat").onclick = function() {
-            document.getElementById("chat-box").style.display = "none";
-            document.getElementById("chat-circle").innerHTML = '<i class="fas fa-comment-dots fa-2x"></i>';
-        };
-
-        // 4. الدخول لشات مدرس معين
-        function openPrivateChat(instructorId, instructorName) {
-            currentReceiverId = instructorId;
-
-            document.getElementById("instructors-list-container").style.display = "none";
-            document.getElementById("private-chat-area").style.display = "flex";
-            document.getElementById("chat-header-title").innerText = instructorName;
-            document.getElementById("chat-back-btn").style.display = "block";
-            document.getElementById("chat-messages-body").innerHTML = "";
-
-            // أ. تحويل الرسائل لـ "مقروءة"
-            markMessagesAsRead(instructorId);
-
-            // ب. تحميل تاريخ المحادثة
-            loadChatHistory(instructorId);
         }
 
-        // 5. العودة للقائمة
-        function backToInstructorsList() {
-            currentReceiverId = "";
-            document.getElementById("instructors-list-container").style.display = "block";
-            document.getElementById("private-chat-area").style.display = "none";
-            document.getElementById("chat-back-btn").style.display = "none";
-            document.getElementById("chat-header-title").innerText = "@(System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "المدرسين" : "Instructors")";
+        function calcTotalUnread() {
+            return (state.conversationsCache || []).reduce((sum, c) => sum + (c.unread || 0), 0);
         }
 
-        // 6. دالة رسم الرسائل
-        function appendMessage(message, isMine, timestamp, isRead = false) {
-            var msgBody = document.getElementById("chat-messages-body");
-            var alignment = isMine ? "justify-content-end" : "justify-content-start";
-            var bgColor = isMine ? "#ff6600" : "#e9e9eb";
-            var textColor = isMine ? "white" : "black";
-            var borderRadius = isMine ? "18px 18px 0 18px" : "18px 18px 18px 0";
-
-            var checkDouble = isMine ?
-                `<i class="fas fa-check-double" style="font-size: 10px; margin-left: 3px; color: ${isRead ? '#00c853' : '#adb5bd'};"></i>`
-                : "";
-
-            var html = `
-                <div class="d-flex ${alignment} mb-3">
-                    <div class="msg-content shadow-sm" style="background-color: ${bgColor}; color: ${textColor}; padding: 10px 15px; border-radius: ${borderRadius}; max-width: 80%; font-size: 0.9rem;">
-                        ${message}
-                        <div style="font-size: 0.65rem; text-align: right; opacity: 0.7; margin-top: 4px;">
-                            ${timestamp} ${checkDouble}
-                        </div>
-                    </div>
-                </div>`;
-
-            msgBody.insertAdjacentHTML('beforeend', html);
-            scrollChatToBottom();
+        function syncFabUnreadFromList() {
+            setFabUnread(calcTotalUnread());
         }
 
-        // 7. إرسال الرسالة (AJAX + SignalR)
-        document.getElementById("send-msg-btn").onclick = function() {
-            var input = document.getElementById("chat-input");
-            var messageContent = input.value.trim();
+        // =========================
+        // UI Helpers
+        // =========================
+        function escapeHtml(str) {
+            return (str ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", "&#039;");
+        }
 
-            if (messageContent !== "" && currentReceiverId !== "") {
-                $.post("@Url.Action("SaveMessage", "Home", new { area = "StudentArea" })", { receiverId: currentReceiverId, content: messageContent }, function(response) {
-                    if (response.success) {
-                        var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        appendMessage(messageContent, true, time, false); // رسمها عندي
-                        input.value = "";
+        function toTime(sentAt) {
+            if (!sentAt) return '';
+            const d = new Date(sentAt);
+            if (Number.isNaN(d.getTime())) return '';
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
 
-                        // إرسال عبر SignalR ليظهر للمدرس "لايف"
-                        connection.invoke("SendMessage", currentReceiverId, messageContent).catch(function (err) {
-                            return console.error(err.toString());
-                        });
-                    }
-                });
-            }
-        };
+        function initials(name) {
+            const s = (name ?? '').trim();
+            if (!s) return 'IN';
+            const parts = s.split(/\s+/).filter(Boolean);
+            const first = parts[0]?.[0] ?? 'I';
+            const second = (parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1]) ?? 'N';
+            return (first + second).toUpperCase();
+        }
 
-        // 8. تحميل التاريخ
-        function loadChatHistory(receiverId) {
-            if (currentReceiverId === "") return;
-            $.get("/StudentArea/Home/GetChatHistory", { instructorId: receiverId }, function(data) {
-                var msgBody = document.getElementById("chat-messages-body");
-                msgBody.innerHTML = "";
-                if (data && data.length > 0) {
-                    data.forEach(function(msg) {
-                        var isMine = msg.senderId === "@_userManager.GetUserId(User)";
-                        var time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        appendMessage(msg.message, isMine, time, msg.isRead);
-                    });
-                } else {
-                    msgBody.innerHTML = '<div class="text-center mt-5 small text-muted">Start your conversation...</div>';
-                }
+        // =========================
+        // Open / Close (UPDATED to use .open)
+        // =========================
+        function showWidget() {
+            state.isOpen = true;
+
+            // ✅ بدل display: flex
+            chatWidget.classList.add('open');
+            chatWidget.setAttribute('aria-hidden', 'false');
+            chatFab.style.display = 'none';
+
+            showListScreen();
+            loadMyConversations();
+        }
+
+        function hideWidget() {
+            state.isOpen = false;
+
+            // ✅ بدل display: none
+            chatWidget.classList.remove('open');
+            chatWidget.setAttribute('aria-hidden', 'true');
+            chatFab.style.display = 'block';
+
+            state.currentInstructorId = null;
+            state.currentInstructorName = '';
+            state.conversationId = null;
+
+            // reset paging
+            state.hasMore = true;
+            state.oldestId = null;
+            state.isLoadingOlder = false;
+
+            messagesBox.innerHTML = '';
+            chatInput.value = '';
+            chatSearch.value = '';
+        }
+
+        function showListScreen() {
+            screenThread.classList.add('hidden');
+            screenList.classList.remove('hidden');
+            chatBackBtn.classList.add('hidden');
+            chatHeaderTitle.textContent = 'Chats';
+
+            state.currentInstructorId = null;
+            state.currentInstructorName = '';
+            state.conversationId = null;
+
+            // reset thread UI + paging
+            state.hasMore = true;
+            state.oldestId = null;
+            state.isLoadingOlder = false;
+
+            messagesBox.innerHTML = '';
+        }
+
+        function showThreadScreen(instructorName) {
+            screenList.classList.add('hidden');
+            screenThread.classList.remove('hidden');
+            chatBackBtn.classList.remove('hidden');
+            chatHeaderTitle.textContent = instructorName || 'Chat';
+        }
+
+        function setActiveItem(instructorId) {
+            document.querySelectorAll('.chat-item').forEach(x => {
+                x.classList.toggle('active', x.dataset.instructorId === instructorId);
             });
         }
 
-        function markMessagesAsRead(instructorId) {
-            $.post("/StudentArea/Home/MarkAsRead", { instructorId: instructorId });
+        function findItem(instructorId) {
+            return document.querySelector(`.chat-item[data-instructor-id="${CSS.escape(instructorId)}"]`);
         }
 
-        function scrollChatToBottom() {
-            var msgWindow = document.getElementById("messages-window");
-            if(msgWindow) msgWindow.scrollTop = msgWindow.scrollHeight;
+        function removeBadge(instructorId) {
+            const item = findItem(instructorId);
+            if (!item) return;
+            const badge = item.querySelector('.badge');
+            if (badge) badge.remove();
         }
 
-        document.getElementById("chat-input").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") {
-                document.getElementById("send-msg-btn").click();
+        function incrementBadge(instructorId) {
+            const item = findItem(instructorId);
+            if (!item) return;
+
+            let badge = item.querySelector('.badge');
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.className = 'badge';
+                badge.textContent = '1';
+                item.appendChild(badge);
+            } else {
+                badge.textContent = (parseInt(badge.textContent || '0') + 1).toString();
+            }
+        }
+
+        // =========================
+        // Conversations
+        // =========================
+        async function loadMyConversations() {
+            try {
+                const res = await fetch(API.conversations);
+                const data = await res.json();
+
+                state.conversationsCache = Array.isArray(data) ? data : [];
+                renderConversations(state.conversationsCache);
+
+                // ✅ NEW: update FAB unread + pulse
+                syncFabUnreadFromList();
+
+            } catch (e) {
+                console.error(e);
+                chatItemsBox.innerHTML = `<div class="empty">Failed to load chats</div>`;
+            }
+        }
+
+        function renderConversations(list) {
+            chatItemsBox.innerHTML = '';
+
+            if (!list || list.length === 0) {
+                chatItemsBox.innerHTML = `<div class="empty">No chats yet</div>`;
+                return;
+            }
+
+            for (const c of list) {
+                const name = c.instructorName ?? 'Instructor';
+                const preview = c.lastMessage ?? '';
+                const unread = c.unread ?? 0;
+
+                const avatarHtml = c.photoUrl
+                    ? `<img class="avatar-img" src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(name)}" />`
+                    : `<div class="avatar-text">${escapeHtml(initials(name))}</div>`;
+
+                const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
+
+                chatItemsBox.insertAdjacentHTML('beforeend', `
+                                        <div class="chat-item"
+                                             data-instructor-id="${escapeHtml(c.instructorId)}"
+                                             data-instructor-name="${escapeHtml(name)}">
+                                            <div class="avatar">${avatarHtml}</div>
+                                            <div class="meta">
+                                                <div class="name">${escapeHtml(name)}</div>
+                                                <div class="preview">${escapeHtml(preview)}</div>
+                                            </div>
+                                            ${unreadHtml}
+                                        </div>
+                                    `);
+            }
+
+            if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
+        }
+
+        // Click on conversation (delegation)
+        chatItemsBox.addEventListener('click', (e) => {
+            const item = e.target.closest('.chat-item');
+            if (!item) return;
+
+            const instructorId = item.dataset.instructorId;
+            const instructorName = item.dataset.instructorName;
+
+            openChat(instructorId, instructorName);
+        });
+
+        // Search filter
+        chatSearch.addEventListener('input', () => {
+            const q = (chatSearch.value ?? '').trim().toLowerCase();
+            const filtered = !q
+                ? state.conversationsCache
+                : state.conversationsCache.filter(x => (x.instructorName ?? '').toLowerCase().includes(q));
+            renderConversations(filtered);
+        });
+
+        async function openChat(instructorId, instructorName) {
+            state.currentInstructorId = instructorId;
+            state.currentInstructorName = instructorName;
+
+            setActiveItem(instructorId);
+            showThreadScreen(instructorName);
+
+            await loadChatHistoryFirstPage();
+
+            await markAsRead(instructorId);
+            removeBadge(instructorId);
+
+            // ✅ NEW: بعد ما فتح الشات وقرأه، حدّث FAB unread
+            await loadMyConversations(); // يضمن الداتا من السيرفر صح
+            // أو لو مش عايز reload، ممكن syncFabUnreadFromList()
+
+            // انزل لآخر الشات بعد أول تحميل
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        async function markAsRead(instructorId) {
+            try {
+                await fetch(API.markRead, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: new URLSearchParams({ instructorId })
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // =========================
+        // Chat History (Cursor paging)
+        // =========================
+        async function loadChatHistoryFirstPage() {
+            messagesBox.innerHTML = '';
+
+            state.hasMore = true;
+            state.oldestId = null;
+            state.isLoadingOlder = false;
+
+            await loadOlderMessages(); // يجيب آخر 10
+        }
+
+        async function loadOlderMessages() {
+            if (!state.currentInstructorId) return;
+            if (!state.hasMore || state.isLoadingOlder) return;
+
+            state.isLoadingOlder = true;
+
+            const prevScrollHeight = messagesBox.scrollHeight;
+            const prevScrollTop = messagesBox.scrollTop;
+
+            const url =
+                `${API.history}?instructorId=${encodeURIComponent(state.currentInstructorId)}`
+                + `&take=${state.take}`
+                + (state.oldestId ? `&beforeId=${state.oldestId}` : ``);
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+
+                const list = data.messages ?? [];
+                state.conversationId = data.conversationId ?? null;
+                state.hasMore = data.hasMore === true;
+
+                if (list.length === 0) {
+                    state.isLoadingOlder = false;
+                    return;
+                }
+
+                const frag = document.createDocumentFragment();
+                for (const m of list) frag.appendChild(messageNode(m));
+                messagesBox.prepend(frag);
+
+                state.oldestId = list[0].id;
+
+                const newScrollHeight = messagesBox.scrollHeight;
+                messagesBox.scrollTop = (newScrollHeight - prevScrollHeight) + prevScrollTop;
+
+            } catch (e) {
+                console.error(e);
+            } finally {
+                state.isLoadingOlder = false;
+            }
+        }
+
+        messagesBox.addEventListener('scroll', () => {
+            if (messagesBox.scrollTop <= 10) {
+                loadOlderMessages();
             }
         });
+
+        function messageNode(m) {
+            const senderId = (m.senderId ?? m.SenderId ?? '');
+            const receiverId = (m.receiverId ?? m.ReceiverId ?? '');
+            const content = (m.content ?? m.Content ?? '');
+            const sentAt = (m.sentAt ?? m.SentAt);
+
+            const isMine = currentUserId && senderId === currentUserId;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
+            wrapper.innerHTML = `
+                                    <div class="bubble">
+                                        ${escapeHtml(content)}
+                                        <span class="time">${escapeHtml(toTime(sentAt))}</span>
+                                    </div>
+                                `;
+            return wrapper;
+        }
+
+        function renderMessage(m) {
+            messagesBox.appendChild(messageNode(m));
+        }
+
+        // =========================
+        // Send Message
+        // =========================
+        async function sendMessageFromUI() {
+            const text = (chatInput.value || '').trim();
+            if (!state.currentInstructorId || !text) return;
+
+            const nowIso = new Date().toISOString();
+            renderMessage({
+                senderId: currentUserId,
+                receiverId: state.currentInstructorId,
+                content: text,
+                sentAt: nowIso
+            });
+
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+            chatInput.value = '';
+
+            const item = findItem(state.currentInstructorId);
+            if (item) {
+                const previewEl = item.querySelector('.preview');
+                if (previewEl) previewEl.textContent = text;
+            }
+
+            try {
+                const res = await fetch(API.save, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: new URLSearchParams({ receiverId: state.currentInstructorId, content: text })
+                });
+
+                const data = await res.json();
+                if (!data || data.success !== true) {
+                    console.log('SaveMessage failed:', data);
+                    return;
+                }
+
+                await sendRealtimeToInstructor(state.currentInstructorId, text);
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessageFromUI);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessageFromUI();
+        });
+
+        // =========================
+        // Open/Close/Back
+        // =========================
+        // ✅ NEW: initAudio أول مرة user يعمل click
+        chatFab.addEventListener('click', () => {
+            initAudio();
+            showWidget();
+        });
+
+        chatCloseBtn.addEventListener('click', hideWidget);
+        chatBackBtn.addEventListener('click', showListScreen);
+
+        // =========================
+        // SignalR (Student)
+        // =========================
+        const studentConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        studentConnection.start()
+            .then(() => console.log("SignalR Connected (Student)!"))
+            .catch(err => console.error(err.toString()));
+
+        studentConnection.on("ReceiveMessage", async function (senderId, message, timestamp) {
+
+            const sameOpenChat = state.isOpen && state.currentInstructorId && senderId === state.currentInstructorId;
+
+            if (sameOpenChat) {
+                renderMessage({
+                    senderId: senderId,
+                    receiverId: currentUserId,
+                    content: message,
+                    sentAt: timestamp
+                });
+
+                messagesBox.scrollTop = messagesBox.scrollHeight;
+
+                await markAsRead(senderId);
+                removeBadge(senderId);
+
+                // بعد القراءة حدّث unread
+                await loadMyConversations();
+                return;
+            }
+
+            // ✅ NEW: صوت إشعار لو مش فاتح نفس الشات
+          
+
+            const item = findItem(senderId);
+            if (item) {
+                const previewEl = item.querySelector('.preview');
+                if (previewEl) previewEl.textContent = message;
+
+                incrementBadge(senderId);
+
+                // ✅ NEW: update FAB unread (local sync)
+                syncFabUnreadFromList();
+                // الأفضل: reload من السيرفر لضمان الرقم الحقيقي
+                await loadMyConversations();
+
+            } else {
+                if (state.isOpen) {
+                    await loadMyConversations();
+                } else {
+                    // حتى لو الودجت مقفول، نحدّث الرقم من السيرفر
+                    await loadMyConversations();
+                }
+            }
+        });
+
+        studentConnection.on("UpdateConversationList", function () {
+            // reload list (if open) + keep FAB in sync
+            if (state.isOpen) loadMyConversations();
+            else loadMyConversations();
+        });
+
+        async function sendRealtimeToInstructor(instructorId, message) {
+            try {
+                await studentConnection.invoke("SendMessage", instructorId, message);
+            } catch (e) {
+                console.error(e.toString());
+            }
+        }
+
     </script>
 }
 
-@functions {
-    public string GetInitials(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return "I";
-        var words = name.Trim().Split(' '); // ضفنا Trim عشان لو في مسافات زيادة
-        if (words.Length >= 2)
-        {
-            return (words[0][0].ToString() + words[1][0].ToString()).ToUpper();
-        }
-        return words[0][0].ToString().ToUpper();
-    }
-}
- 
 
 <style>
-    /* الدائرة البرتقالية */
-    #chat-circle {
-        background-color: #fd7e14 !important;
-        color: white !important;
+    .chat-widget {
         position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
-        cursor: pointer;
-        z-index: 10001; /* خليناه أعلى من الـ Box بواحد */
-    }
-
-    /* صندوق الشات */
-    #chat-box {
-        display: none;
-        position: fixed;
-        bottom: 100px;
-        right: 30px;
-        width: 320px;
-        height: 400px;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0px 5px 25px rgba(0,0,0,0.2);
-        z-index: 10000; /* أقل من الدائرة */
+        right: 18px;
+        bottom: 18px;
+        width: 360px;
+        max-width: calc(100vw - 36px);
+        height: 560px;
+        max-height: calc(100vh - 36px);
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 14px 36px rgba(0,0,0,.18);
         overflow: hidden;
-        border: 1px solid #eee;
-    }
-
-    .chat-box-header {
-        background: #fd7e14;
-        color: white;
-        padding: 15px;
+        z-index: 9999;
+        /* ✅ مهم: لازم يبقى display:flex دايمًا عشان open/close يشتغل */
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    /* لون الزرار البرتقالي */
-    .btn-orange {
-        background-color: #ff6600 !important;
-        border-color: #ff6600 !important;
-        color: white !important;
+        flex-direction: column;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        /* ✅ Slide/Hide default */
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(14px) scale(.98);
+        transform-origin: bottom right;
+        transition: opacity .18s ease, transform .18s ease;
     }
 
-        .btn-orange:hover {
-            background-color: #e65c00 !important;
+        /* ✅ لما يفتح */
+        .chat-widget.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
         }
 
-    /* تنسيق الرسائل المرسلة (الطالب) */
-    .msg-sent {
-        background-color: #ff6600 !important; /* لون برتقالي */
-        color: white !important;
-        border-radius: 15px 15px 0 15px;
-        padding: 8px 12px;
-        margin-bottom: 10px;
-        max-width: 80%;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .chat-header {
+        background: #0ea85f; /* واتساب vibe */
+        color: #fff;
+        padding: 12px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    /* تنسيق الرسائل المستلمة (المدرس) */
-    .msg-received {
-        background-color: #e9ecef !important; /* لون رمادي فاتح */
-        color: #333 !important;
-        border-radius: 15px 15px 15px 0;
-        padding: 8px 12px;
-        margin-bottom: 10px;
-        max-width: 80%;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
     }
 
-  
-    .initials-avatar {
-        width: 45px;
-        height: 45px;
-        /* خلفية برتقالية واضحة */
-        background-color: #000000;
-        /* لون الحروف (خليته أبيض عشان يتباين مع البرتقالي) */
-        color: #FFFFFF;
-        border-radius: 50%;
+    .chat-header .title {
+        font-weight: 800;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chat-btn-icon {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chat-screen {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .chat-search {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+        .chat-search input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e7e7e7;
+            border-radius: 12px;
+            outline: none;
+            font-size: 13px;
+        }
+
+    .chat-items {
+        overflow: auto;
+        padding: 8px;
+        flex: 1;
+    }
+
+    .chat-item {
+        padding: 10px;
+        border-radius: 14px;
+        cursor: pointer;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        position: relative;
+    }
+
+        .chat-item:hover {
+            background: #f6f7f7;
+        }
+
+        .chat-item.active {
+            background: #e9fbf2;
+        }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: #e7e7e7;
+        flex: 0 0 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: bold;
-        font-size: 1rem;
-        /* إضافة حواف (Border) عشان تظهر بوضوح */
-        border: 2px solid #FFFFFF;
-        /* إضافة ظل خفيف (Shadow) عشان تدي عمق */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        text-transform: uppercase;
+        overflow: hidden;
     }
 
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-text {
+        font-weight: 800;
+        font-size: 13px;
+        color: #2b2b2b;
+    }
+
+    .chat-item .meta {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-item .name {
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chat-item .preview {
+        font-size: 12px;
+        color: #6f6f6f;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .badge {
+        min-width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: #00c853;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        padding: 0 6px;
+        font-weight: 800;
+    }
+
+    /* Thread */
+    .messages {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 12px;
+        background: #f3f5f4;
+    }
+
+    .msg-row {
+        display: flex;
+        margin-bottom: 10px;
+    }
+
+        .msg-row.mine {
+            justify-content: flex-end;
+        }
+
+    .bubble {
+        max-width: 85%;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #ffffff;
+        color: #000;
+        font-size: 13px;
+        line-height: 1.35;
+        box-shadow: 0 6px 14px rgba(0,0,0,.06);
+    }
+
+    .mine .bubble {
+        background: #0ea85f;
+        color: #fff;
+    }
+
+    .bubble .time {
+        display: block;
+        font-size: 10px;
+        opacity: .85;
+        margin-top: 4px;
+        text-align: right;
+    }
+
+    .composer {
+        border-top: 1px solid #eee;
+        padding: 10px;
+        display: flex;
+        gap: 8px;
+        background: #fff;
+    }
+
+        .composer input {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid #e7e7e7;
+            outline: none;
+            font-size: 13px;
+        }
+
+        .composer button {
+            width: 44px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            background: #0ea85f;
+            color: #fff;
+            font-size: 16px;
+        }
+
+    /* ===== WhatsApp FAB ===== */
+    .chat-fab {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #25D366;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 26px rgba(0,0,0,.22);
+        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .chat-fab-icon{
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    /* لمسة جمال */
+    background: rgba(255,255,255,.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+.chat-fab-icon i{
+    font-size: 28px;
+    transform: translateY(1px);
+}
+
+        .chat-fab i {
+            font-size: 28px;
+        }
+
+        .chat-fab:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 14px 34px rgba(0,0,0,.28);
+            filter: brightness(1.03);
+        }
+
+    /* ===== Pulse Animation ===== */
+    @@keyframes chatPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 10px 26px rgba(0,0,0,.22);
+        }
+
+        70% {
+            box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+        }
+    }
+
+    .chat-fab.pulse {
+        animation: chatPulse 1.4s ease-out infinite;
+    }
+
+    /* ===== FAB Badge ===== */
+    .chat-fab-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #ff3b30;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+    }
+
+    .empty {
+        padding: 14px;
+        color: #777;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    @@media (max-width: 520px) {
+        .chat-widget {
+            width: 100%;
+            height: 100%;
+            right: 0;
+            bottom: 0;
+            border-radius: 0;
+            transform-origin: bottom right;
+        }
+
+        .chat-fab {
+            right: 14px;
+            bottom: 14px;
+        }
+    }
 </style>
-                               
+
+
+
+
+
+
+

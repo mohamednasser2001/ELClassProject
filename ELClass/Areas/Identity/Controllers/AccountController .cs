@@ -259,11 +259,15 @@ namespace ELClass.Areas.Identity.Controllers
                             return RedirectToAction("index", "home", new { area = "admin" });
 
 
-                        }else if (roles.Contains("Teacher"))
+                        }else if (roles.Contains("Instructor"))
                         {
-                            return RedirectToAction("index", "Course", new { area = "Instructor" });
+                            return RedirectToAction("index", "Home", new { area = "Instructor" });
                         }
-                        return RedirectToAction("index", "Home", new { area = "StudentArea" });
+                        else
+                        {
+                            return RedirectToAction("index", "Home", new { area = "StudentArea" });
+                        }
+                          
                     }
 
                     
@@ -389,7 +393,9 @@ namespace ELClass.Areas.Identity.Controllers
       
         public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null, string? remoteError = null)
         {
-            returnUrl ??= Url.Content("~/");
+           // returnUrl ??= Url.Content("~/");
+            returnUrl ??= Url.Action("Index", "Home", new { area = "StudentArea" }) ?? "/StudentArea/Home/Index";
+
 
             if (remoteError != null)
             {
@@ -412,7 +418,9 @@ namespace ELClass.Areas.Identity.Controllers
 
             if (signInResult.Succeeded)
             {
-                return LocalRedirect(returnUrl ?? "/");
+                //return LocalRedirect(returnUrl ?? "/");
+                return LocalRedirect(returnUrl);
+
             }
 
             // لو الحساب جديد، نرسل المستخدم لصفحة GoogleResponse للتحقق
@@ -423,6 +431,8 @@ namespace ELClass.Areas.Identity.Controllers
         [HttpGet]
         public async Task<IActionResult> GoogleResponse(string returnUrl = null)
         {
+            returnUrl ??= Url.Action("Index", "Home", new { area = "StudentArea" }) ?? "/StudentArea/Home/Index";
+
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
                 return RedirectToAction(nameof(Login));
@@ -434,7 +444,9 @@ namespace ELClass.Areas.Identity.Controllers
                 bypassTwoFactor: true);
 
             if (signInResult.Succeeded)
-                return LocalRedirect(returnUrl ?? "/");
+              //  return LocalRedirect(returnUrl ?? "/");
+                return LocalRedirect(returnUrl);
+
 
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
 

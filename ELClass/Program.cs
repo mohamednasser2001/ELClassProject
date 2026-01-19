@@ -4,6 +4,7 @@ using DataAccess.Repositories.IRepositories;
 using ELClass.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Utilites;
@@ -21,6 +22,8 @@ builder.Services.AddControllersWithViews();
 
 // SignalR
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
+
 
 // DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -35,7 +38,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
     config.Password.RequiredLength = 8;
     config.User.RequireUniqueEmail = true;
 
-    config.SignIn.RequireConfirmedEmail = true;
+    config.SignIn.RequireConfirmedEmail = false;
 
     config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     config.Lockout.MaxFailedAccessAttempts = 5;

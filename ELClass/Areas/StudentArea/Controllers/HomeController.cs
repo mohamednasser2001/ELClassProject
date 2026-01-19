@@ -1,9 +1,11 @@
 ﻿using System.Threading.Tasks;
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels;
@@ -37,12 +39,15 @@ namespace ELClass.Areas.StudentArea.Controllers
                 CourseTitleAr = sc.Course.TitleAr
             }).ToList();
             // 2. هنجيب "كل المدرسين" من الداتا بيز عشان الشات
-            var allInstructors = await _unitOfWork.InstructorRepository.GetAsync();
+            var allInstructors = await _unitOfWork.InstructorRepository.GetAsync(null, q => q.Include(i => i.ApplicationUser));
+
             var instructorsVM = allInstructors.Select(i => new InstructorChatVM
             {
                 InstructorId = i.Id.ToString(),
                 InstructorNameEn = i.NameEn,
-                InstructorNameAr = i.NameAr
+                InstructorNameAr = i.NameAr,
+                ApplicationUser = i.ApplicationUser
+
             }).ToList();
             var model = new StudentDashboardVM
             {
@@ -54,84 +59,216 @@ namespace ELClass.Areas.StudentArea.Controllers
 
         }
 
+        //chat
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> SaveMessage(string receiverId, string content)
         {
-            // الحصول على ID الطالب الحالي
             var senderId = _userManager.GetUserId(User);
 
-            if (string.IsNullOrEmpty(content) || string.IsNullOrEmpty(receiverId))
+            if (string.IsNullOrWhiteSpace(senderId))
+                return Unauthorized();
+
+            content = content?.Trim();
+
+            if (string.IsNullOrWhiteSpace(receiverId) || string.IsNullOrWhiteSpace(content))
+                return Json(new { success = false, message = "Invalid data" });
+
+            // ✅ 0) تأكد إن الـ receiver موجود (على الأقل)
+            var receiverExists = await _userManager.FindByIdAsync(receiverId) != null;
+            if (!receiverExists)
+                return Json(new { success = false, message = "Receiver not found" });
+
+            // ✅ 1) GetOrCreate Conversation بشكل آمن
+            Conversation? convo =await  _unitOfWork.ConversationRepository
+                .GetOneAsync(c => c.StudentId == senderId && c.InstructorId == receiverId, tracked: true);
+
+            if (convo == null)
             {
-                return BadRequest("Invalid message data");
+                convo = new Conversation
+                {
+                    StudentId = senderId,
+                    InstructorId = receiverId,
+                    CreatedAt = DateTime.UtcNow,
+                    LastMessageAt = DateTime.UtcNow,
+                    LastMessagePreview = "",
+                    LastMessageSenderId = senderId,
+                    UnreadForStudent = 0,
+                    UnreadForInstructor = 0
+                };
+
+                try
+                {
+                    await _unitOfWork.ConversationRepository.CreateAsync(convo);
+                    await _unitOfWork.CommitAsync(); // مهم عشان ناخد convo.Id
+  
+                }
+                catch
+                {
+                    // ✅ لو حصلت Race / Unique index hit: هاتها تاني
+                    convo = await _unitOfWork.ConversationRepository
+                        .GetOneAsync(c => c.StudentId == senderId && c.InstructorId == receiverId, tracked: true);
+
+                    if (convo == null)
+                        return Json(new { success = false, message = "Failed to create conversation" });
+                }
             }
 
-            var newMessage = new ChatMessage
+            // ✅ 2) احفظ الرسالة
+            var now = DateTime.UtcNow;
+            var msg = new CHMessage
             {
+                ConversationId = convo.Id,
                 SenderId = senderId,
                 ReceiverId = receiverId,
-                Message = content,
-                Timestamp = DateTime.Now,
+                Content = content,
+                SentAt = now,
                 IsRead = false
             };
 
-            try
+            await _unitOfWork.CHMessageRepository.CreateAsync(msg);
+
+            // ✅ 3) حدّث Conversation
+            convo.LastMessageAt = now;
+            convo.LastMessagePreview = content.Length > 50 ? content.Substring(0, 50) : content;
+            convo.LastMessageSenderId = senderId;
+
+            // sender = الطالب -> زوّد unread عند المدرس
+            convo.UnreadForInstructor = (convo.UnreadForInstructor < 0) ? 1 : convo.UnreadForInstructor + 1;
+
+            await _unitOfWork.CommitAsync();
+
+            return Json(new
             {
-                // استخدام الـ UnitOfWork للوصول للـ Repository وإضافة الرسالة
-                await _unitOfWork.ChatMessageRepository.CreateAsync(newMessage);
-
-                // حفظ التغييرات عن طريق الـ UnitOfWork
-                var result = await _unitOfWork.CommitAsync();
-
-                if (result)
-                    return Ok(new { success = true });
-
-                return BadRequest("Failed to save the message");
-            }
-            catch (Exception ex)
-            {
-                // يفضل هنا عمل Log للـ ex.Message
-                return StatusCode(500, "Internal server error occurred while saving the message");
-            }
+                success = true,
+                conversationId = convo.Id,
+                message = new
+                {
+                    id = msg.Id,
+                    senderId = msg.SenderId,
+                    receiverId = msg.ReceiverId,
+                    content = msg.Content,
+                    sentAt = msg.SentAt,
+                    isRead = msg.IsRead
+                }
+            });
         }
+
 
         [HttpGet]
-        public async Task<IActionResult> GetChatHistory(string instructorId)
+        [Authorize]
+        public async Task<IActionResult> GetChatHistory(string instructorId, int take = 10, long? beforeId = null)
         {
-            var currentUserId = _userManager.GetUserId(User);
+            var studentId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(studentId)) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(instructorId)) return BadRequest();
+            if (take < 1 || take > 50) take = 10;
 
-            if (string.IsNullOrEmpty(instructorId)) return BadRequest();
+            var convo = await _unitOfWork.ConversationRepository
+                .GetOneAsync(c => c.StudentId == studentId && c.InstructorId == instructorId, tracked: false);
 
-            // جلب الرسائل بين الطرفين (أنا اللي باعت أو أنا اللي مستلم)
-            var messages = await _unitOfWork.ChatMessageRepository.GetAsync(
-                m => (m.SenderId == currentUserId && m.ReceiverId == instructorId) ||
-                     (m.SenderId == instructorId && m.ReceiverId == currentUserId)
-            );
+            if (convo == null)
+                return Json(new { conversationId = 0, hasMore = false, messages = Array.Empty<object>() });
 
-            // ترتيب الرسائل من الأقدم للأحدث عشان تظهر منطقية في الشات
-            var sortedMessages = messages.OrderBy(m => m.Timestamp).ToList();
+            var msgs = (await _unitOfWork.CHMessageRepository.GetAsync(
+                m => m.ConversationId == convo.Id && (beforeId == null || m.Id < beforeId),
+                tracked: false,
+                orderBy: q => q.OrderByDescending(m => m.Id),
+                take: take + 1
+            )).ToList();
 
-            return Json(sortedMessages);
+            bool hasMore = msgs.Count > take;
+            if (hasMore) msgs.RemoveAt(msgs.Count - 1);
+
+            var list = msgs
+                .OrderBy(m => m.Id)
+                .Select(m => new {
+                    id = m.Id,
+                    senderId = m.SenderId,
+                    receiverId = m.ReceiverId,
+                    content = m.Content,
+                    sentAt = m.SentAt,
+                    isRead = m.IsRead
+                })
+                .ToList();
+
+            return Json(new { conversationId = convo.Id, hasMore, messages = list });
         }
 
-
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> MarkAsRead(string instructorId)
         {
-            var currentUserId = _userManager.GetUserId(User);
+            var studentId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(studentId)) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(instructorId)) return BadRequest();
 
-            // هات كل الرسايل اللي المدرس بعتها لي وأنا لسه مشفتهاش
-            var unreadMessages = await _unitOfWork.ChatMessageRepository.GetAsync(
-                m => m.SenderId == instructorId && m.ReceiverId == currentUserId && !m.IsRead
+            var convo = await _unitOfWork.ConversationRepository
+                .GetOneAsync(c => c.StudentId == studentId && c.InstructorId == instructorId, tracked: true);
+
+            if (convo == null) return Ok();
+
+            var now = DateTime.UtcNow;
+
+            var unreadMessages = await _unitOfWork.CHMessageRepository.GetAsync(
+                m => m.ConversationId == convo.Id &&
+                     m.ReceiverId == studentId &&
+                     !m.IsRead,
+                tracked: true
             );
 
             foreach (var msg in unreadMessages)
             {
                 msg.IsRead = true;
+                msg.ReadAt = now;
             }
 
+            // ✅ خلّي العداد يعكس الحقيقة (تجنب race conditions)
+            // لو عندك CountAsync في الريبو استخدمه، لو مش موجود هنسيبه 0 مؤقتًا
+            convo.UnreadForStudent = 0;
+
             await _unitOfWork.CommitAsync();
+
             return Ok();
         }
+
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetMyConversations()
+        {
+            var studentId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(studentId)) return Unauthorized();
+
+            var convos = await _unitOfWork.ConversationRepository.GetAsync(
+                c => c.StudentId == studentId,
+                tracked: false,
+                orderBy: q => q.OrderByDescending(c => c.LastMessageAt)
+            );
+
+            if (!convos.Any())
+                return Json(Array.Empty<object>());
+
+            var instructorIds = convos.Select(c => c.InstructorId).Distinct().ToList();
+
+            // ✅ هنا التعديل المهم: هات بيانات المدرس من AspNetUsers
+            var instructors = await _userManager.Users
+                .Where(u => instructorIds.Contains(u.Id))
+                .Select(u => new { u.Id, Name = u.UserName }) // غيّر UserName لو عندك NameEn
+                .ToListAsync();
+
+            var map = instructors.ToDictionary(x => x.Id, x => x.Name);
+
+            return Json(convos.Select(c => new {
+                id = c.Id,
+                instructorId = c.InstructorId,
+                instructorName = map.ContainsKey(c.InstructorId) ? map[c.InstructorId] : "Instructor",
+                lastMessage = c.LastMessagePreview,
+                lastMessageAt = c.LastMessageAt,
+                unread = c.UnreadForStudent
+            }));
+        }
+
 
 
         [HttpGet]
