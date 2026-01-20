@@ -88,14 +88,14 @@
     <script>
         function confirmDelete(id) {
             Swal.fire({
-                title: '@(isArabic ? "هل أنت متأكد؟" : "Are you sure?")',
-                text: '@(isArabic ? "سيتم حذف هذه الرسالة نهائياً!" : "This message will be permanently deleted!")',
+                title: '@Html.Raw(isArabic ? "هل أنت متأكد؟" : "Are you sure?")',
+                text: '@Html.Raw(isArabic ? "سيتم حذف هذه الرسالة نهائياً!" : "This message will be permanently deleted!")',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: '@(isArabic ? "نعم، احذفها" : "Yes, delete it!")',
-                cancelButtonText: '@(isArabic ? "إلغاء" : "Cancel")'
+                confirmButtonText: '@Html.Raw(isArabic ? "نعم، احذفها" : "Yes, delete it!")',
+                cancelButtonText: '@Html.Raw(isArabic ? "إلغاء" : "Cancel")'
             }).then((result) => {
                 if (result.isConfirmed) {
                     const form = document.createElement('form');

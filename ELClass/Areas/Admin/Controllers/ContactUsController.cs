@@ -11,10 +11,16 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var contacts = (await _unitOfWork.ContactUsRepository.GetAsync()).OrderByDescending(c => c.Id);
-            
-
-
+            var contacts = (await _unitOfWork.ContactUsRepository.GetAsync()).AsQueryable().OrderByDescending(c => c.Id);
+            if (contacts.Any())
+            {
+                foreach (var contact in contacts)
+                {
+                    contact.IsReaded = true;
+                }
+                await _unitOfWork.ContactUsRepository.EditAllAsync(contacts);
+                await _unitOfWork.CommitAsync();
+            }
 
             return View(contacts);
         }
@@ -22,6 +28,9 @@ namespace ELClass.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
+            var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            bool isArabic = currentLang == "ar";
+
             var model = await _unitOfWork.ContactUsRepository.GetOneAsync(c => c.Id == id);
 
             if(model == null)
@@ -30,6 +39,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
 
             await _unitOfWork.ContactUsRepository.DeleteAsync(model);
+            TempData["success"] = isArabic ? "تم حذف الرسالة  بنجاح." : "Message deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
     }

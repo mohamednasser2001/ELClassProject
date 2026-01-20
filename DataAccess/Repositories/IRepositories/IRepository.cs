@@ -11,7 +11,8 @@ namespace DataAccess.Repositories.IRepositories
         Task<bool> CreateAsync(T entity);
 
         Task<bool> EditAsync(T entity);
-
+        Task<bool> CreateAllAsync(IEnumerable<T> entities);
+        Task<bool> EditAllAsync(IEnumerable<T> entities);
         Task<bool> DeleteAsync(T entity);
         Task<bool> DeleteAllAsync(IEnumerable<T> entities);
         Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>>? filter = null,

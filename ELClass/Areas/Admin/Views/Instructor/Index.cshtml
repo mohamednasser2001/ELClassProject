@@ -105,11 +105,12 @@
                     },
                     {
                         data: 'id',
-                        render: function (data) {
+                        render: function (data, type, row) {
+                
                             return `
                                 <div class="d-flex gap-1 justify-content-center">
                                     <a href="/Admin/Instructor/Details/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteInstructor('${data}')"><i class="fas fa-trash"></i></button>
+                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteInstructor('${data}', '${row.name}')"><i class="fas fa-trash"></i></button>
                                 </div>`;
                         }
                     }
@@ -121,13 +122,21 @@
             });
         });
 
-        function deleteInstructor(id) {
+                function deleteInstructor(id, name) {
+            
+            var titleText = currentLang === 'ar' ? `هل أنت متأكد من حذف ${name}؟` : `Are you sure you want to delete ${name}?`;
+            var confirmText = currentLang === 'ar' ? 'نعم، احذف' : 'Yes, Delete';
+            var cancelText = currentLang === 'ar' ? 'إلغاء' : 'Cancel';
+
             Swal.fire({
-                title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
+                title: titleText,
+                text: currentLang === 'ar' ? "لن تتمكن من التراجع عن هذا الإجراء!" : "You won't be able to revert this!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-                confirmButtonText: currentLang === 'ar' ? 'حذف' : 'Delete'
+                confirmButtonColor: '#d33', // لون أحمر للحذف
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: cancelText
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
@@ -137,7 +146,19 @@
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                         success: function () {
                             $('#InstructorsTable').DataTable().ajax.reload(null, false);
-                            Swal.fire({ icon: 'success', title: currentLang === 'ar' ? 'تم' : 'Done', timer: 1000, showConfirmButton: false });
+                            Swal.fire({
+                                icon: 'success',
+                                title: currentLang === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: currentLang === 'ar' ? 'خطأ' : 'Error',
+                                text: currentLang === 'ar' ? 'حدث خطأ أثناء الحذف' : 'An error occurred during deletion'
+                            });
                         }
                     });
                 }

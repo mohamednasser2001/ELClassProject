@@ -23,6 +23,21 @@ namespace DataAccess.Repositories
         }
 
         // CRUD
+
+        public async Task<bool> CreateAllAsync(IEnumerable<T> entities)
+        {
+            try
+            {
+                await _dbSet.AddRangeAsync(entities);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                return false;
+            }
+        }
         public async Task<bool> CreateAsync(T entity)
         {
             try
@@ -39,6 +54,21 @@ namespace DataAccess.Repositories
                 Console.WriteLine($"{ex.Message}");
                 return false;
 
+            }
+        }
+
+        public async Task<bool> EditAllAsync(IEnumerable<T> entities)
+        {
+            try
+            {
+                _dbSet.UpdateRange(entities);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                return false;
             }
         }
 

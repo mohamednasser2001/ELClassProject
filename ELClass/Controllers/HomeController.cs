@@ -1,6 +1,8 @@
 ﻿using DataAccess.Repositories.IRepositories;
+using ELClass.Hubs;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels;
@@ -9,9 +11,10 @@ using System.Threading.Tasks;
 namespace ELClass.Controllers
 {
 
-    public class HomeController(IUnitOfWork unitOfWork) : Controller
+    public class HomeController(IUnitOfWork unitOfWork , IHubContext<RealTimeHub> realHub) : Controller
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IHubContext<RealTimeHub> _realHub = realHub;
 
         public async Task<IActionResult> Index()
         {
@@ -45,6 +48,7 @@ namespace ELClass.Controllers
             {
                 await _unitOfWork.ContactUsRepository.CreateAsync(contactUs);
                 await _unitOfWork.CommitAsync();
+                await _realHub.Clients.All.SendAsync("ReceiveMessage", "New Contact Us Message", $"You have a new message from {contactUs.Name} - {contactUs.Email}");
             }
             return RedirectToAction("Index");
 
