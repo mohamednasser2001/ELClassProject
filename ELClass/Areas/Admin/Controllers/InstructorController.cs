@@ -73,7 +73,6 @@ namespace ELClass.Areas.Admin.Controllers
             return Json(new { success = true });
         }
 
-
         public async Task<IActionResult> AssignStudent(string studentId, string instructorId)
         {
             if (studentId != null && instructorId != null)
@@ -87,6 +86,8 @@ namespace ELClass.Areas.Admin.Controllers
                 };
                 await unitOfWork.InstructorStudentRepository.CreateAsync(instructorStudent);
                 await unitOfWork.CommitAsync();
+            
+
                 return Json(new { success = true });
 
             }
@@ -95,6 +96,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return View("AdminNotFoundPage");
             }
         }
+        
 
 
         public async Task<IActionResult> RemoveCourse(int courseId, string instructorId)

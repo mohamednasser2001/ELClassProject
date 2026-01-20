@@ -92,6 +92,7 @@ namespace ELClass.Areas.Admin.Controllers
                 if (res)
                 {
                     var succ = await unitOfWork.CommitAsync();
+               
                     if (succ)
                     {
                         return Json(new { success = true });
@@ -101,6 +102,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
             return View("AdminNotFoundPage");
         }
+      
 
         [HttpPost]
 

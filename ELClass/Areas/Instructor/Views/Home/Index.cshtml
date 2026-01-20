@@ -312,7 +312,7 @@
         // Elements
         // =========================
         const chatFab = document.getElementById('chatFab');
-        const chatFabBadge = document.getElementById('chatFabBadge'); // ✅ NEW
+        const chatFabBadge = document.getElementById('chatFabBadge');
         const chatWidget = document.getElementById('chatWidget');
         const chatCloseBtn = document.getElementById('chatCloseBtn');
         const chatBackBtn = document.getElementById('chatBackBtn');
@@ -338,7 +338,9 @@
             conversationId: null,
             hasMore: false,
             oldestMessageId: null,
-            conversationsCache: []
+            conversationsCache: [],
+            isLoadingOlder: false,
+            take: 20
         };
 
         // =========================
@@ -369,8 +371,18 @@
             return (first + second).toUpperCase();
         }
 
+        function findItem(studentId) {
+            return document.querySelector(`.chat-item[data-student-id="${CSS.escape(studentId)}"]`);
+        }
+
+        function setActive(studentId) {
+            document.querySelectorAll('.chat-item').forEach(x => {
+                x.classList.toggle('active', x.dataset.studentId === studentId);
+            });
+        }
+
         // =========================
-        // FAB Badge + Pulse (NEW)
+        // FAB Badge + Pulse
         // =========================
         function setFabUnread(count) {
             const n = Math.max(0, parseInt(count || 0));
@@ -388,7 +400,7 @@
         }
 
         function calcTotalUnread() {
-            return (state.conversationsCache || []).reduce((sum, c) => sum + (c.unread || 0), 0);
+            return (state.conversationsCache || []).reduce((sum, c) => sum + (parseInt(c.unread || 0)), 0);
         }
 
         function syncFabUnreadFromList() {
@@ -396,12 +408,10 @@
         }
 
         // =========================
-        // Open / Close (UPDATED to use .open)
+        // Open / Close
         // =========================
         function showWidget() {
             state.isOpen = true;
-
-            // ✅ بدل display
             chatWidget.classList.add('open');
             chatWidget.setAttribute('aria-hidden', 'false');
             chatFab.style.display = 'none';
@@ -412,8 +422,6 @@
 
         function hideWidget() {
             state.isOpen = false;
-
-            // ✅ بدل display
             chatWidget.classList.remove('open');
             chatWidget.setAttribute('aria-hidden', 'true');
             chatFab.style.display = 'block';
@@ -424,6 +432,7 @@
             state.conversationId = null;
             state.oldestMessageId = null;
             state.hasMore = false;
+            state.isLoadingOlder = false;
 
             messagesBox.innerHTML = '';
             chatInput.value = '';
@@ -441,6 +450,8 @@
             state.conversationId = null;
             state.oldestMessageId = null;
             state.hasMore = false;
+            state.isLoadingOlder = false;
+
             messagesBox.innerHTML = '';
         }
 
@@ -451,10 +462,9 @@
             chatHeaderTitle.textContent = name || 'Chat';
         }
 
-        function findItem(studentId) {
-            return document.querySelector(`.chat-item[data-student-id="${CSS.escape(studentId)}"]`);
-        }
-
+        // =========================
+        // Badges on list items
+        // =========================
         function removeBadge(studentId) {
             const item = findItem(studentId);
             if (!item) return;
@@ -477,10 +487,9 @@
             }
         }
 
-        function setActive(studentId) {
-            document.querySelectorAll('.chat-item').forEach(x => {
-                x.classList.toggle('active', x.dataset.studentId === studentId);
-            });
+        function bumpUnreadInCache(studentId, delta) {
+            const c = (state.conversationsCache || []).find(x => (x.studentId === studentId));
+            if (c) c.unread = Math.max(0, parseInt(c.unread || 0) + (delta || 0));
         }
 
         // =========================
@@ -489,15 +498,26 @@
         async function loadConversations() {
             try {
                 const res = await fetch(API.conversations);
-                const data = await res.json();
+                if (!res.ok) {
+                    const txt = await res.text();
+                    console.log("GetInstructorConversations failed:", res.status, txt);
+                    chatItemsBox.innerHTML = `<div class="empty">Failed to load chats (${res.status})</div>`;
+                    return;
+                }
 
+                const ct = res.headers.get("content-type") || "";
+                if (!ct.includes("application/json")) {
+                    const txt = await res.text();
+                    console.log("Not JSON response:", ct, txt);
+                    chatItemsBox.innerHTML = `<div class="empty">Failed to load chats (not json)</div>`;
+                    return;
+                }
+
+                const data = await res.json();
                 state.conversationsCache = Array.isArray(data) ? data : [];
                 renderConversations(state.conversationsCache);
 
-                // ✅ NEW: update FAB unread + pulse
                 syncFabUnreadFromList();
-
-                // keep active highlight
                 if (state.currentStudentId) setActive(state.currentStudentId);
 
             } catch (e) {
@@ -517,7 +537,7 @@
             for (const c of list) {
                 const name = c.studentName ?? c.name ?? 'Student';
                 const preview = c.lastMessage ?? '';
-                const unread = c.unread ?? 0;
+                const unread = parseInt(c.unread ?? 0);
 
                 const avatarHtml = c.photoUrl
                     ? `<img class="avatar-img" src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(name)}" />`
@@ -544,7 +564,6 @@
         chatItemsBox.addEventListener('click', (e) => {
             const item = e.target.closest('.chat-item');
             if (!item) return;
-
             openChat(item.dataset.studentId, item.dataset.studentName);
         });
 
@@ -555,6 +574,7 @@
                 ? state.conversationsCache
                 : state.conversationsCache.filter(x => ((x.studentName ?? x.name ?? '').toLowerCase().includes(q)));
             renderConversations(filtered);
+            if (state.currentStudentId) setActive(state.currentStudentId);
         });
 
         // =========================
@@ -567,100 +587,136 @@
             setActive(studentId);
             showThreadScreen(studentName);
 
-            await loadHistory(studentId);
+            await loadHistoryFirst(studentId);
 
             await markAsRead(studentId);
             removeBadge(studentId);
 
-            // ✅ NEW: بعد القراءة، حدّث القائمة + FAB unread الحقيقي
+            // بعد القراءة: صحح الأرقام من السيرفر
             await loadConversations();
         }
 
-        async function loadHistory(studentId) {
-            try {
-                const res = await fetch(`${API.history}?studentId=${encodeURIComponent(studentId)}&take=20`);
-                const data = await res.json();
+        async function loadHistoryFirst(studentId) {
+            messagesBox.innerHTML = '';
+            state.hasMore = true;
+            state.oldestMessageId = null;
+            state.isLoadingOlder = false;
 
-                const list = Array.isArray(data) ? data : (data.messages ?? []);
-                state.conversationId = data.conversationId ?? null;
-                state.hasMore = data.hasMore === true;
-
-                messagesBox.innerHTML = '';
-
-                if (!list || list.length === 0) {
-                    messagesBox.innerHTML = `<div class="empty">No messages yet</div>`;
-                    state.oldestMessageId = null;
-                    return;
-                }
-
-                for (const m of list) renderMessage(m);
-
-                state.oldestMessageId = list[0]?.id ?? null;
-                messagesBox.scrollTop = messagesBox.scrollHeight;
-            } catch (e) {
-                console.error(e);
-                messagesBox.innerHTML = `<div class="empty">Failed to load messages</div>`;
-            }
+            await loadOlderMessages();
+            messagesBox.scrollTop = messagesBox.scrollHeight;
         }
 
-        // optional: load older on scroll top
-        messagesBox.addEventListener('scroll', async () => {
+        async function loadOlderMessages() {
             if (!state.currentStudentId) return;
-            if (!state.hasMore) return;
-            if (messagesBox.scrollTop > 10) return; // near top only
-            if (!state.oldestMessageId) return;
+            if (!state.hasMore || state.isLoadingOlder) return;
 
-            const prevHeight = messagesBox.scrollHeight;
+            state.isLoadingOlder = true;
+
+            const prevScrollHeight = messagesBox.scrollHeight;
+            const prevScrollTop = messagesBox.scrollTop;
+
+            const url =
+                `${API.history}?studentId=${encodeURIComponent(state.currentStudentId)}`
+                + `&take=${state.take}`
+                + (state.oldestMessageId ? `&beforeId=${state.oldestMessageId}` : ``);
 
             try {
-                const res = await fetch(`${API.history}?studentId=${encodeURIComponent(state.currentStudentId)}&take=20&beforeId=${state.oldestMessageId}`);
+                const res = await fetch(url);
                 const data = await res.json();
+
                 const list = data.messages ?? [];
+                state.conversationId = data.conversationId ?? null;
                 state.hasMore = data.hasMore === true;
 
                 if (!list.length) return;
 
-                // prepend
                 const frag = document.createDocumentFragment();
                 for (const m of list) frag.appendChild(messageNode(m));
                 messagesBox.prepend(frag);
 
+                // أقدم ID
                 state.oldestMessageId = list[0]?.id ?? state.oldestMessageId;
 
-                // keep scroll position
-                const newHeight = messagesBox.scrollHeight;
-                messagesBox.scrollTop = newHeight - prevHeight;
+                // ثبّت الاسكرول مكانه
+                const newScrollHeight = messagesBox.scrollHeight;
+                messagesBox.scrollTop = (newScrollHeight - prevScrollHeight) + prevScrollTop;
+
             } catch (e) {
                 console.error(e);
+            } finally {
+                state.isLoadingOlder = false;
+            }
+        }
+
+        // load older when near top
+        messagesBox.addEventListener('scroll', () => {
+            if (messagesBox.scrollTop <= 10) {
+                loadOlderMessages();
             }
         });
 
+        // =========================
+        // ✓✓ Read ticks UI
+        // - isRead من السيرفر: لو الطالب قرا الرسالة
+        // =========================
+        function ticksHtml(isMine, isRead) {
+            if (!isMine) return '';
+            const cls = isRead ? 'ticks read' : 'ticks';
+            // ✓✓
+            return `<span class="${cls}" title="${isRead ? 'Read' : 'Sent'}">✓✓</span>`;
+        }
+
         function messageNode(m) {
+            const id = m.id ?? m.Id;
             const senderId = m.senderId ?? m.SenderId;
             const receiverId = m.receiverId ?? m.ReceiverId;
             const content = m.content ?? m.Content ?? '';
             const sentAt = m.sentAt ?? m.SentAt;
+            const isRead = (m.isRead ?? m.IsRead) === true;
 
-            // ✅ المدرس = أنا -> mine لما receiverId == currentStudentId
+            // المدرس = أنا -> mine لما أنا اللي باعت (يعني ReceiverId == studentId)
             const isMine = receiverId === state.currentStudentId;
 
             const wrapper = document.createElement('div');
             wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
+            wrapper.dataset.messageId = id ?? '';
+
             wrapper.innerHTML = `
                 <div class="bubble">
                     ${escapeHtml(content)}
-                    <span class="time">${escapeHtml(toTime(sentAt))}</span>
+                    <span class="time">
+                        ${escapeHtml(toTime(sentAt))}
+                        ${ticksHtml(isMine, isRead)}
+                    </span>
                 </div>
             `;
             return wrapper;
         }
 
-        function renderMessage(m) {
-            messagesBox.appendChild(messageNode(m));
+        function renderMessage(m, { prepend = false } = {}) {
+            const node = messageNode(m);
+            if (prepend) messagesBox.prepend(node);
+            else messagesBox.appendChild(node);
+            return node; // ✅ مهم
         }
 
+        // لما الطالب يعمل MarkAsRead و يبعت event للمدرس:
+        function markMessagesReadInUI(messageIds) {
+            if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+
+            messageIds.forEach(id => {
+                const row = messagesBox.querySelector(`.msg-row.mine[data-message-id="${CSS.escape(String(id))}"]`);
+                const tick = row?.querySelector('.ticks');
+                if (tick) {
+                    tick.classList.add('read');
+                    tick.title = 'Read';
+                }
+            });
+        }
+
+
         // =========================
-        // Mark read
+        // Mark read (instructor marking student messages read)
         // =========================
         async function markAsRead(studentId) {
             try {
@@ -681,9 +737,18 @@
             const text = (chatInput.value || '').trim();
             if (!state.currentStudentId || !text) return;
 
-            // optimistic
+            // optimistic (mine, not read yet) + temp id
             const nowIso = new Date().toISOString();
-            renderMessage({ receiverId: state.currentStudentId, content: text, sentAt: nowIso });
+            const tempId = `tmp-${Date.now()}`;
+
+            const optimisticNode = renderMessage({
+                id: tempId,
+                receiverId: state.currentStudentId,
+                content: text,
+                sentAt: nowIso,
+                isRead: false
+            });
+
             messagesBox.scrollTop = messagesBox.scrollHeight;
             chatInput.value = '';
 
@@ -701,18 +766,37 @@
                     body: new URLSearchParams({ receiverId: state.currentStudentId, content: text })
                 });
 
+                // لو السيرفر رجّع error صفحة HTML مثلاً
+                const ct = res.headers.get("content-type") || "";
+                if (!ct.includes("application/json")) {
+                    const txt = await res.text();
+                    console.log("SaveMessage not json:", res.status, txt);
+                    return;
+                }
+
                 const data = await res.json();
+                // debug سريع
+                console.log("SaveMessage response:", data);
+
                 if (!data || data.success !== true) {
                     console.log('Save failed:', data);
                     return;
                 }
 
+                // ✅ اربط الـ ID الحقيقي (أياً كان اسمه)
+                const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
+                if (realId && optimisticNode) {
+                    optimisticNode.dataset.messageId = String(realId);
+                }
+
                 // realtime
                 await sendRealtimeToStudent(state.currentStudentId, text);
+
             } catch (e) {
-                console.error(e);
+                console.error("sendMessage error:", e);
             }
         }
+
 
         sendBtn.addEventListener('click', sendMessage);
         chatInput.addEventListener('keydown', (e) => {
@@ -738,13 +822,39 @@
             .then(() => console.log("SignalR Connected (Instructor)!"))
             .catch(err => console.error(err.toString()));
 
-        // ✅ مهم: handler ده لازم يبقى مرة واحدة هنا (مش جوه ReceiveMessage)
+        // ✅ مرة واحدة فقط
         connection.on("UpdateConversationList", function () {
-            loadConversations();
+            // لو مفتوح: هات من السيرفر
+            if (state.isOpen) loadConversations();
         });
 
-        connection.on("ReceiveMessage", async function(senderId, message, timestamp) {
-            // senderId هنا = studentId
+        // ✅ NEW: Event من الطالب لما يعمل MarkAsRead
+        // لازم تضيفه في السيرفر (هديك الكود تحت)
+        connection.on("MessagesRead", function (payload) {
+            console.log("✅ MessagesRead event arrived:", payload);
+            console.log("state.conversationId:", state.conversationId, "state.currentStudentId:", state.currentStudentId);
+
+            // لو payload جايه كـ string (قديم)
+            if (typeof payload === "string") {
+                console.log("⚠️ payload is string (studentId):", payload);
+                // جرّب لوّن كل رسائل mine كاختبار سريع
+                messagesBox.querySelectorAll('.msg-row.mine .ticks').forEach(t => t.classList.add('read'));
+                return;
+            }
+
+            // لو payload object
+            const convId = payload?.conversationId;
+            const ids = payload?.messageIds;
+
+            console.log("payload.conversationId:", convId, "payload.messageIds:", ids);
+
+            // ✅ مؤقتًا: لوّن كل رسائل mine (عشان نتأكد CSS شغال)
+            messagesBox.querySelectorAll('.msg-row.mine .ticks').forEach(t => t.classList.add('read'));
+        });
+
+
+        connection.on("ReceiveMessage", async function (senderId, message, timestamp) {
+            // senderId = studentId
 
             const sameOpenChat = state.isOpen && state.currentStudentId && senderId === state.currentStudentId;
 
@@ -755,22 +865,28 @@
                 await markAsRead(senderId);
                 removeBadge(senderId);
 
-                // بعد القراءة: sync
+                // صفّر unread في cache وحدث FAB
+                bumpUnreadInCache(senderId, -999999);
+                syncFabUnreadFromList();
+
+                // صحح من السيرفر
                 await loadConversations();
                 return;
             }
 
-            // update preview + badge
+            // لو مش فاتح نفس الشات:
             const item = findItem(senderId);
             if (item) {
                 const prev = item.querySelector('.preview');
                 if (prev) prev.textContent = message;
 
                 incrementBadge(senderId);
+                bumpUnreadInCache(senderId, +1);
+                syncFabUnreadFromList();
+            } else {
+                // طالب جديد مش ظاهر -> هات من السيرفر (ومعاه unread الصحيح)
+                await loadConversations();
             }
-
-            // ✅ NEW: حتى لو الودجت مقفول، حدّث FAB unread/pulse من السيرفر
-            await loadConversations();
         });
 
         async function sendRealtimeToStudent(studentId, message) {
@@ -788,355 +904,372 @@
 
 <style>
     .chat-widget {
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    width: 360px;
-    max-width: calc(100vw - 36px);
-    height: 560px;
-    max-height: calc(100vh - 36px);
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 14px 36px rgba(0,0,0,.18);
-    overflow: hidden;
-    z-index: 9999;
-
-    /* ✅ لازم يبقى flex دايمًا */
-    display: flex;
-    flex-direction: column;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-
-    /* ✅ مقفول افتراضيًا (بـ opacity مش display:none) */
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(14px) scale(.98);
-    transform-origin: bottom right;
-    transition: opacity .18s ease, transform .18s ease;
-}
-
-/* ✅ مفتوح */
-.chat-widget.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
-}
-
-.chat-header {
-    background: #0ea85f;
-    color: #fff;
-    padding: 12px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
-
-.chat-header .title {
-    font-weight: 800;
-    font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.chat-btn-icon {
-    width: 34px;
-    height: 34px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background: rgba(255,255,255,.18);
-    color: #fff;
-    font-size: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chat-screen {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.chat-search {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.chat-search input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #e7e7e7;
-    border-radius: 12px;
-    outline: none;
-    font-size: 13px;
-}
-
-.chat-items {
-    overflow: auto;
-    padding: 8px;
-    flex: 1;
-}
-
-.chat-item {
-    padding: 10px;
-    border-radius: 14px;
-    cursor: pointer;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    position: relative;
-}
-
-.chat-item:hover {
-    background: #f6f7f7;
-}
-
-.chat-item.active {
-    background: #e9fbf2;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    background: #e7e7e7;
-    flex: 0 0 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.avatar-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.avatar-text {
-    font-weight: 800;
-    font-size: 13px;
-    color: #2b2b2b;
-}
-
-.chat-item .meta {
-    flex: 1;
-    min-width: 0;
-}
-
-.chat-item .name {
-    font-size: 13px;
-    font-weight: 800;
-    margin-bottom: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.chat-item .preview {
-    font-size: 12px;
-    color: #6f6f6f;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.badge {
-    min-width: 20px;
-    height: 20px;
-    border-radius: 999px;
-    background: #00c853;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    padding: 0 6px;
-    font-weight: 800;
-}
-
-.messages {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    padding: 12px;
-    background: #f3f5f4;
-}
-
-.msg-row {
-    display: flex;
-    margin-bottom: 10px;
-}
-
-.msg-row.mine {
-    justify-content: flex-end;
-}
-
-.bubble {
-    max-width: 85%;
-    padding: 10px 12px;
-    border-radius: 14px;
-    background: #ffffff;
-    color: #000;
-    font-size: 13px;
-    line-height: 1.35;
-    box-shadow: 0 6px 14px rgba(0,0,0,.06);
-}
-
-.mine .bubble {
-    background: #0ea85f;
-    color: #fff;
-}
-
-.bubble .time {
-    display: block;
-    font-size: 10px;
-    opacity: .85;
-    margin-top: 4px;
-    text-align: right;
-}
-
-.composer {
-    border-top: 1px solid #eee;
-    padding: 10px;
-    display: flex;
-    gap: 8px;
-    background: #fff;
-}
-
-.composer input {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 14px;
-    border: 1px solid #e7e7e7;
-    outline: none;
-    font-size: 13px;
-}
-
-.composer button {
-    width: 44px;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    background: #0ea85f;
-    color: #fff;
-    font-size: 16px;
-}
-
-/* ===== WhatsApp FAB ===== */
-.chat-fab {
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    background: #25D366;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 26px rgba(0,0,0,.22);
-    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
-}
-
-.chat-fab:hover {
-    transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 14px 34px rgba(0,0,0,.28);
-    filter: brightness(1.03);
-}
-
-/* ✅ تحسين شكل الأيقونة (نفس تعديل HTML الجديد) */
-.chat-fab-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,.14);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
-}
-
-.chat-fab-icon i {
-    font-size: 28px;
-    transform: translateY(1px);
-}
-
-/* ===== Pulse Animation ===== */
-@@keyframes chatPulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 10px 26px rgba(0,0,0,.22);
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        width: 360px;
+        max-width: calc(100vw - 36px);
+        height: 560px;
+        max-height: calc(100vh - 36px);
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 14px 36px rgba(0,0,0,.18);
+        overflow: hidden;
+        z-index: 9999;
+        /* ✅ لازم يبقى flex دايمًا */
+        display: flex;
+        flex-direction: column;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        /* ✅ مقفول افتراضيًا (بـ opacity مش display:none) */
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(14px) scale(.98);
+        transform-origin: bottom right;
+        transition: opacity .18s ease, transform .18s ease;
     }
-    70% {
-        box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+
+        /* ✅ مفتوح */
+        .chat-widget.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+    .chat-header {
+        background: #0ea85f;
+        color: #fff;
+        padding: 12px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
-    100% {
-        box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
     }
-}
 
-.chat-fab.pulse {
-    animation: chatPulse 1.4s ease-out infinite;
-}
+    .chat-header .title {
+        font-weight: 800;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
-/* ===== FAB Badge ===== */
-.chat-fab-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 6px;
-    border-radius: 999px;
-    background: #ff3b30;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #fff;
-}
+    .chat-btn-icon {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-.empty {
-    padding: 14px;
-    color: #777;
-    font-size: 13px;
-    text-align: center;
-}
+    .chat-screen {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
 
-@@media (max-width: 520px) {
-    .chat-widget {
+    .hidden {
+        display: none !important;
+    }
+
+    .chat-search {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+        .chat-search input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e7e7e7;
+            border-radius: 12px;
+            outline: none;
+            font-size: 13px;
+        }
+
+    .chat-items {
+        overflow: auto;
+        padding: 8px;
+        flex: 1;
+    }
+
+    .chat-item {
+        padding: 10px;
+        border-radius: 14px;
+        cursor: pointer;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        position: relative;
+    }
+
+        .chat-item:hover {
+            background: #f6f7f7;
+        }
+
+        .chat-item.active {
+            background: #e9fbf2;
+        }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: #e7e7e7;
+        flex: 0 0 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .avatar-img {
         width: 100%;
         height: 100%;
-        right: 0;
-        bottom: 0;
-        border-radius: 0;
-        transform-origin: bottom right;
+        object-fit: cover;
     }
 
-    .chat-fab {
-        right: 14px;
-        bottom: 14px;
+    .avatar-text {
+        font-weight: 800;
+        font-size: 13px;
+        color: #2b2b2b;
     }
-}
+
+    .chat-item .meta {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-item .name {
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chat-item .preview {
+        font-size: 12px;
+        color: #6f6f6f;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .badge {
+        min-width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: #00c853;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        padding: 0 6px;
+        font-weight: 800;
+    }
+
+    .messages {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 12px;
+        background: #f3f5f4;
+    }
+
+    .msg-row {
+        display: flex;
+        margin-bottom: 10px;
+    }
+
+        .msg-row.mine {
+            justify-content: flex-end;
+        }
+
+    .bubble {
+        max-width: 85%;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #ffffff;
+        color: #000;
+        font-size: 13px;
+        line-height: 1.35;
+        box-shadow: 0 6px 14px rgba(0,0,0,.06);
+    }
+
+    .mine .bubble {
+        background: #0ea85f;
+        color: #fff;
+    }
+
+    .bubble .time {
+        display: block;
+        font-size: 10px;
+        opacity: .85;
+        margin-top: 4px;
+        text-align: right;
+    }
+
+    .composer {
+        border-top: 1px solid #eee;
+        padding: 10px;
+        display: flex;
+        gap: 8px;
+        background: #fff;
+    }
+
+        .composer input {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid #e7e7e7;
+            outline: none;
+            font-size: 13px;
+        }
+
+        .composer button {
+            width: 44px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            background: #0ea85f;
+            color: #fff;
+            font-size: 16px;
+        }
+
+    /* ===== WhatsApp FAB ===== */
+    .chat-fab {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #25D366;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 26px rgba(0,0,0,.22);
+        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+
+        .chat-fab:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 14px 34px rgba(0,0,0,.28);
+            filter: brightness(1.03);
+        }
+
+    /* ✅ تحسين شكل الأيقونة (نفس تعديل HTML الجديد) */
+    .chat-fab-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+    }
+
+        .chat-fab-icon i {
+            font-size: 28px;
+            transform: translateY(1px);
+        }
+
+    /* ===== Pulse Animation ===== */
+    @@keyframes chatPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 10px 26px rgba(0,0,0,.22);
+        }
+
+        70% {
+            box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
+        }
+    }
+
+    .chat-fab.pulse {
+        animation: chatPulse 1.4s ease-out infinite;
+    }
+
+    /* ===== FAB Badge ===== */
+    .chat-fab-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #ff3b30;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+    }
+
+    .empty {
+        padding: 14px;
+        color: #777;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    @@media (max-width: 520px) {
+        .chat-widget {
+            width: 100%;
+            height: 100%;
+            right: 0;
+            bottom: 0;
+            border-radius: 0;
+            transform-origin: bottom right;
+        }
+
+        .chat-fab {
+            right: 14px;
+            bottom: 14px;
+        }
+    }
+    /* ===== Read Ticks ===== */
+    .ticks {
+        margin-left: 6px;
+        font-size: 11px;
+        opacity: .85;
+    }
+
+    /* قبل القراءة (داخل رسائل المدرس) */
+    .mine .ticks {
+        color: rgba(255,255,255,.85);
+    }
+
+        /* بعد القراءة */
+        .mine .ticks.read {
+            color: #7fd3ff; /* أزرق فاتح واضح على الأخضر */
+            opacity: 1;
+        }
 
 </style>
 
