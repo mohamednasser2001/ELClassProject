@@ -162,14 +162,18 @@ namespace ELClass.Areas.StudentArea.Controllers
             var studentId = _userManager.GetUserId(User);
             if (string.IsNullOrWhiteSpace(studentId)) return Unauthorized();
             if (string.IsNullOrWhiteSpace(instructorId)) return BadRequest();
+
             if (take < 1 || take > 50) take = 10;
 
+            // 1) هات الـ Conversation
             var convo = await _unitOfWork.ConversationRepository
                 .GetOneAsync(c => c.StudentId == studentId && c.InstructorId == instructorId, tracked: false);
 
+            // ✅ مفيش Conversation (لسه مفيش رسائل)
             if (convo == null)
-                return Json(new { conversationId = 0, hasMore = false, messages = Array.Empty<object>() });
+                return Json(new { conversationId = (int?)null, hasMore = false, messages = Array.Empty<object>() });
 
+            // 2) هات take+1 (عشان نعرف هل فيه أقدم ولا لا)
             var msgs = (await _unitOfWork.CHMessageRepository.GetAsync(
                 m => m.ConversationId == convo.Id && (beforeId == null || m.Id < beforeId),
                 tracked: false,
@@ -180,17 +184,18 @@ namespace ELClass.Areas.StudentArea.Controllers
             bool hasMore = msgs.Count > take;
             if (hasMore) msgs.RemoveAt(msgs.Count - 1);
 
-            var list = msgs
-                .OrderBy(m => m.Id)
-                .Select(m => new {
-                    id = m.Id,
-                    senderId = m.SenderId,
-                    receiverId = m.ReceiverId,
-                    content = m.Content,
-                    sentAt = m.SentAt,
-                    isRead = m.IsRead
-                })
-                .ToList();
+            // 3) اعرض من القديم للجديد
+            msgs.Reverse();
+
+            var list = msgs.Select(m => new
+            {
+                id = m.Id,
+                senderId = m.SenderId,
+                receiverId = m.ReceiverId,
+                content = m.Content,
+                sentAt = m.SentAt,
+                isRead = m.IsRead
+            });
 
             return Json(new { conversationId = convo.Id, hasMore, messages = list });
         }
@@ -240,34 +245,65 @@ namespace ELClass.Areas.StudentArea.Controllers
             var studentId = _userManager.GetUserId(User);
             if (string.IsNullOrWhiteSpace(studentId)) return Unauthorized();
 
-            var convos = await _unitOfWork.ConversationRepository.GetAsync(
-                c => c.StudentId == studentId,
-                tracked: false,
-                orderBy: q => q.OrderByDescending(c => c.LastMessageAt)
+            // 1) هات كل المدرسين اللي الطالب متعملهم Assign
+            var links = await _unitOfWork.InstructorStudentRepository.GetAsync(
+                x => x.StudentId == studentId,
+                tracked: false
             );
 
-            if (!convos.Any())
+            if (links == null || !links.Any())
                 return Json(Array.Empty<object>());
 
-            var instructorIds = convos.Select(c => c.InstructorId).Distinct().ToList();
+            var instructorIds = links
+                .Select(x => x.InstructorId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .ToList();
 
-            // ✅ هنا التعديل المهم: هات بيانات المدرس من AspNetUsers
+            // 2) هات الـ conversations (لو موجودة) بين الطالب والمدرسين دول
+            var convos = await _unitOfWork.ConversationRepository.GetAsync(
+                c => c.StudentId == studentId && instructorIds.Contains(c.InstructorId),
+                tracked: false
+            );
+
+            // map: InstructorId -> Conversation (آخر واحدة)
+            var convoByInstructor = convos
+                .GroupBy(c => c.InstructorId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.LastMessageAt).First());
+
+            // 3) هات أسماء المدرسين من AspNetUsers (ApplicationUser)
             var instructors = await _userManager.Users
                 .Where(u => instructorIds.Contains(u.Id))
-                .Select(u => new { u.Id, Name = u.UserName }) // غيّر UserName لو عندك NameEn
+                .Select(u => new { u.Id, Name = u.UserName }) // لو عندك NameEn/FullName حطها هنا
                 .ToListAsync();
 
-            var map = instructors.ToDictionary(x => x.Id, x => x.Name);
+            var nameMap = instructors.ToDictionary(x => x.Id, x => x.Name);
 
-            return Json(convos.Select(c => new {
-                id = c.Id,
-                instructorId = c.InstructorId,
-                instructorName = map.ContainsKey(c.InstructorId) ? map[c.InstructorId] : "Instructor",
-                lastMessage = c.LastMessagePreview,
-                lastMessageAt = c.LastMessageAt,
-                unread = c.UnreadForStudent
-            }));
+            // 4) ابني النتيجة: المدرس يظهر حتى لو مفيش Conversation
+            var result = instructorIds.Select(instructorId =>
+            {
+                convoByInstructor.TryGetValue(instructorId, out var c);
+
+                // fallback للترتيب: وقت الـ assign لو مفيش رسائل
+                var assignedAt = links.FirstOrDefault(x => x.InstructorId == instructorId)?.CreatedAt
+                                 ?? DateTime.MinValue;
+
+                return new
+                {
+                    id = c?.Id,
+                    instructorId = instructorId,
+                    instructorName = nameMap.ContainsKey(instructorId) ? nameMap[instructorId] : "Instructor",
+                    lastMessage = c?.LastMessagePreview ?? "",
+                    lastMessageAt = c?.LastMessageAt ?? assignedAt,
+                    unread = c?.UnreadForStudent ?? 0
+                };
+            })
+            .OrderByDescending(x => x.lastMessageAt)
+            .ToList();
+
+            return Json(result);
         }
+
 
 
 

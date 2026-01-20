@@ -182,7 +182,6 @@
     <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
 </button>
 
-
 <div id="chatWidget" class="chat-widget" aria-hidden="true">
     <div class="chat-header">
         <div class="header-left">
@@ -212,7 +211,9 @@
         </div>
     </div>
 </div>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 
@@ -224,16 +225,16 @@
         // =========================
         const API = {
             conversations: '/StudentArea/Home/GetMyConversations',
-            history: '/StudentArea/Home/GetChatHistory',   // ✅ لازم يدعم beforeId + take
+            history: '/StudentArea/Home/GetChatHistory',
             save: '/StudentArea/Home/SaveMessage',
-            markRead: '/StudentArea/Home/MarkAsRead'
+            markRead: '/StudentArea/Home/MarkAsRead' // (لسه موجود) بس القراءة اللايف هتبقى عبر Hub
         };
 
         // =========================
         // Elements
         // =========================
         const chatFab = document.getElementById('chatFab');
-        const chatFabBadge = document.getElementById('chatFabBadge'); // ✅ NEW
+        const chatFabBadge = document.getElementById('chatFabBadge');
         const chatWidget = document.getElementById('chatWidget');
         const chatCloseBtn = document.getElementById('chatCloseBtn');
         const chatBackBtn = document.getElementById('chatBackBtn');
@@ -261,7 +262,7 @@
             conversationId: null,
             conversationsCache: [],
 
-            // ✅ paging state
+            // paging
             take: 10,
             hasMore: true,
             oldestId: null,
@@ -269,7 +270,7 @@
         };
 
         // =========================
-        // Audio (NEW) - WebAudio Beep
+        // Audio (unused حاليا)
         // =========================
         let audioReady = false;
         let audioCtx = null;
@@ -284,10 +285,8 @@
             }
         }
 
-      
-
         // =========================
-        // FAB Badge + Pulse (NEW)
+        // FAB Badge + Pulse
         // =========================
         function setFabUnread(count) {
             const n = Math.max(0, parseInt(count || 0));
@@ -341,12 +340,11 @@
         }
 
         // =========================
-        // Open / Close (UPDATED to use .open)
+        // Open / Close
         // =========================
         function showWidget() {
             state.isOpen = true;
 
-            // ✅ بدل display: flex
             chatWidget.classList.add('open');
             chatWidget.setAttribute('aria-hidden', 'false');
             chatFab.style.display = 'none';
@@ -358,7 +356,6 @@
         function hideWidget() {
             state.isOpen = false;
 
-            // ✅ بدل display: none
             chatWidget.classList.remove('open');
             chatWidget.setAttribute('aria-hidden', 'true');
             chatFab.style.display = 'block';
@@ -367,7 +364,6 @@
             state.currentInstructorName = '';
             state.conversationId = null;
 
-            // reset paging
             state.hasMore = true;
             state.oldestId = null;
             state.isLoadingOlder = false;
@@ -387,7 +383,6 @@
             state.currentInstructorName = '';
             state.conversationId = null;
 
-            // reset thread UI + paging
             state.hasMore = true;
             state.oldestId = null;
             state.isLoadingOlder = false;
@@ -445,7 +440,6 @@
                 state.conversationsCache = Array.isArray(data) ? data : [];
                 renderConversations(state.conversationsCache);
 
-                // ✅ NEW: update FAB unread + pulse
                 syncFabUnreadFromList();
 
             } catch (e) {
@@ -474,17 +468,17 @@
                 const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
 
                 chatItemsBox.insertAdjacentHTML('beforeend', `
-                                        <div class="chat-item"
-                                             data-instructor-id="${escapeHtml(c.instructorId)}"
-                                             data-instructor-name="${escapeHtml(name)}">
-                                            <div class="avatar">${avatarHtml}</div>
-                                            <div class="meta">
-                                                <div class="name">${escapeHtml(name)}</div>
-                                                <div class="preview">${escapeHtml(preview)}</div>
-                                            </div>
-                                            ${unreadHtml}
-                                        </div>
-                                    `);
+                        <div class="chat-item"
+                             data-instructor-id="${escapeHtml(c.instructorId)}"
+                             data-instructor-name="${escapeHtml(name)}">
+                            <div class="avatar">${avatarHtml}</div>
+                            <div class="meta">
+                                <div class="name">${escapeHtml(name)}</div>
+                                <div class="preview">${escapeHtml(preview)}</div>
+                            </div>
+                            ${unreadHtml}
+                        </div>
+                    `);
             }
 
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
@@ -519,14 +513,14 @@
 
             await loadChatHistoryFirstPage();
 
+            // ✅ Mark read via Controller (counts) + via Hub (read-receipt live)
             await markAsRead(instructorId);
+            scheduleMarkAsReadHub();
+
             removeBadge(instructorId);
 
-            // ✅ NEW: بعد ما فتح الشات وقرأه، حدّث FAB unread
-            await loadMyConversations(); // يضمن الداتا من السيرفر صح
-            // أو لو مش عايز reload، ممكن syncFabUnreadFromList()
+            await loadMyConversations();
 
-            // انزل لآخر الشات بعد أول تحميل
             messagesBox.scrollTop = messagesBox.scrollHeight;
         }
 
@@ -552,7 +546,7 @@
             state.oldestId = null;
             state.isLoadingOlder = false;
 
-            await loadOlderMessages(); // يجيب آخر 10
+            await loadOlderMessages();
         }
 
         async function loadOlderMessages() {
@@ -598,48 +592,91 @@
             }
         }
 
+        // ✅ لو الطالب طلع لفوق يجيب قديم
         messagesBox.addEventListener('scroll', () => {
             if (messagesBox.scrollTop <= 10) {
                 loadOlderMessages();
             }
+
+            // ✅ لو الطالب نازل لتحت (يعني شايف آخر الرسائل) يبعت read-receipt
+            if (messagesBox.scrollTop + messagesBox.clientHeight >= messagesBox.scrollHeight - 6) {
+                scheduleMarkAsReadHub();
+            }
         });
 
+        // =========================
+        // ✓✓ Ticks (Student)
+        // =========================
+        function ticksHtml(isMine, isRead) {
+            if (!isMine) return '';
+            const cls = isRead ? 'ticks read' : 'ticks';
+            return `<span class="${cls}" title="${isRead ? 'Read' : 'Sent'}">✓✓</span>`;
+        }
+
         function messageNode(m) {
+            const id = (m.id ?? m.Id ?? '');
             const senderId = (m.senderId ?? m.SenderId ?? '');
             const receiverId = (m.receiverId ?? m.ReceiverId ?? '');
             const content = (m.content ?? m.Content ?? '');
             const sentAt = (m.sentAt ?? m.SentAt);
+            const isRead = (m.isRead ?? m.IsRead) === true;
 
             const isMine = currentUserId && senderId === currentUserId;
 
             const wrapper = document.createElement('div');
             wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
+            wrapper.dataset.messageId = String(id || '');
+
             wrapper.innerHTML = `
-                                    <div class="bubble">
-                                        ${escapeHtml(content)}
-                                        <span class="time">${escapeHtml(toTime(sentAt))}</span>
-                                    </div>
-                                `;
+                    <div class="bubble">
+                        ${escapeHtml(content)}
+                        <span class="time">
+                            ${escapeHtml(toTime(sentAt))}
+                            ${ticksHtml(isMine, isRead)}
+                        </span>
+                    </div>
+                `;
             return wrapper;
         }
 
         function renderMessage(m) {
-            messagesBox.appendChild(messageNode(m));
+            const node = messageNode(m);
+            messagesBox.appendChild(node);
+            return node; // ✅ مهم عشان نركب ID بعد الحفظ
+        }
+
+        // ✅ لما المدرس يقرا رسائل الطالب: لوّن ✓✓ للرسائل دي فقط
+        function markMessagesReadInUI(messageIds) {
+            if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+
+            messageIds.forEach(id => {
+                const row = messagesBox.querySelector(`.msg-row.mine[data-message-id="${CSS.escape(String(id))}"]`);
+                const tick = row?.querySelector('.ticks');
+                if (tick) {
+                    tick.classList.add('read');
+                    tick.title = 'Read';
+                }
+            });
         }
 
         // =========================
-        // Send Message
+        // Send Message (Student)
         // =========================
         async function sendMessageFromUI() {
             const text = (chatInput.value || '').trim();
             if (!state.currentInstructorId || !text) return;
 
             const nowIso = new Date().toISOString();
-            renderMessage({
+            const tempId = `tmp-${Date.now()}`;
+
+            // optimistic
+            const optimisticNode = renderMessage({
+                id: tempId,
                 senderId: currentUserId,
                 receiverId: state.currentInstructorId,
                 content: text,
-                sentAt: nowIso
+                sentAt: nowIso,
+                isRead: false
             });
 
             messagesBox.scrollTop = messagesBox.scrollHeight;
@@ -664,6 +701,12 @@
                     return;
                 }
 
+                // ✅ اربط الـ ID الحقيقي للرسالة الجديدة
+                const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
+                if (realId && optimisticNode) {
+                    optimisticNode.dataset.messageId = String(realId);
+                }
+
                 await sendRealtimeToInstructor(state.currentInstructorId, text);
 
             } catch (e) {
@@ -679,7 +722,6 @@
         // =========================
         // Open/Close/Back
         // =========================
-        // ✅ NEW: initAudio أول مرة user يعمل click
         chatFab.addEventListener('click', () => {
             initAudio();
             showWidget();
@@ -700,6 +742,22 @@
             .then(() => console.log("SignalR Connected (Student)!"))
             .catch(err => console.error(err.toString()));
 
+        // ✅ Debounce عشان مايبعتش MarkAsRead كتير
+        let readDebounceTimer = null;
+        function scheduleMarkAsReadHub() {
+            clearTimeout(readDebounceTimer);
+            readDebounceTimer = setTimeout(() => {
+                if (!state.isOpen) return;
+                if (!state.conversationId) return;
+                if (!state.currentInstructorId) return;
+
+                // ✅ ده اللي هيخلّي ✓✓ عند المدرس يتغير لايف
+                studentConnection.invoke("MarkAsRead", state.conversationId, state.currentInstructorId)
+                    .catch(err => console.error("MarkAsRead invoke error:", err));
+            }, 200);
+        }
+
+        // ✅ لما المدرس يبعت رسالة للطالب
         studentConnection.on("ReceiveMessage", async function (senderId, message, timestamp) {
 
             const sameOpenChat = state.isOpen && state.currentInstructorId && senderId === state.currentInstructorId;
@@ -714,16 +772,16 @@
 
                 messagesBox.scrollTop = messagesBox.scrollHeight;
 
+                // ✅ خلي read-receipt يتبعت للمدرس فورًا وهو فاتح
+                scheduleMarkAsReadHub();
+
+                // لو عايز تحتفظ بالكونترولر لتصفير unread counts
                 await markAsRead(senderId);
                 removeBadge(senderId);
 
-                // بعد القراءة حدّث unread
                 await loadMyConversations();
                 return;
             }
-
-            // ✅ NEW: صوت إشعار لو مش فاتح نفس الشات
-          
 
             const item = findItem(senderId);
             if (item) {
@@ -732,23 +790,27 @@
 
                 incrementBadge(senderId);
 
-                // ✅ NEW: update FAB unread (local sync)
                 syncFabUnreadFromList();
-                // الأفضل: reload من السيرفر لضمان الرقم الحقيقي
                 await loadMyConversations();
 
             } else {
-                if (state.isOpen) {
-                    await loadMyConversations();
-                } else {
-                    // حتى لو الودجت مقفول، نحدّث الرقم من السيرفر
-                    await loadMyConversations();
-                }
+                await loadMyConversations();
             }
         });
 
+        // ✅ Event من السيرفر لما المدرس يقرا رسائل الطالب
+        studentConnection.on("MessagesRead", function (payload) {
+            if (!payload) return;
+            if (!state.isOpen) return;
+            if (!state.conversationId) return;
+
+            // لازم نفس المحادثة
+            if (String(payload.conversationId) !== String(state.conversationId)) return;
+
+            markMessagesReadInUI(payload.messageIds);
+        });
+
         studentConnection.on("UpdateConversationList", function () {
-            // reload list (if open) + keep FAB in sync
             if (state.isOpen) loadMyConversations();
             else loadMyConversations();
         });
@@ -760,10 +822,8 @@
                 console.error(e.toString());
             }
         }
-
     </script>
 }
-
 
 <style>
     .chat-widget {
@@ -779,11 +839,9 @@
         box-shadow: 0 14px 36px rgba(0,0,0,.18);
         overflow: hidden;
         z-index: 9999;
-        /* ✅ مهم: لازم يبقى display:flex دايمًا عشان open/close يشتغل */
         display: flex;
         flex-direction: column;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-        /* ✅ Slide/Hide default */
         opacity: 0;
         pointer-events: none;
         transform: translateY(14px) scale(.98);
@@ -791,7 +849,6 @@
         transition: opacity .18s ease, transform .18s ease;
     }
 
-        /* ✅ لما يفتح */
         .chat-widget.open {
             opacity: 1;
             pointer-events: auto;
@@ -799,7 +856,7 @@
         }
 
     .chat-header {
-        background: #0ea85f; /* واتساب vibe */
+        background: #0ea85f;
         color: #fff;
         padding: 12px 12px;
         display: flex;
@@ -945,7 +1002,6 @@
         font-weight: 800;
     }
 
-    /* Thread */
     .messages {
         flex: 1;
         min-height: 0;
@@ -987,6 +1043,24 @@
         text-align: right;
     }
 
+    /* ===== Read Ticks (Student) ===== */
+    .ticks {
+        margin-left: 6px;
+        font-size: 11px;
+        opacity: .85;
+    }
+
+    /* قبل القراءة */
+    .mine .ticks {
+        color: rgba(255,255,255,.85);
+    }
+
+        /* بعد القراءة */
+        .mine .ticks.read {
+            color: #7fd3ff;
+            opacity: 1;
+        }
+
     .composer {
         border-top: 1px solid #eee;
         padding: 10px;
@@ -1014,7 +1088,6 @@
             font-size: 16px;
         }
 
-    /* ===== WhatsApp FAB ===== */
     .chat-fab {
         position: fixed;
         right: 18px;
@@ -1033,35 +1106,29 @@
         box-shadow: 0 10px 26px rgba(0,0,0,.22);
         transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
     }
-    .chat-fab-icon{
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
 
-    /* لمسة جمال */
-    background: rgba(255,255,255,.14);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
-}
+    .chat-fab-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+    }
 
-.chat-fab-icon i{
-    font-size: 28px;
-    transform: translateY(1px);
-}
-
-        .chat-fab i {
+        .chat-fab-icon i {
             font-size: 28px;
+            transform: translateY(1px);
         }
 
-        .chat-fab:hover {
-            transform: translateY(-2px) scale(1.04);
-            box-shadow: 0 14px 34px rgba(0,0,0,.28);
-            filter: brightness(1.03);
-        }
+    .chat-fab:hover {
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 14px 34px rgba(0,0,0,.28);
+        filter: brightness(1.03);
+    }
 
-    /* ===== Pulse Animation ===== */
     @@keyframes chatPulse {
         0% {
             box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 10px 26px rgba(0,0,0,.22);
@@ -1080,7 +1147,6 @@
         animation: chatPulse 1.4s ease-out infinite;
     }
 
-    /* ===== FAB Badge ===== */
     .chat-fab-badge {
         position: absolute;
         top: -6px;
@@ -1122,7 +1188,6 @@
         }
     }
 </style>
-
 
 
 
