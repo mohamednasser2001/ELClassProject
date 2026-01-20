@@ -334,10 +334,13 @@ namespace ELClass.Areas.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateInstructorAccount(
-        Models.Instructor ins,
-        string Password,
-        string ConfirmPassword)
+    Models.Instructor ins,
+    string Password,
+    string ConfirmPassword)
         {
+            
+            bool isArabic = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.IsRightToLeft;
+
             ModelState.Remove("ApplicationUser.Student");
             ModelState.Remove("ApplicationUser.Instructor");
             ModelState.Remove("ApplicationUser.NameAR");
@@ -345,13 +348,19 @@ namespace ELClass.Areas.Admin.Controllers
 
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "عفواً، هناك خطأ في البيانات المدخلة | Sorry, there is an error in the input data");
+                string errorMsg = isArabic
+                    ? "عفواً، هناك خطأ في البيانات المدخلة"
+                    : "Sorry, there is an error in the input data";
+                ModelState.AddModelError("", errorMsg);
                 return View(ins);
             }
 
             if (Password != ConfirmPassword)
             {
-                ModelState.AddModelError("", "كلمة المرور غير متطابقة | Passwords do not match");
+                string passMsg = isArabic
+                    ? "كلمة المرور غير متطابقة"
+                    : "Passwords do not match";
+                ModelState.AddModelError("", passMsg);
                 return View(ins);
             }
 
@@ -365,6 +374,8 @@ namespace ELClass.Areas.Admin.Controllers
                 PhoneNumber = ins.ApplicationUser.PhoneNumber,
                 AddressEN = ins.ApplicationUser.AddressEN,
                 AddressAR = ins.ApplicationUser.AddressAR,
+                NameAR = ins.NameAr,
+                NameEN = ins.NameEn,
                 EmailConfirmed = true
             };
 
@@ -375,7 +386,9 @@ namespace ELClass.Areas.Admin.Controllers
                 foreach (var error in result.Errors)
                     ModelState.AddModelError("", error.Description);
 
-                TempData["Error"] = "فشل إنشاء حساب المستخدم | Failed to create user account";
+                TempData["Error"] = isArabic
+                    ? "فشل إنشاء حساب المستخدم"
+                    : "Failed to create user account";
                 return View(ins);
             }
 
@@ -384,11 +397,14 @@ namespace ELClass.Areas.Admin.Controllers
             ins.Id = user.Id;
             ins.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ins.CreatedAt = DateTime.Now;
-            
+            ins.ApplicationUser = user;
+
             await unitOfWork.InstructorRepository.CreateAsync(ins);
             await unitOfWork.CommitAsync();
 
-            TempData["Success"] = "تم إنشاء حساب المحاضر بنجاح | Instructor account has been created successfully";
+            TempData["Success"] = isArabic
+                ? "تم إنشاء حساب المحاضر بنجاح"
+                : "Instructor account has been created successfully";
 
             return RedirectToAction("Index");
         }

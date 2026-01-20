@@ -1,12 +1,14 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Models
+@using DataAccess.Repositories.IRepositories
 @inject UserManager<ApplicationUser> UserManager
-
+@inject IUnitOfWork _unitOfWork
 @{
     var user = await UserManager.GetUserAsync(User);
     var userImage = user?.Img;
     var displayName = user?.NameEN ?? user?.UserName;
     var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var unreadCount = await _unitOfWork.ContactUsRepository.CountAsync(e =>e.IsReaded == false);
 }
 
 <!doctype html>
@@ -160,16 +162,37 @@
                     </li>
 
                     <li class="dropdown pc-h-item">
-                        <a class="pc-head-link head-link-secondary dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button">
+                        <a class="pc-head-link head-link-secondary dropdown-toggle arrow-none me-0 position-relative"
+                           data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                             <i class="ti ti-bell"></i>
+                            <span id="notification-badge-outer"
+                                  class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-circle @(unreadCount > 0 ? "" : "d-none")"
+                                  style="font-size: 10px; padding: 3px 6px;">
+                                @unreadCount
+                            </span>
                         </a>
+
                         <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
                             <div class="dropdown-header">
-                                <a href="#!" class="link-primary float-end text-decoration-underline">@(isArabic ? "تحديد الكل كمقروء" : "Mark as all read")</a>
+                                <a href="/Admin/ContactUs" class="link-primary float-end text-decoration-underline">
+                                    @(isArabic ? "عرض الكل" : "View All")
+                                </a>
                                 <h5>
                                     @(isArabic ? "كل التنبيهات" : "All Notification")
-                                    <span class="badge bg-warning rounded-pill ms-1">01</span>
+                                    <span id="notification-badge" class="badge bg-warning rounded-pill ms-1">
+                                        @unreadCount.ToString("00")
+                                    </span>
                                 </h5>
+                            </div>
+
+                            <div id="notification-list" style="max-height: 300px; overflow-y: auto;">
+                                @* يمكنك هنا عمل Loop لعرض آخر 5 رسائل غير مقروءة من الداتابيز عند تحميل الصفحة *@
+                            </div>
+
+                            <div class="text-center py-2">
+                                <a href="/Admin/ContactUs" class="btn btn-sm btn-light-primary w-90">
+                                    @(isArabic ? "الانتقال لرسائل التواصل" : "Go to Contact Messages")
+                                </a>
                             </div>
                         </div>
                     </li>
@@ -246,6 +269,7 @@
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
 
     <script>
         layout_change('light');
@@ -256,6 +280,103 @@
         preset_change('preset-1');
     </script>
 
+    <script>
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/realTimeHub")
+            .build();
+
+        connection.on("ReceiveMessage", function (title, message) {
+            // 1. تحديث الرقم الخارجي (الذي يظهر فوق الجرس)
+            var badgeOuter = document.getElementById("notification-badge-outer");
+            if (badgeOuter) {
+                var currentCount = parseInt(badgeOuter.innerText) || 0;
+                var newCount = currentCount + 1;
+                badgeOuter.innerText = newCount;
+                badgeOuter.classList.remove("d-none");
+            }
+
+            // 2. تحديث الرقم الداخلي
+            var badgeInner = document.getElementById("notification-badge");
+            if (badgeInner) {
+                var currentCountInner = parseInt(badgeInner.innerText) || 0;
+                var newCountFormatted = currentCountInner + 1;
+                badgeInner.innerText = newCountFormatted < 10 ? "0" + newCountFormatted : newCountFormatted;
+            }
+
+            // 3. إضافة الرسالة للقائمة بشكل جمالي
+            var list = document.getElementById("notification-list");
+            var item = `
+                <a href="/Admin/ContactUs" class="dropdown-item py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 ms-2">
+                            <h6 class="mb-1">${title}</h6>
+                            <p class="mb-0 text-muted small">${message}</p>
+                        </div>
+                    </div>
+                </a>
+                <hr class="m-0 text-light">`;
+
+            list.insertAdjacentHTML('afterbegin', item);
+
+            // 4. تشغيل الصوت (تم تغيير المسار لمسار أكثر استقراراً)
+            try {
+                var audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+                audio.play();
+            } catch (e) {
+                console.log("Audio play blocked by browser");
+            }
+
+            // 5. إظهار Toast سريع للمدير
+            showToast(title, 'info');
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+    </script>
+
+
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        $(document).ready(function () {
+            var successMessage = '@TempData["Success"]';
+            var errorMessage = '@TempData["Error"]';
+
+
+            function showToast(message, icon) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    },
+
+                    showClass: {
+                        popup: 'animate__animated animate__shakeX'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutRight'
+                    }
+                });
+
+                Toast.fire({
+                    icon: icon,
+                    title: message
+                });
+            }
+
+            if (successMessage && successMessage !== '') {
+                showToast(successMessage, 'success');
+            }
+
+            if (errorMessage && errorMessage !== '') {
+                showToast(errorMessage, 'error');
+            }
+        });
+    </script>
+
 </body>
 </html>

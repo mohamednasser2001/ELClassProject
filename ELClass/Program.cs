@@ -85,6 +85,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IDbIntializer, DbIntializer>();
 
+builder.Services.AddSignalR();
+
 // =======================
 // 2️⃣ Build App
 // =======================
@@ -118,7 +120,7 @@ app.UseAuthorization();
 // 4️⃣ Endpoints
 // =======================
 app.MapHub<ChatHub>("/chatHub");
-
+app.MapHub<RealTimeHub>("/realTimeHub");
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
