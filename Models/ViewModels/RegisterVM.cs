@@ -31,5 +31,7 @@ namespace Models.ViewModels
         [Compare(nameof(Password))]
         [DataType(DataType.Password)]
         public string ConfirmPassword { get; set; } = null!;
+        [Required(ErrorMessage = "You must accept the terms")]
+        public bool AcceptTerms { get; set; }
     }
 }
