@@ -26,7 +26,7 @@
     <div class="row mb-4">
         <div class="col-6 col-md-3">
             <div class="stat-card text-center">
-                <i class="fas fa-chalkboard-instructor fa-2x mb-2"></i>
+                <i class="fas fa-user fa-2x mb-2"></i>
                 <h3>@Model.InstructorCourses.Count()</h3>
                 <p>@(isArabic ? "المحاضرين" : "Instructors")</p>
             </div>
@@ -38,7 +38,28 @@
                 <p>@(isArabic ? "الطلاب" : "Students")</p>
             </div>
         </div>
+
+        <div class="col-6 col-md-3">
+            <a href="javascript:void(0)" onclick="toggleDetailsStatus(@Model.Course.Id)" class="text-decoration-none">
+                <div id="statusCard" class="text-center border shadow-sm p-3 @(Model.Course.IsActive ? "border-success bg-light" : "border-secondary bg-white")"
+                     style="border-radius:15px; border-width: 2px !important; cursor: pointer;">
+
+                    <i id="statusIcon" class="fas @(Model.Course.IsActive ? "fa-check-circle text-success" : "fa-times-circle text-secondary") fa-2x mb-2"></i>
+
+                    <h3 id="statusText" class="fw-bold @(Model.Course.IsActive ? "text-success" : "text-secondary")">
+                        @(Model.Course.IsActive ? (isArabic ? "نشط" : "Active") : (isArabic ? "غير نشط" : "Inactive"))
+                    </h3>
+
+                    <p class="mb-0 text-muted small">@(isArabic ? "اضغط لتغيير الحالة" : "Click to toggle status")</p>
+                </div>
+            </a>
+        </div>
+
     </div>
+
+    
+        
+    
 
     <div class="card custom-card mb-4">
         <div class="card-header">
@@ -278,5 +299,38 @@
                 }
             });
         }
+
+                function toggleDetailsStatus(courseId) {
+            $.ajax({
+                url: '/Admin/Course/ToggleStatus/' + courseId,
+                type: 'POST',
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        const isAr = '@isArabic' === 'True';
+                        const card = $('#statusCard');
+                        const icon = $('#statusIcon');
+                        const text = $('#statusText');
+
+                        if (response.isActive) {
+                            
+                            card.addClass('border-success bg-light').removeClass('border-secondary bg-white');
+                            icon.addClass('fa-check-circle text-success').removeClass('fa-times-circle text-secondary');
+                            text.addClass('text-success').removeClass('text-secondary').text(isAr ? "نشط" : "Active");
+                        } else {
+                            
+                            card.addClass('border-secondary bg-white').removeClass('border-success bg-light');
+                            icon.addClass('fa-times-circle text-secondary').removeClass('fa-check-circle text-success');
+                            text.addClass('text-secondary').removeClass('text-success').text(isAr ? "غير نشط" : "Inactive");
+                        }
+                        document.location.reload();
+                        toastr.success(response.message);
+                    }
+                }
+            });
+        }
+
     </script>
 }

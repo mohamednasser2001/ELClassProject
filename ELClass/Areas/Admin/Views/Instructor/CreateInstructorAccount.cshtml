@@ -70,6 +70,19 @@
                         </div>
 
                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SpecializationEn" class="small mb-1 fw-bold text-muted">@(isAr ? "التخصص (إنجليزي)" : "Specialization (English)")</label>
+                                <input asp-for="SpecializationEn" class="form-control" placeholder="e.g. Mathematics">
+                                <span asp-validation-for="SpecializationEn" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SpecializationAr" class="small mb-1 fw-bold text-muted">@(isAr ? "التخصص (عربي)" : "Specialization (Arabic)")</label>
+                                <input asp-for="SpecializationAr" class="form-control @(isAr ? "text-end" : "")" placeholder="مثلاً: رياضيات">
+                                <span asp-validation-for="SpecializationAr" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="small mb-1 fw-bold text-muted">@(isAr ? "رقم الهاتف" : "Phone Number")</label>
                                 <input type="text" asp-for="ApplicationUser.PhoneNumber" class="form-control" placeholder="01xxxxxxxxx">

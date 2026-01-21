@@ -28,24 +28,42 @@ namespace ELClass.Areas.Admin.Controllers
         {
             return View();
         }
-        
+
 
 
         public async Task<IActionResult> Details(string id)
         {
             var student = await unitOfWork.StudentRepository.GetOneAsync(e => e.Id == id, include: e => e.Include(e => e.ApplicationUser));
-            if (student == null)
-            {
-                return View("AdminNotFoundPage");
-            }
+            if (student == null) return View("AdminNotFoundPage");
 
-            var courses = await unitOfWork.StudentCourseRepository.GetAsync(filter: e => e.StudentId == id, include: e => e.Include(e => e.Course));
-            var instructors = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.StudentId == id, include: e => e.Include(e => e.Instructor));
+            
+            var courses = await unitOfWork.StudentCourseRepository.GetAsync(
+                filter: e => e.StudentId == id,
+                include: e => e.Include(e => e.Course)
+            );
+            var courseList = courses.ToList();
+
+            
+            var directInstructors = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.StudentId == id);
+            var directIds = directInstructors.Select(i => i.InstructorId).ToList();
+
+            
+            var studentCourseIds = courseList.Select(c => c.CourseId).ToList();
+
+            
+            var courseInstructors = await unitOfWork.InstructorCourseRepository.GetAsync(
+                filter: ic => studentCourseIds.Contains(ic.CourseId)
+            );
+            var courseIds = courseInstructors.Select(ic => ic.InstructorId).ToList();
+
+            
+            ViewBag.TotalInstructorsCount = directIds.Union(courseIds).Distinct().Count();
+
             var model = new StudentDetailsVM()
             {
                 Student = student,
-                StudentCourses = courses.ToList() ?? new List<StudentCourse>(),
-                InstructorStudents = instructors.ToList() ?? new List<InstructorStudent>()
+                StudentCourses = courseList ?? new List<StudentCourse>(),
+                //InstructorStudents = directInstructors.ToList()
             };
             return View(model);
         }
@@ -219,41 +237,54 @@ namespace ELClass.Areas.Admin.Controllers
                 var studentId = Request.Form["studentId"].FirstOrDefault();
 
                 
-                Expression<Func<InstructorStudent, bool>> filter = e =>
-                    e.StudentId == studentId &&
-                    (string.IsNullOrEmpty(searchValue) || e.Instructor.NameEn.Contains(searchValue) || e.Instructor.NameAr.Contains(searchValue));
+                var directInstructors = await unitOfWork.InstructorStudentRepository.GetAsync(
+                    filter: e => e.StudentId == studentId
+                );
+                var directIds = directInstructors.Select(i => i.InstructorId);
 
                 
-                var instructors = await unitOfWork.InstructorStudentRepository.GetAsync(
-                    filter: filter,
-                    include: e => e.Include(x => x.Instructor),
-                    orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue),
+                var courseInstructors = await unitOfWork.InstructorCourseRepository.GetAsync(
+                    filter: ic => ic.Course.StudentCourses.Any(sc => sc.StudentId == studentId)
+                );
+                var courseIds = courseInstructors.Select(ic => ic.InstructorId);
+
+                
+                var allUniqueInstructorIds = directIds.Union(courseIds).ToList();
+
+                
+                Expression<Func<Models.Instructor, bool>> instructorFilter = i =>
+                    allUniqueInstructorIds.Contains(i.Id) &&
+                    (string.IsNullOrEmpty(searchValue) || i.NameEn.Contains(searchValue) || i.NameAr.Contains(searchValue));
+
+                
+                var totalCount = allUniqueInstructorIds.Count;
+                var filteredCount = await unitOfWork.InstructorRepository.CountAsync(filter: instructorFilter);
+
+                
+                var instructors = await unitOfWork.InstructorRepository.GetAsync(
+                    filter: instructorFilter,
+                    orderBy: q => q.OrderBy(i => i.NameEn),
                     skip: start,
                     take: length
                 );
 
-                
-               
-                var recordsFiltered = await unitOfWork.InstructorStudentRepository.CountAsync(filter: filter);
-
-
                 var result = instructors.Select(i => new
                 {
-                    instructorId = i.InstructorId,
-                    name = i.Instructor.NameEn 
+                    instructorId = i.Id,
+                    name = i.NameEn
                 }).ToList();
 
                 return Json(new
                 {
                     draw,
-                    recordsTotal = recordsFiltered, 
-                    recordsFiltered = recordsFiltered,
+                    recordsTotal = totalCount,
+                    recordsFiltered = filteredCount,
                     data = result
                 });
             }
             catch (Exception ex)
             {
-                return Json(new { error = ex.Message });
+                return Json(new { draw = Request.Form["draw"].FirstOrDefault(), recordsTotal = 0, recordsFiltered = 0, data = new List<object>(), error = ex.Message });
             }
         }
 
