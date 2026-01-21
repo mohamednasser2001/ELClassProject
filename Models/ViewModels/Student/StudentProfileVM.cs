@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Models.ViewModels.Student
 {
     public class StudentProfileVM
     {
+        [Required]
         public string Id { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Full Name is required")]
@@ -15,12 +17,13 @@ namespace Models.ViewModels.Student
         public string FullName { get; set; } = string.Empty;
 
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
-        [Display(Name = "Email")]
-        public string Email { get; set; }  = string.Empty;
+        [ValidateNever]
+        public string Email { get; set; } = string.Empty;
 
         [Display(Name = "Phone Number")]
         public string? PhoneNumber { get; set; }
 
+        [ValidateNever]
         public string? ProfileImageUrl { get; set; }
 
         [Display(Name = "Profile Picture")]
@@ -36,13 +39,13 @@ namespace Models.ViewModels.Student
         [Compare("NewPassword", ErrorMessage = "Passwords do not match")]
         public string? ConfirmPassword { get; set; }
 
+        [ValidateNever]
         public string Initials =>
             string.IsNullOrWhiteSpace(FullName)
                 ? "??"
                 : string.Concat(
-                    FullName
-                        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(x => x[0])
+                    FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(x => x[0])
                   ).ToUpper();
     }
 }

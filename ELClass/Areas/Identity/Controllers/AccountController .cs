@@ -157,7 +157,7 @@ namespace ELClass.Areas.Identity.Controllers
                         lang == "ar" ? $"برجاء تأكيد حسابك من خلال <a href='{confirmationLink}'>الضغط هنا</a>"
                                      : $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.");
 
-                    TempData["success-notification"] = lang == "ar"
+                    TempData["success-notifications"] = lang == "ar"
                         ? "تم إنشاء الحساب! برجاء مراجعة بريدك الإلكتروني لتفعيله."
                         : "Account Created! Please check your email to confirm.";
 
@@ -169,6 +169,9 @@ namespace ELClass.Areas.Identity.Controllers
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
+                    TempData["error-notifications"] = lang == "ar"
+                                ? "فشل إنشاء الحساب. راجع الأخطاء."
+                                : "Registration failed. Please check the errors.";
                     return View(registerVM);
                 }
             }
