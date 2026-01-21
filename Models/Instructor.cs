@@ -20,6 +20,8 @@ namespace Models
         public string BioAr { get; set; } = string.Empty;
         [Required(ErrorMessage = "the bio is required")]
         public string BioEn { get; set; } = string.Empty;
+        public string SpecializationEn { get; set; } = string.Empty;
+        public string SpecializationAr { get; set; } = string.Empty;
 
         public ApplicationUser ApplicationUser { get; set; } = null!;
         public ICollection<InstructorStudent> InstructorStudents { get; set; } = new List<InstructorStudent>();

@@ -69,6 +69,25 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
+                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "التخصص (بالإنجليزي)" : "Specialization (English)")</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-briefcase text-orange"></i></span>
+                            <input class="form-control bg-light border-start-0" asp-for="SpecializationEn" type="text" placeholder="@(isAr ? "أدخل التخصص بالإنجليزي" : "Enter English Specialization")">
+                        </div>
+                        <span class="text-danger" asp-validation-for="SpecializationEn"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "التخصص (بالعربي)" : "Specialization (Arabic)")</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white @(isAr ? "border-start-0" : "border-end-0")"><i class="fas fa-briefcase text-orange"></i></span>
+                            <input class="form-control bg-light @(isAr ? "border-end-0 text-end" : "border-start-0")" type="text" asp-for="SpecializationAr" placeholder="@(isAr ? "أدخل التخصص بالعربي" : "Enter Arabic Specialization")">
+                        </div>
+                        <span class="text-danger" asp-validation-for="SpecializationAr"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label class="small mb-2 fw-bold text-muted">@(isAr ? "السيرة الذاتية (بالإنجليزي)" : "Bio (English)")</label>
                         <textarea class="form-control bg-light" asp-for="BioEn" rows="4" placeholder="@(isAr ? "نبذة عن المحاضر..." : "Tell us about the instructor...")"></textarea>
                         <span class="text-danger" asp-validation-for="BioEn"></span>

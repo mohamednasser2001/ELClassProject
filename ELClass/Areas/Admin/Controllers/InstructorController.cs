@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using Models.ViewModels;
 using Models.ViewModels.Instructor;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -41,14 +43,36 @@ namespace ELClass.Areas.Admin.Controllers
                 return View("AdminNotFoundPage");
             }
 
-            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Course));
-            var students = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Student));
+            // 1. جلب الكورسات الخاصة بالمحاضر
+            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(
+                filter: e => e.InstructorId == id,
+                include: e => e.Include(e => e.Course)
+            );
+            var courseList = courses.ToList();
+
+            
+            var directStudents = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.InstructorId == id);
+            var directStudentIds = directStudents.Select(s => s.StudentId).ToList();
+
+            
+            var instructorCourseIds = courseList.Select(c => c.CourseId).ToList();
+
+            
+            var courseStudents = await unitOfWork.StudentCourseRepository.GetAsync(
+                filter: sc => instructorCourseIds.Contains(sc.CourseId)
+            );
+            var courseStudentIds = courseStudents.Select(sc => sc.StudentId).ToList();
+
+            
+            ViewBag.TotalStudentsCount = directStudentIds.Union(courseStudentIds).Distinct().Count();
+
             var model = new InstructorDetailsVM()
             {
                 Instructor = instructor,
-                InstructorCourses = courses.ToList() ?? new List<InstructorCourse>(),
-                InstructorStudents = students.ToList() ?? new List<InstructorStudent>()
+                InstructorCourses = courseList,
+                //InstructorStudents = directStudents.ToList() 
             };
+
             return View(model);
         }
 
@@ -224,7 +248,8 @@ namespace ELClass.Areas.Admin.Controllers
                 var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
                 var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
-                var lang = HttpContext.Session.GetString("Language") ?? "en";
+                var lang = Request.Form["language"].FirstOrDefault() ??
+                   (CultureInfo.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en");
 
                 Expression<Func<Models.Instructor, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
                     (c.NameEn.Contains(searchValue) || c.NameAr.Contains(searchValue) ||
@@ -298,24 +323,42 @@ namespace ELClass.Areas.Admin.Controllers
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
                 var instructorId = Request.Form["instructorId"].FirstOrDefault();
 
-                Expression<Func<InstructorStudent, bool>> filter = e => e.InstructorId == instructorId &&
-                    (string.IsNullOrEmpty(searchValue) || e.Student.NameEn.Contains(searchValue) || e.Student.NameAr.Contains(searchValue));
+                
+                var directStudents = await unitOfWork.InstructorStudentRepository.GetAsync(
+                    filter: e => e.InstructorId == instructorId
+                );
+                var directIds = directStudents.Select(s => s.StudentId);
 
-                var students = await unitOfWork.InstructorStudentRepository.GetAsync(
-                    filter: filter,
-                    include: e => e.Include(x => x.Student),
-                    orderBy: q => q.OrderByDescending(x => x.CreatedAt ?? DateTime.MinValue),
+                
+                var courseStudents = await unitOfWork.StudentCourseRepository.GetAsync(
+                    filter: e => e.Course.InstructorCourses.Any(ic => ic.InstructorId == instructorId)
+                );
+                var courseIds = courseStudents.Select(s => s.StudentId);
+
+                
+                var allUniqueStudentIds = directIds.Union(courseIds).ToList();
+
+                
+                Expression<Func<Student, bool>> studentFilter = s =>
+                    allUniqueStudentIds.Contains(s.Id) &&
+                    (string.IsNullOrEmpty(searchValue) || s.NameEn.Contains(searchValue) || s.NameAr.Contains(searchValue));
+
+                
+                var totalCount = allUniqueStudentIds.Count;
+                var filteredCount = await unitOfWork.StudentRepository.CountAsync(filter: studentFilter);
+
+                
+                var students = await unitOfWork.StudentRepository.GetAsync(
+                    filter: studentFilter,
+                    orderBy: q => q.OrderBy(s => s.NameEn),
                     skip: start,
                     take: length
                 );
 
-                var totalCount = await unitOfWork.InstructorStudentRepository.CountAsync(filter: e => e.InstructorId == instructorId);
-                var filteredCount = await unitOfWork.InstructorStudentRepository.CountAsync(filter: filter);
-
                 var result = students.Select(s => new
                 {
-                    studentId = s.StudentId,
-                    name = s.Student.NameEn
+                    studentId = s.Id,
+                    name = s.NameEn
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalCount, recordsFiltered = filteredCount, data = result });
@@ -464,6 +507,8 @@ namespace ELClass.Areas.Admin.Controllers
                 NameEn = ins.NameEn,
                 BioAr = ins.BioAr,
                 BioEn = ins.BioEn,
+                SpecializationEn = ins.SpecializationEn,
+                SpecializationAr = ins.SpecializationAr,  
                 CreatedById= User.FindFirstValue(ClaimTypes.NameIdentifier),
                 CreatedAt = DateTime.Now
             };
@@ -521,6 +566,8 @@ namespace ELClass.Areas.Admin.Controllers
                     instructorInDb.NameAr = ins.NameAr;
                     instructorInDb.BioEn = ins.BioEn;
                     instructorInDb.BioAr = ins.BioAr;
+                    instructorInDb.SpecializationEn = ins.SpecializationEn;
+                    instructorInDb.SpecializationAr = ins.SpecializationAr;
 
                     if (instructorInDb.ApplicationUser != null && ins.ApplicationUser != null)
                     {

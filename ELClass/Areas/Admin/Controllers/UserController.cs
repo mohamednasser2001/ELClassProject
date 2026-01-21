@@ -86,9 +86,9 @@ namespace ELClass.Areas.Admin.Controllers
             }
         }
 
-        public IActionResult Details(string id)
+        public async Task<IActionResult> Details(string id)
         {
-            var user = _unitOfWork.InstructorRepository.GetOneAsync(u => u.Id == id);
+            var user = await _unitOfWork.InstructorRepository.GetOneAsync(u => u.Id == id);
             if (user == null)
             {
                 return RedirectToAction("Details", "Student", new { id = id });

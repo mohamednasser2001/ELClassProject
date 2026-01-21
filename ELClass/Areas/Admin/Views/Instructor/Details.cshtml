@@ -37,7 +37,7 @@
         <div class="col-6 col-md-6 col-xl-3 mb-3">
             <div class="stat-card text-center">
                 <i class="fas fa-users fa-2x mb-2"></i>
-                <h3 id="studentsCountDisp">@Model.InstructorStudents.Count()</h3>
+                <h3 id="studentsCountDisp">@ViewBag.TotalStudentsCount</h3>
                 <p>@(isArabic ? "الطلاب" : "Students")</p>
             </div>
         </div>
@@ -101,6 +101,17 @@
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted @(isArabic ? "text-start" : "text-end") d-block">الاسم بالكامل (AR)</label>
                                 <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.NameAr" style="text-align:right" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Specialization (EN)</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" asp-for="Instructor.SpecializationEn" type="text" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted @(isArabic ? "text-start" : "text-end") d-block">التخصص (AR)</label>
+                                <input class="form-control form-editable bg-light border-0 py-2" type="text" asp-for="Instructor.SpecializationAr" style="text-align:right" readonly>
                             </div>
                         </div>
 

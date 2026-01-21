@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels.Course;
 using Models.ViewModels.Student;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -46,6 +47,34 @@ namespace ELClass.Areas.Admin.Controllers
                 StudentCourses = students.ToList()
             };
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int id)
+        {
+            var course = await unitOfWork.CourseRepository.GetOneAsync(e => e.Id == id);
+
+            if (course == null)
+            {
+                return Json(new { success = false, message = "الكورس غير موجود" });
+            }
+
+            // عكس الحالة الحالية
+            course.IsActive = !course.IsActive;
+
+            // تحديث البيانات (بما إنك وارث من AuditLogging، الـ EF هيحدث الـ Update Date تلقائياً)
+            await unitOfWork.CourseRepository.EditAsync(course);
+            await unitOfWork.CommitAsync();
+
+            bool isAr = CultureInfo.CurrentCulture.Name.StartsWith("ar");
+            string msg;
+
+            if (course.IsActive)
+                msg = isAr ? "تم تنشيط الكورس بنجاح" : "Course activated successfully";
+            else
+                msg = isAr ? "تم تعطيل الكورس بنجاح" : "Course deactivated successfully";
+
+            return Json(new { success = true, message = msg });
         }
 
         public async Task<IActionResult> SearchStudents(string term, int courseId)
@@ -259,7 +288,9 @@ namespace ELClass.Areas.Admin.Controllers
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
                 var orderColumnIndex = Request.Form["order[0][column]"].FirstOrDefault();
                 var orderDir = Request.Form["order[0][dir]"].FirstOrDefault();
-                var lang = HttpContext.Session.GetString("Language") ?? "en";
+
+                
+                var lang = CultureInfo.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
 
                 Expression<Func<Course, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
                     (c.TitleEn.Contains(searchValue) || c.TitleAr.Contains(searchValue) ||
@@ -294,11 +325,13 @@ namespace ELClass.Areas.Admin.Controllers
                 var totalRecords = await unitOfWork.CourseRepository.CountAsync();
                 var filteredRecords = await unitOfWork.CourseRepository.CountAsync(filter: filter);
 
+                
                 var result = courses.Select(c => new
                 {
                     id = c.Id,
                     title = lang == "en" ? c.TitleEn : c.TitleAr,
-                    description = lang == "en" ? c.DescriptionEn : c.DescriptionAr
+                    description = lang == "en" ? c.DescriptionEn : c.DescriptionAr,
+                    isActive = c.IsActive 
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalRecords, recordsFiltered = filteredRecords, data = result });
@@ -414,6 +447,7 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.LessonRepository.DeleteAllAsync(relatedLessons);
                 }
 
+                
                 
                 await unitOfWork.CourseRepository.DeleteAsync(course);
 

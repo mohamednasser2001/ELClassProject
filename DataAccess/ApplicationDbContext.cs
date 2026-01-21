@@ -33,6 +33,7 @@ namespace DataAccess
         public DbSet<InstructorStudent> InstructorStudents { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ContactUs> ContactUs { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
