@@ -256,6 +256,7 @@
 </div>
 
 @* Instructor Chat Widget *@
+
 <button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
     <span class="chat-fab-icon" aria-hidden="true">
         <i class="fab fa-whatsapp"></i>
@@ -263,13 +264,17 @@
     <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
 </button>
 
-
-<div id="chatWidget" class="chat-widget" aria-hidden="true">
+<div id="chatWidget" class="chat-widget" aria-hidden="true" role="dialog" aria-label="Chat widget">
     <div class="chat-header">
         <div class="header-left">
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
-            <div class="title" id="chatHeaderTitle">Chats</div>
+
+            <div class="header-titles">
+                <div class="title" id="chatHeaderTitle">Chats</div>
+                <div class="subtitle hidden" id="chatHeaderSubTitle"> </div>
+            </div>
         </div>
+
         <div class="actions">
             <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">✕</button>
         </div>
@@ -280,12 +285,13 @@
         <div class="chat-search">
             <input id="chatSearch" type="text" placeholder="Search students..." autocomplete="off" />
         </div>
-        <div class="chat-items" id="chatItems"></div>
+
+        <div class="chat-items" id="chatItems" role="list"></div>
     </div>
 
     @* Screen 2: Thread *@
     <div class="chat-screen hidden" id="screenThread">
-        <div class="messages" id="messagesBox"></div>
+        <div class="messages" id="messagesBox" role="log" aria-live="polite"></div>
 
         <div class="composer">
             <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
@@ -293,6 +299,7 @@
         </div>
     </div>
 </div>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
@@ -701,19 +708,20 @@
         }
 
         // لما الطالب يعمل MarkAsRead و يبعت event للمدرس:
-        function markMessagesReadInUI(messageIds) {
+        function markMessagesReadUI(messageIds) {
             if (!Array.isArray(messageIds) || messageIds.length === 0) return;
 
             messageIds.forEach(id => {
-                const row = messagesBox.querySelector(`.msg-row.mine[data-message-id="${CSS.escape(String(id))}"]`);
-                const tick = row?.querySelector('.ticks');
+                const tick = document.querySelector(
+                    `.msg-row.mine[data-message-id="${CSS.escape(String(id))}"] .ticks`
+                );
+
                 if (tick) {
-                    tick.classList.add('read');
-                    tick.title = 'Read';
+                    tick.classList.add("read");
+                    tick.title = "Read";
                 }
             });
         }
-
 
         // =========================
         // Mark read (instructor marking student messages read)
@@ -797,7 +805,6 @@
             }
         }
 
-
         sendBtn.addEventListener('click', sendMessage);
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendMessage();
@@ -828,30 +835,28 @@
             if (state.isOpen) loadConversations();
         });
 
-        // ✅ NEW: Event من الطالب لما يعمل MarkAsRead
-        // لازم تضيفه في السيرفر (هديك الكود تحت)
+        // ✅ FIX: Event من الطالب لما يعمل MarkAsRead
+        // هنا التعديل الوحيد: بدل ما نلوّن الكل، نلوّن IDs اللي جايه من السيرفر فورًا
         connection.on("MessagesRead", function (payload) {
             console.log("✅ MessagesRead event arrived:", payload);
-            console.log("state.conversationId:", state.conversationId, "state.currentStudentId:", state.currentStudentId);
 
-            // لو payload جايه كـ string (قديم)
-            if (typeof payload === "string") {
-                console.log("⚠️ payload is string (studentId):", payload);
-                // جرّب لوّن كل رسائل mine كاختبار سريع
-                messagesBox.querySelectorAll('.msg-row.mine .ticks').forEach(t => t.classList.add('read'));
+            // لو السيرفر بعت array مباشرة: [55,56,...]
+            if (Array.isArray(payload)) {
+                markMessagesReadUI(payload);
                 return;
             }
 
-            // لو payload object
-            const convId = payload?.conversationId;
+            // لو السيرفر بعت object: { conversationId, messageIds }
             const ids = payload?.messageIds;
 
-            console.log("payload.conversationId:", convId, "payload.messageIds:", ids);
+            if (Array.isArray(ids) && ids.length > 0) {
+                // (اختياري) تقدر تشيك على conversationId لو بتحبه
+                // const convId = payload?.conversationId;
+                // if (state.conversationId && convId && String(convId) !== String(state.conversationId)) return;
 
-            // ✅ مؤقتًا: لوّن كل رسائل mine (عشان نتأكد CSS شغال)
-            messagesBox.querySelectorAll('.msg-row.mine .ticks').forEach(t => t.classList.add('read'));
+                markMessagesReadUI(ids); // ✅ ده اللي يخلي اللون يتغير فورًا
+            }
         });
-
 
         connection.on("ReceiveMessage", async function (senderId, message, timestamp) {
             // senderId = studentId
@@ -900,377 +905,8 @@
 }
 
 
-
-
-<style>
-    .chat-widget {
-        position: fixed;
-        right: 18px;
-        bottom: 18px;
-        width: 360px;
-        max-width: calc(100vw - 36px);
-        height: 560px;
-        max-height: calc(100vh - 36px);
-        background: #fff;
-        border-radius: 18px;
-        box-shadow: 0 14px 36px rgba(0,0,0,.18);
-        overflow: hidden;
-        z-index: 9999;
-        /* ✅ لازم يبقى flex دايمًا */
-        display: flex;
-        flex-direction: column;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-        /* ✅ مقفول افتراضيًا (بـ opacity مش display:none) */
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(14px) scale(.98);
-        transform-origin: bottom right;
-        transition: opacity .18s ease, transform .18s ease;
-    }
-
-        /* ✅ مفتوح */
-        .chat-widget.open {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0) scale(1);
-        }
-
-    .chat-header {
-        background: #0ea85f;
-        color: #fff;
-        padding: 12px 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-    }
-
-    .chat-header .title {
-        font-weight: 800;
-        font-size: 14px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .chat-btn-icon {
-        width: 34px;
-        height: 34px;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        background: rgba(255,255,255,.18);
-        color: #fff;
-        font-size: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .chat-screen {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-    }
-
-    .hidden {
-        display: none !important;
-    }
-
-    .chat-search {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-
-        .chat-search input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e7e7e7;
-            border-radius: 12px;
-            outline: none;
-            font-size: 13px;
-        }
-
-    .chat-items {
-        overflow: auto;
-        padding: 8px;
-        flex: 1;
-    }
-
-    .chat-item {
-        padding: 10px;
-        border-radius: 14px;
-        cursor: pointer;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        position: relative;
-    }
-
-        .chat-item:hover {
-            background: #f6f7f7;
-        }
-
-        .chat-item.active {
-            background: #e9fbf2;
-        }
-
-    .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 999px;
-        background: #e7e7e7;
-        flex: 0 0 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-
-    .avatar-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .avatar-text {
-        font-weight: 800;
-        font-size: 13px;
-        color: #2b2b2b;
-    }
-
-    .chat-item .meta {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .chat-item .name {
-        font-size: 13px;
-        font-weight: 800;
-        margin-bottom: 2px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .chat-item .preview {
-        font-size: 12px;
-        color: #6f6f6f;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .badge {
-        min-width: 20px;
-        height: 20px;
-        border-radius: 999px;
-        background: #00c853;
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        padding: 0 6px;
-        font-weight: 800;
-    }
-
-    .messages {
-        flex: 1;
-        min-height: 0;
-        overflow: auto;
-        padding: 12px;
-        background: #f3f5f4;
-    }
-
-    .msg-row {
-        display: flex;
-        margin-bottom: 10px;
-    }
-
-        .msg-row.mine {
-            justify-content: flex-end;
-        }
-
-    .bubble {
-        max-width: 85%;
-        padding: 10px 12px;
-        border-radius: 14px;
-        background: #ffffff;
-        color: #000;
-        font-size: 13px;
-        line-height: 1.35;
-        box-shadow: 0 6px 14px rgba(0,0,0,.06);
-    }
-
-    .mine .bubble {
-        background: #0ea85f;
-        color: #fff;
-    }
-
-    .bubble .time {
-        display: block;
-        font-size: 10px;
-        opacity: .85;
-        margin-top: 4px;
-        text-align: right;
-    }
-
-    .composer {
-        border-top: 1px solid #eee;
-        padding: 10px;
-        display: flex;
-        gap: 8px;
-        background: #fff;
-    }
-
-        .composer input {
-            flex: 1;
-            padding: 10px 12px;
-            border-radius: 14px;
-            border: 1px solid #e7e7e7;
-            outline: none;
-            font-size: 13px;
-        }
-
-        .composer button {
-            width: 44px;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            background: #0ea85f;
-            color: #fff;
-            font-size: 16px;
-        }
-
-    /* ===== WhatsApp FAB ===== */
-    .chat-fab {
-        position: fixed;
-        right: 18px;
-        bottom: 18px;
-        width: 58px;
-        height: 58px;
-        border-radius: 50%;
-        background: #25D366;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 26px rgba(0,0,0,.22);
-        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
-    }
-
-        .chat-fab:hover {
-            transform: translateY(-2px) scale(1.04);
-            box-shadow: 0 14px 34px rgba(0,0,0,.28);
-            filter: brightness(1.03);
-        }
-
-    /* ✅ تحسين شكل الأيقونة (نفس تعديل HTML الجديد) */
-    .chat-fab-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255,255,255,.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
-    }
-
-        .chat-fab-icon i {
-            font-size: 28px;
-            transform: translateY(1px);
-        }
-
-    /* ===== Pulse Animation ===== */
-    @@keyframes chatPulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 10px 26px rgba(0,0,0,.22);
-        }
-
-        70% {
-            box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
-        }
-    }
-
-    .chat-fab.pulse {
-        animation: chatPulse 1.4s ease-out infinite;
-    }
-
-    /* ===== FAB Badge ===== */
-    .chat-fab-badge {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        min-width: 22px;
-        height: 22px;
-        padding: 0 6px;
-        border-radius: 999px;
-        background: #ff3b30;
-        color: #fff;
-        font-size: 12px;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid #fff;
-    }
-
-    .empty {
-        padding: 14px;
-        color: #777;
-        font-size: 13px;
-        text-align: center;
-    }
-
-    @@media (max-width: 520px) {
-        .chat-widget {
-            width: 100%;
-            height: 100%;
-            right: 0;
-            bottom: 0;
-            border-radius: 0;
-            transform-origin: bottom right;
-        }
-
-        .chat-fab {
-            right: 14px;
-            bottom: 14px;
-        }
-    }
-    /* ===== Read Ticks ===== */
-    .ticks {
-        margin-left: 6px;
-        font-size: 11px;
-        opacity: .85;
-    }
-
-    /* قبل القراءة (داخل رسائل المدرس) */
-    .mine .ticks {
-        color: rgba(255,255,255,.85);
-    }
-
-        /* بعد القراءة */
-        .mine .ticks.read {
-            color: #7fd3ff; /* أزرق فاتح واضح على الأخضر */
-            opacity: 1;
-        }
-
-</style>
+@section Styles {
+    <link rel="stylesheet" href="~/css/ChatMessage.css" asp-append-version="true" />
+}
 
 

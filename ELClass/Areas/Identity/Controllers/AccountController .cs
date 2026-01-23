@@ -56,131 +56,185 @@ namespace ELClass.Areas.Identity.Controllers
         [HttpGet]
         public IActionResult Register(string? email = null)
         {
-            
             ViewBag.GoogleEmail = email;
+            ViewBag.IsExternalRegister = !string.IsNullOrWhiteSpace(email);
             return View();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterVM registerVM, string? returnUrl = null)
         {
+            // 1) returnUrl safety (prevent open redirect)
+            returnUrl ??= Url.Content("~/");
+            if (!Url.IsLocalUrl(returnUrl))
+                returnUrl = Url.Content("~/");
+
+            // 2) language (culture is reliable)
+            var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName; // "en" / "ar"
+
             try
             {
-                returnUrl ??= Url.Content("~/");
+                // 3) External login info early
+                var info = await _signInManager.GetExternalLoginInfoAsync();
 
-                // التحقق من النموذج
-                if (!ModelState.IsValid)
-                    return View(registerVM);
+                // لو جاي من Google: شيل validation الباسورد من ModelState
+                if (info != null)
+                {
+                    ModelState.Remove(nameof(RegisterVM.Password));
+                    ModelState.Remove(nameof(RegisterVM.ConfirmPassword));
+                }
 
                 #region check model state with language
-                var lang = HttpContext.Session.GetString("Language") ?? "en";
 
+                // Required name based on language
                 if ((lang == "en" && string.IsNullOrWhiteSpace(registerVM.NameEN)) ||
                     (lang == "ar" && string.IsNullOrWhiteSpace(registerVM.NameAR)))
                 {
                     ModelState.AddModelError(
-                        lang == "en" ? "NameEN" : "NameAR",
+                        lang == "en" ? nameof(RegisterVM.NameEN) : nameof(RegisterVM.NameAR),
                         lang == "en" ? "Name is required" : "الاسم مطلوب"
                     );
                 }
 
+                // Fill missing name to avoid NULL in DB
+                if (string.IsNullOrWhiteSpace(registerVM.NameEN) && !string.IsNullOrWhiteSpace(registerVM.NameAR))
+                    registerVM.NameEN = registerVM.NameAR;
+
+                if (string.IsNullOrWhiteSpace(registerVM.NameAR) && !string.IsNullOrWhiteSpace(registerVM.NameEN))
+                    registerVM.NameAR = registerVM.NameEN;
+
+                // Email required (extra safety)
                 if (string.IsNullOrWhiteSpace(registerVM.Email))
                 {
-                    ModelState.AddModelError("Email", "Email is required");
+                    ModelState.AddModelError(nameof(RegisterVM.Email), lang == "ar" ? "البريد مطلوب" : "Email is required");
                 }
 
-                // لو المستخدم جاي من Google، Password ممكن يكون فاضي
-                var info = await _signInManager.GetExternalLoginInfoAsync();
-                if (info == null && string.IsNullOrWhiteSpace(registerVM.Password))
-                {
-                    ModelState.AddModelError("Password", "Password is required");
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    return View(registerVM);
-                }
                 #endregion
 
-                ApplicationUser applicationUser = new ApplicationUser()
+                if (!ModelState.IsValid)
+                    return View(registerVM);
+
+                // Normalize email
+                var email = registerVM.Email!.Trim();
+
+                // 4) Generate safe unique username (بدل Random عشان ما يعملش collision)
+                var userName = await GenerateUniqueUsernameAsync(email);
+
+                var applicationUser = new ApplicationUser
                 {
                     NameEN = registerVM.NameEN,
                     NameAR = registerVM.NameAR,
-                    Email = registerVM.Email,
-                    UserName = registerVM.Email.Split('@')[0] + new Random().Next(10, 99).ToString(),
-                    
+                    Email = email,
+                    UserName = userName
                 };
 
                 IdentityResult result;
 
                 if (info != null)
                 {
-                    // المستخدم جاي من Google → نسجل بدون باسورد
+                    // Google → بدون باسورد
                     result = await _userManager.CreateAsync(applicationUser);
                 }
                 else
                 {
-                    // التسجيل العادي
-                    result = await _userManager.CreateAsync(applicationUser, registerVM.Password);
+                    // عادي
+                    result = await _userManager.CreateAsync(applicationUser, registerVM.Password!);
                 }
 
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(applicationUser, "Student");
-
-                    var std = new Student()
-                    {
-                        Id = applicationUser.Id,
-                        NameAr = applicationUser.NameAR ?? "",
-                        NameEn = applicationUser.NameEN ?? "",
-                        CreatedDate = DateTime.Now
-                    };
-                    await unitOfWork.StudentRepository.CreateAsync(std);
-                    await unitOfWork.CommitAsync();
-
-                    // لو المستخدم جاي من Google → نربط الحساب
-                    if (info != null)
-                    {
-                        await _userManager.AddLoginAsync(applicationUser, info);
-                        await _signInManager.SignInAsync(applicationUser, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
-
-                    // التسجيل العادي → تأكيد الإيميل
-                    var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser);
-
-                    var confirmationLink = Url.Action("ConfirmEmail", "Account",
-                        new { userId = applicationUser.Id, token = token }, Request.Scheme);
-
-                    await _emailSender.SendEmailAsync(applicationUser.Email,
-                        lang == "ar" ? "تأكيد الحساب" : "Confirm Your Email",
-                        lang == "ar" ? $"برجاء تأكيد حسابك من خلال <a href='{confirmationLink}'>الضغط هنا</a>"
-                                     : $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.");
-
-                    TempData["success-notifications"] = lang == "ar"
-                        ? "تم إنشاء الحساب! برجاء مراجعة بريدك الإلكتروني لتفعيله."
-                        : "Account Created! Please check your email to confirm.";
-
-                    return RedirectToAction(nameof(Login));
-                }
-                else
+                if (!result.Succeeded)
                 {
                     foreach (var error in result.Errors)
-                    {
                         ModelState.AddModelError(string.Empty, error.Description);
-                    }
+
                     TempData["error-notifications"] = lang == "ar"
-                                ? "فشل إنشاء الحساب. راجع الأخطاء."
-                                : "Registration failed. Please check the errors.";
+                        ? "فشل إنشاء الحساب. راجع الأخطاء."
+                        : "Registration failed. Please check the errors.";
+
                     return View(registerVM);
                 }
+
+                // Success
+                await _userManager.AddToRoleAsync(applicationUser, "Student");
+
+                var std = new Student
+                {
+                    Id = applicationUser.Id,
+                    NameAr = applicationUser.NameAR ?? "",
+                    NameEn = applicationUser.NameEN ?? "",
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await unitOfWork.StudentRepository.CreateAsync(std);
+                await unitOfWork.CommitAsync();
+
+                // Google → Link + SignIn + Redirect
+                if (info != null)
+                {
+                    await _userManager.AddLoginAsync(applicationUser, info);
+                    await _signInManager.SignInAsync(applicationUser, isPersistent: false);
+                    return LocalRedirect(returnUrl);
+                }
+
+                // Normal registration → Email confirmation
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser);
+
+                var confirmationLink = Url.Action(
+                    "ConfirmEmail",
+                    "Account",
+                    new { userId = applicationUser.Id, token },
+                    Request.Scheme
+                );
+
+                await _emailSender.SendEmailAsync(
+                    applicationUser.Email!,
+                    lang == "ar" ? "تأكيد الحساب" : "Confirm Your Email",
+                    lang == "ar"
+                        ? $"برجاء تأكيد حسابك من خلال <a href='{confirmationLink}'>الضغط هنا</a>"
+                        : $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>."
+                );
+
+                TempData["success-notifications"] = lang == "ar"
+                    ? "تم إنشاء الحساب! برجاء مراجعة بريدك الإلكتروني لتفعيله."
+                    : "Account Created! Please check your email to confirm.";
+
+                return RedirectToAction(nameof(Login));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                // ما نعرضش تفاصيل Exception للمستخدم (security)
+                ModelState.AddModelError(string.Empty,
+                    lang == "ar" ? "حدث خطأ غير متوقع. حاول مرة أخرى." : "An unexpected error occurred. Please try again.");
+
                 return View(registerVM);
             }
         }
+
+        // Helper: generate unique username (بدون Random)
+        private async Task<string> GenerateUniqueUsernameAsync(string email)
+        {
+            var baseName = email.Split('@')[0];
+
+            // sanitize
+            baseName = new string(baseName.Where(ch => char.IsLetterOrDigit(ch) || ch == '_' || ch == '.').ToArray());
+            if (string.IsNullOrWhiteSpace(baseName))
+                baseName = "user";
+
+            // try a few times
+            for (int i = 0; i < 5; i++)
+            {
+                var suffix = Guid.NewGuid().ToString("N").Substring(0, 6);
+                var candidate = $"{baseName}_{suffix}";
+
+                var exists = await _userManager.FindByNameAsync(candidate);
+                if (exists == null)
+                    return candidate;
+            }
+
+            // fallback
+            return $"{baseName}_{Guid.NewGuid():N}";
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId,string token)

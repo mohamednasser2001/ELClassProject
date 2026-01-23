@@ -22,13 +22,11 @@ namespace Models.ViewModels
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         public string Email { get; set; } = null!;
 
-        [Required(ErrorMessage = "Password is required")]
-        [DataType(DataType.Password)]
         [StringLength(32, MinimumLength = 8)]
+        [DataType(DataType.Password)]
         public string Password { get; set; } = null!;
 
-        [Required(ErrorMessage = "Confirm Password is required")]
-        [Compare(nameof(Password))]
+        [Compare(nameof(Password), ErrorMessage = "Password and confirmation password do not match.")]
         [DataType(DataType.Password)]
         public string ConfirmPassword { get; set; } = null!;
         [Required(ErrorMessage = "You must accept the terms")]
