@@ -468,17 +468,17 @@
                 const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
 
                 chatItemsBox.insertAdjacentHTML('beforeend', `
-                        <div class="chat-item"
-                             data-instructor-id="${escapeHtml(c.instructorId)}"
-                             data-instructor-name="${escapeHtml(name)}">
-                            <div class="avatar">${avatarHtml}</div>
-                            <div class="meta">
-                                <div class="name">${escapeHtml(name)}</div>
-                                <div class="preview">${escapeHtml(preview)}</div>
+                            <div class="chat-item"
+                                 data-instructor-id="${escapeHtml(c.instructorId)}"
+                                 data-instructor-name="${escapeHtml(name)}">
+                                <div class="avatar">${avatarHtml}</div>
+                                <div class="meta">
+                                    <div class="name">${escapeHtml(name)}</div>
+                                    <div class="preview">${escapeHtml(preview)}</div>
+                                </div>
+                                ${unreadHtml}
                             </div>
-                            ${unreadHtml}
-                        </div>
-                    `);
+                        `);
             }
 
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
@@ -628,14 +628,14 @@
             wrapper.dataset.messageId = String(id || '');
 
             wrapper.innerHTML = `
-                    <div class="bubble">
-                        ${escapeHtml(content)}
-                        <span class="time">
-                            ${escapeHtml(toTime(sentAt))}
-                            ${ticksHtml(isMine, isRead)}
-                        </span>
-                    </div>
-                `;
+                        <div class="bubble">
+                            ${escapeHtml(content)}
+                            <span class="time">
+                                ${escapeHtml(toTime(sentAt))}
+                                ${ticksHtml(isMine, isRead)}
+                            </span>
+                        </div>
+                    `;
             return wrapper;
         }
 
@@ -825,370 +825,9 @@
     </script>
 }
 
-<style>
-    .chat-widget {
-        position: fixed;
-        right: 18px;
-        bottom: 18px;
-        width: 360px;
-        max-width: calc(100vw - 36px);
-        height: 560px;
-        max-height: calc(100vh - 36px);
-        background: #fff;
-        border-radius: 18px;
-        box-shadow: 0 14px 36px rgba(0,0,0,.18);
-        overflow: hidden;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(14px) scale(.98);
-        transform-origin: bottom right;
-        transition: opacity .18s ease, transform .18s ease;
-    }
-
-        .chat-widget.open {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0) scale(1);
-        }
-
-    .chat-header {
-        background: #0ea85f;
-        color: #fff;
-        padding: 12px 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-    }
-
-    .chat-header .title {
-        font-weight: 800;
-        font-size: 14px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .chat-btn-icon {
-        width: 34px;
-        height: 34px;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        background: rgba(255,255,255,.18);
-        color: #fff;
-        font-size: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .chat-screen {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-    }
-
-    .hidden {
-        display: none !important;
-    }
-
-    .chat-search {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-
-        .chat-search input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e7e7e7;
-            border-radius: 12px;
-            outline: none;
-            font-size: 13px;
-        }
-
-    .chat-items {
-        overflow: auto;
-        padding: 8px;
-        flex: 1;
-    }
-
-    .chat-item {
-        padding: 10px;
-        border-radius: 14px;
-        cursor: pointer;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        position: relative;
-    }
-
-        .chat-item:hover {
-            background: #f6f7f7;
-        }
-
-        .chat-item.active {
-            background: #e9fbf2;
-        }
-
-    .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 999px;
-        background: #e7e7e7;
-        flex: 0 0 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-
-    .avatar-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .avatar-text {
-        font-weight: 800;
-        font-size: 13px;
-        color: #2b2b2b;
-    }
-
-    .chat-item .meta {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .chat-item .name {
-        font-size: 13px;
-        font-weight: 800;
-        margin-bottom: 2px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .chat-item .preview {
-        font-size: 12px;
-        color: #6f6f6f;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .badge {
-        min-width: 20px;
-        height: 20px;
-        border-radius: 999px;
-        background: #00c853;
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        padding: 0 6px;
-        font-weight: 800;
-    }
-
-    .messages {
-        flex: 1;
-        min-height: 0;
-        overflow: auto;
-        padding: 12px;
-        background: #f3f5f4;
-    }
-
-    .msg-row {
-        display: flex;
-        margin-bottom: 10px;
-    }
-
-        .msg-row.mine {
-            justify-content: flex-end;
-        }
-
-    .bubble {
-        max-width: 85%;
-        padding: 10px 12px;
-        border-radius: 14px;
-        background: #ffffff;
-        color: #000;
-        font-size: 13px;
-        line-height: 1.35;
-        box-shadow: 0 6px 14px rgba(0,0,0,.06);
-    }
-
-    .mine .bubble {
-        background: #0ea85f;
-        color: #fff;
-    }
-
-    .bubble .time {
-        display: block;
-        font-size: 10px;
-        opacity: .85;
-        margin-top: 4px;
-        text-align: right;
-    }
-
-    /* ===== Read Ticks (Student) ===== */
-    .ticks {
-        margin-left: 6px;
-        font-size: 11px;
-        opacity: .85;
-    }
-
-    /* قبل القراءة */
-    .mine .ticks {
-        color: rgba(255,255,255,.85);
-    }
-
-        /* بعد القراءة */
-        .mine .ticks.read {
-            color: #7fd3ff;
-            opacity: 1;
-        }
-
-    .composer {
-        border-top: 1px solid #eee;
-        padding: 10px;
-        display: flex;
-        gap: 8px;
-        background: #fff;
-    }
-
-        .composer input {
-            flex: 1;
-            padding: 10px 12px;
-            border-radius: 14px;
-            border: 1px solid #e7e7e7;
-            outline: none;
-            font-size: 13px;
-        }
-
-        .composer button {
-            width: 44px;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            background: #0ea85f;
-            color: #fff;
-            font-size: 16px;
-        }
-
-    .chat-fab {
-        position: fixed;
-        right: 18px;
-        bottom: 18px;
-        width: 58px;
-        height: 58px;
-        border-radius: 50%;
-        background: #25D366;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 26px rgba(0,0,0,.22);
-        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
-    }
-
-    .chat-fab-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255,255,255,.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
-    }
-
-        .chat-fab-icon i {
-            font-size: 28px;
-            transform: translateY(1px);
-        }
-
-    .chat-fab:hover {
-        transform: translateY(-2px) scale(1.04);
-        box-shadow: 0 14px 34px rgba(0,0,0,.28);
-        filter: brightness(1.03);
-    }
-
-    @@keyframes chatPulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 10px 26px rgba(0,0,0,.22);
-        }
-
-        70% {
-            box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 10px 26px rgba(0,0,0,.22);
-        }
-    }
-
-    .chat-fab.pulse {
-        animation: chatPulse 1.4s ease-out infinite;
-    }
-
-    .chat-fab-badge {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        min-width: 22px;
-        height: 22px;
-        padding: 0 6px;
-        border-radius: 999px;
-        background: #ff3b30;
-        color: #fff;
-        font-size: 12px;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid #fff;
-    }
-
-    .empty {
-        padding: 14px;
-        color: #777;
-        font-size: 13px;
-        text-align: center;
-    }
-
-    @@media (max-width: 520px) {
-        .chat-widget {
-            width: 100%;
-            height: 100%;
-            right: 0;
-            bottom: 0;
-            border-radius: 0;
-            transform-origin: bottom right;
-        }
-
-        .chat-fab {
-            right: 14px;
-            bottom: 14px;
-        }
-    }
-</style>
-
+@section Styles {
+    <link rel="stylesheet" href="~/css/ChatMessage.css" asp-append-version="true" />
+}
 
 
 
