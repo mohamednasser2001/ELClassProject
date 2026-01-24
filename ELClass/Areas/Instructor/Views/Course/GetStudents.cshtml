@@ -1,4 +1,16 @@
-﻿@using Models
+﻿@{
+    if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+    {
+        Layout = "_AdminLayout";
+    }
+    else
+    {
+        Layout = "_InstrcutorLayout";
+    }
+}
+
+
+@using Models
 @model IEnumerable<StudentCourse>
 
 @{
@@ -6,7 +18,7 @@
     int index = 1;
 }
 
-@* ستايل Tailwind و Material Icons *@
+
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
 <div class="bg-white dark:bg-slate-900 min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-200">

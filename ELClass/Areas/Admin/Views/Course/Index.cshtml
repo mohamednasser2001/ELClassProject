@@ -30,7 +30,6 @@
                                     <th style="text-align: @(isArabic ? "right" : "left")">#</th>
                                     <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "العنوان" : "Title")</th>
                                     <th style="text-align: @(isArabic ? "right" : "left")" class="d-none d-md-table-cell">@(isArabic ? "الوصف" : "Description")</th>
-                                    <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "الحالة" : "Status")</th>
                                     <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "التحكم" : "Actions")</th>
                                 </tr>
                             </thead>
@@ -99,29 +98,6 @@
                         }
                     },
                     {
-                        data: 'isActive',
-                        render: function (data, type, row) {
-                            const currentCulture = '@(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en")';
-                            const isArabic = currentCulture === 'ar';
-
-                            
-                            const activeText = isArabic ? "نشط" : "Active";
-                            const inactiveText = isArabic ? "غير نشط" : "Inactive";
-
-                            
-                            const badgeClass = data ? 'bg-success' : 'bg-secondary';
-                            const text = data ? activeText : inactiveText;
-                            const icon = data ? 'fa-check-circle' : 'fa-times-circle';
-
-                            return `
-                                <button type="button" class="btn btn-sm ${badgeClass} text-white d-inline-flex align-items-center text-nowrap px-md-3 px-2 shadow-sm"
-                                        style="border-radius:20px; min-width:90px;"
-                                        onclick="toggleStatus(${row.id})">
-                                    <i class="fas ${icon} me-1"></i> ${text}
-                                </button>`;
-                        }
-                    },
-                    {
                         data: 'id',
                         render: function (data) {
                             return `
@@ -161,21 +137,7 @@
             });
         }
 
-        function toggleStatus(courseId) {
-            $.ajax({
-                url: '/Admin/Course/ToggleStatus/' + courseId,
-                type: 'POST',
-                success: function (response) {
-                    if (response.success) {
-                        
-                        $('#coursesTable').DataTable().ajax.reload(null, false);
-                        toastr.success(response.message);
-                    } else {
-                        toastr.error("حدث خطأ ما");
-                    }
-                }
-            });
-        }
+       
 
     </script>
 }
