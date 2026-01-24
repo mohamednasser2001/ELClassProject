@@ -1,4 +1,15 @@
-﻿@using Models
+﻿@{
+    if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+    {
+        Layout = "_AdminLayout";
+    }
+    else
+    {
+        Layout = "_InstrcutorLayout";
+    }
+}
+
+@using Models
 @model IEnumerable<Lesson>
 
 @{

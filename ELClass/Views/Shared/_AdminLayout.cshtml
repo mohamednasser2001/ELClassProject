@@ -167,31 +167,34 @@
                             <i class="ti ti-bell"></i>
                             <span id="notification-badge-outer"
                                   class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-circle @(unreadCount > 0 ? "" : "d-none")"
-                                  style="font-size: 10px; padding: 3px 6px;">
+                                  style="font-size: 10px; padding: 3px 6px; border: 2px solid #fff;">
                                 @unreadCount
                             </span>
                         </a>
 
-                        <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
-                            <div class="dropdown-header">
-                                <a href="/Admin/ContactUs" class="link-primary float-end text-decoration-underline">
-                                    @(isArabic ? "عرض الكل" : "View All")
-                                </a>
-                                <h5>
-                                    @(isArabic ? "كل التنبيهات" : "All Notification")
-                                    <span id="notification-badge" class="badge bg-warning rounded-pill ms-1">
+                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown p-0" style="width: 300px; border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                            <div class="p-3 text-white" style="background-color: #0053B3;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h6 class="m-0 text-white">@(isArabic ? "التنبيهات" : "Notifications")</h6>
+                                    <span id="notification-badge" class="badge bg-white text-primary" style="color: #0053B3 !important;">
                                         @unreadCount.ToString("00")
                                     </span>
-                                </h5>
+                                </div>
                             </div>
 
-                            <div id="notification-list" style="max-height: 300px; overflow-y: auto;">
-                                @* يمكنك هنا عمل Loop لعرض آخر 5 رسائل غير مقروءة من الداتابيز عند تحميل الصفحة *@
+                            <div id="notification-list" style="max-height: 250px; overflow-y: auto; background: #fff;">
+                                @if (unreadCount == 0)
+                                {
+                                    <div id="no-notifications-msg" class="p-4 text-center">
+                                        <i class="ti ti-mail-opened d-block mb-2 text-muted" style="font-size: 24px;"></i>
+                                        <p class="text-muted small mb-0">@(isArabic ? "لا توجد رسائل جديدة" : "No new messages")</p>
+                                    </div>
+                                }
                             </div>
 
-                            <div class="text-center py-2">
-                                <a href="/Admin/ContactUs" class="btn btn-sm btn-light-primary w-90">
-                                    @(isArabic ? "الانتقال لرسائل التواصل" : "Go to Contact Messages")
+                            <div class="p-2 bg-light border-top">
+                                <a href="/Admin/ContactUs" class="btn btn-sm w-100 text-white" style="background-color: #0053B3; transition: 0.3s; border-radius: 8px;">
+                                    @(isArabic ? "عرض كل الرسائل" : "View All Messages")
                                 </a>
                             </div>
                         </div>
@@ -199,7 +202,10 @@
 
                     <li class="dropdown pc-h-item header-user-profile">
                         <a class="pc-head-link head-link-primary dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button">
-                            <img src="@(!string.IsNullOrEmpty(userImage) ? Url.Content("~/images/users/" + userImage) : $"https://ui-avatars.com/api/?name={displayName}&background=fffaf5&color=fd7e14&size=128")" alt="user-image" class="user-avtar" />
+                            <img src="@(!string.IsNullOrEmpty(userImage) ? Url.Content("~/images/users/" + userImage) : $"https://ui-avatars.com/api/?name={displayName}&background=fffaf5&color=fd7e14&size=128")"
+                                 alt="user-image"
+                                 class="user-avtar"
+                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                             <span><i class="ti ti-settings"></i></span>
                         </a>
                         <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
@@ -286,48 +292,52 @@
             .withUrl("/realTimeHub")
             .build();
 
-        connection.on("ReceiveMessage", function (title, message) {
-            // 1. تحديث الرقم الخارجي (الذي يظهر فوق الجرس)
+               connection.on("ReceiveMessage", function (title, message) {
+            // 1. تحديث العدادات (خارجي وداخلي)
             var badgeOuter = document.getElementById("notification-badge-outer");
+            var badgeInner = document.getElementById("notification-badge");
+
+            var currentCount = parseInt(badgeOuter.innerText) || 0;
+            var newCount = currentCount + 1;
+
             if (badgeOuter) {
-                var currentCount = parseInt(badgeOuter.innerText) || 0;
-                var newCount = currentCount + 1;
                 badgeOuter.innerText = newCount;
                 badgeOuter.classList.remove("d-none");
             }
-
-            // 2. تحديث الرقم الداخلي
-            var badgeInner = document.getElementById("notification-badge");
             if (badgeInner) {
-                var currentCountInner = parseInt(badgeInner.innerText) || 0;
-                var newCountFormatted = currentCountInner + 1;
-                badgeInner.innerText = newCountFormatted < 10 ? "0" + newCountFormatted : newCountFormatted;
+                badgeInner.innerText = newCount < 10 ? "0" + newCount : newCount;
             }
 
-            // 3. إضافة الرسالة للقائمة بشكل جمالي
+            // 2. إخفاء رسالة "لا يوجد إشعارات" إذا كانت موجودة
+            var noMsg = document.getElementById("no-notifications-msg");
+            if (noMsg) noMsg.style.display = 'none';
+
+            // 3. إضافة الإشعار الجديد بتنسيق متوافق مع الألوان (استخدام اللون الأصفر من Palette)
             var list = document.getElementById("notification-list");
             var item = `
-                <a href="/Admin/ContactUs" class="dropdown-item py-3">
+                <a href="/Admin/ContactUs" class="dropdown-item py-3 border-bottom animate__animated animate__fadeInDown" style="background: #f8f9fa;">
                     <div class="d-flex align-items-center">
-                        <div class="flex-grow-1 ms-2">
-                            <h6 class="mb-1">${title}</h6>
-                            <p class="mb-0 text-muted small">${message}</p>
+                        <div class="flex-shrink-0">
+                            <div class="avtar avtar-s bg-light-warning">
+                                <i class="ti ti-mail text-warning" style="color: #FCC247 !important;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 fw-bold" style="font-size: 13px;">${title}</h6>
+                            <small class="text-muted">@(isArabic ? "رسالة جديدة الآن" : "New message just now")</small>
                         </div>
                     </div>
-                </a>
-                <hr class="m-0 text-light">`;
+                </a>`;
 
             list.insertAdjacentHTML('afterbegin', item);
 
-            // 4. تشغيل الصوت (تم تغيير المسار لمسار أكثر استقراراً)
+            // 4. تشغيل الصوت
             try {
                 var audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
                 audio.play();
-            } catch (e) {
-                console.log("Audio play blocked by browser");
-            }
+            } catch (e) { console.log("Audio play blocked"); }
 
-            // 5. إظهار Toast سريع للمدير
+            // 5. الـ Toast
             showToast(title, 'info');
         });
 
