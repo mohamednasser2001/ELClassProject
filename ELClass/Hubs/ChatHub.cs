@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using DataAccess.Repositories.IRepositories;
+using ELClass.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -10,11 +11,55 @@ public class ChatHub : Hub
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserManager<ApplicationUser> _userManager;
-    public ChatHub(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
+    private readonly OnlineUserTracker _tracker;
+
+    public ChatHub(
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager,
+        OnlineUserTracker tracker
+    )
     {
-        this._unitOfWork = unitOfWork;
-        this._userManager = userManager;
+        _unitOfWork = unitOfWork;
+        _userManager = userManager;
+        _tracker = tracker;
     }
+
+    public override async Task OnConnectedAsync()
+    {
+        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            var becameOnline = _tracker.Add(userId, Context.ConnectionId);
+            if (becameOnline)
+            {
+                await Clients.All.SendAsync("PresenceChanged", userId, true);
+            }
+
+            Console.WriteLine($"[Presence] {userId} connected");
+        }
+
+        await base.OnConnectedAsync();
+    }
+
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            var becameOffline = _tracker.Remove(userId, Context.ConnectionId);
+            if (becameOffline)
+            {
+                await Clients.All.SendAsync("PresenceChanged", userId, false);
+            }
+
+            Console.WriteLine($"[Presence] {userId} disconnected");
+        }
+
+        await base.OnDisconnectedAsync(exception);
+    }
+
+
     public async Task SendMessage(string receiverId, string message)
     {
         var senderId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -26,7 +71,7 @@ public class ChatHub : Hub
         await Clients.Users(receiverId, senderId).SendAsync("UpdateConversationList");
     }
 
-    // ✅ NEW: لما الطرف التاني يقرا الرسائل
+
     public async Task MarkAsRead(int conversationId, string otherUserId)
     {
         var readerId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -34,9 +79,12 @@ public class ChatHub : Hub
 
         var now = DateTime.UtcNow;
 
-        // هات رسائل الطرف التاني اللي "وصلت للطالب" ولسه مش مقروءة
         var unread = (await _unitOfWork.CHMessageRepository.GetAsync())
-             .Where(m => m.ConversationId == conversationId && m.SenderId == otherUserId && m.ReceiverId == readerId && !m.IsRead).ToList();
+             .Where(m => m.ConversationId == conversationId
+                      && m.SenderId == otherUserId
+                      && m.ReceiverId == readerId
+                      && !m.IsRead)
+             .ToList();
 
         if (unread.Count == 0) return;
 
@@ -50,7 +98,6 @@ public class ChatHub : Hub
 
         var messageIds = unread.Select(m => m.Id).ToList();
 
-        // بلّغ الطرف التاني إن الرسائل دي اتقرت
         await Clients.User(otherUserId).SendAsync("MessagesRead", new
         {
             conversationId,
@@ -58,9 +105,24 @@ public class ChatHub : Hub
             readAt = now
         });
 
-        // اختياري: تحديث الليست عند الطرفين
+ 
         await Clients.Users(otherUserId, readerId).SendAsync("UpdateConversationList");
     }
+
+    public Task<bool> IsUserOnline(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult(false);
+
+        return Task.FromResult(_tracker.IsOnline(userId));
+    }
+    public Task<string?> WhoAmI()
+    {
+        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Task.FromResult(userId);
+    }
+
+
 
 }
 

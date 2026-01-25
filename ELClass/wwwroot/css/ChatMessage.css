@@ -498,3 +498,35 @@
         color: #2f5f9e;
         font-weight: 700;
     }
+.chat-status {
+    font-size: 12px;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+    .chat-status.online {
+        color: #6fbf8e; /* أخضر هادي */
+    }
+
+    .chat-status.offline {
+        color: #9aa0a6; /* رمادي هادي */
+    }
+.chat-header {
+    background-color: #355f8c; /* أزرق أهدى */
+}
+
+/* ✅ Online/Offline subtitle under the name */
+#chatHeaderSubTitle.subtitle {
+    font-size: 12px;
+    margin-top: 2px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+    #chatHeaderSubTitle.subtitle.online {
+        color: #6fbf8e; /* أخضر هادي */
+    }
+
+    #chatHeaderSubTitle.subtitle.offline {
+        color: #9aa0a6; /* رمادي هادي */
+    }

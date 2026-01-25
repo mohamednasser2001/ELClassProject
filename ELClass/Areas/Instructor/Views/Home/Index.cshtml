@@ -270,8 +270,11 @@
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
 
             <div class="header-titles">
+                <!-- ✅ نفس الـid موجود عشان ما نكسرش JS قديم -->
                 <div class="title" id="chatHeaderTitle">Chats</div>
-                <div class="subtitle hidden" id="chatHeaderSubTitle"> </div>
+
+                <!-- ✅ هنستخدمه كـ Online/Offline تحت الاسم -->
+                <div class="subtitle hidden" id="chatHeaderSubTitle"></div>
             </div>
         </div>
 
@@ -301,6 +304,7 @@
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 
@@ -324,6 +328,9 @@
         const chatCloseBtn = document.getElementById('chatCloseBtn');
         const chatBackBtn = document.getElementById('chatBackBtn');
         const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+
+        // ✅ NEW: subtitle for Online/Offline
+        const chatHeaderSubTitle = document.getElementById('chatHeaderSubTitle');
 
         const screenList = document.getElementById('screenList');
         const screenThread = document.getElementById('screenThread');
@@ -388,6 +395,24 @@
             });
         }
 
+        // ✅ NEW: Header status helper
+        function setHeaderStatus(isOnline) {
+            if (!chatHeaderSubTitle) return;
+
+            chatHeaderSubTitle.classList.remove('hidden');
+            chatHeaderSubTitle.classList.toggle('online', !!isOnline);
+            chatHeaderSubTitle.classList.toggle('offline', !isOnline);
+
+            chatHeaderSubTitle.textContent = isOnline ? '● Online' : '● Offline';
+        }
+
+        function clearHeaderStatus() {
+            if (!chatHeaderSubTitle) return;
+            chatHeaderSubTitle.textContent = '';
+            chatHeaderSubTitle.classList.add('hidden');
+            chatHeaderSubTitle.classList.remove('online', 'offline');
+        }
+
         // =========================
         // FAB Badge + Pulse
         // =========================
@@ -444,6 +469,9 @@
             messagesBox.innerHTML = '';
             chatInput.value = '';
             chatSearch.value = '';
+
+            // ✅ NEW
+            clearHeaderStatus();
         }
 
         function showListScreen() {
@@ -460,6 +488,9 @@
             state.isLoadingOlder = false;
 
             messagesBox.innerHTML = '';
+
+            // ✅ NEW
+            clearHeaderStatus();
         }
 
         function showThreadScreen(name) {
@@ -601,6 +632,16 @@
 
             // بعد القراءة: صحح الأرقام من السيرفر
             await loadConversations();
+
+            // =========================
+            // ✅ NEW: Presence for Student (Online/Offline under name)
+            // =========================
+            try {
+                const isOnline = await connection.invoke("IsUserOnline", state.currentStudentId);
+                setHeaderStatus(isOnline);
+            } catch (e) {
+                console.error("IsUserOnline invoke error:", e);
+            }
         }
 
         async function loadHistoryFirst(studentId) {
@@ -850,10 +891,6 @@
             const ids = payload?.messageIds;
 
             if (Array.isArray(ids) && ids.length > 0) {
-                // (اختياري) تقدر تشيك على conversationId لو بتحبه
-                // const convId = payload?.conversationId;
-                // if (state.conversationId && convId && String(convId) !== String(state.conversationId)) return;
-
                 markMessagesReadUI(ids); // ✅ ده اللي يخلي اللون يتغير فورًا
             }
         });
@@ -893,6 +930,13 @@
                 await loadConversations();
             }
         });
+        connection.on("PresenceChanged", function (userId, isOnline) {
+            // لو المدرس فاتح شات نفس الطالب ده، حدّث الهيدر فورًا
+            if (state.isOpen && state.currentStudentId && userId === state.currentStudentId) {
+                setHeaderStatus(isOnline);
+            }
+        });
+
 
         async function sendRealtimeToStudent(studentId, message) {
             try {
@@ -903,6 +947,7 @@
         }
     </script>
 }
+
 
 
 @section Styles {
