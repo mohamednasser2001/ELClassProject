@@ -81,7 +81,7 @@
 .systems-section {
 /*    background: #ff716b;*/
     padding: 30px 0;
-    margin: 10px 0;
+    margin: 40px 0;
 }
 
     .systems-section h2 {
@@ -227,5 +227,7 @@
 
 
 
-/*small grades section */
+.single-pricing ul li {
+    padding: 10px;
+}
 

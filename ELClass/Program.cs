@@ -54,13 +54,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
 .AddDefaultTokenProviders();
 
 // Google Authentication
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
-    {
+//builder.Services.AddAuthentication()
+//    .AddGoogle(options =>
+//    {
 
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
-    });
+//        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+//        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+//    });
 
 // Cookie paths
 builder.Services.ConfigureApplicationCookie(options =>
