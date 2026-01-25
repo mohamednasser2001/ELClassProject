@@ -28,18 +28,22 @@
     @* --- قسم الإحصائيات --- *@
     <div class="row mb-4">
         <div class="col-6 col-md-6 col-xl-3 mb-3">
-            <div class="stat-card text-center">
-                <i class="fas fa-book fa-2x mb-2"></i>
-                <h3 id="coursesCountDisp">@Model.InstructorCourses.Count()</h3>
-                <p>@(isArabic ? "الكورسات" : "Courses")</p>
-            </div>
+            <a href="#crs">
+                <div class="stat-card text-center">
+                    <i class="fas fa-book fa-2x mb-2"></i>
+                    <h3 class="text-white" id="coursesCountDisp">@Model.InstructorCourses.Count()</h3>
+                    <p>@(isArabic ? "الكورسات" : "Courses")</p>
+                </div>
+            </a>
         </div>
         <div class="col-6 col-md-6 col-xl-3 mb-3">
-            <div class="stat-card text-center">
-                <i class="fas fa-users fa-2x mb-2"></i>
-                <h3 id="studentsCountDisp">@ViewBag.TotalStudentsCount</h3>
-                <p>@(isArabic ? "الطلاب" : "Students")</p>
-            </div>
+            <a href="#std">
+                <div class="stat-card text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="text-white" id="studentsCountDisp">@Model.InstructorStudents.Count()</h3>
+                    <p>@(isArabic ? "الطلاب" : "Students")</p>
+                </div>
+            </a>
         </div>
     </div>
 
@@ -54,8 +58,8 @@
                     <div class="position-relative d-inline-block mb-3">
                         <img id="profilePreview" class="rounded-circle img-thumbnail shadow-sm"
                              src="@(Model.Instructor.ApplicationUser.Img != null
-                                     ? Url.Content("~/images/users/" + Model.Instructor.ApplicationUser.Img)
-                                     : $"https://ui-avatars.com/api/?name={Model.Instructor.NameEn}&background=fffaf5&color=fd7e14&size=128")"
+                                                                  ? Url.Content("~/images/users/" + Model.Instructor.ApplicationUser.Img)
+                                                                  : $"https://ui-avatars.com/api/?name={Model.Instructor.NameEn}&background=fffaf5&color=fd7e14&size=128")"
                              style="width:160px; height:160px; border: 4px solid var(--soft-orange); object-fit: cover;">
                     </div>
                     <form asp-action="ChangeProfilePhoto" method="post" enctype="multipart/form-data">
@@ -167,7 +171,7 @@
         <div class="card-header">
             <h5 class="card-title"><i class="fas fa-layer-group icon-primary"></i> @(isArabic ? "الكورسات المسؤولة" : "Managed Courses")</h5>
         </div>
-        <div class="card-body">
+        <div id="crs" class="card-body">
             <div class="table-responsive mb-3">
                 <table id="InstructorCoursesTable" class="table admin-table w-100">
                     <thead>
@@ -186,7 +190,7 @@
         </div>
     </div>
 
-    <div class="card custom-card mt-4">
+    <div id="std" class="card custom-card mt-4">
         <div class="card-header">
             <h5 class="card-title"><i class="fas fa-user-graduate icon-primary"></i> @(isArabic ? "الطلاب التابعين" : "Assigned Students")</h5>
         </div>

@@ -40,19 +40,23 @@
 
     <div class="row mb-4">
         <div class="col-6 col-md-6 col-xl-3 mb-3">
-            <div class="stat-card text-center">
-                <i class="fas fa-book fa-2x mb-2"></i>
-                <h3>@Model.StudentCourses.Count()</h3>
-                <p>@(currentLang == "ar" ? "الكورسات" : "Courses")</p>
-            </div>
+            <a href="#crs">
+                <div class="stat-card text-center">
+                    <i class="fas fa-book fa-2x mb-2"></i>
+                    <h3 class="text-white">@Model.StudentCourses.Count()</h3>
+                    <p>@(currentLang == "ar" ? "الكورسات" : "Courses")</p>
+                </div>
+            </a>
         </div>
 
         <div class="col-6 col-md-6 col-xl-3 mb-3">
-            <div class="stat-card text-center">
-                <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
-                <h3>@ViewBag.TotalInstructorsCount</h3>
-                <p>@(currentLang == "ar" ? "المدربين" : "Instructors")</p>
-            </div>
+            <a href="#ins">
+                <div class="stat-card text-center">
+                    <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                    <h3 class="text-white">@Model.InstructorStudents.Count()</h3>
+                    <p>@(currentLang == "ar" ? "المدربين" : "Instructors")</p>
+                </div>
+            </a>
         </div>
     </div>
 
@@ -161,7 +165,7 @@
         </div>
     </div>
 
-    <div class="card custom-card mt-4">
+    <div id="crs" class="card custom-card mt-4">
         <div class="card-header">
             <h5 class="card-title">
                 <i class="fas fa-book-reader icon-primary"></i>
@@ -201,7 +205,7 @@
         </div>
     </div>
 
-    <div class="card custom-card mt-4">
+    <div id="ins" class="card custom-card mt-4">
         <div class="card-header">
             <h5 class="card-title">
                 <i class="fas fa-chalkboard-teacher icon-primary"></i>

@@ -40,6 +40,7 @@ namespace ELClass.Areas.Admin.Controllers
 
             var instructors = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.CourseId == id , e=>e.Include(e=>e.Instructor));
             var students = await unitOfWork.StudentCourseRepository.GetAsync(filter: e => e.CourseId == id, e => e.Include(e => e.Student));
+            ViewBag.LessonNumbers = await unitOfWork.LessonRepository.CountAsync(e => e.CourseId == id);
             var model = new CourseDetailsVM()
             {
                 Course = course,
@@ -49,33 +50,6 @@ namespace ELClass.Areas.Admin.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> ToggleStatus(int id)
-        {
-            var course = await unitOfWork.CourseRepository.GetOneAsync(e => e.Id == id);
-
-            if (course == null)
-            {
-                return Json(new { success = false, message = "الكورس غير موجود" });
-            }
-
-            // عكس الحالة الحالية
-            course.IsActive = !course.IsActive;
-
-            // تحديث البيانات (بما إنك وارث من AuditLogging، الـ EF هيحدث الـ Update Date تلقائياً)
-            await unitOfWork.CourseRepository.EditAsync(course);
-            await unitOfWork.CommitAsync();
-
-            bool isAr = CultureInfo.CurrentCulture.Name.StartsWith("ar");
-            string msg;
-
-            if (course.IsActive)
-                msg = isAr ? "تم تنشيط الكورس بنجاح" : "Course activated successfully";
-            else
-                msg = isAr ? "تم تعطيل الكورس بنجاح" : "Course deactivated successfully";
-
-            return Json(new { success = true, message = msg });
-        }
 
         public async Task<IActionResult> SearchStudents(string term, int courseId)
         {
