@@ -186,7 +186,10 @@
     <div class="chat-header">
         <div class="header-left">
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
-            <div class="title" id="chatHeaderTitle">Chats</div>
+            <div class="title" id="chatHeaderTitle">
+                <div id="chatHeaderName">Chats</div>
+                <div id="chatHeaderStatus" class="chat-status"></div>
+            </div>
         </div>
         <div class="actions">
             <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">✕</button>
@@ -227,7 +230,7 @@
             conversations: '/StudentArea/Home/GetMyConversations',
             history: '/StudentArea/Home/GetChatHistory',
             save: '/StudentArea/Home/SaveMessage',
-            markRead: '/StudentArea/Home/MarkAsRead' // (لسه موجود) بس القراءة اللايف هتبقى عبر Hub
+            markRead: '/StudentArea/Home/MarkAsRead'
         };
 
         // =========================
@@ -252,6 +255,10 @@
 
         const currentUserId = document.getElementById('currentUserId')?.value;
 
+        // ✅ Header elements (Student)
+        const headerNameEl = document.getElementById("chatHeaderName");
+        const headerStatusEl = document.getElementById("chatHeaderStatus");
+
         // =========================
         // State
         // =========================
@@ -262,7 +269,6 @@
             conversationId: null,
             conversationsCache: [],
 
-            // paging
             take: 10,
             hasMore: true,
             oldestId: null,
@@ -340,6 +346,19 @@
         }
 
         // =========================
+        // ✅ Presence helpers (FIX)
+        // =========================
+        const presenceMap = new Map();
+
+        function setHeaderStatus(isOnline) {
+            if (!headerStatusEl) return;
+
+            headerStatusEl.textContent = isOnline ? "● Online" : "● Offline";
+            headerStatusEl.classList.toggle("online", !!isOnline);
+            headerStatusEl.classList.toggle("offline", !isOnline);
+        }
+
+        // =========================
         // Open / Close
         // =========================
         function showWidget() {
@@ -371,13 +390,18 @@
             messagesBox.innerHTML = '';
             chatInput.value = '';
             chatSearch.value = '';
+
+            if (headerNameEl) headerNameEl.textContent = "Chats";
+            if (headerStatusEl) headerStatusEl.textContent = "";
         }
 
         function showListScreen() {
             screenThread.classList.add('hidden');
             screenList.classList.remove('hidden');
             chatBackBtn.classList.add('hidden');
-            chatHeaderTitle.textContent = 'Chats';
+
+            if (headerNameEl) headerNameEl.textContent = "Chats";
+            if (headerStatusEl) headerStatusEl.textContent = "";
 
             state.currentInstructorId = null;
             state.currentInstructorName = '';
@@ -394,7 +418,8 @@
             screenList.classList.add('hidden');
             screenThread.classList.remove('hidden');
             chatBackBtn.classList.remove('hidden');
-            chatHeaderTitle.textContent = instructorName || 'Chat';
+
+            if (headerNameEl) headerNameEl.textContent = instructorName || "Chat";
         }
 
         function setActiveItem(instructorId) {
@@ -468,23 +493,22 @@
                 const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
 
                 chatItemsBox.insertAdjacentHTML('beforeend', `
-                            <div class="chat-item"
-                                 data-instructor-id="${escapeHtml(c.instructorId)}"
-                                 data-instructor-name="${escapeHtml(name)}">
-                                <div class="avatar">${avatarHtml}</div>
-                                <div class="meta">
-                                    <div class="name">${escapeHtml(name)}</div>
-                                    <div class="preview">${escapeHtml(preview)}</div>
-                                </div>
-                                ${unreadHtml}
+                        <div class="chat-item"
+                             data-instructor-id="${escapeHtml(c.instructorId)}"
+                             data-instructor-name="${escapeHtml(name)}">
+                            <div class="avatar">${avatarHtml}</div>
+                            <div class="meta">
+                                <div class="name">${escapeHtml(name)}</div>
+                                <div class="preview">${escapeHtml(preview)}</div>
                             </div>
-                        `);
+                            ${unreadHtml}
+                        </div>
+                    `);
             }
 
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
         }
 
-        // Click on conversation (delegation)
         chatItemsBox.addEventListener('click', (e) => {
             const item = e.target.closest('.chat-item');
             if (!item) return;
@@ -495,7 +519,6 @@
             openChat(instructorId, instructorName);
         });
 
-        // Search filter
         chatSearch.addEventListener('input', () => {
             const q = (chatSearch.value ?? '').trim().toLowerCase();
             const filtered = !q
@@ -513,7 +536,6 @@
 
             await loadChatHistoryFirstPage();
 
-            // ✅ Mark read via Controller (counts) + via Hub (read-receipt live)
             await markAsRead(instructorId);
             scheduleMarkAsReadHub();
 
@@ -522,6 +544,26 @@
             await loadMyConversations();
 
             messagesBox.scrollTop = messagesBox.scrollHeight;
+
+            // =========================
+            // ✅ Presence (FIXED)
+            // =========================
+            try {
+                if (headerNameEl) headerNameEl.textContent = instructorName || "Chat";
+
+                const cached = presenceMap.get(String(state.currentInstructorId));
+                if (cached !== undefined) {
+                    setHeaderStatus(cached);
+                    return;
+                }
+
+                const isOnline = await studentConnection.invoke("IsUserOnline", state.currentInstructorId);
+                presenceMap.set(String(state.currentInstructorId), !!isOnline);
+                setHeaderStatus(!!isOnline);
+
+            } catch (e) {
+                console.error("IsUserOnline invoke error:", e);
+            }
         }
 
         async function markAsRead(instructorId) {
@@ -592,13 +634,11 @@
             }
         }
 
-        // ✅ لو الطالب طلع لفوق يجيب قديم
         messagesBox.addEventListener('scroll', () => {
             if (messagesBox.scrollTop <= 10) {
                 loadOlderMessages();
             }
 
-            // ✅ لو الطالب نازل لتحت (يعني شايف آخر الرسائل) يبعت read-receipt
             if (messagesBox.scrollTop + messagesBox.clientHeight >= messagesBox.scrollHeight - 6) {
                 scheduleMarkAsReadHub();
             }
@@ -628,24 +668,23 @@
             wrapper.dataset.messageId = String(id || '');
 
             wrapper.innerHTML = `
-                        <div class="bubble">
-                            ${escapeHtml(content)}
-                            <span class="time">
-                                ${escapeHtml(toTime(sentAt))}
-                                ${ticksHtml(isMine, isRead)}
-                            </span>
-                        </div>
-                    `;
+                    <div class="bubble">
+                        ${escapeHtml(content)}
+                        <span class="time">
+                            ${escapeHtml(toTime(sentAt))}
+                            ${ticksHtml(isMine, isRead)}
+                        </span>
+                    </div>
+                `;
             return wrapper;
         }
 
         function renderMessage(m) {
             const node = messageNode(m);
             messagesBox.appendChild(node);
-            return node; // ✅ مهم عشان نركب ID بعد الحفظ
+            return node;
         }
 
-        // ✅ لما المدرس يقرا رسائل الطالب: لوّن ✓✓ للرسائل دي فقط
         function markMessagesReadInUI(messageIds) {
             if (!Array.isArray(messageIds) || messageIds.length === 0) return;
 
@@ -669,7 +708,6 @@
             const nowIso = new Date().toISOString();
             const tempId = `tmp-${Date.now()}`;
 
-            // optimistic
             const optimisticNode = renderMessage({
                 id: tempId,
                 senderId: currentUserId,
@@ -701,7 +739,6 @@
                     return;
                 }
 
-                // ✅ اربط الـ ID الحقيقي للرسالة الجديدة
                 const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
                 if (realId && optimisticNode) {
                     optimisticNode.dataset.messageId = String(realId);
@@ -738,11 +775,32 @@
             .withAutomaticReconnect()
             .build();
 
+        // ✅ PresenceChanged listener (FIXED: update chatHeaderStatus NOT chatHeaderSubTitle)
+        studentConnection.on("PresenceChanged", function (userId, isOnline) {
+            const id = String(userId);
+            presenceMap.set(id, !!isOnline);
+
+            if (state.currentInstructorId && String(state.currentInstructorId) === id) {
+                setHeaderStatus(!!isOnline);
+            }
+        });
+
+        // ✅ لو حصل reconnect: رجّع الحالة فورًا
+        studentConnection.onreconnected(async () => {
+            if (!state.currentInstructorId) return;
+            try {
+                const isOnline = await studentConnection.invoke("IsUserOnline", state.currentInstructorId);
+                presenceMap.set(String(state.currentInstructorId), !!isOnline);
+                setHeaderStatus(!!isOnline);
+            } catch (e) {
+                console.error("Reconnected IsUserOnline error:", e);
+            }
+        });
+
         studentConnection.start()
             .then(() => console.log("SignalR Connected (Student)!"))
             .catch(err => console.error(err.toString()));
 
-        // ✅ Debounce عشان مايبعتش MarkAsRead كتير
         let readDebounceTimer = null;
         function scheduleMarkAsReadHub() {
             clearTimeout(readDebounceTimer);
@@ -751,15 +809,12 @@
                 if (!state.conversationId) return;
                 if (!state.currentInstructorId) return;
 
-                // ✅ ده اللي هيخلّي ✓✓ عند المدرس يتغير لايف
                 studentConnection.invoke("MarkAsRead", state.conversationId, state.currentInstructorId)
                     .catch(err => console.error("MarkAsRead invoke error:", err));
             }, 200);
         }
 
-        // ✅ لما المدرس يبعت رسالة للطالب
         studentConnection.on("ReceiveMessage", async function (senderId, message, timestamp) {
-
             const sameOpenChat = state.isOpen && state.currentInstructorId && senderId === state.currentInstructorId;
 
             if (sameOpenChat) {
@@ -772,10 +827,8 @@
 
                 messagesBox.scrollTop = messagesBox.scrollHeight;
 
-                // ✅ خلي read-receipt يتبعت للمدرس فورًا وهو فاتح
                 scheduleMarkAsReadHub();
 
-                // لو عايز تحتفظ بالكونترولر لتصفير unread counts
                 await markAsRead(senderId);
                 removeBadge(senderId);
 
@@ -798,21 +851,18 @@
             }
         });
 
-        // ✅ Event من السيرفر لما المدرس يقرا رسائل الطالب
         studentConnection.on("MessagesRead", function (payload) {
             if (!payload) return;
             if (!state.isOpen) return;
             if (!state.conversationId) return;
 
-            // لازم نفس المحادثة
             if (String(payload.conversationId) !== String(state.conversationId)) return;
 
             markMessagesReadInUI(payload.messageIds);
         });
 
         studentConnection.on("UpdateConversationList", function () {
-            if (state.isOpen) loadMyConversations();
-            else loadMyConversations();
+            loadMyConversations();
         });
 
         async function sendRealtimeToInstructor(instructorId, message) {
@@ -824,6 +874,7 @@
         }
     </script>
 }
+
 
 @section Styles {
     <link rel="stylesheet" href="~/css/ChatMessage.css" asp-append-version="true" />

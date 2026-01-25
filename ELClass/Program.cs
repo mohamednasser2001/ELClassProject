@@ -2,6 +2,7 @@
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
 using ELClass.Hubs;
+using ELClass.services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.SignalR;
@@ -29,6 +30,7 @@ builder.Services.AddControllersWithViews();
 // SignalR
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
+builder.Services.AddSingleton<OnlineUserTracker>();
 
 
 // DbContext
