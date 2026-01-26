@@ -126,6 +126,15 @@
                             <span class="pc-mtext">Students</span>
                         </a>
                     </li>
+
+                    <li class="pc-item">
+                        <a href="/Instructor/appointment/index" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fa-regular fa-calendar-days"></i>
+                            </span>
+                            <span class="pc-mtext">Appointments</span>
+                        </a>
+                    </li>
                     
                 </ul>
 
@@ -432,7 +441,7 @@
         .build();
 
            connection.on("ReceiveMessage", function (title, message) {
-        // 1. تحديث العدادات (خارجي وداخلي)
+        
         var badgeOuter = document.getElementById("notification-badge-outer");
         var badgeInner = document.getElementById("notification-badge");
 

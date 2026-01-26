@@ -18,7 +18,8 @@ namespace DataAccess.Repositories
            IRepository<Student> studentRepository, IRepository<Lesson> lessonRepository, IRepository<CHMessage> ChatMessageRepositories
            , IRepository<Conversation> conversationRepository, ApplicationDbContext context, IRepository<InstructorCourse> instructorCourseRepository,
            IRepository<InstructorStudent> instructorStudentRepository, IRepository<StudentCourse> studentCourseRepository,
-           IRepository<ContactUs> contactUsRepository
+           IRepository<ContactUs> contactUsRepository , IRepository<Appointment> Appoinments , 
+           IRepository<StudentAppointment> studentAppointmentRepository
            )
            {
             CourseRepository = courseRepository;
@@ -32,6 +33,8 @@ namespace DataAccess.Repositories
             InstructorStudentRepository = instructorStudentRepository;
             StudentCourseRepository = studentCourseRepository;
             ContactUsRepository = contactUsRepository;
+            AppoinmentRepository = Appoinments;
+            StudentAppointmentRepository = studentAppointmentRepository;
         }
         public IRepository<Course> CourseRepository { get; }
         public IRepository<Instructor> InstructorRepository { get; }
@@ -43,6 +46,8 @@ namespace DataAccess.Repositories
         public IRepository<InstructorStudent> InstructorStudentRepository { get; }
         public IRepository<StudentCourse> StudentCourseRepository { get; }
         public IRepository<ContactUs> ContactUsRepository { get; }
+        public IRepository<Appointment> AppoinmentRepository { get; }
+        public IRepository<StudentAppointment> StudentAppointmentRepository { get; }
 
         public async Task<bool> CommitAsync()
         {

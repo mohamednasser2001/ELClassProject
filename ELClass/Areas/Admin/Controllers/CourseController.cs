@@ -305,7 +305,7 @@ namespace ELClass.Areas.Admin.Controllers
                     id = c.Id,
                     title = lang == "en" ? c.TitleEn : c.TitleAr,
                     description = lang == "en" ? c.DescriptionEn : c.DescriptionAr,
-                    isActive = c.IsActive 
+                    
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalRecords, recordsFiltered = filteredRecords, data = result });

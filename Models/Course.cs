@@ -18,7 +18,7 @@ namespace Models
         public string? DescriptionAr { get; set; } = string.Empty;
         [Required(ErrorMessage = "please, Enter a Description")]
         public string? DescriptionEn { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = true;
+        
         public ICollection<InstructorCourse> InstructorCourses { get; set; } =new List<InstructorCourse>();
         public ICollection<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();
         public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();

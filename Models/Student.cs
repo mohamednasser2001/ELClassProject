@@ -18,5 +18,6 @@ namespace Models
         public ApplicationUser ApplicationUser { get; set; } = null!;
         public ICollection<InstructorStudent> InstructorStudents { get; set; } = new List<InstructorStudent>();
         public ICollection<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();
+        public ICollection<StudentAppointment> StudentAppointments { get; set; } = new List<StudentAppointment>();
     }
 }

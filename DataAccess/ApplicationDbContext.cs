@@ -34,6 +34,7 @@ namespace DataAccess
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ContactUs> ContactUs { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<StudentAppointment> StudentAppointments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -140,8 +141,22 @@ namespace DataAccess
                 entity.HasKey(ic => new { ic.InstructorId, ic.CourseId });
                 entity.Property(ic => ic.InstructorId).HasMaxLength(idMaxLength);
             });
+
+            builder.Entity<Appointment>()
+            .HasOne(a => a.Instructor)
+            .WithMany(i => i.Appointments) 
+            .HasForeignKey(a => a.InstructorId)
+            .OnDelete(DeleteBehavior.NoAction); 
+
+            
+            builder.Entity<StudentAppointment>()
+                .HasOne(sa => sa.Appointment)
+                .WithMany()
+                .HasForeignKey(sa => sa.AppointmentId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
         }
 
-       
+
     }
 }

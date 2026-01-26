@@ -1,0 +1,275 @@
+﻿@using System.Security.Claims
+@using Models.ViewModels
+@model AppointmentVM
+
+@{
+    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
+}
+
+<div class="container py-5" style="direction:@direction">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h4 class="mb-0 text-orange">
+                <i class="fas fa-calendar-plus me-2"></i>
+                @(isArabic ? "إضافة ميعاد جديد" : "Create New Appointment")
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form id="appointmentForm">
+                
+
+                <input type="hidden" name="InstructorId" value="@User.FindFirstValue(ClaimTypes.NameIdentifier)" />
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="p-3 bg-light rounded-2 border-start border-4 border-info">
+                            <label class="form-label fw-bold text-info">
+                                <i class="fas fa-user-graduate me-1"></i> @(isArabic ? "اختر الطالب" : "Select Student")
+                            </label>
+                            <select id="studentSelect" class="form-control" name="StudentId" required></select>
+                            <div class="form-text small">@(isArabic ? "ابحث عن الطالب بالاسم أو البريد الإلكتروني" : "Search for student by name or email")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <div class="p-3 bg-light rounded-2 border-start border-4 border-primary">
+                            <label class="form-label fw-bold text-primary">
+                                <i class="fas fa-book me-1"></i> @(isArabic ? "اختر الكورس" : "Select Course")
+                            </label>
+                            <select id="courseSelect" class="form-control" name="CourseId" required></select>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "رابط الاجتماع" : "Meeting Link")</label>
+                        <input type="url" name="MeetingLink" class="form-control" placeholder="https://..." required />
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "نوع الميعاد" : "Schedule Type")</label>
+                        <select id="scheduleType" name="Type" class="form-select border-orange">
+                            <option value="0">@(isArabic ? "ثابت (أسبوعي)" : "Recurring")</option>
+                            <option value="1">@(isArabic ? "مرة واحدة" : "One Time")</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 mb-3" id="timeCountContainer">
+                        <label class="form-label fw-bold">@(isArabic ? "عدد مرات الدخول" : "Access Count")</label>
+                        <input type="number" id="timeCountInput" name="TimeCount" class="form-control" value="1" min="1" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "المدة (بالساعات)" : "Duration (Hours)")</label>
+                        <input type="number" name="DurationInHours" class="form-control" value="1" min="1" />
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="dayContainer">
+                        <label class="form-label fw-bold">@(isArabic ? "اليوم" : "Day")</label>
+                        <select name="Day" class="form-select">
+                            <option value="0">@(isArabic ? "الأحد" : "Sunday")</option>
+                            <option value="1">@(isArabic ? "الاثنين" : "Monday")</option>
+                            <option value="2">@(isArabic ? "الثلاثاء" : "Tuesday")</option>
+                            <option value="3">@(isArabic ? "الأربعاء" : "Wednesday")</option>
+                            <option value="4">@(isArabic ? "الخميس" : "Thursday")</option>
+                            <option value="5">@(isArabic ? "الجمعة" : "Friday")</option>
+                            <option value="6">@(isArabic ? "السبت" : "Saturday")</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="dateContainer" style="display:none;">
+                        <label class="form-label fw-bold">@(isArabic ? "التاريخ" : "Specific Date")</label>
+                        <input type="date" name="SpecificDate" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "وقت البدء" : "Start Time")</label>
+                        <input type="time" name="StartTime" class="form-control" required />
+                    </div>
+
+                    <div class="col-12 mt-4 text-center">
+                        <button type="submit" class="btn btn-orange-custom px-5">
+                            <i class="fas fa-save me-1"></i> @(isArabic ? "حفظ الميعاد" : "Save Appointment")
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const isAr = "@isArabic".toLowerCase() === "true";
+
+            $('#courseSelect').select2({
+            placeholder: isAr ? "ابحث عن اسم الكورس..." : "Search course name...",
+            allowClear: true,
+            width: '100%',
+            ajax: {
+                url: '/Instructor/Appointment/SearchCourses',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        term: params.term
+                    };
+                },
+                processResults: function (data) {
+                    // Select2 بتحتاج id و text لكل عنصر
+                    return {
+                        results: data
+                    };
+                },
+                cache: true
+            }
+        });
+
+
+                $('#studentSelect').select2({
+            placeholder: isAr ? "ابحث عن اسم الطالب..." : "Search student name...",
+            allowClear: true,
+            width: '100%',
+            ajax: {
+                url: '/Instructor/Appointment/SearchStudents', 
+                dataType: 'json',
+                delay: 250,
+                data: params => ({ term: params.term }),
+                processResults: data => ({ results: data }),
+                cache: true
+            }
+        });
+
+
+            $('#scheduleType').change(function () {
+                const type = $(this).val();
+                if (type == "0") { // Recurring
+                    $('#recurringFields').fadeIn();
+                    $('#oneTimeFields').hide();
+                } else { // OneTime
+                    $('#oneTimeFields').fadeIn();
+                    $('#recurringFields').hide();
+                }
+            });
+
+            // 3. الأكشن بتاع الحفظ (AJAX)
+            $('#appointmentForm').submit(function (e) {
+                e.preventDefault();
+                const formData = $(this).serialize();
+
+                $.post('/instructor/Appointment/Create', formData, function (res) {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: isAr ? 'تم بنجاح' : 'Success',
+                            text: isAr ? 'تمت إضافة الميعاد بنجاح' : 'Appointment created successfully'
+                        }).then(() => {
+                            window.location.href = '/instructor/Appointment/Index';
+                        });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                });
+            });
+        });
+
+                $('#scheduleType').change(function () {
+            const type = $(this).val();
+
+            if (type == "0") { // Recurring (أسبوعي)
+                $('#dayContainer').show();
+                $('#dateContainer').hide();
+                $('#timeCountContainer').fadeIn(); // نظهر الـ TimeCount
+            } else { // One Time (مرة واحدة)
+                $('#dayContainer').hide();
+                $('#dateContainer').fadeIn();
+                $('#timeCountContainer').hide(); // نخفي الـ TimeCount
+                $('#timeCountInput').val(1);     // نرجع القيمة لـ 1 أوتوماتيك
+            }
+        });
+
+            const validator = $('#appointmentForm').validate({
+            rules: {
+                CourseId: { required: true },
+                InstructorId: { required: true },
+                MeetingLink: { required: true, url: true },
+                StartTime: { required: true },
+                SpecificDate: {
+                    required: function() { return $('#scheduleType').val() == "1"; }
+                }
+            },
+            messages: {
+                CourseId: isAr ? "يرجى اختيار الكورس" : "Please select a course",
+
+                MeetingLink: {
+                    required: isAr ? "رابط الاجتماع مطلوب" : "Meeting link is required",
+                    url: isAr ? "يرجى إدخال رابط صحيح" : "Please enter a valid URL"
+                },
+                StartTime: isAr ? "وقت البدء مطلوب" : "Start time is required",
+                SpecificDate: isAr ? "التاريخ مطلوب للمواعيد الفردية" : "Date is required for one-time appointments"
+            },
+            errorPlacement: function (error, element) {
+                // عشان الرسالة تظهر تحت الـ Select2 بشكل مظبوط
+                if (element.hasClass('select2-hidden-accessible')) {
+                    error.insertAfter(element.next('.select2-container'));
+                } else {
+                    error.insertAfter(element);
+                }
+            },
+            highlight: function (element) {
+                $(element).addClass('is-invalid');
+                $(element).next('.select2-container').find('.select2-selection').addClass('border-danger');
+            },
+            unhighlight: function (element) {
+                $(element).removeClass('is-invalid');
+                $(element).next('.select2-container').find('.select2-selection').removeClass('border-danger');
+            }
+        });
+
+        $('#appointmentForm').submit(function (e) {
+            e.preventDefault();
+
+
+            if (!$(this).valid()) {
+                Swal.fire({
+                    icon: 'error',
+                    title: isAr ? 'بيانات ناقصة' : 'Missing Data',
+                    text: isAr ? 'يرجى التأكد من ملء جميع الحقول المطلوبة باللون الأحمر' : 'Please fill all required fields highlighted in red'
+                });
+                return;
+            }
+
+            const formData = $(this).serialize();
+
+            // إظهار Loading بسيط على الزرار
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+            $.post('/instructor/Appointment/Create', formData, function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: isAr ? 'تم بنجاح' : 'Success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = '/instructor/Appointment/Index';
+                    });
+                } else {
+                    submitBtn.prop('disabled', false).html(originalText);
+                    Swal.fire('Error', res.message, 'error');
+                }
+            }).fail(function() {
+                submitBtn.prop('disabled', false).html(originalText);
+                Swal.fire('Error', isAr ? 'فشل الاتصال بالسيرفر' : 'Server connection failed', 'error');
+            });
+        });
+
+
+    </script>
+}
