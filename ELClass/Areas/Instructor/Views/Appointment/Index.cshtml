@@ -1,0 +1,157 @@
+﻿@model IEnumerable<Models.Appointment>
+
+@{
+    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+}
+
+<div class="p-6 bg-gray-50 min-h-screen" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-calendar-alt text-orange-500"></i>
+                @(isArabic ? "جدول المواعيد" : "Appointments Schedule")
+            </h1>
+            <p class="text-gray-500 text-sm mt-1">@(isArabic ? "إدارة مواعيد المحاضرات والدروس" : "Manage your lecture schedules")</p>
+        </div>
+        <a href="/instructor/Appointment/AddNewAppointment" class="inline-flex items-center px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-all shadow-sm gap-2 w-fit">
+            <i class="fas fa-plus text-sm"></i>
+            @(isArabic ? "إضافة ميعاد جديد" : "Add New Appointment")
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-right">
+                <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-center">#</th>
+                        <th class="px-6 py-4">@(isArabic ? "الكورس" : "Course")</th>
+                        <th class="px-6 py-4">@(isArabic ? "النوع" : "Type")</th>
+                        <th class="px-6 py-4">@(isArabic ? "اليوم / التاريخ" : "Day / Date")</th>
+                        <th class="px-6 py-4">@(isArabic ? "الوقت" : "Time")</th>
+                        <th class="px-6 py-4">@(isArabic ? "الحالة" : "Status")</th>
+                        <th class="px-6 py-4 text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @foreach (var item in Model.Select((value, index) => new { value, index }))
+                    {
+                        <tr class="hover:bg-orange-50/30 transition-colors">
+                            <td class="px-6 py-4 text-center text-gray-400 font-medium">@(item.index + 1)</td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900">@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (item.value.Type == Models.ScheduleType.Recurring)
+                                {
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md text-xs font-semibold">
+                                        <i class="fas fa-redo-alt mr-1"></i> @(isArabic ? "أسبوعي" : "Recurring")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-md text-xs font-semibold">
+                                        <i class="fas fa-bolt mr-1"></i> @(isArabic ? "مرة واحدة" : "One-Time")
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (item.value.Type == Models.ScheduleType.Recurring)
+                                {
+                                    <span class="text-gray-700">@(isArabic? GetArabicDay(item.value.Day) : item.value.Day.ToString())</span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-700">@item.value.SpecificDate?.ToString("yyyy-MM-dd")</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-gray-900 font-medium">@DateTime.Today.Add(item.value.StartTime).ToString("hh:mm tt")</span>
+                                    <span class="text-gray-400 text-xs">@item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs")</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (item.value.IsActive)
+                                {
+                                    <span class="flex items-center gap-1.5 text-green-600 font-bold animate-pulse">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        @(isArabic ? "مباشر الآن" : "Live Now")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">@(isArabic ? "غير نشط" : "Inactive")</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex justify-center gap-2">
+                                    <a href="@item.value.MeetingLink" target="_blank" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors shadow-sm border border-gray-100" title="Join">
+                                        <i class="fas fa-video"></i>
+                                    </a>
+                                    <button onclick="deleteAppointment(@item.value.Id)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-gray-100" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+@functions {
+    public string GetArabicDay(DayOfWeek day)
+    {
+        return day switch
+        {
+            DayOfWeek.Sunday => "الأحد",
+            DayOfWeek.Monday => "الاثنين",
+            DayOfWeek.Tuesday => "الثلاثاء",
+            DayOfWeek.Wednesday => "الأربعاء",
+            DayOfWeek.Thursday => "الخميس",
+            DayOfWeek.Friday => "الجمعة",
+            DayOfWeek.Saturday => "السبت",
+            _ => day.ToString()
+        };
+    }
+}
+
+@section Scripts{
+    <script>
+        function deleteAppointment(id) {
+            const isAr = "@isArabic".toLowerCase() === "true";
+
+            Swal.fire({
+                title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+                text: isAr ? 'لن تتمكن من استعادة هذا الموعد!' : "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, delete it!',
+                cancelButtonText: isAr ? 'إلغاء' : 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/instructor/Appointment/Delete', { id: id }, function (res) {
+                        if (res.success) {
+                            Swal.fire(
+                                isAr ? 'تم الحذف!' : 'Deleted!',
+                                isAr ? 'تم حذف الموعد بنجاح.' : 'The appointment has been deleted.',
+                                'success'
+                            ).then(() => {
+                                
+                                location.reload();
+                               
+                            });
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

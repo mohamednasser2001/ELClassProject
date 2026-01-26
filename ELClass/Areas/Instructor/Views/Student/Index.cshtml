@@ -1,5 +1,6 @@
 ﻿@{
-    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var currentLang = isArabic ?"ar" :"en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
@@ -14,13 +15,7 @@
                         @(currentLang == "ar" ? "قائمة الطلاب" : "Students List")
                     </h3>
 
-                    <div class="d-flex gap-2 align-items-center language-toggle">
-                        <a href="/Admin/Student/Create" class="btn btn-sm btn-success-custom">
-                            <i class="fas fa-user-plus"></i>
-                            <span> @(currentLang == "ar" ? "إضافة طالب جديد" : "Add New Student")</span>
-                        </a>
-
-                    </div>
+                   
                 </div>
 
                 <div class="card-body p-2 p-md-4">
@@ -89,21 +84,31 @@
                     {
                         data: 'name',
                         render: function (data, type, row) {
-                            return `<a href="/Admin/Student/Details/${row.id}" class="student-link">
+                            return `
                                     <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
-                                    </a>`;
+                                    `;
                         }
                     },
-                    {
-                        data: 'id',
-                        render: function (data) {
-                            return `
-                                <div class="d-flex gap-1 justify-content-center">
-                                    <a href="/Admin/Student/Details/${data}" class="btn btn-sm btn-light border text-warning"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteStudent('${data}')"><i class="fas fa-trash"></i></button>
-                                </div>`;
-                        }
-                    }
+                            {
+            data: 'id',
+            render: function (data, type, row) {
+                
+                var url = `/instructor/Appointment/create?StudentId=${row.id}`;
+
+                
+                if(row.courseId) {
+                    url += `&CourseId=${row.courseId}`;
+                }
+
+                return `
+                    <div class="d-flex gap-1 justify-content-center">
+                        <a href="${url}" class="btn btn-sm rounded btn-outline-warning">
+                            <i class="fas fa-plus-circle"></i>
+                            ${currentLang === 'ar' ? 'إضافة موعد' : 'Add Appointment'}
+                        </a>
+                    </div>`;
+            }
+        }
                 ],
                 language: languageSettings[currentLang],
                 pageLength: 10,
@@ -114,27 +119,6 @@
 
 
 
-        function deleteStudent(id) {
-            Swal.fire({
-                title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-                confirmButtonText: currentLang === 'ar' ? 'حذف' : 'Delete'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/Instructor/Student/Delete',
-                        type: 'POST',
-                        data: { id: id },
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function () {
-                            $('#StudentsTable').DataTable().ajax.reload(null, false);
-                            Swal.fire({ icon: 'success', title: currentLang === 'ar' ? 'تم' : 'Done', timer: 1000, showConfirmButton: false });
-                        }
-                    });
-                }
-            });
-        }
+        
     </script>
 }

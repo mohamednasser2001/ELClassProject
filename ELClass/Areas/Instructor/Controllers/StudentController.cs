@@ -25,7 +25,7 @@ namespace ELClass.Areas.Instructor.Controllers
         {
             try
             {
-                
+                var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
@@ -35,51 +35,49 @@ namespace ELClass.Areas.Instructor.Controllers
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
                 var orderColumnIndex = Request.Form["order[0][column]"].FirstOrDefault();
                 var orderDir = Request.Form["order[0][dir]"].FirstOrDefault();
-                var lang = HttpContext.Session.GetString("Language") ?? "en";
+                var lang = isArabic ? "ar" : "en";
 
                 
-                Expression<Func<Student, bool>> filter = s =>
-                    s.InstructorStudents.Any(e => e.InstructorId == userId) &&
+                Expression<Func<InstructorStudent, bool>> filter = x =>
+                    x.InstructorId == userId &&
                     (string.IsNullOrEmpty(searchValue) ||
-                     s.NameEn.Contains(searchValue) || s.NameAr.Contains(searchValue));
+                     x.Student.NameEn.Contains(searchValue) ||
+                     x.Student.NameAr.Contains(searchValue));
 
-               
-                Func<IQueryable<Student>, IOrderedQueryable<Student>> orderBy = q =>
+                
+                Func<IQueryable<InstructorStudent>, IOrderedQueryable<InstructorStudent>> orderBy = q =>
                 {
                     if (orderDir == "asc")
                     {
                         return orderColumnIndex switch
                         {
-                            "1" => q.OrderBy(s => lang == "en" ? s.NameEn : s.NameAr),
-                            _ => q.OrderBy(s => s.Id)
+                            "1" => q.OrderBy(x => lang == "en" ? x.Student.NameEn : x.Student.NameAr),
+                            _ => q.OrderBy(x => x.StudentId)
                         };
                     }
                     return orderColumnIndex switch
                     {
-                        "1" => q.OrderByDescending(s => lang == "en" ? s.NameEn : s.NameAr),
-                        _ => q.OrderBy(s => s.Id)
+                        "1" => q.OrderByDescending(x => lang == "en" ? x.Student.NameEn : x.Student.NameAr),
+                        _ => q.OrderByDescending(x => x.StudentId)
                     };
                 };
 
-           
-                var students = await _unitOfWork.StudentRepository.GetAsync(
+                
+                var instructorStudents = await _unitOfWork.InstructorStudentRepository.GetAsync(
                     filter: filter,
                     orderBy: orderBy,
                     skip: start,
                     take: length,
-                    include:e=>e.Include(e=>e.InstructorStudents)
+                    include: q => q.Include(x => x.Student) 
                 );
 
-                
-                var totalRecords = await _unitOfWork.StudentRepository.CountAsync(s => s.InstructorStudents.Any(e => e.InstructorId == userId));
-                var filteredRecords = await _unitOfWork.StudentRepository.CountAsync(filter: filter);
+                var totalRecords = await _unitOfWork.InstructorStudentRepository.CountAsync(x => x.InstructorId == userId);
+                var filteredRecords = await _unitOfWork.InstructorStudentRepository.CountAsync(filter: filter);
 
-               
-                var data = students.Select(c => new
+                var data = instructorStudents.Select(x => new
                 {
-                    id = c.Id,
-                    name = lang == "en" ? c.NameEn : c.NameAr,
-                   
+                    id = x.Student.Id, 
+                    name = lang == "en" ? x.Student.NameEn : x.Student.NameAr,
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalRecords, recordsFiltered = filteredRecords, data = data });
