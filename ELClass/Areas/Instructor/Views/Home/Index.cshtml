@@ -304,7 +304,6 @@
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 
@@ -329,7 +328,7 @@
         const chatBackBtn = document.getElementById('chatBackBtn');
         const chatHeaderTitle = document.getElementById('chatHeaderTitle');
 
-        // ✅ NEW: subtitle for Online/Offline
+        // ✅ subtitle for Online/Offline
         const chatHeaderSubTitle = document.getElementById('chatHeaderSubTitle');
 
         const screenList = document.getElementById('screenList');
@@ -395,14 +394,18 @@
             });
         }
 
-        // ✅ NEW: Header status helper
+        // =========================
+        // ✅ Presence cache (FIX)
+        // =========================
+        const presenceMap = new Map();
+
+        // ✅ Header status helper
         function setHeaderStatus(isOnline) {
             if (!chatHeaderSubTitle) return;
 
             chatHeaderSubTitle.classList.remove('hidden');
             chatHeaderSubTitle.classList.toggle('online', !!isOnline);
             chatHeaderSubTitle.classList.toggle('offline', !isOnline);
-
             chatHeaderSubTitle.textContent = isOnline ? '● Online' : '● Offline';
         }
 
@@ -470,7 +473,6 @@
             chatInput.value = '';
             chatSearch.value = '';
 
-            // ✅ NEW
             clearHeaderStatus();
         }
 
@@ -489,7 +491,6 @@
 
             messagesBox.innerHTML = '';
 
-            // ✅ NEW
             clearHeaderStatus();
         }
 
@@ -533,6 +534,35 @@
         // =========================
         // Conversations list
         // =========================
+        async function syncPresenceForList() {
+        
+            if (connection.state !== signalR.HubConnectionState.Connected) return;
+
+            const dots = document.querySelectorAll('.presence-dot[data-presence-id]');
+            const ids = Array.from(dots).map(d => String(d.dataset.presenceId));
+
+            const uniqueIds = [...new Set(ids)];
+
+            await Promise.all(uniqueIds.map(async (id) => {
+                try {
+                    const isOnline = await connection.invoke("IsUserOnline", id);
+
+                    // خزّن في الكاش
+                    presenceMap.set(String(id), !!isOnline);
+
+                    // حدّث الدوت
+                    const dot = document.querySelector(`.presence-dot[data-presence-id="${CSS.escape(String(id))}"]`);
+                    if (dot) {
+                        dot.classList.toggle("online", !!isOnline);
+                        dot.classList.toggle("offline", !isOnline);
+                    }
+
+                } catch (e) {
+                    console.error("syncPresenceForList IsUserOnline error:", id, e);
+                }
+            }));
+        }
+
         async function loadConversations() {
             try {
                 const res = await fetch(API.conversations);
@@ -554,9 +584,11 @@
                 const data = await res.json();
                 state.conversationsCache = Array.isArray(data) ? data : [];
                 renderConversations(state.conversationsCache);
-
+                renderConversations(state.conversationsCache);
                 syncFabUnreadFromList();
                 if (state.currentStudentId) setActive(state.currentStudentId);
+                await syncPresenceForList();
+                
 
             } catch (e) {
                 console.error(e);
@@ -564,6 +596,7 @@
             }
         }
 
+        // ✅ FIXED: dot class is based on presenceMap (not always offline)
         function renderConversations(list) {
             chatItemsBox.innerHTML = '';
 
@@ -573,6 +606,7 @@
             }
 
             for (const c of list) {
+                const studentIdStr = String(c.studentId ?? '');
                 const name = c.studentName ?? c.name ?? 'Student';
                 const preview = c.lastMessage ?? '';
                 const unread = parseInt(c.unread ?? 0);
@@ -583,11 +617,17 @@
 
                 const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
 
+                const isOnline = presenceMap.get(studentIdStr) === true;
+                const dotClass = isOnline ? 'online' : 'offline';
+
                 chatItemsBox.insertAdjacentHTML('beforeend', `
                     <div class="chat-item"
-                         data-student-id="${escapeHtml(c.studentId)}"
+                         data-student-id="${escapeHtml(studentIdStr)}"
                          data-student-name="${escapeHtml(name)}">
-                        <div class="avatar">${avatarHtml}</div>
+                        <div class="avatar">
+                            ${avatarHtml}
+                            <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(studentIdStr)}"></span>
+                        </div>
                         <div class="meta">
                             <div class="name">${escapeHtml(name)}</div>
                             <div class="preview">${escapeHtml(preview)}</div>
@@ -633,12 +673,17 @@
             // بعد القراءة: صحح الأرقام من السيرفر
             await loadConversations();
 
-            // =========================
-            // ✅ NEW: Presence for Student (Online/Offline under name)
-            // =========================
+            // ✅ FIX: use cache first, otherwise invoke then cache
             try {
-                const isOnline = await connection.invoke("IsUserOnline", state.currentStudentId);
-                setHeaderStatus(isOnline);
+                const id = String(state.currentStudentId);
+                const cached = presenceMap.get(id);
+                if (cached !== undefined) {
+                    setHeaderStatus(cached);
+                } else {
+                    const isOnline = await connection.invoke("IsUserOnline", state.currentStudentId);
+                    presenceMap.set(id, !!isOnline);
+                    setHeaderStatus(!!isOnline);
+                }
             } catch (e) {
                 console.error("IsUserOnline invoke error:", e);
             }
@@ -705,12 +750,10 @@
 
         // =========================
         // ✓✓ Read ticks UI
-        // - isRead من السيرفر: لو الطالب قرا الرسالة
         // =========================
         function ticksHtml(isMine, isRead) {
             if (!isMine) return '';
             const cls = isRead ? 'ticks read' : 'ticks';
-            // ✓✓
             return `<span class="${cls}" title="${isRead ? 'Read' : 'Sent'}">✓✓</span>`;
         }
 
@@ -722,7 +765,7 @@
             const sentAt = m.sentAt ?? m.SentAt;
             const isRead = (m.isRead ?? m.IsRead) === true;
 
-            // المدرس = أنا -> mine لما أنا اللي باعت (يعني ReceiverId == studentId)
+            // المدرس = mine لما أنا اللي باعت (ReceiverId == studentId)
             const isMine = receiverId === state.currentStudentId;
 
             const wrapper = document.createElement('div');
@@ -745,10 +788,9 @@
             const node = messageNode(m);
             if (prepend) messagesBox.prepend(node);
             else messagesBox.appendChild(node);
-            return node; // ✅ مهم
+            return node;
         }
 
-        // لما الطالب يعمل MarkAsRead و يبعت event للمدرس:
         function markMessagesReadUI(messageIds) {
             if (!Array.isArray(messageIds) || messageIds.length === 0) return;
 
@@ -786,7 +828,6 @@
             const text = (chatInput.value || '').trim();
             if (!state.currentStudentId || !text) return;
 
-            // optimistic (mine, not read yet) + temp id
             const nowIso = new Date().toISOString();
             const tempId = `tmp-${Date.now()}`;
 
@@ -815,7 +856,6 @@
                     body: new URLSearchParams({ receiverId: state.currentStudentId, content: text })
                 });
 
-                // لو السيرفر رجّع error صفحة HTML مثلاً
                 const ct = res.headers.get("content-type") || "";
                 if (!ct.includes("application/json")) {
                     const txt = await res.text();
@@ -824,7 +864,6 @@
                 }
 
                 const data = await res.json();
-                // debug سريع
                 console.log("SaveMessage response:", data);
 
                 if (!data || data.success !== true) {
@@ -832,13 +871,11 @@
                     return;
                 }
 
-                // ✅ اربط الـ ID الحقيقي (أياً كان اسمه)
                 const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
                 if (realId && optimisticNode) {
                     optimisticNode.dataset.messageId = String(realId);
                 }
 
-                // realtime
                 await sendRealtimeToStudent(state.currentStudentId, text);
 
             } catch (e) {
@@ -870,34 +907,25 @@
             .then(() => console.log("SignalR Connected (Instructor)!"))
             .catch(err => console.error(err.toString()));
 
-        // ✅ مرة واحدة فقط
         connection.on("UpdateConversationList", function () {
-            // لو مفتوح: هات من السيرفر
             if (state.isOpen) loadConversations();
         });
 
-        // ✅ FIX: Event من الطالب لما يعمل MarkAsRead
-        // هنا التعديل الوحيد: بدل ما نلوّن الكل، نلوّن IDs اللي جايه من السيرفر فورًا
         connection.on("MessagesRead", function (payload) {
             console.log("✅ MessagesRead event arrived:", payload);
 
-            // لو السيرفر بعت array مباشرة: [55,56,...]
             if (Array.isArray(payload)) {
                 markMessagesReadUI(payload);
                 return;
             }
 
-            // لو السيرفر بعت object: { conversationId, messageIds }
             const ids = payload?.messageIds;
-
             if (Array.isArray(ids) && ids.length > 0) {
-                markMessagesReadUI(ids); // ✅ ده اللي يخلي اللون يتغير فورًا
+                markMessagesReadUI(ids);
             }
         });
 
         connection.on("ReceiveMessage", async function (senderId, message, timestamp) {
-            // senderId = studentId
-
             const sameOpenChat = state.isOpen && state.currentStudentId && senderId === state.currentStudentId;
 
             if (sameOpenChat) {
@@ -907,16 +935,13 @@
                 await markAsRead(senderId);
                 removeBadge(senderId);
 
-                // صفّر unread في cache وحدث FAB
                 bumpUnreadInCache(senderId, -999999);
                 syncFabUnreadFromList();
 
-                // صحح من السيرفر
                 await loadConversations();
                 return;
             }
 
-            // لو مش فاتح نفس الشات:
             const item = findItem(senderId);
             if (item) {
                 const prev = item.querySelector('.preview');
@@ -926,17 +951,32 @@
                 bumpUnreadInCache(senderId, +1);
                 syncFabUnreadFromList();
             } else {
-                // طالب جديد مش ظاهر -> هات من السيرفر (ومعاه unread الصحيح)
                 await loadConversations();
             }
         });
+
+        // ✅ FIXED: update cache + update list dot + update header
         connection.on("PresenceChanged", function (userId, isOnline) {
-            // لو المدرس فاتح شات نفس الطالب ده، حدّث الهيدر فورًا
-            if (state.isOpen && state.currentStudentId && userId === state.currentStudentId) {
-                setHeaderStatus(isOnline);
+            const id = String(userId);
+
+            // ✅ cache
+            presenceMap.set(id, !!isOnline);
+
+            // لو المدرس فاتح شات نفس الطالب حدّث الهيدر
+            if (state.isOpen && state.currentStudentId && String(state.currentStudentId) === id) {
+                setHeaderStatus(!!isOnline);
+            }
+
+            // ✅ حدّث الدوت في الليست
+            const dot = document.querySelector(
+                `.presence-dot[data-presence-id="${CSS.escape(id)}"]`
+            );
+
+            if (dot) {
+                dot.classList.toggle("online", !!isOnline);
+                dot.classList.toggle("offline", !isOnline);
             }
         });
-
 
         async function sendRealtimeToStudent(studentId, message) {
             try {
@@ -947,6 +987,8 @@
         }
     </script>
 }
+
+
 
 
 

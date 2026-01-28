@@ -21,6 +21,7 @@
     <Folder Include="wwwroot\js\Admin\Course\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="wwwroot\css\DashboardStudent.css" />
     <None Include="wwwroot\HomePageAssets\assets\.DS_Store" />
     <None Include="wwwroot\HomePageAssets\assets\img\.DS_Store" />
     <None Include="wwwroot\HomePageAssets\assets\img\about\.DS_Store" />

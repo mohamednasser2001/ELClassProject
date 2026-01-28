@@ -1,140 +1,64 @@
 ﻿<!DOCTYPE html>
 <html lang="en" dir="ltr">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ElClass Student</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Icons (اختياري) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="~/css/DashboardStudent.css" />
+
     @RenderSection("Styles", required: false)
-
-    <style>
-        :root {
-            --std-dark: #34495e;
-            --std-teal: #9dbfad;
-            --std-orange: #e67e22;
-            --std-bg: #f4f7f6;
-        }
-
-        body {
-            background-color: var(--std-bg);
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            text-align: left;
-        }
-
-        .navbar-student {
-            background-color: var(--std-dark);
-            color: white;
-            padding: 8px 20px;
-        }
-
-
-        .nav-center-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-        }
-
-        .navbar-student .nav-link {
-            color: #ecf0f1 !important;
-            font-size: 14px;
-            font-weight: 500;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-            .navbar-student .nav-link:hover {
-                color: var(--std-teal) !important;
-            }
-
-        /* تنسيق اللوجو */
-        .navbar-brand img {
-            max-height: 45px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .side-width {
-            width: 250px;
-        }
-    </style>
 </head>
+
 <body>
+    <div class="dash">
+        <!-- Sidebar (Right) -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand__logo">ED</div>
+                <div class="brand__name">EduDash</div>
+            </div>
 
-    <nav class="navbar navbar-expand-lg navbar-student shadow-sm">
-        <div class="container-fluid">
-
-            <div class="side-width">
-                <a class="navbar-brand d-flex align-items-center fw-bold text-white" href="#">
-                 
-                    <img src="~/Images/logos-04.png" alt="Logo" onerror="this.src='../Images/logos-04.png';">
-
-                    @* <span class="ms-2">ElClass</span> *@
-
+            <nav class="nav">
+                <a class="nav__item is-active" asp-area="StudentArea" asp-controller="Home" asp-action="Index">
+                    <span class="nav__icon">🏠</span>
+                    <span class="nav__text">الرئيسية</span>
                 </a>
-            </div>
 
-            <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#studentNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <a class="nav__item" href="#">
+                    <span class="nav__icon">📊</span>
+                    <span class="nav__text">Dashboard</span>
+                </a>
 
-            <div class="collapse navbar-collapse nav-center-container" id="studentNav">
-                <ul class="navbar-nav gap-4">
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           asp-area="StudentArea"
-                           asp-controller="Home"
-                           asp-action="Index">
-                            <i class="fas fa-home"></i> Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           asp-area="StudentArea"
-                           asp-controller="Course"
-                           asp-action="Details">
-                            <i class="fas fa-home"></i> Courses
-                        </a>
-                    </li>
-                   
-                    <li class="nav-item"><a class="nav-link"><i class="fas fa-video"></i> Lectures</a></li>
-                    <li class="nav-item"><a class="nav-link"><i class="fas fa-clipboard-list"></i> Tests</a></li>
-                </ul>
-            </div>
+                <a class="nav__item" href="#">
+                    <span class="nav__icon">📚</span>
+                    <span class="nav__text">Courses</span>
+                </a>
 
-            <div class="d-flex align-items-center justify-content-end gap-3 side-width border-start ps-3">
-                <i class="fas fa-bell" style="cursor:pointer"></i>
+                <a class="nav__item" href="#">
+                    <span class="nav__icon">📅</span>
+                    <span class="nav__text">Calendar</span>
+                </a>
 
-                <div class="dropdown">
-                  
-                    <button class="btn btn-dark d-flex align-items-center gap-2" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="small d-none d-sm-block">Account</span>
-                        <img src="https://ui-avatars.com/api/?name=ST&background=9dbfad&color=fff" class="rounded-circle" width="32">
-                        <i class="fas fa-caret-down ms-1"></i> 
-                    </button>
+                <a class="nav__item" href="#">
+                    <span class="nav__icon">⚙️</span>
+                    <span class="nav__text">Settings</span>
+                </a>
+            </nav>
+        </aside>
 
-             
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
-                        <li><a class="dropdown-item" href="/Identity/MyProfile/MyProfile">MyProfile</a></li>
-                    </ul>
-                </div>
-            </div>
-
-        </div>
-    </nav>
-
-    <div class="container-fluid mt-4">
-
-        @RenderBody()
-        @RenderSection("Scripts", required: false)
-
-
-
+        <!-- Main Content -->
+        <main class="main">
+            @RenderBody()
+        </main>
     </div>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -1,178 +1,262 @@
 ﻿@using Models
+@using System.Text.RegularExpressions
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager
-
 @model Models.ViewModels.StudentDashboardVM
-
 
 @{
     Layout = "_StudentLayout";
 }
 
-<div class="container-fluid py-4" dir="ltr">
-    @* سنثبته LTR حالياً ليطابق الصورة *@
-    <div class="row">
+<!-- Topbar -->
+<header class="topbar">
+    <div class="topbar__left">
+        <h1 class="page-title">لوحة الطالب</h1>
+        <p class="page-subtitle">نظرة سريعة على تقدمك ومهامك</p>
+    </div>
 
-        <div class="col-lg-3 order-1">
-            <div class="card border-0 shadow-sm mb-3" style="border-radius: 15px; overflow: hidden;">
-                <div class="p-3 fw-bold text-white" style="background-color: #d35400;">
-                    <i class="fas fa-book-open me-2"></i> My Subjects
-                </div>
-                <div class="list-group list-group-flush">
-                    @if (Model.Courses != null && Model.Courses.Any())
-                    {
-                        @foreach (var coursesVM in Model.Courses)
-                        {
-                            @* هنا نجعل العنصر رابطاً يوجه إلى CourseController *@
-                            <a asp-area="StudentArea"
-                               asp-controller="Course"
-                               asp-action="Details"
-                               asp-route-id="@coursesVM.CourseId"
-                               class="list-group-item list-group-item-action small py-3"
-                               style="color: #d35400; cursor: pointer; text-decoration: none;">
-                                <i class="fas fa-chevron-right me-2" style="font-size: 0.8em;"></i>
-                                @coursesVM.CourseTitleEn @* أو CourseTitleAr حسب رغبتك *@
-                            </a>
-                        }
-                    }
-                    else
-                    {
-                        <div class="list-group-item small py-3 text-muted">
-                            No courses assigned yet.
-                        </div>
-                    }
-                </div>
-            </div>
+    <div class="topbar__right">
+        <button class="icon-btn" type="button" aria-label="Notifications">🔔</button>
+        @{
+            var currentUser = await _userManager.GetUserAsync(User);
 
-            <div class="input-group mb-3 shadow-sm" style="border-radius: 10px; overflow: hidden;">
-                <input type="text" class="form-control border-0" placeholder="Search ...">
-                <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-search"></i></span>
-            </div>
+            var rawName = currentUser?.NameAR
+                ?? currentUser?.NameEN
+                ?? currentUser?.UserName
+                ?? "Student";
 
-            <div class="card border-0 shadow-sm mb-3" style="border-radius: 15px; overflow: hidden;">
-                <div class="p-3 fw-bold" style="background-color: #d5e5db; color: #5d7c6b;">
-                    <i class="fas fa-edit me-2"></i> Latest assignments
-                </div>
-                <div class="p-3">
-                    <div class="mb-3 border-bottom pb-2">
-                        <div style="color: #5d7c6b; font-weight: 600; font-size: 14px;">Shadowing + Summarization</div>
-                        <small class="text-muted">task level 4 -</small>
-                    </div>
-                    <div class="mb-3 border-bottom pb-2">
-                        <div style="color: #5d7c6b; font-weight: 600; font-size: 14px;">task level 4 -</div>
-                        <small class="text-muted">task level 4.</small>
-                    </div>
-                    <div class="pb-2">
-                        <div style="color: #5d7c6b; font-weight: 600; font-size: 14px;">task level 4.</div>
-                    </div>
-                </div>
-            </div>
+            var displayName = Regex.Replace(rawName, "([a-z])([A-Z])", "$1 $2");
 
-            <div class="p-2">
-                <h6 class="fw-bold small text-muted"><i class="far fa-question-circle"></i> Need help?</h6>
-                <p class="text-muted" style="font-size: 11px;">Please review our guides and help manuals</p>
-            </div>
-        </div>
+            var nameParts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-        <div class="col-lg-9 order-2">
-            <div class="row g-3">
-                <div class="col-lg-5">
-                    <div class="card h-100 border-0 p-4 text-center shadow-sm d-flex flex-column justify-content-center"
-                         style="background-color: #a3c1ad; border-radius: 25px;">
-                        <div class="mb-3 text-white">
-                            <i class="fas fa-video fa-3x" style="opacity: 0.7;"></i>
-                        </div>
-                        <h4 class="text-white fw-bold mb-3">Join online lecture</h4>
-                        <p class="text-white small mb-4 px-2">Click to check if an online lecture is currently running. Keep the page open, and it will do this check automatically.</p>
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn fw-bold px-4" style="background-color: #d35400; color: white; border-radius: 10px;">
-                                <i class="fas fa-sync-alt me-1"></i> Check
-                            </button>
-                            <button class="btn btn-light fw-bold px-4" style="border-radius: 10px; color: #333;">
-                                <i class="fas fa-arrow-right me-1"></i> All lectures
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            var initials = nameParts.Length >= 2
+                ? $"{nameParts[0][0]}{nameParts[1][0]}"
+                : nameParts.Length == 1
+                    ? $"{nameParts[0][0]}"
+                    : "S";
 
-                <div class="col-lg-7">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; overflow: hidden;">
-                        <div class="p-3 border-bottom bg-white d-flex justify-content-between">
-                            <span class="fw-bold small text-muted"><i class="far fa-calendar-alt me-1"></i> Upcoming lectures</span>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" style="font-size: 13px;">
-                                <thead class="bg-light">
-                                    <tr class="text-muted">
-                                        <th>TIME</th>
-                                        <th>subjects</th>
-                                        <th>Instructor</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="py-3">
-                                            <span style="color: #d35400; font-weight: 700;">07/01, 10:00 PM</span><br>
-                                            <small class="text-muted">20 hours 22 minutes from now</small>
-                                        </td>
-                                        <td class="py-3" style="color: #d35400;">Arabic</td>
-                                        <td class="py-3">Ahmed mahmoud</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="py-3">
-                                            <span style="color: #d35400; font-weight: 700;">11/01, 11:30 PM</span><br>
-                                            <small class="text-muted">5 days from now</small>
-                                        </td>
-                                        <td class="py-3" style="color: #d35400;">English</td>
-                                        <td class="py-3">mohamed nasser</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="p-2 text-end bg-light border-top">
-                            <a href="#" class="text-danger small text-decoration-none fw-bold me-2">
-                                <i class="far fa-calendar-alt"></i> View lecture schedule
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            var profileImage = !string.IsNullOrEmpty(currentUser?.Img)
+                ? Url.Content("~/Images/Users/" + currentUser.Img)
+                : null;
+        }
 
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm p-3" style="border-radius: 15px;">
-                        <h6 class="fw-bold small text-muted border-bottom pb-2"><i class="fas fa-check-double me-2"></i> Latest tests</h6>
-                        <div class="d-flex align-items-center justify-content-between pt-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-check-square text-success"></i>
-                                <a href="#" class="text-danger fw-bold small text-decoration-none">Premium Written Placement Test A</a>
-                            </div>
-                        </div>
-                        <div class="ps-4 mt-1">
-                            <small class="text-muted" style="font-size: 11px;">
-                                <i class="fas fa-laptop me-1"></i> Written (Online) | <i class="far fa-clock me-1"></i> Start at 20/11, 04:23 PM
-                            </small>
-                        </div>
-                    </div>
+        <div class="user">
+            @if (!string.IsNullOrWhiteSpace(profileImage))
+            {
+                <img class="user__avatar" src="@profileImage" alt="Student avatar" />
+            }
+            else
+            {
+                <div class="user__avatar user__avatar--initials">
+                    @initials
                 </div>
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm p-3" style="border-radius: 15px;">
-                        <h6 class="fw-bold small text-muted border-bottom pb-2"><i class="fas fa-file-alt me-2"></i> Latest assignments</h6>
-                        <div class="d-flex justify-content-between align-items-center pt-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-hourglass-half text-warning"></i>
-                                <a href="#" class="text-danger fw-bold small text-decoration-none">Shadowing + Summarization</a>
-                            </div>
-                            <i class="fas fa-chevron-right text-muted"></i>
-                        </div>
-                        <div class="ps-4 mt-1 text-muted" style="font-size: 11px;">
-                            <i class="far fa-clock me-1"></i> 21/12 10:19 PM
-                        </div>
-                    </div>
+            }
+
+            <div class="user__meta">
+                <div class="user__name">
+                    <span class="hello">Hello</span> @displayName
                 </div>
+            
             </div>
         </div>
     </div>
-</div>
+</header>
+
+<!-- Stats -->
+<section class="stats">
+    <article class="stat-card">
+        <div class="stat-card__icon">🧾</div>
+        <div class="stat-card__body">
+            <div class="stat-card__label">إجمالي الدروس</div>
+            <div class="stat-card__value">12</div>
+            <div class="stat-card__hint">هذا الأسبوع</div>
+        </div>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card__icon">✅</div>
+        <div class="stat-card__body">
+            <div class="stat-card__label">المهام المنتهية</div>
+            <div class="stat-card__value">5</div>
+            <div class="stat-card__hint">آخر 7 أيام</div>
+        </div>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card__icon">📈</div>
+        <div class="stat-card__body">
+            <div class="stat-card__label">مستوى التقدم</div>
+            <div class="stat-card__value">85%</div>
+            <div class="stat-card__hint">متوسط عام</div>
+        </div>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card__icon">🔔</div>
+        <div class="stat-card__body">
+            <div class="stat-card__label">إشعارات جديدة</div>
+            <div class="stat-card__value">3</div>
+            <div class="stat-card__hint">اليوم</div>
+        </div>
+    </article>
+</section>
+
+<!-- Content Grid -->
+<section class="grid">
+    <!-- Courses Progress -->
+    <div class="panel panel--courses" style="grid-area:courses;">
+        <div class="panel__header">
+            <h2 class="panel__title">مقرراتي الدراسية</h2>
+            <a class="panel__link" href="#">عرض الكل</a>
+        </div>
+        <div class="courses">
+            @if (Model?.Courses != null && Model.Courses.Any())
+            {
+                var i = 0;
+
+                foreach (var c in Model.Courses)
+                {
+                    // عنوان الكورس (AR لو موجود)
+                    var title = c.CourseTitleAr ?? c.CourseTitleEn ?? "Course";
+
+                    // أيقونة بسيطة حسب الترتيب (مؤقتًا)
+                    string icon = (i % 4) switch
+                    {
+                        0 => "📘",
+                        1 => "🌍",
+                        2 => "➗",
+                        _ => "🧪"
+                    };
+
+                    i++;
+
+                    <article class="course-card">
+                        <div class="course-card__media">@icon</div>
+
+                        <div class="course-card__body">
+                            <div class="course-card__name">@title</div>
+
+                            <!-- مؤقتًا: Progress ثابت لحد ما نربطه بالداتا -->
+                            <div class="progress">
+                                <div class="progress__bar" style="width:@c.ProgressPercent%;"></div>
+                            </div>
+
+                            <div class="course-card__meta">
+                                <span>@c.ProgressPercent%</span>
+                                <span>@c.AttendedCount / @c.GoalCount حصة</span>
+                            </div>
+
+                            <a class="course-card__action"
+                               asp-area="StudentArea"
+                               asp-controller="Courses"
+                               asp-action="Details"
+                               asp-route-id="@c.CourseId">
+                                عرض المزيد
+                            </a>
+                        </div>
+                    </article>
+                }
+            }
+            else
+            {
+                <div style="padding:16px; color: var(--muted);">
+                    لا يوجد مقررات حالياً.
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <!-- Join Online Lecture -->
+    <div class="panel panel--join" style="grid-area:join;">
+        <div class="join">
+            <h2 class="join__title">الانضمام إلى محاضرة عبر الإنترنت</h2>
+            <p class="join__text">اضغط للانضمام بسرعة أو حجز موعد.</p>
+
+            <div class="join__actions">
+                <a class="btn btn--primary" href="#">انضم الآن</a>
+                <a class="btn btn--outline" href="#">حجز موعد</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="panel panel--schedule" style="grid-area:schedule;">
+        <div class="panel__header">
+            <h2 class="panel__title">جدولي</h2>
+            <a class="panel__link" href="#">عرض</a>
+        </div>
+
+        <ul class="schedule">
+            <li class="schedule__item">
+                <div class="schedule__time">10:00 - 11:30</div>
+                <div class="schedule__info">
+                    <div class="schedule__title">محاضرة رياضيات</div>
+                    <div class="schedule__sub">أ/ محمد</div>
+                </div>
+                <span class="badge badge--upcoming">قادم</span>
+            </li>
+
+            <li class="schedule__item">
+                <div class="schedule__time">01:00 - 02:30</div>
+                <div class="schedule__info">
+                    <div class="schedule__title">محاضرة عربي</div>
+                    <div class="schedule__sub">أ/ أحمد</div>
+                </div>
+                <span class="badge badge--upcoming">قادم</span>
+            </li>
+
+            <li class="schedule__item">
+                <div class="schedule__time">04:00 - 05:00</div>
+                <div class="schedule__info">
+                    <div class="schedule__title">محاضرة علوم</div>
+                    <div class="schedule__sub">أ/ سارة</div>
+                </div>
+                <span class="badge badge--done">تم</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Current Tasks -->
+    <div class="panel panel--tasks" style="grid-area:tasks;">
+        <div class="panel__header">
+            <h2 class="panel__title">المهام الحالية</h2>
+            <a class="panel__link" href="#">عرض الكل</a>
+        </div>
+
+        <ul class="tasks">
+            <li class="task">
+                <span class="task__icon">📝</span>
+                <div class="task__body">
+                    <div class="task__title">تسليم واجب اللغة العربية 1</div>
+                    <div class="task__meta">موعد: 10:00 ص - اليوم</div>
+                </div>
+                <span class="badge badge--urgent">هام</span>
+            </li>
+
+            <li class="task">
+                <span class="task__icon">📌</span>
+                <div class="task__body">
+                    <div class="task__title">مذاكرة درس العلوم</div>
+                    <div class="task__meta">موعد: 05:00 م - غدًا</div>
+                </div>
+            </li>
+
+            <li class="task">
+                <span class="task__icon">✅</span>
+                <div class="task__body">
+                    <div class="task__title">حل اختبار رياضيات قصير</div>
+                    <div class="task__meta">موعد: 11:59 م - الجمعة</div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</section>
+
+<footer class="footer">
+    © 2026 EduDash. All rights reserved.
+</footer>
+
+
 
 @* Chat Widget (Student) *@
 <button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
@@ -214,6 +298,7 @@
         </div>
     </div>
 </div>
+
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -346,7 +431,7 @@
         }
 
         // =========================
-        // ✅ Presence helpers (FIX)
+        // ✅ Presence helpers
         // =========================
         const presenceMap = new Map();
 
@@ -473,6 +558,7 @@
             }
         }
 
+        // ✅✅ FIX HERE: apply presenceMap when rendering list
         function renderConversations(list) {
             chatItemsBox.innerHTML = '';
 
@@ -482,6 +568,7 @@
             }
 
             for (const c of list) {
+                const idStr = String(c.instructorId ?? '');
                 const name = c.instructorName ?? 'Instructor';
                 const preview = c.lastMessage ?? '';
                 const unread = c.unread ?? 0;
@@ -492,18 +579,25 @@
 
                 const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
 
+                // 👇 أهم سطر: خُد الحالة من الكاش بدل default offline
+                const isOnline = presenceMap.get(idStr) === true;
+                const dotClass = isOnline ? 'online' : 'offline';
+
                 chatItemsBox.insertAdjacentHTML('beforeend', `
-                        <div class="chat-item"
-                             data-instructor-id="${escapeHtml(c.instructorId)}"
-                             data-instructor-name="${escapeHtml(name)}">
-                            <div class="avatar">${avatarHtml}</div>
-                            <div class="meta">
-                                <div class="name">${escapeHtml(name)}</div>
-                                <div class="preview">${escapeHtml(preview)}</div>
-                            </div>
-                            ${unreadHtml}
-                        </div>
-                    `);
+                                            <div class="chat-item"
+                                                 data-instructor-id="${escapeHtml(idStr)}"
+                                                 data-instructor-name="${escapeHtml(name)}">
+                                                 <div class="avatar">
+                                                    ${avatarHtml}
+                                                    <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(idStr)}"></span>
+                                                </div>
+                                                <div class="meta">
+                                                    <div class="name">${escapeHtml(name)}</div>
+                                                    <div class="preview">${escapeHtml(preview)}</div>
+                                                </div>
+                                                ${unreadHtml}
+                                            </div>
+                                        `);
             }
 
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
@@ -524,7 +618,11 @@
             const filtered = !q
                 ? state.conversationsCache
                 : state.conversationsCache.filter(x => (x.instructorName ?? '').toLowerCase().includes(q));
+
             renderConversations(filtered);
+
+            // ✅ لو فاتح شات بالفعل خلي الـactive ثابت
+            if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
         });
 
         async function openChat(instructorId, instructorName) {
@@ -545,9 +643,7 @@
 
             messagesBox.scrollTop = messagesBox.scrollHeight;
 
-            // =========================
-            // ✅ Presence (FIXED)
-            // =========================
+            // ✅ Presence for header
             try {
                 if (headerNameEl) headerNameEl.textContent = instructorName || "Chat";
 
@@ -668,14 +764,14 @@
             wrapper.dataset.messageId = String(id || '');
 
             wrapper.innerHTML = `
-                    <div class="bubble">
-                        ${escapeHtml(content)}
-                        <span class="time">
-                            ${escapeHtml(toTime(sentAt))}
-                            ${ticksHtml(isMine, isRead)}
-                        </span>
-                    </div>
-                `;
+                                        <div class="bubble">
+                                            ${escapeHtml(content)}
+                                            <span class="time">
+                                                ${escapeHtml(toTime(sentAt))}
+                                                ${ticksHtml(isMine, isRead)}
+                                            </span>
+                                        </div>
+                                    `;
             return wrapper;
         }
 
@@ -775,17 +871,26 @@
             .withAutomaticReconnect()
             .build();
 
-        // ✅ PresenceChanged listener (FIXED: update chatHeaderStatus NOT chatHeaderSubTitle)
+        // ✅ PresenceChanged
         studentConnection.on("PresenceChanged", function (userId, isOnline) {
             const id = String(userId);
             presenceMap.set(id, !!isOnline);
 
+            // لو الشات مفتوح على نفس المدرس حدّث الهيدر
             if (state.currentInstructorId && String(state.currentInstructorId) === id) {
                 setHeaderStatus(!!isOnline);
             }
+
+            // ✅ حدّث الدوت في الليست
+            const dot = document.querySelector(
+                `.presence-dot[data-presence-id="${CSS.escape(id)}"]`
+            );
+            if (dot) {
+                dot.classList.toggle("online", !!isOnline);
+                dot.classList.toggle("offline", !isOnline);
+            }
         });
 
-        // ✅ لو حصل reconnect: رجّع الحالة فورًا
         studentConnection.onreconnected(async () => {
             if (!state.currentInstructorId) return;
             try {
@@ -874,6 +979,7 @@
         }
     </script>
 }
+
 
 
 @section Styles {

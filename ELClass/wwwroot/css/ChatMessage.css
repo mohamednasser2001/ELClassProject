@@ -530,3 +530,35 @@
     #chatHeaderSubTitle.subtitle.offline {
         color: #9aa0a6; /* رمادي هادي */
     }
+
+/* ===== Presence Dot (Online/Offline) ===== */
+.avatar {
+    position: relative;
+    overflow: visible; /* مهم عشان الدوت متتقصش */
+}
+
+/* Presence Dot */
+.presence-dot {
+    position: absolute;
+    right: -3px; /* متوازنة أكتر */
+    bottom: -3px;
+    width: 11px; /* أصغر شوية = أشيك */
+    height: 11px;
+    border-radius: 50%;
+    border: 2px solid #eef2f7; /* أبيض هادي مش فاقع */
+    background: #9ca3af;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* ظل أنعم */
+    z-index: 2; /* ضمان إنها فوق الصورة */
+}
+
+    /* Online */
+    .presence-dot.online {
+        background: #22c55e; /* أخضر مريح للعين */
+    }
+
+    /* Offline */
+    .presence-dot.offline {
+        background: #9ca3af; /* رمادي هادي */
+    }
+
+
