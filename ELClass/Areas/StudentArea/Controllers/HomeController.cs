@@ -24,22 +24,70 @@ namespace ELClass.Areas.StudentArea.Controllers
             this._unitOfWork = unitOfWork;
             this._userManager = userManager;
         }
-   
+
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
 
-            // 1. الكود بتاعك (بيجيب الكورسات اللي الطالب مشترك فيها)
+            // كورسات الطالب
+            var courses = await _unitOfWork.StudentCourseRepository
+                .GetAsync(e => e.StudentId == userId, q => q.Include(e => e.Course));
+
           
-            var courses = await _unitOfWork.StudentCourseRepository.GetAsync(e => e.StudentId == userId, q => q.Include(e => e.Course));
+            const int defaultGoal = 8;
+
+            // Helper: يقرأ عدد الحصص/الدروس المنجزة لو موجودة داخل StudentCourse (بدون ما يكسر المشروع)
+            int ReadAttendedCountFromStudentCourse(object scObj)
+            {
+                if (scObj == null) return 0;
+
+                // أسماء محتملة عندك في الـ entity (لو أي واحد موجود هيتقرأ)
+                string[] possibleProps =
+                {
+                        "AttendedCount",
+                        "CompletedLessons",
+                        "LessonsTaken",
+                        "TakenLessons",
+                        "CompletedCount",
+                        "ProgressCount"
+               };
+
+                var t = scObj.GetType();
+
+                foreach (var propName in possibleProps)
+                {
+                    var prop = t.GetProperty(propName);
+                    if (prop == null) continue;
+
+                    var val = prop.GetValue(scObj);
+                    if (val == null) return 0;
+
+                    try
+                    {
+                        return Convert.ToInt32(val);
+                    }
+                    catch
+                    {
+                        return 0;
+                    }
+                }
+
+                return 0; 
+            }
+
             var coursesVM = courses.Select(sc => new StudentCoursesVM
             {
                 CourseId = sc.CourseId,
                 CourseTitleEn = sc.Course.TitleEn,
-                CourseTitleAr = sc.Course.TitleAr
+                CourseTitleAr = sc.Course.TitleAr,
+
+             
+                AttendedCount = ReadAttendedCountFromStudentCourse(sc),
+                GoalCount = defaultGoal
             }).ToList();
-            // 2. هنجيب "كل المدرسين" من الداتا بيز عشان الشات
-            var allInstructors = await _unitOfWork.InstructorRepository.GetAsync(null, q => q.Include(i => i.ApplicationUser));
+
+            var allInstructors = await _unitOfWork.InstructorRepository
+                .GetAsync(null, q => q.Include(i => i.ApplicationUser));
 
             var instructorsVM = allInstructors.Select(i => new InstructorChatVM
             {
@@ -47,8 +95,8 @@ namespace ELClass.Areas.StudentArea.Controllers
                 InstructorNameEn = i.NameEn,
                 InstructorNameAr = i.NameAr,
                 ApplicationUser = i.ApplicationUser
-
             }).ToList();
+
             var model = new StudentDashboardVM
             {
                 Courses = coursesVM,
@@ -56,8 +104,8 @@ namespace ELClass.Areas.StudentArea.Controllers
             };
 
             return View(model);
-
         }
+
 
         //chat
         [HttpPost]
