@@ -14,7 +14,7 @@ namespace Models
     public class Appointment
     {
         public int Id { get; set; }
-        public DayOfWeek Day { get; set; }
+        public DayOfWeek Day { get; set; } // للمتكرر
         public TimeSpan StartTime { get; set; }
         public string MeetingLink { get; set; } = string.Empty;
         public int DurationInHours { get; set; }
@@ -22,9 +22,12 @@ namespace Models
         public DateTime? SpecificDate { get; set; }
         public int CourseId { get; set; }
         public Course? Course { get; set; }
-        public string InstructorId { get; set; }= string.Empty;
+        public string InstructorId { get; set; } = string.Empty;
         public Instructor? Instructor { get; set; }
+
+
         public ICollection<StudentAppointment> StudentAppointments { get; set; } = new List<StudentAppointment>();
+
         public bool IsActive
         {
             get
@@ -38,7 +41,7 @@ namespace Models
                     var endDateTime = startDateTime.AddHours(DurationInHours);
                     return now >= startDateTime && now <= endDateTime;
                 }
-                else 
+                else
                 {
                     
                     return now.DayOfWeek == Day &&
@@ -46,6 +49,7 @@ namespace Models
                            now.TimeOfDay <= endTime;
                 }
             }
+
         }
 
     }

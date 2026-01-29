@@ -4,6 +4,7 @@ using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260128143958_editAppointmentWithExpireDate")]
+    partial class editAppointmentWithExpireDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,6 +255,9 @@ namespace DataAccess.Migrations
 
                     b.Property<int>("DurationInHours")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("InstructorId")
                         .IsRequired()
@@ -640,14 +646,8 @@ namespace DataAccess.Migrations
                     b.Property<int>("AppointmentId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("AttendedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsAttended")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("StudentExpiryDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int?>("AppointmentId1")
+                        .HasColumnType("int");
 
                     b.Property<string>("StudentId")
                         .IsRequired()
@@ -659,6 +659,8 @@ namespace DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AppointmentId");
+
+                    b.HasIndex("AppointmentId1");
 
                     b.HasIndex("StudentId");
 
@@ -910,9 +912,13 @@ namespace DataAccess.Migrations
             modelBuilder.Entity("Models.StudentAppointment", b =>
                 {
                     b.HasOne("Models.Appointment", "Appointment")
-                        .WithMany("StudentAppointments")
+                        .WithMany()
                         .HasForeignKey("AppointmentId")
                         .IsRequired();
+
+                    b.HasOne("Models.Appointment", null)
+                        .WithMany("StudentAppointments")
+                        .HasForeignKey("AppointmentId1");
 
                     b.HasOne("Models.Student", "Student")
                         .WithMany("StudentAppointments")

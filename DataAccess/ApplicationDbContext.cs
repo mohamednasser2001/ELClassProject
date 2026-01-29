@@ -144,17 +144,22 @@ namespace DataAccess
 
             builder.Entity<Appointment>()
             .HasOne(a => a.Instructor)
-            .WithMany(i => i.Appointments) 
+            .WithMany(i => i.Appointments)
             .HasForeignKey(a => a.InstructorId)
-            .OnDelete(DeleteBehavior.NoAction); 
+            .OnDelete(DeleteBehavior.NoAction);
 
-            
+
             builder.Entity<StudentAppointment>()
                 .HasOne(sa => sa.Appointment)
                 .WithMany()
                 .HasForeignKey(sa => sa.AppointmentId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
+
+            builder.Entity<StudentAppointment>()
+                .HasOne(sa => sa.Appointment)
+                .WithMany(a => a.StudentAppointments)
+                .HasForeignKey(sa => sa.AppointmentId);
         }
 
 

@@ -9,9 +9,9 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <i class="fas fa-calendar-alt text-orange-500"></i>
-                @(isArabic ? "جدول المواعيد" : "Appointments Schedule")
+                @(isArabic ? "إدارة جدول المحاضرات" : "Lectures Schedule Management")
             </h1>
-            <p class="text-gray-500 text-sm mt-1">@(isArabic ? "إدارة مواعيد المحاضرات والدروس" : "Manage your lecture schedules")</p>
+            <p class="text-gray-500 text-sm mt-1">@(isArabic ? "تعديل موعد واحد يطبق على جميع الطلاب المشتركين" : "Editing one appointment applies to all linked students")</p>
         </div>
         <a href="/instructor/Appointment/AddNewAppointment" class="inline-flex items-center px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-all shadow-sm gap-2 w-fit">
             <i class="fas fa-plus text-sm"></i>
@@ -26,9 +26,8 @@
                     <tr>
                         <th class="px-6 py-4 text-center">#</th>
                         <th class="px-6 py-4">@(isArabic ? "الكورس" : "Course")</th>
-                        <th class="px-6 py-4">@(isArabic ? "النوع" : "Type")</th>
-                        <th class="px-6 py-4">@(isArabic ? "اليوم / التاريخ" : "Day / Date")</th>
-                        <th class="px-6 py-4">@(isArabic ? "الوقت" : "Time")</th>
+                        <th class="px-6 py-4">@(isArabic ? "اليوم / الوقت" : "Day / Time")</th>
+                        <th class="px-6 py-4 text-center">@(isArabic ? "عدد الطلاب" : "Students")</th>
                         <th class="px-6 py-4">@(isArabic ? "الحالة" : "Status")</th>
                         <th class="px-6 py-4 text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
                     </tr>
@@ -38,39 +37,48 @@
                     {
                         <tr class="hover:bg-orange-50/30 transition-colors">
                             <td class="px-6 py-4 text-center text-gray-400 font-medium">@(item.index + 1)</td>
+
                             <td class="px-6 py-4">
                                 <div class="font-bold text-gray-900">@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)</div>
+                                <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                                    @(item.value.Type == Models.ScheduleType.Recurring ? (isArabic ? "أسبوعي" : "Weekly") : (isArabic ? "مرة واحدة" : "One-Time"))
+                                </span>
                             </td>
-                            <td class="px-6 py-4">
-                                @if (item.value.Type == Models.ScheduleType.Recurring)
-                                {
-                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md text-xs font-semibold">
-                                        <i class="fas fa-redo-alt mr-1"></i> @(isArabic ? "أسبوعي" : "Recurring")
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-md text-xs font-semibold">
-                                        <i class="fas fa-bolt mr-1"></i> @(isArabic ? "مرة واحدة" : "One-Time")
-                                    </span>
-                                }
-                            </td>
-                            <td class="px-6 py-4">
-                                @if (item.value.Type == Models.ScheduleType.Recurring)
-                                {
-                                    <span class="text-gray-700">@(isArabic? GetArabicDay(item.value.Day) : item.value.Day.ToString())</span>
-                                }
-                                else
-                                {
-                                    <span class="text-gray-700">@item.value.SpecificDate?.ToString("yyyy-MM-dd")</span>
-                                }
-                            </td>
+
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">@DateTime.Today.Add(item.value.StartTime).ToString("hh:mm tt")</span>
-                                    <span class="text-gray-400 text-xs">@item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs")</span>
+                                    <span class="text-gray-900 font-medium">
+                                        @if (item.value.Type == Models.ScheduleType.Recurring)
+                                        {
+                                            // حل مباشر بدون الاعتماد على دالة خارجية لتجنب الـ Error
+                                            @(isArabic ?
+                                                                                (item.value.Day == DayOfWeek.Saturday ? "السبت" :
+                                                                                item.value.Day == DayOfWeek.Sunday ? "الأحد" :
+                                                                                item.value.Day == DayOfWeek.Monday ? "الاثنين" :
+                                                                                item.value.Day == DayOfWeek.Tuesday ? "الثلاثاء" :
+                                                                                item.value.Day == DayOfWeek.Wednesday ? "الأربعاء" :
+                                                                                item.value.Day == DayOfWeek.Thursday ? "الخميس" : "الجمعة")
+                                                                                : item.value.Day.ToString())
+                                        }
+                                        else
+                                        {
+                                            @item.value.SpecificDate?.ToString("yyyy-MM-dd")
+                                        }
+                                    </span>
+                                    <span class="text-orange-600 text-xs">
+                                        <i class="far fa-clock"></i> @DateTime.Today.Add(item.value.StartTime).ToString("hh:mm tt")
+                                        (@item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs"))
+                                    </span>
                                 </div>
                             </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-bold">
+                                    <i class="fas fa-users mr-1 ml-1 text-xs text-blue-400"></i>
+                                    @item.value.StudentAppointments.Count
+                                </div>
+                            </td>
+
                             <td class="px-6 py-4">
                                 @if (item.value.IsActive)
                                 {
@@ -84,12 +92,34 @@
                                     <span class="text-gray-400">@(isArabic ? "غير نشط" : "Inactive")</span>
                                 }
                             </td>
+
                             <td class="px-6 py-4">
                                 <div class="flex justify-center gap-2">
-                                    <a href="@item.value.MeetingLink" target="_blank" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors shadow-sm border border-gray-100" title="Join">
-                                        <i class="fas fa-video"></i>
+                                    @* زر التعديل *@
+                                    <a href="/instructor/Appointment/Edit/@item.value.Id" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors border border-gray-100" title="Edit">
+                                        <i class="fas fa-edit"></i>
                                     </a>
-                                    <button onclick="deleteAppointment(@item.value.Id)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-gray-100" title="Delete">
+
+                                    @if (item.value.IsActive)
+                                    {
+                                        @* الزرار وهو شغال *@
+                                        <a href="@item.value.MeetingLink" target="_blank"
+                                           class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm"
+                                           title="@(isArabic ? "انضم الآن" : "Join Now")">
+                                            <i class="fas fa-video animate-pulse"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        @* الزرار وهو غير نشط (مقفول) *@
+                                        <span class="p-2 text-gray-300 bg-gray-50 border border-gray-100 rounded-lg cursor-not-allowed"
+                                              title="@(isArabic ? "الموعد غير متاح حالياً" : "Meeting not available yet")">
+                                            <i class="fas fa-video-slash"></i>
+                                        </span>
+                                    }
+
+                                    @* زر الحذف *@
+                                    <button onclick="deleteAppointment(@item.value.Id)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -101,23 +131,8 @@
         </div>
     </div>
 </div>
+
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-@functions {
-    public string GetArabicDay(DayOfWeek day)
-    {
-        return day switch
-        {
-            DayOfWeek.Sunday => "الأحد",
-            DayOfWeek.Monday => "الاثنين",
-            DayOfWeek.Tuesday => "الثلاثاء",
-            DayOfWeek.Wednesday => "الأربعاء",
-            DayOfWeek.Thursday => "الخميس",
-            DayOfWeek.Friday => "الجمعة",
-            DayOfWeek.Saturday => "السبت",
-            _ => day.ToString()
-        };
-    }
-}
 
 @section Scripts{
     <script>
