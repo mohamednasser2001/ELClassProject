@@ -1,0 +1,109 @@
+﻿@using System.Security.Claims
+@model Models.Appointment
+
+@{
+    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
+}
+
+<div class="container py-5" style="direction:@direction">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h4 class="mb-0 text-orange">
+                <i class="fas fa-edit me-2"></i>
+                @(isArabic ? "تعديل الميعاد" : "Edit Appointment")
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Edit" method="post" id="editAppointmentForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CourseId" />
+                <input type="hidden" asp-for="InstructorId" />
+
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="p-3 bg-light rounded-2 border-start border-4 border-primary">
+                            <label class="form-label fw-bold text-primary">
+                                <i class="fas fa-book me-1"></i> @(isArabic ? "الكورس" : "Course")
+                            </label>
+                            <input type="text" class="form-control bg-white" value="@(isArabic ? Model.Course?.TitleAr : Model.Course?.TitleEn)" readonly />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "رابط الاجتماع" : "Meeting Link")</label>
+                        <input type="url" asp-for="MeetingLink" class="form-control" placeholder="https://..." required />
+                        <span asp-validation-for="MeetingLink" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "نوع الميعاد" : "Schedule Type")</label>
+                        <select id="scheduleType" asp-for="Type" class="form-select border-orange">
+                            <option value="Recurring">@(isArabic ? "ثابت (أسبوعي)" : "Recurring")</option>
+                            <option value="OneTime">@(isArabic ? "مرة واحدة" : "One Time")</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "المدة (بالساعات)" : "Duration (Hours)")</label>
+                        <input type="number" asp-for="DurationInHours" class="form-control" min="1" max="12" />
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="dayContainer">
+                        <label class="form-label fw-bold">@(isArabic ? "اليوم" : "Day")</label>
+                        <select asp-for="Day" class="form-select">
+                            <option value="Sunday">@(isArabic ? "الأحد" : "Sunday")</option>
+                            <option value="Monday">@(isArabic ? "الاثنين" : "Monday")</option>
+                            <option value="Tuesday">@(isArabic ? "الثلاثاء" : "Tuesday")</option>
+                            <option value="Wednesday">@(isArabic ? "الأربعاء" : "Wednesday")</option>
+                            <option value="Thursday">@(isArabic ? "الخميس" : "Thursday")</option>
+                            <option value="Friday">@(isArabic ? "الجمعة" : "Friday")</option>
+                            <option value="Saturday">@(isArabic ? "السبت" : "Saturday")</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="dateContainer" style="display:none;">
+                        <label class="form-label fw-bold">@(isArabic ? "التاريخ" : "Specific Date")</label>
+                        <input type="date" asp-for="SpecificDate" class="form-control"
+                               value="@(Model.SpecificDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "وقت البدء" : "Start Time")</label>
+                        <input type="time" asp-for="StartTime" class="form-control" required />
+                    </div>
+
+                    <div class="col-12 mt-4 text-center">
+                        <button type="submit" class="btn btn-orange-custom px-5">
+                            <i class="fas fa-save me-1"></i> @(isArabic ? "حفظ التعديلات" : "Save Changes")
+                        </button>
+                        <a href="/instructor/Appointment/Index" class="btn btn-light px-4 ms-2">
+                            @(isArabic ? "إلغاء" : "Cancel")
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function toggleFields() {
+                const type = $('#scheduleType').val();
+                if (type === "Recurring" || type === "0") {
+                    $('#dayContainer').show();
+                    $('#dateContainer').hide();
+                } else {
+                    $('#dayContainer').hide();
+                    $('#dateContainer').show();
+                }
+            }
+
+            $('#scheduleType').change(toggleFields);
+            toggleFields(); // تشغيل عند التحميل لأول مرة
+        });
+    </script>
+}
