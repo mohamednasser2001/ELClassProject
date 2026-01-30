@@ -16,7 +16,7 @@ namespace ELClass.Areas.Instructor.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type.EndsWith("nameidentifier"))?.Value;
-            var appointments = await _unitOfWork.AppoinmentRepository.GetAsync(e => e.InstructorId == userId, include: e => e.Include(e => e.Course!).Include(e=>e.StudentAppointments));
+            var appointments = await _unitOfWork.AppoinmentRepository.GetAsync(e => e.InstructorId == userId, include: e => e.Include(e => e.Course!).Include(e => e.StudentAppointments));
             return View(appointments);
         }
 
@@ -83,7 +83,7 @@ namespace ELClass.Areas.Instructor.Controllers
                         CourseId = vm.CourseId,
                         Day = vm.Type == (int)ScheduleType.Recurring ? vm.Day : 0,
                         SpecificDate = vm.Type == (int)ScheduleType.OneTime ? vm.SpecificDate : null
-                        
+
                     };
 
                     await _unitOfWork.AppoinmentRepository.CreateAsync(appointment);
@@ -194,24 +194,24 @@ namespace ELClass.Areas.Instructor.Controllers
         {
             try
             {
-                
-                var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e=>e.Id == id);
+
+                var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id);
                 if (appointment == null)
                 {
                     return Json(new { success = false, message = "Appointment not found" });
                 }
 
-                
+
                 var studentAppointments = await _unitOfWork.StudentAppointmentRepository.GetAsync(filter: x => x.AppointmentId == id);
                 foreach (var sa in studentAppointments)
                 {
                     await _unitOfWork.StudentAppointmentRepository.DeleteAsync(sa);
                 }
 
-                
+
                 await _unitOfWork.AppoinmentRepository.DeleteAsync(appointment);
 
-               
+
                 await _unitOfWork.CommitAsync();
 
                 return Json(new { success = true, message = "Deleted Successfully" });
@@ -220,6 +220,38 @@ namespace ELClass.Areas.Instructor.Controllers
             {
                 return Json(new { success = false, message = "Error: " + ex.Message });
             }
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id
+                , include: e => e.Include(e => e.Course!));
+            return View(appointment);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Models.Appointment model)
+        {
+            if (ModelState.IsValid)
+            {
+                var existing = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == model.Id);
+                if (existing == null) return NotFound();
+
+                
+                existing.Type = model.Type;
+                existing.Day = model.Day;
+                existing.StartTime = model.StartTime;
+                existing.SpecificDate = model.SpecificDate;
+                existing.DurationInHours = model.DurationInHours;
+                existing.MeetingLink = model.MeetingLink;
+
+                await _unitOfWork.AppoinmentRepository.EditAsync(existing);
+                await _unitOfWork.CommitAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+            return View(model);
         }
 
     }
