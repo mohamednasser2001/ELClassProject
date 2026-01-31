@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using ELClass.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -353,7 +354,7 @@ namespace ELClass.Areas.Admin.Controllers
     string ConfirmPassword)
         {
             
-            bool isArabic = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.IsRightToLeft;
+            bool isArabic = CultureHelper.IsArabic;
 
             ModelState.Remove("ApplicationUser.Student");
             ModelState.Remove("ApplicationUser.Instructor");

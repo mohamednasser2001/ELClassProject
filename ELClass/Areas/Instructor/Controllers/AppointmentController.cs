@@ -1,4 +1,5 @@
 ﻿using DataAccess.Repositories.IRepositories;
+using ELClass.services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
@@ -27,34 +28,15 @@ namespace ELClass.Areas.Instructor.Controllers
             return View();
         }
 
+
+
+
         [HttpPost]
         public async Task<IActionResult> Create(AppointmentVM vm)
         {
             try
             {
-                // 1. حساب تاريخ انتهاء الطالب (Student Expiry Date)
-                DateTime? calculatedStudentExpiryDate = null;
 
-                if (vm.Type == (int)ScheduleType.Recurring)
-                {
-                    DateTime startDate = DateTime.Today;
-                    while (startDate.DayOfWeek != vm.Day)
-                    {
-                        startDate = startDate.AddDays(1);
-                    }
-
-                    if (vm.TimeCount > 0)
-                    {
-                        calculatedStudentExpiryDate = startDate.AddDays((vm.TimeCount - 1) * 7);
-                    }
-                }
-                else // OneTime
-                {
-                    calculatedStudentExpiryDate = vm.SpecificDate;
-                }
-
-                // 2. البحث عن موعد موجود مسبقاً بنفس المواصفات للمدرس ده
-                // بندور على (نفس المدرس، نفس الكورس، نفس اليوم، نفس وقت البدء، نفس النوع)
                 var existingAppointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(a =>
                     a.InstructorId == vm.InstructorId &&
                     a.CourseId == vm.CourseId &&
@@ -63,61 +45,28 @@ namespace ELClass.Areas.Instructor.Controllers
                     (vm.Type == (int)ScheduleType.Recurring ? a.Day == vm.Day : a.SpecificDate == vm.SpecificDate)
                 );
 
-                int appointmentId;
-
                 if (existingAppointment != null)
                 {
-                    // لو الموعد موجود، هنستخدم الـ ID بتاعه
-                    appointmentId = existingAppointment.Id;
+                    return Json(new { success = false, message = "هذا الموعد موجود بالفعل لهذا المدرس" });
                 }
-                else
+
+                // 2. إنشاء الموعد الجديد
+                var appointment = new Appointment
                 {
-                    // لو مش موجود، هننشئ موعد جديد (الماستر)
-                    var appointment = new Appointment
-                    {
-                        InstructorId = vm.InstructorId,
-                        MeetingLink = vm.MeetingLink,
-                        Type = (ScheduleType)vm.Type,
-                        DurationInHours = vm.DurationInHours,
-                        StartTime = vm.StartTime,
-                        CourseId = vm.CourseId,
-                        Day = vm.Type == (int)ScheduleType.Recurring ? vm.Day : 0,
-                        SpecificDate = vm.Type == (int)ScheduleType.OneTime ? vm.SpecificDate : null
+                    InstructorId = vm.InstructorId,
+                    MeetingLink = vm.MeetingLink,
+                    Type = (ScheduleType)vm.Type,
+                    DurationInHours = vm.DurationInHours,
+                    StartTime = vm.StartTime,
+                    CourseId = vm.CourseId,
+                    Day = vm.Type == (int)ScheduleType.Recurring ? vm.Day : 0,
+                    SpecificDate = vm.Type == (int)ScheduleType.OneTime ? vm.SpecificDate : null
+                };
 
-                    };
-
-                    await _unitOfWork.AppoinmentRepository.CreateAsync(appointment);
-                    await _unitOfWork.CommitAsync();
-                    appointmentId = appointment.Id;
-                }
-
-                // 3. التحقق إذا كان الطالب مسجل في هذا الموعد مسبقاً (عشان منكررهوش)
-                var existingStudentLink = await _unitOfWork.StudentAppointmentRepository.GetOneAsync(sa =>
-                    sa.AppointmentId == appointmentId && sa.StudentId == vm.StudentId);
-
-                if (existingStudentLink != null)
-                {
-                    // لو الطالب موجود أصلاً، ممكن نحدث تاريخ انتهائه فقط (تجديد اشتراك)
-                    existingStudentLink.StudentExpiryDate = calculatedStudentExpiryDate;
-                    existingStudentLink.TimeCount = vm.Type == (int)ScheduleType.OneTime ? 1 : vm.TimeCount;
-                    await _unitOfWork.StudentAppointmentRepository.EditAsync(existingStudentLink);
-                }
-                else
-                {
-                    // لو طالب جديد على الموعد ده، ننشئ سجل ربط جديد
-                    var studentAppointment = new StudentAppointment
-                    {
-                        AppointmentId = appointmentId,
-                        StudentId = vm.StudentId,
-                        TimeCount = vm.Type == (int)ScheduleType.OneTime ? 1 : vm.TimeCount,
-                        StudentExpiryDate = calculatedStudentExpiryDate
-                    };
-                    await _unitOfWork.StudentAppointmentRepository.CreateAsync(studentAppointment);
-                }
-
+                await _unitOfWork.AppoinmentRepository.CreateAsync(appointment);
                 await _unitOfWork.CommitAsync();
 
-                return Json(new { success = true, message = "Successfully processed" });
+                return Json(new { success = true, message = "تم إنشاء الموعد بنجاح" });
             }
             catch (Exception ex)
             {
@@ -238,7 +187,7 @@ namespace ELClass.Areas.Instructor.Controllers
                 var existing = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == model.Id);
                 if (existing == null) return NotFound();
 
-                
+
                 existing.Type = model.Type;
                 existing.Day = model.Day;
                 existing.StartTime = model.StartTime;
@@ -253,6 +202,82 @@ namespace ELClass.Areas.Instructor.Controllers
             }
             return View(model);
         }
+
+
+        public async Task<IActionResult> ManageStudents(int id)
+        {
+
+            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(
+                a => a.Id == id,
+                include: e => e.Include(e => e.Course).Include(e => e.StudentAppointments).ThenInclude(e => e.Student!));
+
+            if (appointment == null) return NotFound();
+
+            return View(appointment);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> AddStudentToAppointment(string StudentId, int AppointmentId, int TimeCount)
+        {
+            
+            var isExists = await _unitOfWork.StudentAppointmentRepository
+                .GetOneAsync(e => e.StudentId == StudentId && e.AppointmentId == AppointmentId);
+
+            if (isExists != null)
+            {
+               
+                var errorMsg = CultureHelper.IsArabic
+                    ? "هذا الطالب مضاف بالفعل لهذا الموعد."
+                    : "This student is already added to this appointment.";
+
+                return Json(new { success = false, message = errorMsg });
+            }
+
+            
+            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == AppointmentId);
+            if (appointment == null)
+            {
+                return Json(new { success = false, message = "Appointment not found." });
+            }
+
+            DateTime? expiryDate = null;
+
+            if (appointment.Type == ScheduleType.Recurring)
+                expiryDate = DateTime.Now.AddDays(TimeCount * 7);
+            else
+                expiryDate = appointment.SpecificDate;
+
+            var link = new StudentAppointment
+            {
+                StudentId = StudentId,
+                AppointmentId = AppointmentId,
+                TimeCount = TimeCount,
+                StudentExpiryDate = expiryDate
+            };
+
+            
+            await _unitOfWork.StudentAppointmentRepository.CreateAsync(link);
+            await _unitOfWork.CommitAsync();
+            TempData["Success"] = CultureHelper.IsArabic ? "تم اضافة الطالب بنجاح " : " the student has been added successfully";
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveStudentFromAppointment(int studentAppointmentId)
+        {
+            var item = await _unitOfWork.StudentAppointmentRepository.GetOneAsync(e=>e.Id == studentAppointmentId);
+            if (item != null)
+            {
+                await _unitOfWork.StudentAppointmentRepository.DeleteAsync(item);
+                await _unitOfWork.CommitAsync();
+                
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false });
+        }
+
 
     }
 }

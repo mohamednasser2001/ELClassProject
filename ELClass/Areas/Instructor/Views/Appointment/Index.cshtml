@@ -1,7 +1,8 @@
-﻿@model IEnumerable<Models.Appointment>
+﻿@using ELClass.services
+@model IEnumerable<Models.Appointment>
 
 @{
-    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var isArabic = CultureHelper.IsArabic;
 }
 
 <div class="p-6 bg-gray-50 min-h-screen" dir="@(isArabic ? "rtl" : "ltr")">
@@ -73,10 +74,11 @@
                             </td>
 
                             <td class="px-6 py-4 text-center">
-                                <div class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-bold">
+                                <a href="/instructor/Appointment/ManageStudents/@item.value.Id"
+                                   class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-bold hover:bg-blue-100 transition-colors cursor-pointer">
                                     <i class="fas fa-users mr-1 ml-1 text-xs text-blue-400"></i>
                                     @item.value.StudentAppointments.Count
-                                </div>
+                                </a>
                             </td>
 
                             <td class="px-6 py-4">
