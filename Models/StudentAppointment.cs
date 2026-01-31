@@ -13,5 +13,10 @@ namespace Models
 
         public Appointment? Appointment { get; set; }
         public int TimeCount { get; set; } = 0;
+
+        public bool IsAttended { get; set; }
+        public DateTime? AttendedAt { get; set; }
+
+
     }
 }

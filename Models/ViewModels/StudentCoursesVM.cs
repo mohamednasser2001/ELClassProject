@@ -13,7 +13,7 @@ namespace Models.ViewModels
         public string? CourseImage { get; set; }
 
         public int AttendedCount { get; set; }
-        public int GoalCount { get; set; } = 16;
+        public int GoalCount { get; set; } = 8;
 
         public int ProgressPercent
         {

@@ -1,0 +1,60 @@
+﻿@using Models.ViewModels 
+@model IEnumerable<StudentCoursesVM>
+
+<div  class="courses-grid" style="padding: 50px;">
+    @if (Model != null && Model.Any())
+    {
+        var i = 0;
+        foreach (var c in Model)
+        {
+            var title = c.CourseTitleAr ?? c.CourseTitleEn ?? "Course";
+            var courseIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+              {
+              { "عربي", "📜" },
+              { "انجليزي", "🔤" },
+              { "رياضيات", "📐" },
+              { "الماني", "🇩🇪" },
+              { "كيميا", "🧪" },
+              { "فيزياء", "⚡" },
+              { "C#", "💻" },
+              { "ASP.NET", "🌐" },
+              { "LINQ", "🔍" },
+              { "Entity Framework", "💾" }
+              };
+
+            string icon = courseIcons.FirstOrDefault(x => title.Contains(x.Key)).Value ?? "📘";
+
+            i++;
+
+            <article class="course-card">
+                <div class="course-card__media">@icon</div>
+                <div class="course-card__body">
+                    <div class="course-card__name">@title</div>
+
+                    <div class="progress">
+                        @* حساب النسبة المئوية *@
+                        @{ var percent = (c.GoalCount > 0) ? (c.AttendedCount * 100 / c.GoalCount) : 0; }
+                        <div class="progress__bar" style="width:@percent%;"></div>
+                    </div>
+
+                    <div class="course-card__meta">
+                        <span>@percent%</span>
+                        <span>@c.AttendedCount / @c.GoalCount حصة</span>
+                    </div>
+
+                    <a class="course-card__action "
+                       asp-area="StudentArea"
+                       asp-controller="Course"
+                       asp-action="Details"
+                       asp-route-id="@c.CourseId">
+                        عرض المزيد
+                       
+                    </a>
+                </div>
+            </article>
+        }
+    }
+    else
+    {
+    }
+</div>

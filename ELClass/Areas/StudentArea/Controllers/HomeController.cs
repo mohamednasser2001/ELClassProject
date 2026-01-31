@@ -29,62 +29,36 @@ namespace ELClass.Areas.StudentArea.Controllers
         {
             var userId = _userManager.GetUserId(User);
 
-            // كورسات الطالب
+            // 1) تحميل الكورسات مع الدروس لحساب التقدم
             var courses = await _unitOfWork.StudentCourseRepository
-                .GetAsync(e => e.StudentId == userId, q => q.Include(e => e.Course));
+                .GetAsync(e => e.StudentId == userId, q => q.Include(e => e.Course).ThenInclude(c => c.Lessons));
 
-          
+            // 2) تحميل كل حجوزات الطالب (بدون فلتر IsAttended دلوقتي عشان نحسب منها كل حاجة)
+            var allStudentAppointments = await _unitOfWork.StudentAppointmentRepository
+                .GetAsync(sa => sa.StudentId == userId, q => q.Include(sa => sa.Appointment));
+
+            // حساب الدروس المحضورة فعلياً
+            var attendedCountByCourseId = allStudentAppointments
+                .Where(sa => sa.Appointment != null && sa.IsAttended)
+                .GroupBy(sa => sa.Appointment!.CourseId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
             const int defaultGoal = 8;
 
-            // Helper: يقرأ عدد الحصص/الدروس المنجزة لو موجودة داخل StudentCourse (بدون ما يكسر المشروع)
-            int ReadAttendedCountFromStudentCourse(object scObj)
+            var coursesVM = courses.Select(sc =>
             {
-                if (scObj == null) return 0;
-
-                // أسماء محتملة عندك في الـ entity (لو أي واحد موجود هيتقرأ)
-                string[] possibleProps =
+                var attended = attendedCountByCourseId.TryGetValue(sc.CourseId, out var c) ? c : 0;
+                return new StudentCoursesVM
                 {
-                        "AttendedCount",
-                        "CompletedLessons",
-                        "LessonsTaken",
-                        "TakenLessons",
-                        "CompletedCount",
-                        "ProgressCount"
-               };
-
-                var t = scObj.GetType();
-
-                foreach (var propName in possibleProps)
-                {
-                    var prop = t.GetProperty(propName);
-                    if (prop == null) continue;
-
-                    var val = prop.GetValue(scObj);
-                    if (val == null) return 0;
-
-                    try
-                    {
-                        return Convert.ToInt32(val);
-                    }
-                    catch
-                    {
-                        return 0;
-                    }
-                }
-
-                return 0; 
-            }
-
-            var coursesVM = courses.Select(sc => new StudentCoursesVM
-            {
-                CourseId = sc.CourseId,
-                CourseTitleEn = sc.Course.TitleEn,
-                CourseTitleAr = sc.Course.TitleAr,
-
-             
-                AttendedCount = ReadAttendedCountFromStudentCourse(sc),
-                GoalCount = defaultGoal
-            }).ToList();
+                    CourseId = sc.CourseId,
+                    CourseTitleEn = sc.Course.TitleEn,
+                    CourseTitleAr = sc.Course.TitleAr,
+                    AttendedCount = attended,
+                    GoalCount = defaultGoal
+                };
+            })
+                .Take(4)
+                .ToList();
 
             var allInstructors = await _unitOfWork.InstructorRepository
                 .GetAsync(null, q => q.Include(i => i.ApplicationUser));
@@ -103,8 +77,54 @@ namespace ELClass.Areas.StudentArea.Controllers
                 Instructors = instructorsVM
             };
 
+            // --- منطق الانضمام للمحاضرة (Join Now Logic) ---
+
+           
+            var activeAppointment = allStudentAppointments
+                .Where(sa => sa.Appointment != null && sa.Appointment.IsActive == true)
+                .OrderBy(sa => sa.Appointment!.StartTime)
+                .FirstOrDefault();
+
+            if (activeAppointment != null)
+            {
+                model.NextStudentAppointmentId = activeAppointment.Id;
+                model.CanJoinNow = true;
+            }
+            else
+            {
+                
+                var nextUpcoming = allStudentAppointments
+                .Where(sa => sa.Appointment != null && !sa.IsAttended && sa.Appointment.StartTime > DateTime.Now.TimeOfDay) 
+                .OrderBy(sa => sa.Appointment!.StartTime)
+                .FirstOrDefault();
+                model.NextStudentAppointmentId = nextUpcoming?.Id;
+                model.CanJoinNow = false;
+            }
+
+            // --- حساب الإحصائيات العامة ---
+            model.TotalCoursesCount = courses.Count();
+            model.TotalLessons = allStudentAppointments.Count();
+            model.CompletedLessons = allStudentAppointments.Count(sa => sa.IsAttended);
+
+            if (model.TotalLessons > 0)
+            {
+                model.OverallProgress = (int)((double)model.CompletedLessons / model.TotalLessons * 100);
+            }
+            else
+            {
+                model.OverallProgress = 0;
+            }
+
+            // الإشعارات: المواعيد القادمة التي لم يتم حضورها بعد
+            model.NewNotifications = allStudentAppointments
+               .Count(sa => sa.Appointment != null
+               && !sa.IsAttended
+               && sa.Appointment.IsActive == true);
+
             return View(model);
         }
+
+
 
 
         //chat

@@ -7,6 +7,7 @@
     Layout = "_StudentLayout";
 }
 
+
 <!-- Topbar -->
 <header class="topbar">
     <div class="topbar__left">
@@ -15,7 +16,7 @@
     </div>
 
     <div class="topbar__right">
-        <button class="icon-btn" type="button" aria-label="Notifications">🔔</button>
+        
         @{
             var currentUser = await _userManager.GetUserAsync(User);
 
@@ -55,7 +56,7 @@
                 <div class="user__name">
                     <span class="hello">Hello</span> @displayName
                 </div>
-            
+
             </div>
         </div>
     </div>
@@ -67,8 +68,8 @@
         <div class="stat-card__icon">🧾</div>
         <div class="stat-card__body">
             <div class="stat-card__label">إجمالي الدروس</div>
-            <div class="stat-card__value">12</div>
-            <div class="stat-card__hint">هذا الأسبوع</div>
+            <div class="stat-card__value">@Model.TotalLessons</div>
+
         </div>
     </article>
 
@@ -76,26 +77,34 @@
         <div class="stat-card__icon">✅</div>
         <div class="stat-card__body">
             <div class="stat-card__label">المهام المنتهية</div>
-            <div class="stat-card__value">5</div>
-            <div class="stat-card__hint">آخر 7 أيام</div>
+            <div class="stat-card__value">@Model.CompletedLessons</div>
+          
         </div>
     </article>
 
     <article class="stat-card">
-        <div class="stat-card__icon">📈</div>
-        <div class="stat-card__body">
-            <div class="stat-card__label">مستوى التقدم</div>
-            <div class="stat-card__value">85%</div>
-            <div class="stat-card__hint">متوسط عام</div>
+        <div class="stat-card__icon">
+            <i class="fas fa-book-reader"></i>
+        </div>
+
+        <div class="stat-card__info">
+            <span class="stat-card__label">الكورسات المسجلة</span>
+            <div class="stat-card__value">@Model.TotalCoursesCount</div>
+            <span class="stat-card__hint">كورس نشط</span>
         </div>
     </article>
 
     <article class="stat-card">
-        <div class="stat-card__icon">🔔</div>
-        <div class="stat-card__body">
-            <div class="stat-card__label">إشعارات جديدة</div>
-            <div class="stat-card__value">3</div>
-            <div class="stat-card__hint">اليوم</div>
+        <div class="stat-card__icon @(Model.NewNotifications > 0 ? "notification-pulse" : "")">
+            <i class="fas fa-bell"></i>
+        </div>
+
+        <div class="stat-card__content">
+            <span class="stat-card__label">إشعارات جديدة</span>
+
+            <div class="stat-card__value">@Model.NewNotifications</div>
+
+            <span class="stat-card__hint">محاضرات بانتظارك</span>
         </div>
     </article>
 </section>
@@ -103,31 +112,28 @@
 <!-- Content Grid -->
 <section class="grid">
     <!-- Courses Progress -->
-    <div class="panel panel--courses" style="grid-area:courses;">
+    <div class="panel panel--courses" style="grid-area:courses; display: flex; flex-direction: column;">
         <div class="panel__header">
             <h2 class="panel__title">مقرراتي الدراسية</h2>
-            <a class="panel__link" href="#">عرض الكل</a>
+            <a asp-area="StudentArea" asp-controller="Course" asp-action="Index" class="view-all-link">عرض الكل</a>
         </div>
-        <div class="courses">
+
+        <div class="courses" style="flex-grow: 1;">
             @if (Model?.Courses != null && Model.Courses.Any())
             {
-                var i = 0;
+                // 1. تعريف القاموس مرة واحدة خارج اللفة للأداء
+                var courseIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "عربي", "📜" }, { "انجليزي", "🔤" }, { "رياضيات", "📐" },
+                { "الماني", "🇩🇪" }, { "كيميا", "🧪" }, { "فيزياء", "⚡" },
+                { "C#", "💻" }, { "ASP.NET", "🌐" }, { "LINQ", "🔍" },
+                { "Entity Framework", "💾" }
+            };
 
                 foreach (var c in Model.Courses)
                 {
-                    // عنوان الكورس (AR لو موجود)
                     var title = c.CourseTitleAr ?? c.CourseTitleEn ?? "Course";
-
-                    // أيقونة بسيطة حسب الترتيب (مؤقتًا)
-                    string icon = (i % 4) switch
-                    {
-                        0 => "📘",
-                        1 => "🌍",
-                        2 => "➗",
-                        _ => "🧪"
-                    };
-
-                    i++;
+                    string icon = courseIcons.FirstOrDefault(x => title.Contains(x.Key)).Value ?? "📘";
 
                     <article class="course-card">
                         <div class="course-card__media">@icon</div>
@@ -135,7 +141,6 @@
                         <div class="course-card__body">
                             <div class="course-card__name">@title</div>
 
-                            <!-- مؤقتًا: Progress ثابت لحد ما نربطه بالداتا -->
                             <div class="progress">
                                 <div class="progress__bar" style="width:@c.ProgressPercent%;"></div>
                             </div>
@@ -147,7 +152,7 @@
 
                             <a class="course-card__action"
                                asp-area="StudentArea"
-                               asp-controller="Courses"
+                               asp-controller="Course"
                                asp-action="Details"
                                asp-route-id="@c.CourseId">
                                 عرض المزيد
@@ -158,24 +163,40 @@
             }
             else
             {
-                <div style="padding:16px; color: var(--muted);">
+                <div style="padding:16px; color: var(--muted); text-align: center;">
                     لا يوجد مقررات حالياً.
                 </div>
             }
         </div>
-
     </div>
 
     <!-- Join Online Lecture -->
     <div class="panel panel--join" style="grid-area:join;">
         <div class="join">
-            <h2 class="join__title">الانضمام إلى محاضرة عبر الإنترنت</h2>
-            <p class="join__text">اضغط للانضمام بسرعة أو حجز موعد.</p>
-
-            <div class="join__actions">
-                <a class="btn btn--primary" href="#">انضم الآن</a>
-                <a class="btn btn--outline" href="#">حجز موعد</a>
-            </div>
+            @if (Model.CanJoinNow && Model.NextStudentAppointmentId != null)
+            {
+                <h2 class="join__title">المحاضرة الآن!</h2>
+                <p class="join__text">المدرس بانتظارك، يمكنك الانضمام للمحاضرة مباشرة من هنا.</p>
+                <div class="join__actions">
+                    <a class="btn btn--primary"
+                       asp-area="StudentArea"
+                       asp-controller="Appointments"
+                       asp-action="Join"
+                       asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
+                        <i class="fas fa-video" style="margin-left: 8px;"></i> انضم الآن
+                    </a>
+                </div>
+            }
+            else
+            {
+                <h2 class="join__title">لا توجد محاضرة الآن</h2>
+                <p class="join__text">سيظهر زر الانضمام هنا فور بدء المحاضرة من قبل المدرس.</p>
+                <div class="join__actions">
+                    <button class="btn btn--outline" type="button" disabled>
+                        <i class="fas fa-clock" style="margin-left: 8px;"></i> بانتظار البدء...
+                    </button>
+                </div>
+            }
         </div>
     </div>
 
@@ -216,44 +237,11 @@
         </ul>
     </div>
 
-    <!-- Current Tasks -->
-    <div class="panel panel--tasks" style="grid-area:tasks;">
-        <div class="panel__header">
-            <h2 class="panel__title">المهام الحالية</h2>
-            <a class="panel__link" href="#">عرض الكل</a>
-        </div>
-
-        <ul class="tasks">
-            <li class="task">
-                <span class="task__icon">📝</span>
-                <div class="task__body">
-                    <div class="task__title">تسليم واجب اللغة العربية 1</div>
-                    <div class="task__meta">موعد: 10:00 ص - اليوم</div>
-                </div>
-                <span class="badge badge--urgent">هام</span>
-            </li>
-
-            <li class="task">
-                <span class="task__icon">📌</span>
-                <div class="task__body">
-                    <div class="task__title">مذاكرة درس العلوم</div>
-                    <div class="task__meta">موعد: 05:00 م - غدًا</div>
-                </div>
-            </li>
-
-            <li class="task">
-                <span class="task__icon">✅</span>
-                <div class="task__body">
-                    <div class="task__title">حل اختبار رياضيات قصير</div>
-                    <div class="task__meta">موعد: 11:59 م - الجمعة</div>
-                </div>
-            </li>
-        </ul>
-    </div>
+    
 </section>
 
 <footer class="footer">
-    © 2026 EduDash. All rights reserved.
+    © 2026 ElClass
 </footer>
 
 
@@ -584,20 +572,20 @@
                 const dotClass = isOnline ? 'online' : 'offline';
 
                 chatItemsBox.insertAdjacentHTML('beforeend', `
-                                            <div class="chat-item"
-                                                 data-instructor-id="${escapeHtml(idStr)}"
-                                                 data-instructor-name="${escapeHtml(name)}">
-                                                 <div class="avatar">
-                                                    ${avatarHtml}
-                                                    <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(idStr)}"></span>
-                                                </div>
-                                                <div class="meta">
-                                                    <div class="name">${escapeHtml(name)}</div>
-                                                    <div class="preview">${escapeHtml(preview)}</div>
-                                                </div>
-                                                ${unreadHtml}
-                                            </div>
-                                        `);
+                                                            <div class="chat-item"
+                                                                 data-instructor-id="${escapeHtml(idStr)}"
+                                                                 data-instructor-name="${escapeHtml(name)}">
+                                                                 <div class="avatar">
+                                                                    ${avatarHtml}
+                                                                    <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(idStr)}"></span>
+                                                                </div>
+                                                                <div class="meta">
+                                                                    <div class="name">${escapeHtml(name)}</div>
+                                                                    <div class="preview">${escapeHtml(preview)}</div>
+                                                                </div>
+                                                                ${unreadHtml}
+                                                            </div>
+                                                        `);
             }
 
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
@@ -764,14 +752,14 @@
             wrapper.dataset.messageId = String(id || '');
 
             wrapper.innerHTML = `
-                                        <div class="bubble">
-                                            ${escapeHtml(content)}
-                                            <span class="time">
-                                                ${escapeHtml(toTime(sentAt))}
-                                                ${ticksHtml(isMine, isRead)}
-                                            </span>
-                                        </div>
-                                    `;
+                                                        <div class="bubble">
+                                                            ${escapeHtml(content)}
+                                                            <span class="time">
+                                                                ${escapeHtml(toTime(sentAt))}
+                                                                ${ticksHtml(isMine, isRead)}
+                                                            </span>
+                                                        </div>
+                                                    `;
             return wrapper;
         }
 
@@ -984,9 +972,7 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/ChatMessage.css" asp-append-version="true" />
+
 }
-
-
-
 
 
