@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using Models.ViewModels;
 
 namespace ELClass.Areas.StudentArea.Controllers
 {
@@ -18,10 +19,45 @@ namespace ELClass.Areas.StudentArea.Controllers
             _unitOfWork = unitOfWork;
             this._userManager = userManager;
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var userId = _userManager.GetUserId(User);
+
+            // 1) هات كورسات الطالب
+            var courses = await _unitOfWork.StudentCourseRepository
+                .GetAsync(e => e.StudentId == userId, q => q.Include(e => e.Course));
+
+            // 2) هات المواعيد عشان نحسب الـ Progress
+            var studentAppointments = await _unitOfWork.StudentAppointmentRepository
+                .GetAsync(sa => sa.StudentId == userId, q => q.Include(sa => sa.Appointment));
+
+            var attendedCountByCourseId = studentAppointments
+                .Where(sa => sa.Appointment != null && sa.IsAttended)
+                .GroupBy(sa => sa.Appointment!.CourseId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            const int defaultGoal = 8;
+
+            // 3) تحويل البيانات للـ ViewModel (StudentCoursesVM)
+            var coursesVM = courses.Select(sc =>
+            {
+                var attended = attendedCountByCourseId.TryGetValue(sc.CourseId, out var c) ? c : 0;
+
+                return new StudentCoursesVM
+                {
+                    CourseId = sc.CourseId,
+                    CourseTitleEn = sc.Course.TitleEn,
+                    CourseTitleAr = sc.Course.TitleAr,
+                    AttendedCount = attended,
+                    GoalCount = defaultGoal
+                    // ProgressPercent بيتحسب أوتوماتيك داخل الـ VM لو أنت عامله كدة
+                };
+            }).ToList();
+
+            // بنبعث قائمة الكورسات مباشرة للـ View
+            return View(coursesVM);
         }
+
 
         [Authorize]
         public async Task<IActionResult> Details(int id)
@@ -38,11 +74,6 @@ namespace ELClass.Areas.StudentArea.Controllers
                 return Forbid();
             }
 
-       
-
-
-
-           
             var course = await _unitOfWork.CourseRepository.GetOneAsync(
                 e => e.Id == id,
                 q => q.Include(c => c.Lessons)
@@ -55,6 +86,7 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             return View(course); 
         }
+     
 
         public async Task<IActionResult> LessonDetails(int id)
         {

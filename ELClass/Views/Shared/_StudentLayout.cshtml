@@ -9,20 +9,24 @@
 
     <!-- Icons (اختياري) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" asp-append-version="true" />
 
-    <!-- Dashboard CSS -->
-    <link rel="stylesheet" href="~/css/DashboardStudent.css" />
+    <link rel="stylesheet" href="~/css/DashboardStudent.css" asp-append-version="true" />
+
 
     @RenderSection("Styles", required: false)
 </head>
+
+
 
 <body>
     <div class="dash">
         <!-- Sidebar (Right) -->
         <aside class="sidebar">
             <div class="brand">
-                <div class="brand__logo">ED</div>
-                <div class="brand__name">EduDash</div>
+                <div class="brand__logo">EE</div>
+                <div class="brand__name">ElClass Education</div>
             </div>
 
             <nav class="nav">
@@ -31,12 +35,9 @@
                     <span class="nav__text">الرئيسية</span>
                 </a>
 
-                <a class="nav__item" href="#">
-                    <span class="nav__icon">📊</span>
-                    <span class="nav__text">Dashboard</span>
-                </a>
+              
 
-                <a class="nav__item" href="#">
+                <a class="nav__item" href="/StudentArea/Course/Index">
                     <span class="nav__icon">📚</span>
                     <span class="nav__text">Courses</span>
                 </a>
@@ -46,10 +47,29 @@
                     <span class="nav__text">Calendar</span>
                 </a>
 
-                <a class="nav__item" href="#">
-                    <span class="nav__icon">⚙️</span>
-                    <span class="nav__text">Settings</span>
-                </a>
+                <div class="sidebar-item dropdown" id="settingsDropdown">
+                    <div class="menu-link" onclick="toggleSettings()">
+                        <div class="icon-box">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <span class="link-text">Settings</span>
+                        <i class="fas fa-chevron-down arrow-icon"></i>
+                    </div>
+
+                    <div class="submenu">
+                        <a href="/Identity/MyProfile/MyProfile" class="submenu-item">
+                            <i class="fas fa-user-circle"></i>
+                            <span>My Profile</span>
+                        </a>
+                        <a href="/Identity/Account/Logout" class="submenu-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+
+
+
             </nav>
         </aside>
 
@@ -58,7 +78,16 @@
             @RenderBody()
         </main>
     </div>
-
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
+    <script>
+        function toggleSettings() {
+            const dropdown = document.getElementById('settingsDropdown');
+            dropdown.classList.toggle('active');
+        }
+    </script>
+
+
+
 </body>
 </html>
