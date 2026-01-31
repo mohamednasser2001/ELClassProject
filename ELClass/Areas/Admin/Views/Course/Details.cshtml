@@ -1,9 +1,10 @@
-﻿@using Models.ViewModels.Course
+﻿@using ELClass.services
+@using Models.ViewModels.Course
 @model CourseDetailsVM
 
 @{
-    var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-    var isArabic = currentLang == "ar";
+    
+    var isArabic = CultureHelper.IsArabic;
     var direction = isArabic ? "rtl" : "ltr";
 }
 

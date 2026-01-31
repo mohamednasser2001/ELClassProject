@@ -1,4 +1,5 @@
 ﻿using DataAccess.Repositories.IRepositories;
+using ELClass.services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -28,8 +29,8 @@ namespace ELClass.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-            bool isArabic = currentLang == "ar";
+            
+            bool isArabic = CultureHelper.IsArabic;
 
             var model = await _unitOfWork.ContactUsRepository.GetOneAsync(c => c.Id == id);
 

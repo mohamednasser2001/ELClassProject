@@ -1,9 +1,10 @@
 ﻿@using System.Security.Claims
+@using ELClass.services
 @using Models.ViewModels
 @model AppointmentVM
 
 @{
-    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var isArabic = CultureHelper.IsArabic;
     var direction = isArabic ? "rtl" : "ltr";
 }
 
