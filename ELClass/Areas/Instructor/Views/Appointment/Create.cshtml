@@ -1,9 +1,10 @@
 ﻿@using System.Security.Claims
+@using ELClass.services
 @using Models.ViewModels
 @model AppointmentVM
 
 @{
-    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var isArabic = CultureHelper.IsArabic;
     var direction = isArabic ? "rtl" : "ltr";
 }
 
@@ -54,8 +55,9 @@
                     </div>
 
                     <div class="col-md-3 mb-3" id="timeCountContainer">
-                        <label class="form-label fw-bold">@(isArabic ? "عدد مرات الدخول" : "Access Count")</label>
+                        <label class="form-label fw-bold">@(isArabic ? "عدد الأسابيع" : "Number of Weeks")</label>
                         <input type="number" id="timeCountInput" name="TimeCount" class="form-control" value="1" min="1" />
+                        <div class="form-text small">@(isArabic ? "مدة تكرار هذا الميعاد" : "How many weeks this repeats")</div>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -102,74 +104,111 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        $(document).ready(function () {
+                $(document).ready(function () {
             const isAr = "@isArabic".toLowerCase() === "true";
 
+            // 1. Course Select2
             $('#courseSelect').select2({
-            placeholder: isAr ? "ابحث عن اسم الكورس..." : "Search course name...",
-            allowClear: true,
-            width: '100%',
-            ajax: {
-                url: '/Instructor/Appointment/SearchCourses', 
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return {
-                        term: params.term 
-                    };
-                },
-                processResults: function (data) {
-                    // Select2 بتحتاج id و text لكل عنصر
-                    return {
-                        results: data
-                    };
-                },
-                cache: true
-            }
-        });
-
-
-            // $('#instructorSelect').select2({
-            //     placeholder: isAr ? "ابحث عن محاضر بالاسم..." : "Search instructor by name...",
-            //     width: '100%',
-            //     ajax: {
-            //         url: '/instructor/Appointment/SearchInstructors', 
-            //         dataType: 'json',
-            //         delay: 250,
-            //         data: params => ({ term: params.term }),
-            //         processResults: data => ({ results: data })
-            //     }
-            // });
-
-            
-            $('#scheduleType').change(function () {
-                const type = $(this).val();
-                if (type == "0") { // Recurring
-                    $('#recurringFields').fadeIn();
-                    $('#oneTimeFields').hide();
-                } else { // OneTime
-                    $('#oneTimeFields').fadeIn();
-                    $('#recurringFields').hide();
+                placeholder: isAr ? "ابحث عن اسم الكورس..." : "Search course name...",
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: '/Instructor/Appointment/SearchCourses',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({ term: params.term }),
+                    processResults: data => ({ results: data }),
+                    cache: true
                 }
             });
 
-            // 3. الأكشن بتاع الحفظ (AJAX)
+            // 2. التحكم في إظهار الحقول بناءً على النوع (موحد)
+            $('#scheduleType').change(function () {
+                const type = $(this).val();
+
+                if (type == "0") { // Recurring (أسبوعي)
+                    $('#dayContainer').fadeIn();
+                    $('#timeCountContainer').fadeIn();
+                    $('#dateContainer').hide();
+                    // تفريغ قيمة التاريخ عشان الـ Validation ميعلقش
+                    $('input[name="SpecificDate"]').val('');
+                } else { // One Time (مرة واحدة)
+                    $('#dayContainer').hide();
+                    $('#timeCountContainer').hide();
+                    $('#dateContainer').fadeIn();
+                    $('#timeCountInput').val(1); // افتراضياً أسبوع واحد (مرة واحدة)
+                }
+            }).change(); // تشغيل الدالة فوراً عند التحميل لضبط الحالة الابتدائية
+
+            // 3. Validation Logic
+            const validator = $('#appointmentForm').validate({
+                rules: {
+                    CourseId: { required: true },
+                    MeetingLink: { required: true, url: true },
+                    StartTime: { required: true },
+                    TimeCount: { required: true, min: 1 },
+                    SpecificDate: {
+                        required: function() { return $('#scheduleType').val() == "1"; }
+                    },
+                    Day: {
+                        required: function() { return $('#scheduleType').val() == "0"; }
+                    }
+                },
+                messages: {
+                    CourseId: isAr ? "يرجى اختيار الكورس" : "Please select a course",
+                    MeetingLink: {
+                        required: isAr ? "رابط الاجتماع مطلوب" : "Meeting link is required",
+                        url: isAr ? "يرجى إدخال رابط صحيح" : "Please enter a valid URL"
+                    },
+                    StartTime: isAr ? "وقت البدء مطلوب" : "Start time is required",
+                    SpecificDate: isAr ? "التاريخ مطلوب للمواعيد الفردية" : "Date is required",
+                    TimeCount: isAr ? "يجب إدخال عدد أسابيع صحيح" : "Enter valid week count"
+                },
+                errorPlacement: function (error, element) {
+                    if (element.hasClass('select2-hidden-accessible')) {
+                        error.insertAfter(element.next('.select2-container'));
+                    } else {
+                        error.insertAfter(element);
+                    }
+                },
+                highlight: element => $(element).addClass('is-invalid'),
+                unhighlight: element => $(element).removeClass('is-invalid')
+            });
+
+            // 4. Submit Form
             $('#appointmentForm').submit(function (e) {
                 e.preventDefault();
-                const formData = $(this).serialize();
 
-                $.post('/instructor/Appointment/Create', formData, function (res) {
+                if (!$(this).valid()) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: isAr ? 'بيانات ناقصة' : 'Missing Data',
+                        text: isAr ? 'يرجى ملء الحقول المطلوبة' : 'Please fill all required fields'
+                    });
+                    return;
+                }
+
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                $.post('/instructor/Appointment/Create', $(this).serialize(), function (res) {
                     if (res.success) {
                         Swal.fire({
                             icon: 'success',
                             title: isAr ? 'تم بنجاح' : 'Success',
-                            text: isAr ? 'تمت إضافة الميعاد بنجاح' : 'Appointment created successfully'
+                            timer: 2000,
+                            showConfirmButton: false
                         }).then(() => {
                             window.location.href = '/instructor/Appointment/Index';
                         });
                     } else {
+                        submitBtn.prop('disabled', false).html(originalText);
                         Swal.fire('Error', res.message, 'error');
                     }
+                }).fail(function() {
+                    submitBtn.prop('disabled', false).html(originalText);
+                    Swal.fire('Error', isAr ? 'فشل الاتصال بالسيرفر' : 'Server connection failed', 'error');
                 });
             });
         });
@@ -270,3 +309,4 @@
 
     </script>
 }
+

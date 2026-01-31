@@ -7,65 +7,56 @@
     var direction = isArabic ? "rtl" : "ltr";
 }
 
+
+
 <div class="container py-5" style="direction:@direction">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3">
             <h4 class="mb-0 text-orange">
                 <i class="fas fa-calendar-plus me-2"></i>
-                @(isArabic ? "إضافة ميعاد جديد" : "Create New Appointment")
+                @(isArabic ? "إضافة ميعاد جديد للكورس" : "Create New Course Appointment")
             </h4>
         </div>
         <div class="card-body p-4">
             <form id="appointmentForm">
-                
-
+                @* تم حذف StudentId *@
                 <input type="hidden" name="InstructorId" value="@User.FindFirstValue(ClaimTypes.NameIdentifier)" />
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        <div class="p-3 bg-light rounded-2 border-start border-4 border-info">
-                            <label class="form-label fw-bold text-info">
-                                <i class="fas fa-user-graduate me-1"></i> @(isArabic ? "اختر الطالب" : "Select Student")
-                            </label>
-                            <select id="studentSelect" class="form-control" name="StudentId" required></select>
-                            <div class="form-text small">@(isArabic ? "ابحث عن الطالب بالاسم أو البريد الإلكتروني" : "Search for student by name or email")</div>
-                        </div>
-                    </div>
 
+                <div class="row">
+                    @* اختيار الكورس *@
                     <div class="col-12 mb-3">
                         <div class="p-3 bg-light rounded-2 border-start border-4 border-primary">
                             <label class="form-label fw-bold text-primary">
                                 <i class="fas fa-book me-1"></i> @(isArabic ? "اختر الكورس" : "Select Course")
                             </label>
-                            <select id="courseSelect" class="form-control" name="CourseId" required></select>
+                            <select id="courseSelect" class="form-control select2-course" name="CourseId" required></select>
                         </div>
                     </div>
 
-
+                    @* رابط الاجتماع *@
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">@(isArabic ? "رابط الاجتماع" : "Meeting Link")</label>
+                        <label class="form-label fw-bold">@(isArabic ? "رابط الاجتماع (Zoom/Meet)" : "Meeting Link")</label>
                         <input type="url" name="MeetingLink" class="form-control" placeholder="https://..." required />
                     </div>
 
+                    @* نوع الموعد *@
                     <div class="col-md-3 mb-3">
-                        <label class="form-label fw-bold">@(isArabic ? "نوع الميعاد" : "Schedule Type")</label>
+                        <label class="form-label fw-bold">@(isArabic ? "نظام الموعد" : "Schedule Type")</label>
                         <select id="scheduleType" name="Type" class="form-select border-orange">
-                            <option value="0">@(isArabic ? "ثابت (أسبوعي)" : "Recurring")</option>
-                            <option value="1">@(isArabic ? "مرة واحدة" : "One Time")</option>
+                            <option value="0">@(isArabic ? "أسبوعي (متكرر)" : "Recurring")</option>
+                            <option value="1">@(isArabic ? "مرة واحدة فقط" : "One Time")</option>
                         </select>
                     </div>
 
-                    <div class="col-md-3 mb-3" id="timeCountContainer">
-                        <label class="form-label fw-bold">@(isArabic ? "عدد مرات الدخول" : "Access Count")</label>
-                        <input type="number" id="timeCountInput" name="TimeCount" class="form-control" value="1" min="1" />
+                    @* المدة *@
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">@(isArabic ? "المدة (ساعات)" : "Duration (Hrs)")</label>
+                        <input type="number" name="DurationInHours" class="form-control" value="1" min="1" step="0.5" />
                     </div>
 
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-bold">@(isArabic ? "المدة (بالساعات)" : "Duration (Hours)")</label>
-                        <input type="number" name="DurationInHours" class="form-control" value="1" min="1" />
-                    </div>
-
-                    <div class="col-md-4 mb-3" id="dayContainer">
-                        <label class="form-label fw-bold">@(isArabic ? "اليوم" : "Day")</label>
+                    @* اليوم (يظهر في الأسبوعي) *@
+                    <div class="col-md-6 mb-3" id="dayContainer">
+                        <label class="form-label fw-bold">@(isArabic ? "يوم المحاضرة" : "Day of Lecture")</label>
                         <select name="Day" class="form-select">
                             <option value="0">@(isArabic ? "الأحد" : "Sunday")</option>
                             <option value="1">@(isArabic ? "الاثنين" : "Monday")</option>
@@ -77,19 +68,21 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4 mb-3" id="dateContainer" style="display:none;">
-                        <label class="form-label fw-bold">@(isArabic ? "التاريخ" : "Specific Date")</label>
+                    @* التاريخ (يظهر في المرة الواحدة) *@
+                    <div class="col-md-6 mb-3" id="dateContainer" style="display:none;">
+                        <label class="form-label fw-bold">@(isArabic ? "تاريخ المحاضرة" : "Specific Date")</label>
                         <input type="date" name="SpecificDate" class="form-control" />
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    @* وقت البدء *@
+                    <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">@(isArabic ? "وقت البدء" : "Start Time")</label>
                         <input type="time" name="StartTime" class="form-control" required />
                     </div>
 
                     <div class="col-12 mt-4 text-center">
-                        <button type="submit" class="btn btn-orange-custom px-5">
-                            <i class="fas fa-save me-1"></i> @(isArabic ? "حفظ الميعاد" : "Save Appointment")
+                        <button type="submit" class="btn btn-primary px-5 btn-lg">
+                            <i class="fas fa-save me-1"></i> @(isArabic ? "تثبيت الموعد" : "Save Appointment")
                         </button>
                     </div>
                 </div>
@@ -97,6 +90,7 @@
         </div>
     </div>
 </div>
+
 
 
 @section Scripts {
@@ -135,7 +129,7 @@
             allowClear: true,
             width: '100%',
             ajax: {
-                url: '/Instructor/Appointment/SearchStudents', 
+                url: '/Instructor/Appointment/SearchStudents',
                 dataType: 'json',
                 delay: 250,
                 data: params => ({ term: params.term }),

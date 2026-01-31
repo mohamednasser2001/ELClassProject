@@ -1,11 +1,12 @@
-﻿@using Models
+﻿@using ELClass.services
+@using Models
 @model IEnumerable<ContactUs>
 
 @{
     ViewData["Title"] = "Contact Messages";
     int index = 1;
     
-    bool isArabic = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.IsRightToLeft;
+    bool isArabic = CultureHelper.IsArabic;
 }
 
 <div class="bg-white dark:bg-slate-900 min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-200" dir="@(isArabic ? "rtl" : "ltr")">

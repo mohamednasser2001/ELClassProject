@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using ELClass.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -326,8 +327,8 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("StudentCourses");
             ModelState.Remove("InstructorCourses");
 
-            var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-            bool isArabic = currentLang == "ar";
+           
+            bool isArabic = CultureHelper.IsArabic;
 
             if (!ModelState.IsValid)
             {
@@ -378,8 +379,8 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("InstructorCourses");
 
             
-            var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-            bool isArabic = currentLang == "ar";
+            
+            bool isArabic = CultureHelper.IsArabic;
 
             if (!ModelState.IsValid)
             {
