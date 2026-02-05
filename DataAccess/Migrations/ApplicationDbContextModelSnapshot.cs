@@ -287,8 +287,22 @@ namespace DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("AttachmentContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("AttachmentOriginalName")
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<long?>("AttachmentSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AttachmentStoredName")
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
@@ -648,12 +662,6 @@ namespace DataAccess.Migrations
 
                     b.Property<DateTime?>("StudentExpiryDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("AttendedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsAttended")
-                        .HasColumnType("bit");
 
                     b.Property<string>("StudentId")
                         .IsRequired()
