@@ -562,3 +562,151 @@
     }
 
 
+/* Attach button */
+.chat-attach-btn {
+    border: none;
+    background: #f1f5f9;
+    color: #334155;
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+    .chat-attach-btn:hover {
+        background: #e2e8f0;
+    }
+
+/* Composer must be relative so the chip positions correctly */
+.composer {
+    position: relative;
+}
+
+/* Attachment chip */
+.attach-chip {
+    position: absolute;
+    left: 12px;
+    bottom: 52px; /* فوق input */
+    background: #eef2ff;
+    color: #1e293b;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 70%;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    z-index: 10; /* ✅ مهم */
+}
+
+    .attach-chip.hidden {
+        display: none;
+    }
+
+    .attach-chip #attachName {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+/* Remove attachment button (×) */
+.attach-clear {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    opacity: .7;
+    padding: 0;
+}
+
+    .attach-clear:hover {
+        opacity: 1;
+    }
+
+/* Message attachments */
+.att {
+    margin-top: 6px;
+}
+
+.att-img {
+    max-width: 220px;
+    max-height: 220px;
+    border-radius: 12px;
+    display: block;
+    object-fit: cover;
+}
+
+.att-file {
+    display: inline-block;
+    padding: 6px 10px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.att-text {
+    white-space: pre-wrap;
+}
+
+/* ✅ minimal modal styles (safe) */
+.img-preview-modal.hidden {
+    display: none;
+}
+
+.img-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+}
+
+.img-preview-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.72);
+}
+
+.img-preview-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.img-preview-img {
+    max-width: min(1100px, 95vw);
+    max-height: 85vh;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    background: #111;
+}
+
+.img-preview-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+    .img-preview-close:hover {
+        background: rgba(255,255,255,.22);
+    }
+
+.att-img {
+    cursor: zoom-in;
+}
+
+
+

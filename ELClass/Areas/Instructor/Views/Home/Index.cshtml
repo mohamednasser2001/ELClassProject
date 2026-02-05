@@ -265,6 +265,7 @@
 </button>
 
 <div id="chatWidget" class="chat-widget" aria-hidden="true" role="dialog" aria-label="Chat widget">
+    @Html.AntiForgeryToken()
     <div class="chat-header">
         <div class="header-left">
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
@@ -293,644 +294,936 @@
     </div>
 
     @* Screen 2: Thread *@
+
     <div class="chat-screen hidden" id="screenThread">
         <div class="messages" id="messagesBox" role="log" aria-live="polite"></div>
 
         <div class="composer">
+            <div id="attachChip" class="attach-chip hidden">
+                <span id="attachName"></span>
+                <button type="button" id="attachClearBtn" class="attach-clear" aria-label="Remove file">×</button>
+            </div>
+
             <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+            <input type="file" id="chatFile" hidden />
+
+            <button type="button" id="attachBtn" class="chat-attach-btn" title="Attach file">
+                <i class="fa-solid fa-paperclip"></i>
+            </button>
+
             <button id="sendBtn" type="button" aria-label="Send">➤</button>
         </div>
     </div>
+
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 
     <script>
-        // =========================
-        // URLs (Instructor area)
-        // =========================
-        const API = {
-            conversations: '@Url.Action("GetInstructorConversations","Home", new { area="Instructor" })',
-            history: '@Url.Action("GetChatHistory","Home", new { area="Instructor" })',
-            save: '@Url.Action("SaveMessage","Home", new { area="Instructor" })',
-            markRead: '@Url.Action("MarkAsRead","Home", new { area="Instructor" })'
-        };
+    // =========================
+    // URLs (Instructor area)
+    // =========================
+    const API = {
+        conversations: '@Url.Action("GetInstructorConversations","Home", new { area="Instructor" })',
+        history: '@Url.Action("GetChatHistory","Home", new { area="Instructor" })',
+        save: '@Url.Action("SaveMessage","Home", new { area="Instructor" })',
+        saveWithFile: '@Url.Action("SendMessageWithFile","Home", new { area="Instructor" })',
+        download: '@Url.Action("DownloadAttachment","Home", new { area="Instructor" })',
+        markRead: '@Url.Action("MarkAsRead","Home", new { area="Instructor" })'
+    };
 
-        // =========================
-        // Elements
-        // =========================
-        const chatFab = document.getElementById('chatFab');
-        const chatFabBadge = document.getElementById('chatFabBadge');
-        const chatWidget = document.getElementById('chatWidget');
-        const chatCloseBtn = document.getElementById('chatCloseBtn');
-        const chatBackBtn = document.getElementById('chatBackBtn');
-        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+    // =========================
+    // Elements
+    // =========================
+    const chatFab = document.getElementById('chatFab');
+    const chatFabBadge = document.getElementById('chatFabBadge');
+    const chatWidget = document.getElementById('chatWidget');
+    const chatCloseBtn = document.getElementById('chatCloseBtn');
+    const chatBackBtn = document.getElementById('chatBackBtn');
+    const chatHeaderTitle = document.getElementById('chatHeaderTitle');
 
-        // ✅ subtitle for Online/Offline
-        const chatHeaderSubTitle = document.getElementById('chatHeaderSubTitle');
+    const chatHeaderSubTitle = document.getElementById('chatHeaderSubTitle');
 
-        const screenList = document.getElementById('screenList');
-        const screenThread = document.getElementById('screenThread');
+    const screenList = document.getElementById('screenList');
+    const screenThread = document.getElementById('screenThread');
 
-        const chatSearch = document.getElementById('chatSearch');
-        const chatItemsBox = document.getElementById('chatItems');
+    const chatSearch = document.getElementById('chatSearch');
+    const chatItemsBox = document.getElementById('chatItems');
 
-        const messagesBox = document.getElementById('messagesBox');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
+    const messagesBox = document.getElementById('messagesBox');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
 
-        // =========================
-        // State
-        // =========================
-        const state = {
-            isOpen: false,
-            currentStudentId: null,
-            currentStudentName: '',
-            conversationId: null,
-            hasMore: false,
-            oldestMessageId: null,
-            conversationsCache: [],
-            isLoadingOlder: false,
-            take: 20
-        };
+    // ✅ Attachment elements
+    const attachBtn = document.getElementById("attachBtn");
+    const chatFile = document.getElementById("chatFile");
+    const attachChip = document.getElementById("attachChip");
+    const attachName = document.getElementById("attachName");
+    const attachClearBtn = document.getElementById("attachClearBtn");
 
-        // =========================
-        // Helpers
-        // =========================
-        function escapeHtml(str) {
-            return (str ?? '')
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", "&#039;");
+    // =========================
+    // ✅ Anti-forgery
+    // =========================
+    function getAntiForgeryToken() {
+        const el = chatWidget?.querySelector('input[name="__RequestVerificationToken"]')
+            || document.querySelector('input[name="__RequestVerificationToken"]');
+        return el?.value || '';
+    }
+
+    function addCsrfHeader(headersObj) {
+        const token = getAntiForgeryToken();
+        if (token) headersObj['RequestVerificationToken'] = token;
+        return headersObj;
+    }
+
+    // =========================
+    // State
+    // =========================
+    const state = {
+        isOpen: false,
+        currentStudentId: null,
+        currentStudentName: '',
+        conversationId: null,
+        hasMore: false,
+        oldestMessageId: null,
+        conversationsCache: [],
+        isLoadingOlder: false,
+        take: 20
+    };
+
+    // =========================
+    // Helpers
+    // =========================
+    function escapeHtml(str) {
+        return (str ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", "&#039;");
+    }
+
+    function toTime(sentAt) {
+        if (!sentAt) return '';
+        const d = new Date(sentAt);
+        if (Number.isNaN(d.getTime())) return '';
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function initials(name) {
+        const s = (name ?? '').trim();
+        if (!s) return 'ST';
+        const parts = s.split(/\s+/).filter(Boolean);
+        const first = parts[0]?.[0] ?? 'S';
+        const second = (parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1]) ?? 'T';
+        return (first + second).toUpperCase();
+    }
+
+    function findItem(studentId) {
+        return document.querySelector(`.chat-item[data-student-id="${CSS.escape(studentId)}"]`);
+    }
+
+    function setActive(studentId) {
+        document.querySelectorAll('.chat-item').forEach(x => {
+            x.classList.toggle('active', x.dataset.studentId === studentId);
+        });
+    }
+
+    function isImageContentType(ct) {
+        return typeof ct === 'string' && ct.toLowerCase().startsWith('image/');
+    }
+
+    function buildDownloadUrl(messageId) {
+        return `${API.download}?messageId=${encodeURIComponent(messageId)}`;
+    }
+
+    // =========================
+    // ✅ Image Preview Modal
+    // =========================
+    function ensureImageModal() {
+        if (document.getElementById('imgPreviewModal')) return;
+
+        const modal = document.createElement('div');
+        modal.id = 'imgPreviewModal';
+        modal.className = 'img-preview-modal hidden';
+        modal.innerHTML = `
+            <div class="img-preview-backdrop"></div>
+            <div class="img-preview-content" role="dialog" aria-modal="true">
+                <button type="button" class="img-preview-close" aria-label="Close">✕</button>
+                <img class="img-preview-img" alt="Preview" />
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        const close = () => modal.classList.add('hidden');
+        modal.querySelector('.img-preview-backdrop')?.addEventListener('click', close);
+        modal.querySelector('.img-preview-close')?.addEventListener('click', close);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+        });
+    }
+
+    function openImagePreview(src) {
+        if (!src) return;
+        ensureImageModal();
+        const modal = document.getElementById('imgPreviewModal');
+        const img = modal.querySelector('.img-preview-img');
+        img.src = src;
+        modal.classList.remove('hidden');
+    }
+
+    // =========================
+    // ✅ Attachment helpers UI
+    // =========================
+    function getSelectedFile() {
+        return (chatFile && chatFile.files && chatFile.files.length > 0) ? chatFile.files[0] : null;
+    }
+
+    function showAttachChip(fileName) {
+        if (!attachChip || !attachName) return;
+        attachName.textContent = fileName || '';
+        attachChip.classList.remove('hidden');
+    }
+
+    function clearAttachmentUI() {
+        if (chatFile) chatFile.value = "";
+        if (attachName) attachName.textContent = "";
+        if (attachChip) attachChip.classList.add('hidden');
+    }
+
+    function readAttachmentFromMessage(m) {
+        const a = m.attachment ?? m.Attachment ?? null;
+
+        const storedName = m.attachmentStoredName ?? m.AttachmentStoredName ?? a?.storedName ?? a?.StoredName ?? null;
+        const originalName = m.attachmentOriginalName ?? m.AttachmentOriginalName ?? a?.name ?? a?.Name ?? null;
+        const contentType = m.attachmentContentType ?? m.AttachmentContentType ?? a?.type ?? a?.Type ?? null;
+        const size = m.attachmentSize ?? m.AttachmentSize ?? a?.size ?? a?.Size ?? null;
+
+        const attachmentUrl = m.attachmentUrl ?? m.AttachmentUrl ?? null;
+        const previewUrl = m.previewUrl ?? null;
+
+        return { storedName, originalName, contentType, size, attachmentUrl, previewUrl };
+    }
+
+    if (attachBtn && chatFile) {
+        attachBtn.addEventListener("click", () => chatFile.click());
+        chatFile.addEventListener("change", () => {
+            const f = getSelectedFile();
+            if (f) showAttachChip(f.name);
+            else clearAttachmentUI();
+        });
+    }
+
+    attachClearBtn?.addEventListener("click", clearAttachmentUI);
+
+    // =========================
+    // ✅ Presence cache
+    // =========================
+    const presenceMap = new Map();
+
+    function setHeaderStatus(isOnline) {
+        if (!chatHeaderSubTitle) return;
+
+        chatHeaderSubTitle.classList.remove('hidden');
+        chatHeaderSubTitle.classList.toggle('online', !!isOnline);
+        chatHeaderSubTitle.classList.toggle('offline', !isOnline);
+        chatHeaderSubTitle.textContent = isOnline ? '● Online' : '● Offline';
+    }
+
+    function clearHeaderStatus() {
+        if (!chatHeaderSubTitle) return;
+        chatHeaderSubTitle.textContent = '';
+        chatHeaderSubTitle.classList.add('hidden');
+        chatHeaderSubTitle.classList.remove('online', 'offline');
+    }
+
+    // =========================
+    // FAB Badge + Pulse
+    // =========================
+    function setFabUnread(count) {
+        const n = Math.max(0, parseInt(count || 0));
+        if (!chatFabBadge) return;
+
+        if (n === 0) {
+            chatFabBadge.classList.add('hidden');
+            chatFab.classList.remove('pulse');
+            chatFabBadge.textContent = '0';
+        } else {
+            chatFabBadge.classList.remove('hidden');
+            chatFabBadge.textContent = (n > 99) ? '99+' : String(n);
+            chatFab.classList.add('pulse');
         }
+    }
 
-        function toTime(sentAt) {
-            if (!sentAt) return '';
-            const d = new Date(sentAt);
-            if (Number.isNaN(d.getTime())) return '';
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    function calcTotalUnread() {
+        return (state.conversationsCache || []).reduce((sum, c) => sum + (parseInt(c.unread || 0)), 0);
+    }
+
+    function syncFabUnreadFromList() {
+        setFabUnread(calcTotalUnread());
+    }
+
+    // =========================
+    // Open / Close
+    // =========================
+    function showWidget() {
+        state.isOpen = true;
+        chatWidget.classList.add('open');
+        chatWidget.setAttribute('aria-hidden', 'false');
+        chatFab.style.display = 'none';
+
+        showListScreen();
+        loadConversations();
+    }
+
+    function hideWidget() {
+        state.isOpen = false;
+        chatWidget.classList.remove('open');
+        chatWidget.setAttribute('aria-hidden', 'true');
+        chatFab.style.display = 'block';
+
+        state.currentStudentId = null;
+        state.currentStudentName = '';
+        state.conversationId = null;
+        state.oldestMessageId = null;
+        state.hasMore = false;
+        state.isLoadingOlder = false;
+
+        messagesBox.innerHTML = '';
+        chatInput.value = '';
+        chatSearch.value = '';
+        clearAttachmentUI();
+
+        clearHeaderStatus();
+    }
+
+    function showListScreen() {
+        screenThread.classList.add('hidden');
+        screenList.classList.remove('hidden');
+        chatBackBtn.classList.add('hidden');
+        chatHeaderTitle.textContent = 'Chats';
+
+        state.currentStudentId = null;
+        state.currentStudentName = '';
+        state.conversationId = null;
+        state.oldestMessageId = null;
+        state.hasMore = false;
+        state.isLoadingOlder = false;
+
+        messagesBox.innerHTML = '';
+        clearAttachmentUI();
+        clearHeaderStatus();
+    }
+
+    function showThreadScreen(name) {
+        screenList.classList.add('hidden');
+        screenThread.classList.remove('hidden');
+        chatBackBtn.classList.remove('hidden');
+        chatHeaderTitle.textContent = name || 'Chat';
+    }
+
+    // =========================
+    // Badges
+    // =========================
+    function removeBadge(studentId) {
+        const item = findItem(studentId);
+        if (!item) return;
+        const badge = item.querySelector('.badge');
+        if (badge) badge.remove();
+    }
+
+    function incrementBadge(studentId) {
+        const item = findItem(studentId);
+        if (!item) return;
+
+        let badge = item.querySelector('.badge');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'badge';
+            badge.textContent = '1';
+            item.appendChild(badge);
+        } else {
+            badge.textContent = (parseInt(badge.textContent || '0') + 1).toString();
         }
+    }
 
-        function initials(name) {
-            const s = (name ?? '').trim();
-            if (!s) return 'ST';
-            const parts = s.split(/\s+/).filter(Boolean);
-            const first = parts[0]?.[0] ?? 'S';
-            const second = (parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1]) ?? 'T';
-            return (first + second).toUpperCase();
-        }
+    function bumpUnreadInCache(studentId, delta) {
+        const c = (state.conversationsCache || []).find(x => (x.studentId === studentId));
+        if (c) c.unread = Math.max(0, parseInt(c.unread || 0) + (delta || 0));
+    }
 
-        function findItem(studentId) {
-            return document.querySelector(`.chat-item[data-student-id="${CSS.escape(studentId)}"]`);
-        }
+    // =========================
+    // Conversations list
+    // =========================
+    async function syncPresenceForList() {
+        if (connection.state !== signalR.HubConnectionState.Connected) return;
 
-        function setActive(studentId) {
-            document.querySelectorAll('.chat-item').forEach(x => {
-                x.classList.toggle('active', x.dataset.studentId === studentId);
-            });
-        }
+        const dots = document.querySelectorAll('.presence-dot[data-presence-id]');
+        const ids = Array.from(dots).map(d => String(d.dataset.presenceId));
+        const uniqueIds = [...new Set(ids)];
 
-        // =========================
-        // ✅ Presence cache (FIX)
-        // =========================
-        const presenceMap = new Map();
-
-        // ✅ Header status helper
-        function setHeaderStatus(isOnline) {
-            if (!chatHeaderSubTitle) return;
-
-            chatHeaderSubTitle.classList.remove('hidden');
-            chatHeaderSubTitle.classList.toggle('online', !!isOnline);
-            chatHeaderSubTitle.classList.toggle('offline', !isOnline);
-            chatHeaderSubTitle.textContent = isOnline ? '● Online' : '● Offline';
-        }
-
-        function clearHeaderStatus() {
-            if (!chatHeaderSubTitle) return;
-            chatHeaderSubTitle.textContent = '';
-            chatHeaderSubTitle.classList.add('hidden');
-            chatHeaderSubTitle.classList.remove('online', 'offline');
-        }
-
-        // =========================
-        // FAB Badge + Pulse
-        // =========================
-        function setFabUnread(count) {
-            const n = Math.max(0, parseInt(count || 0));
-            if (!chatFabBadge) return;
-
-            if (n === 0) {
-                chatFabBadge.classList.add('hidden');
-                chatFab.classList.remove('pulse');
-                chatFabBadge.textContent = '0';
-            } else {
-                chatFabBadge.classList.remove('hidden');
-                chatFabBadge.textContent = (n > 99) ? '99+' : String(n);
-                chatFab.classList.add('pulse');
-            }
-        }
-
-        function calcTotalUnread() {
-            return (state.conversationsCache || []).reduce((sum, c) => sum + (parseInt(c.unread || 0)), 0);
-        }
-
-        function syncFabUnreadFromList() {
-            setFabUnread(calcTotalUnread());
-        }
-
-        // =========================
-        // Open / Close
-        // =========================
-        function showWidget() {
-            state.isOpen = true;
-            chatWidget.classList.add('open');
-            chatWidget.setAttribute('aria-hidden', 'false');
-            chatFab.style.display = 'none';
-
-            showListScreen();
-            loadConversations();
-        }
-
-        function hideWidget() {
-            state.isOpen = false;
-            chatWidget.classList.remove('open');
-            chatWidget.setAttribute('aria-hidden', 'true');
-            chatFab.style.display = 'block';
-
-            // reset
-            state.currentStudentId = null;
-            state.currentStudentName = '';
-            state.conversationId = null;
-            state.oldestMessageId = null;
-            state.hasMore = false;
-            state.isLoadingOlder = false;
-
-            messagesBox.innerHTML = '';
-            chatInput.value = '';
-            chatSearch.value = '';
-
-            clearHeaderStatus();
-        }
-
-        function showListScreen() {
-            screenThread.classList.add('hidden');
-            screenList.classList.remove('hidden');
-            chatBackBtn.classList.add('hidden');
-            chatHeaderTitle.textContent = 'Chats';
-
-            state.currentStudentId = null;
-            state.currentStudentName = '';
-            state.conversationId = null;
-            state.oldestMessageId = null;
-            state.hasMore = false;
-            state.isLoadingOlder = false;
-
-            messagesBox.innerHTML = '';
-
-            clearHeaderStatus();
-        }
-
-        function showThreadScreen(name) {
-            screenList.classList.add('hidden');
-            screenThread.classList.remove('hidden');
-            chatBackBtn.classList.remove('hidden');
-            chatHeaderTitle.textContent = name || 'Chat';
-        }
-
-        // =========================
-        // Badges on list items
-        // =========================
-        function removeBadge(studentId) {
-            const item = findItem(studentId);
-            if (!item) return;
-            const badge = item.querySelector('.badge');
-            if (badge) badge.remove();
-        }
-
-        function incrementBadge(studentId) {
-            const item = findItem(studentId);
-            if (!item) return;
-
-            let badge = item.querySelector('.badge');
-            if (!badge) {
-                badge = document.createElement('div');
-                badge.className = 'badge';
-                badge.textContent = '1';
-                item.appendChild(badge);
-            } else {
-                badge.textContent = (parseInt(badge.textContent || '0') + 1).toString();
-            }
-        }
-
-        function bumpUnreadInCache(studentId, delta) {
-            const c = (state.conversationsCache || []).find(x => (x.studentId === studentId));
-            if (c) c.unread = Math.max(0, parseInt(c.unread || 0) + (delta || 0));
-        }
-
-        // =========================
-        // Conversations list
-        // =========================
-        async function syncPresenceForList() {
-        
-            if (connection.state !== signalR.HubConnectionState.Connected) return;
-
-            const dots = document.querySelectorAll('.presence-dot[data-presence-id]');
-            const ids = Array.from(dots).map(d => String(d.dataset.presenceId));
-
-            const uniqueIds = [...new Set(ids)];
-
-            await Promise.all(uniqueIds.map(async (id) => {
-                try {
-                    const isOnline = await connection.invoke("IsUserOnline", id);
-
-                    // خزّن في الكاش
-                    presenceMap.set(String(id), !!isOnline);
-
-                    // حدّث الدوت
-                    const dot = document.querySelector(`.presence-dot[data-presence-id="${CSS.escape(String(id))}"]`);
-                    if (dot) {
-                        dot.classList.toggle("online", !!isOnline);
-                        dot.classList.toggle("offline", !isOnline);
-                    }
-
-                } catch (e) {
-                    console.error("syncPresenceForList IsUserOnline error:", id, e);
-                }
-            }));
-        }
-
-        async function loadConversations() {
+        await Promise.all(uniqueIds.map(async (id) => {
             try {
-                const res = await fetch(API.conversations);
-                if (!res.ok) {
-                    const txt = await res.text();
-                    console.log("GetInstructorConversations failed:", res.status, txt);
-                    chatItemsBox.innerHTML = `<div class="empty">Failed to load chats (${res.status})</div>`;
-                    return;
+                const isOnline = await connection.invoke("IsUserOnline", id);
+                presenceMap.set(String(id), !!isOnline);
+
+                const dot = document.querySelector(`.presence-dot[data-presence-id="${CSS.escape(String(id))}"]`);
+                if (dot) {
+                    dot.classList.toggle("online", !!isOnline);
+                    dot.classList.toggle("offline", !isOnline);
                 }
-
-                const ct = res.headers.get("content-type") || "";
-                if (!ct.includes("application/json")) {
-                    const txt = await res.text();
-                    console.log("Not JSON response:", ct, txt);
-                    chatItemsBox.innerHTML = `<div class="empty">Failed to load chats (not json)</div>`;
-                    return;
-                }
-
-                const data = await res.json();
-                state.conversationsCache = Array.isArray(data) ? data : [];
-                renderConversations(state.conversationsCache);
-                renderConversations(state.conversationsCache);
-                syncFabUnreadFromList();
-                if (state.currentStudentId) setActive(state.currentStudentId);
-                await syncPresenceForList();
-                
-
             } catch (e) {
-                console.error(e);
-                chatItemsBox.innerHTML = `<div class="empty">Failed to load chats</div>`;
+                console.error("syncPresenceForList IsUserOnline error:", id, e);
             }
-        }
+        }));
+    }
 
-        // ✅ FIXED: dot class is based on presenceMap (not always offline)
-        function renderConversations(list) {
-            chatItemsBox.innerHTML = '';
-
-            if (!list || list.length === 0) {
-                chatItemsBox.innerHTML = `<div class="empty">No chats yet</div>`;
+    async function loadConversations() {
+        try {
+            const res = await fetch(API.conversations);
+            if (!res.ok) {
+                const txt = await res.text();
+                console.log("GetInstructorConversations failed:", res.status, txt);
+                chatItemsBox.innerHTML = `<div class="empty">Failed to load chats (${res.status})</div>`;
                 return;
             }
 
-            for (const c of list) {
-                const studentIdStr = String(c.studentId ?? '');
-                const name = c.studentName ?? c.name ?? 'Student';
-                const preview = c.lastMessage ?? '';
-                const unread = parseInt(c.unread ?? 0);
-
-                const avatarHtml = c.photoUrl
-                    ? `<img class="avatar-img" src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(name)}" />`
-                    : `<div class="avatar-text">${escapeHtml(initials(name))}</div>`;
-
-                const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
-
-                const isOnline = presenceMap.get(studentIdStr) === true;
-                const dotClass = isOnline ? 'online' : 'offline';
-
-                chatItemsBox.insertAdjacentHTML('beforeend', `
-                    <div class="chat-item"
-                         data-student-id="${escapeHtml(studentIdStr)}"
-                         data-student-name="${escapeHtml(name)}">
-                        <div class="avatar">
-                            ${avatarHtml}
-                            <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(studentIdStr)}"></span>
-                        </div>
-                        <div class="meta">
-                            <div class="name">${escapeHtml(name)}</div>
-                            <div class="preview">${escapeHtml(preview)}</div>
-                        </div>
-                        ${unreadHtml}
-                    </div>
-                `);
+            const ct = res.headers.get("content-type") || "";
+            if (!ct.includes("application/json")) {
+                const txt = await res.text();
+                console.log("Not JSON response:", ct, txt);
+                chatItemsBox.innerHTML = `<div class="empty">Failed to load chats (not json)</div>`;
+                return;
             }
-        }
 
-        // click list (delegation)
-        chatItemsBox.addEventListener('click', (e) => {
-            const item = e.target.closest('.chat-item');
-            if (!item) return;
-            openChat(item.dataset.studentId, item.dataset.studentName);
-        });
+            const data = await res.json();
+            state.conversationsCache = Array.isArray(data) ? data : [];
+            renderConversations(state.conversationsCache);
 
-        // search
-        chatSearch.addEventListener('input', () => {
-            const q = (chatSearch.value ?? '').trim().toLowerCase();
-            const filtered = !q
-                ? state.conversationsCache
-                : state.conversationsCache.filter(x => ((x.studentName ?? x.name ?? '').toLowerCase().includes(q)));
-            renderConversations(filtered);
+            syncFabUnreadFromList();
             if (state.currentStudentId) setActive(state.currentStudentId);
-        });
 
-        // =========================
-        // Thread (history + paging)
-        // =========================
-        async function openChat(studentId, studentName) {
-            state.currentStudentId = studentId;
-            state.currentStudentName = studentName;
+            await syncPresenceForList();
+        } catch (e) {
+            console.error(e);
+            chatItemsBox.innerHTML = `<div class="empty">Failed to load chats</div>`;
+        }
+    }
 
-            setActive(studentId);
-            showThreadScreen(studentName);
+    function renderConversations(list) {
+        chatItemsBox.innerHTML = '';
 
-            await loadHistoryFirst(studentId);
-
-            await markAsRead(studentId);
-            removeBadge(studentId);
-
-            // بعد القراءة: صحح الأرقام من السيرفر
-            await loadConversations();
-
-            // ✅ FIX: use cache first, otherwise invoke then cache
-            try {
-                const id = String(state.currentStudentId);
-                const cached = presenceMap.get(id);
-                if (cached !== undefined) {
-                    setHeaderStatus(cached);
-                } else {
-                    const isOnline = await connection.invoke("IsUserOnline", state.currentStudentId);
-                    presenceMap.set(id, !!isOnline);
-                    setHeaderStatus(!!isOnline);
-                }
-            } catch (e) {
-                console.error("IsUserOnline invoke error:", e);
-            }
+        if (!list || list.length === 0) {
+            chatItemsBox.innerHTML = `<div class="empty">No chats yet</div>`;
+            return;
         }
 
-        async function loadHistoryFirst(studentId) {
-            messagesBox.innerHTML = '';
-            state.hasMore = true;
-            state.oldestMessageId = null;
-            state.isLoadingOlder = false;
+        for (const c of list) {
+            const studentIdStr = String(c.studentId ?? '');
+            const name = c.studentName ?? c.name ?? 'Student';
+            const preview = c.lastMessage ?? '';
+            const unread = parseInt(c.unread ?? 0);
 
-            await loadOlderMessages();
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-        }
+            const avatarHtml = c.photoUrl
+                ? `<img class="avatar-img" src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(name)}" />`
+                : `<div class="avatar-text">${escapeHtml(initials(name))}</div>`;
 
-        async function loadOlderMessages() {
-            if (!state.currentStudentId) return;
-            if (!state.hasMore || state.isLoadingOlder) return;
+            const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
 
-            state.isLoadingOlder = true;
+            const isOnline = presenceMap.get(studentIdStr) === true;
+            const dotClass = isOnline ? 'online' : 'offline';
 
-            const prevScrollHeight = messagesBox.scrollHeight;
-            const prevScrollTop = messagesBox.scrollTop;
-
-            const url =
-                `${API.history}?studentId=${encodeURIComponent(state.currentStudentId)}`
-                + `&take=${state.take}`
-                + (state.oldestMessageId ? `&beforeId=${state.oldestMessageId}` : ``);
-
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-
-                const list = data.messages ?? [];
-                state.conversationId = data.conversationId ?? null;
-                state.hasMore = data.hasMore === true;
-
-                if (!list.length) return;
-
-                const frag = document.createDocumentFragment();
-                for (const m of list) frag.appendChild(messageNode(m));
-                messagesBox.prepend(frag);
-
-                // أقدم ID
-                state.oldestMessageId = list[0]?.id ?? state.oldestMessageId;
-
-                // ثبّت الاسكرول مكانه
-                const newScrollHeight = messagesBox.scrollHeight;
-                messagesBox.scrollTop = (newScrollHeight - prevScrollHeight) + prevScrollTop;
-
-            } catch (e) {
-                console.error(e);
-            } finally {
-                state.isLoadingOlder = false;
-            }
-        }
-
-        // load older when near top
-        messagesBox.addEventListener('scroll', () => {
-            if (messagesBox.scrollTop <= 10) {
-                loadOlderMessages();
-            }
-        });
-
-        // =========================
-        // ✓✓ Read ticks UI
-        // =========================
-        function ticksHtml(isMine, isRead) {
-            if (!isMine) return '';
-            const cls = isRead ? 'ticks read' : 'ticks';
-            return `<span class="${cls}" title="${isRead ? 'Read' : 'Sent'}">✓✓</span>`;
-        }
-
-        function messageNode(m) {
-            const id = m.id ?? m.Id;
-            const senderId = m.senderId ?? m.SenderId;
-            const receiverId = m.receiverId ?? m.ReceiverId;
-            const content = m.content ?? m.Content ?? '';
-            const sentAt = m.sentAt ?? m.SentAt;
-            const isRead = (m.isRead ?? m.IsRead) === true;
-
-            // المدرس = mine لما أنا اللي باعت (ReceiverId == studentId)
-            const isMine = receiverId === state.currentStudentId;
-
-            const wrapper = document.createElement('div');
-            wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
-            wrapper.dataset.messageId = id ?? '';
-
-            wrapper.innerHTML = `
-                <div class="bubble">
-                    ${escapeHtml(content)}
-                    <span class="time">
-                        ${escapeHtml(toTime(sentAt))}
-                        ${ticksHtml(isMine, isRead)}
-                    </span>
+            chatItemsBox.insertAdjacentHTML('beforeend', `
+                <div class="chat-item"
+                     data-student-id="${escapeHtml(studentIdStr)}"
+                     data-student-name="${escapeHtml(name)}">
+                    <div class="avatar">
+                        ${avatarHtml}
+                        <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(studentIdStr)}"></span>
+                    </div>
+                    <div class="meta">
+                        <div class="name">${escapeHtml(name)}</div>
+                        <div class="preview">${escapeHtml(preview)}</div>
+                    </div>
+                    ${unreadHtml}
                 </div>
-            `;
-            return wrapper;
+            `);
+        }
+    }
+
+    chatItemsBox.addEventListener('click', (e) => {
+        const item = e.target.closest('.chat-item');
+        if (!item) return;
+        openChat(item.dataset.studentId, item.dataset.studentName);
+    });
+
+    chatSearch.addEventListener('input', () => {
+        const q = (chatSearch.value ?? '').trim().toLowerCase();
+        const filtered = !q
+            ? state.conversationsCache
+            : state.conversationsCache.filter(x => ((x.studentName ?? x.name ?? '').toLowerCase().includes(q)));
+        renderConversations(filtered);
+        if (state.currentStudentId) setActive(state.currentStudentId);
+    });
+
+    // =========================
+    // Thread (history + paging)
+    // =========================
+    async function openChat(studentId, studentName) {
+        state.currentStudentId = studentId;
+        state.currentStudentName = studentName;
+
+        setActive(studentId);
+        showThreadScreen(studentName);
+
+        clearAttachmentUI();
+
+        await loadHistoryFirst();
+
+        await markAsRead(studentId);
+        removeBadge(studentId);
+
+        await loadConversations();
+
+        try {
+            const id = String(state.currentStudentId);
+            const cached = presenceMap.get(id);
+            if (cached !== undefined) {
+                setHeaderStatus(cached);
+            } else {
+                const isOnline = await connection.invoke("IsUserOnline", state.currentStudentId);
+                presenceMap.set(id, !!isOnline);
+                setHeaderStatus(!!isOnline);
+            }
+        } catch (e) {
+            console.error("IsUserOnline invoke error:", e);
+        }
+    }
+
+    async function loadHistoryFirst() {
+        messagesBox.innerHTML = '';
+        state.hasMore = true;
+        state.oldestMessageId = null;
+        state.isLoadingOlder = false;
+
+        await loadOlderMessages();
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+
+        scheduleMarkAsReadHub();
+    }
+
+    async function loadOlderMessages() {
+        if (!state.currentStudentId) return;
+        if (!state.hasMore || state.isLoadingOlder) return;
+
+        state.isLoadingOlder = true;
+
+        const prevScrollHeight = messagesBox.scrollHeight;
+        const prevScrollTop = messagesBox.scrollTop;
+
+        const url =
+            `${API.history}?studentId=${encodeURIComponent(state.currentStudentId)}`
+            + `&take=${state.take}`
+            + (state.oldestMessageId ? `&beforeId=${state.oldestMessageId}` : ``);
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const list = data.messages ?? [];
+            state.conversationId = data.conversationId ?? null;
+            state.hasMore = data.hasMore === true;
+
+            if (!list.length) return;
+
+            const frag = document.createDocumentFragment();
+            for (const m of list) frag.appendChild(messageNode(m));
+            messagesBox.prepend(frag);
+
+            state.oldestMessageId = list[0]?.id ?? list[0]?.Id ?? state.oldestMessageId;
+
+            const newScrollHeight = messagesBox.scrollHeight;
+            messagesBox.scrollTop = (newScrollHeight - prevScrollHeight) + prevScrollTop;
+
+        } catch (e) {
+            console.error(e);
+        } finally {
+            state.isLoadingOlder = false;
+        }
+    }
+
+    messagesBox.addEventListener('scroll', () => {
+        if (messagesBox.scrollTop <= 10) loadOlderMessages();
+
+        if (messagesBox.scrollTop + messagesBox.clientHeight >= messagesBox.scrollHeight - 6) {
+            scheduleMarkAsReadHub();
+        }
+    });
+
+    // =========================
+    // ✅ NEW: MarkAsRead via SignalR (debounced)
+    // =========================
+    let readDebounceTimer = null;
+
+    function scheduleMarkAsReadHub() {
+        clearTimeout(readDebounceTimer);
+
+        readDebounceTimer = setTimeout(() => {
+            if (!state.isOpen) return;
+            if (!state.conversationId) return;
+            if (!state.currentStudentId) return;
+
+            connection.invoke("MarkAsRead", state.conversationId, state.currentStudentId)
+                .catch(err => console.error("MarkAsRead invoke error:", err));
+        }, 200);
+    }
+
+    // =========================
+    // ✓✓ Read ticks UI
+    // =========================
+    function ticksHtml(isMine, isRead) {
+        if (!isMine) return '';
+        const cls = isRead ? 'ticks read' : 'ticks';
+        return `<span class="${cls}" title="${isRead ? 'Read' : 'Sent'}">✓✓</span>`;
+    }
+
+    // =========================
+    // ✅ Render (supports attachmentUrl + download fallback + previewUrl)
+    // =========================
+    function messageNode(m) {
+        const id = (m.id ?? m.Id ?? '');
+        const senderId = (m.senderId ?? m.SenderId ?? '');
+        const receiverId = (m.receiverId ?? m.ReceiverId ?? '');
+        const content = (m.content ?? m.Content ?? '') || '';
+        const sentAt = (m.sentAt ?? m.SentAt);
+        const isRead = (m.isRead ?? m.IsRead) === true;
+
+        // mine for instructor: if I'm sender -> receiver == current student
+        const isMine = String(receiverId) === String(state.currentStudentId);
+
+        const att = readAttachmentFromMessage(m);
+
+        let attachmentHtml = '';
+        if (att.attachmentUrl) {
+            if (isImageContentType(att.contentType)) {
+                attachmentHtml = `
+                    <div class="att">
+                        <img class="att-img js-preview-img"
+                             src="${escapeHtml(att.attachmentUrl)}"
+                             data-full-src="${escapeHtml(att.attachmentUrl)}"
+                             alt="${escapeHtml(att.originalName || 'image')}" />
+                    </div>`;
+            } else {
+                attachmentHtml = `
+                    <div class="att">
+                        <a class="att-file" href="${escapeHtml(att.attachmentUrl)}" target="_blank" rel="noopener">
+                            📎 ${escapeHtml(att.originalName || 'file')}
+                        </a>
+                    </div>`;
+            }
+        } else if (att.previewUrl && isImageContentType(att.contentType)) {
+            attachmentHtml = `
+                <div class="att">
+                    <img class="att-img js-preview-img"
+                         src="${escapeHtml(att.previewUrl)}"
+                         data-full-src="${escapeHtml(att.previewUrl)}"
+                         alt="${escapeHtml(att.originalName || 'image')}" />
+                </div>`;
+        } else if (att.storedName || att.originalName) {
+            const href = id ? buildDownloadUrl(id) : '#';
+            if (isImageContentType(att.contentType)) {
+                attachmentHtml = `
+                    <div class="att">
+                        <img class="att-img js-preview-img"
+                             src="${escapeHtml(href)}"
+                             data-full-src="${escapeHtml(href)}"
+                             alt="${escapeHtml(att.originalName || 'image')}" />
+                    </div>`;
+            } else {
+                attachmentHtml = `
+                    <div class="att">
+                        <a class="att-file" href="${escapeHtml(href)}" target="_blank" rel="noopener">
+                            📎 ${escapeHtml(att.originalName || 'file')}
+                        </a>
+                    </div>`;
+            }
         }
 
-        function renderMessage(m, { prepend = false } = {}) {
-            const node = messageNode(m);
-            if (prepend) messagesBox.prepend(node);
-            else messagesBox.appendChild(node);
-            return node;
+        const textHtml = content ? `<div class="att-text">${escapeHtml(content)}</div>` : '';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
+        wrapper.dataset.messageId = String(id || '');
+
+        wrapper.innerHTML = `
+            <div class="bubble">
+                ${textHtml}
+                ${attachmentHtml}
+                <span class="time">
+                    ${escapeHtml(toTime(sentAt))}
+                    ${ticksHtml(isMine, isRead)}
+                </span>
+            </div>
+        `;
+        return wrapper;
+    }
+
+    function renderMessage(m, { prepend = false } = {}) {
+        const id = (m.id ?? m.Id ?? null);
+        if (id) {
+            const exists = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(id))}"]`);
+            if (exists) return exists;
         }
 
-        function markMessagesReadUI(messageIds) {
-            if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+        const node = messageNode(m);
+        if (prepend) messagesBox.prepend(node);
+        else messagesBox.appendChild(node);
+        return node;
+    }
 
-            messageIds.forEach(id => {
-                const tick = document.querySelector(
-                    `.msg-row.mine[data-message-id="${CSS.escape(String(id))}"] .ticks`
+    // click image => preview
+    messagesBox.addEventListener('click', (e) => {
+        const img = e.target.closest('img.js-preview-img');
+        if (!img) return;
+        const src = img.getAttribute('data-full-src') || img.src;
+        openImagePreview(src);
+    });
+
+    function markMessagesReadUI(messageIds) {
+        if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+
+        messageIds.forEach(id => {
+            const row = messagesBox.querySelector(
+                `.msg-row[data-message-id="${CSS.escape(String(id))}"]`
+            );
+            const tick = row?.querySelector('.ticks');
+            if (tick) {
+                tick.classList.add("read");
+                tick.title = "Read";
+            }
+        });
+    }
+
+    // =========================
+    // Mark read (HTTP) - keep as is
+    // =========================
+    async function markAsRead(studentId) {
+        try {
+            await fetch(API.markRead, {
+                method: 'POST',
+                headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
+                body: new URLSearchParams({ studentId })
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // =========================
+    // ✅ optimistic patch (update id + replace previewUrl to attachmentUrl)
+    // =========================
+    function patchOptimisticToReal(optimisticRowEl, payload) {
+        if (!optimisticRowEl || !payload) return;
+
+        const realId = payload.id ?? payload.Id;
+        if (!realId) return;
+
+        optimisticRowEl.dataset.messageId = String(realId);
+
+        const attUrl = payload.attachmentUrl ?? payload.AttachmentUrl ?? null;
+        const ct = payload.attachmentContentType ?? payload.AttachmentContentType ?? '';
+
+        if (!attUrl) return;
+
+        const img = optimisticRowEl.querySelector('img.att-img');
+        const a = optimisticRowEl.querySelector('a.att-file');
+
+        if (isImageContentType(ct)) {
+            if (img) {
+                img.src = attUrl;
+                img.setAttribute('data-full-src', attUrl);
+            }
+        } else {
+            if (a) a.href = attUrl;
+        }
+    }
+
+    // =========================
+    // Send message (Text OR File)
+    // =========================
+    async function sendMessage() {
+        const text = (chatInput.value || '').trim();
+        const file = getSelectedFile();
+
+        if (!state.currentStudentId) return;
+        if (!text && !file) return;
+
+        const nowIso = new Date().toISOString();
+        const tempId = `tmp-${Date.now()}`;
+
+        const optimistic = {
+            id: tempId,
+            receiverId: state.currentStudentId,
+            content: text,
+            sentAt: nowIso,
+            isRead: false
+        };
+
+        let previewUrl = null;
+
+        if (file) {
+            optimistic.attachmentOriginalName = file.name;
+            optimistic.attachmentContentType = file.type || 'application/octet-stream';
+            if (isImageContentType(optimistic.attachmentContentType)) {
+                previewUrl = URL.createObjectURL(file);
+                optimistic.previewUrl = previewUrl;
+            }
+        }
+
+        const optimisticNode = renderMessage(optimistic);
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+
+        chatInput.value = '';
+        clearAttachmentUI();
+
+        // update preview in list
+        const item = findItem(state.currentStudentId);
+        if (item) {
+            const prev = item.querySelector('.preview');
+            if (prev) prev.textContent = text || (file ? `📎 ${file.name}` : '');
+        }
+
+        try {
+            // 1) file -> FormData (NO realtime text after upload)
+            if (file) {
+                const fd = new FormData();
+                fd.append("ReceiverId", state.currentStudentId);
+                fd.append("Content", text);
+                fd.append("File", file);
+
+                const res = await fetch(API.saveWithFile, {
+                    method: 'POST',
+                    headers: addCsrfHeader({}),
+                    body: fd
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    console.log("SendMessageWithFile failed:", res.status, err);
+                    return;
+                }
+
+                const payload = await res.json();
+
+                patchOptimisticToReal(optimisticNode, payload);
+
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+                return;
+            }
+
+            // 2) text only (legacy realtime)
+            const res = await fetch(API.save, {
+                method: 'POST',
+                headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
+                body: new URLSearchParams({ receiverId: state.currentStudentId, content: text })
+            });
+
+            const ct = res.headers.get("content-type") || "";
+            if (!ct.includes("application/json")) {
+                const txt = await res.text();
+                console.log("SaveMessage not json:", res.status, txt);
+                return;
+            }
+
+            const data = await res.json();
+            if (!data || data.success !== true) {
+                console.log('Save failed:', data);
+                return;
+            }
+
+            const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
+            if (realId && optimisticNode) optimisticNode.dataset.messageId = String(realId);
+
+            await sendRealtimeToStudent(state.currentStudentId, text);
+
+        } catch (e) {
+            console.error("sendMessage error:", e);
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    // =========================
+    // Open/Close/Back
+    // =========================
+    chatFab.addEventListener('click', showWidget);
+    chatCloseBtn.addEventListener('click', hideWidget);
+    chatBackBtn.addEventListener('click', showListScreen);
+
+    // =========================
+    // SignalR (Instructor)
+    // =========================
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chatHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.start()
+        .then(() => console.log("SignalR Connected (Instructor)!"))
+        .catch(err => console.error(err.toString()));
+
+    connection.on("UpdateConversationList", function () {
+        if (state.isOpen) loadConversations();
+    });
+
+    connection.on("MessagesRead", function (payload) {
+        if (Array.isArray(payload)) {
+            markMessagesReadUI(payload);
+            return;
+        }
+        const ids = payload?.messageIds;
+        if (Array.isArray(ids) && ids.length > 0) markMessagesReadUI(ids);
+    });
+
+    // ✅ ReceiveMessage supports BOTH:
+    // 1) payload object (attachments)
+    // 2) old signature (senderId, message, timestamp)
+    connection.on("ReceiveMessage", async function (arg1, arg2, arg3) {
+
+        // NEW payload object
+        if (arg1 && typeof arg1 === 'object') {
+            const p = arg1;
+
+            const senderId = String(p.senderId ?? p.SenderId ?? '');
+            const receiverId = String(p.receiverId ?? p.ReceiverId ?? '');
+            const messageId = (p.id ?? p.Id ?? null);
+
+            const sameOpenChat =
+                state.isOpen
+                && state.currentStudentId
+                && (
+                    senderId === String(state.currentStudentId) // from student
+                    || receiverId === String(state.currentStudentId) // echo/instructor message
                 );
 
-                if (tick) {
-                    tick.classList.add("read");
-                    tick.title = "Read";
-                }
-            });
-        }
-
-        // =========================
-        // Mark read (instructor marking student messages read)
-        // =========================
-        async function markAsRead(studentId) {
-            try {
-                await fetch(API.markRead, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                    body: new URLSearchParams({ studentId })
-                });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // =========================
-        // Send message
-        // =========================
-        async function sendMessage() {
-            const text = (chatInput.value || '').trim();
-            if (!state.currentStudentId || !text) return;
-
-            const nowIso = new Date().toISOString();
-            const tempId = `tmp-${Date.now()}`;
-
-            const optimisticNode = renderMessage({
-                id: tempId,
-                receiverId: state.currentStudentId,
-                content: text,
-                sentAt: nowIso,
-                isRead: false
-            });
-
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-            chatInput.value = '';
-
-            // update preview
-            const item = findItem(state.currentStudentId);
-            if (item) {
-                const prev = item.querySelector('.preview');
-                if (prev) prev.textContent = text;
-            }
-
-            try {
-                const res = await fetch(API.save, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                    body: new URLSearchParams({ receiverId: state.currentStudentId, content: text })
-                });
-
-                const ct = res.headers.get("content-type") || "";
-                if (!ct.includes("application/json")) {
-                    const txt = await res.text();
-                    console.log("SaveMessage not json:", res.status, txt);
-                    return;
-                }
-
-                const data = await res.json();
-                console.log("SaveMessage response:", data);
-
-                if (!data || data.success !== true) {
-                    console.log('Save failed:', data);
-                    return;
-                }
-
-                const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
-                if (realId && optimisticNode) {
-                    optimisticNode.dataset.messageId = String(realId);
-                }
-
-                await sendRealtimeToStudent(state.currentStudentId, text);
-
-            } catch (e) {
-                console.error("sendMessage error:", e);
-            }
-        }
-
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        // =========================
-        // Open/Close/Back
-        // =========================
-        chatFab.addEventListener('click', showWidget);
-        chatCloseBtn.addEventListener('click', hideWidget);
-        chatBackBtn.addEventListener('click', showListScreen);
-
-        // =========================
-        // SignalR (Instructor)
-        // =========================
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chatHub")
-            .withAutomaticReconnect()
-            .build();
-
-        connection.start()
-            .then(() => console.log("SignalR Connected (Instructor)!"))
-            .catch(err => console.error(err.toString()));
-
-        connection.on("UpdateConversationList", function () {
-            if (state.isOpen) loadConversations();
-        });
-
-        connection.on("MessagesRead", function (payload) {
-            console.log("✅ MessagesRead event arrived:", payload);
-
-            if (Array.isArray(payload)) {
-                markMessagesReadUI(payload);
-                return;
-            }
-
-            const ids = payload?.messageIds;
-            if (Array.isArray(ids) && ids.length > 0) {
-                markMessagesReadUI(ids);
-            }
-        });
-
-        connection.on("ReceiveMessage", async function (senderId, message, timestamp) {
-            const sameOpenChat = state.isOpen && state.currentStudentId && senderId === state.currentStudentId;
-
             if (sameOpenChat) {
-                renderMessage({ senderId, receiverId: 'me', content: message, sentAt: timestamp });
+                if (messageId) {
+                    const exists = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(messageId))}"]`);
+                    if (exists) return;
+                }
+
+                renderMessage(p);
                 messagesBox.scrollTop = messagesBox.scrollHeight;
+
+                scheduleMarkAsReadHub();
 
                 await markAsRead(senderId);
                 removeBadge(senderId);
@@ -942,52 +1235,86 @@
                 return;
             }
 
-            const item = findItem(senderId);
+            const otherId = senderId; // incoming from student
+            const item = findItem(otherId);
             if (item) {
                 const prev = item.querySelector('.preview');
-                if (prev) prev.textContent = message;
+                const previewText = (p.content ?? p.Content ?? '').trim()
+                    || ((p.attachmentOriginalName ?? p.AttachmentOriginalName) ? `📎 ${(p.attachmentOriginalName ?? p.AttachmentOriginalName)}` : '');
 
-                incrementBadge(senderId);
-                bumpUnreadInCache(senderId, +1);
+                if (prev) prev.textContent = previewText;
+
+                incrementBadge(otherId);
+                bumpUnreadInCache(otherId, +1);
                 syncFabUnreadFromList();
             } else {
                 await loadConversations();
             }
-        });
-
-        // ✅ FIXED: update cache + update list dot + update header
-        connection.on("PresenceChanged", function (userId, isOnline) {
-            const id = String(userId);
-
-            // ✅ cache
-            presenceMap.set(id, !!isOnline);
-
-            // لو المدرس فاتح شات نفس الطالب حدّث الهيدر
-            if (state.isOpen && state.currentStudentId && String(state.currentStudentId) === id) {
-                setHeaderStatus(!!isOnline);
-            }
-
-            // ✅ حدّث الدوت في الليست
-            const dot = document.querySelector(
-                `.presence-dot[data-presence-id="${CSS.escape(id)}"]`
-            );
-
-            if (dot) {
-                dot.classList.toggle("online", !!isOnline);
-                dot.classList.toggle("offline", !isOnline);
-            }
-        });
-
-        async function sendRealtimeToStudent(studentId, message) {
-            try {
-                await connection.invoke("SendMessage", studentId, message);
-            } catch (e) {
-                console.error(e.toString());
-            }
+            return;
         }
-    </script>
-}
 
+        // OLD signature
+        const senderId = arg1;
+        const message = arg2;
+        const timestamp = arg3;
+
+        const sameOpenChat = state.isOpen && state.currentStudentId && senderId === state.currentStudentId;
+
+        if (sameOpenChat) {
+            renderMessage({ senderId, receiverId: 'me', content: message, sentAt: timestamp });
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+
+            scheduleMarkAsReadHub();
+
+            await markAsRead(senderId);
+            removeBadge(senderId);
+
+            bumpUnreadInCache(senderId, -999999);
+            syncFabUnreadFromList();
+
+            await loadConversations();
+            return;
+        }
+
+        const item = findItem(senderId);
+        if (item) {
+            const prev = item.querySelector('.preview');
+            if (prev) prev.textContent = message;
+
+            incrementBadge(senderId);
+            bumpUnreadInCache(senderId, +1);
+            syncFabUnreadFromList();
+        } else {
+            await loadConversations();
+        }
+    });
+
+    connection.on("PresenceChanged", function (userId, isOnline) {
+        const id = String(userId);
+        presenceMap.set(id, !!isOnline);
+
+        if (state.isOpen && state.currentStudentId && String(state.currentStudentId) === id) {
+            setHeaderStatus(!!isOnline);
+        }
+
+        const dot = document.querySelector(`.presence-dot[data-presence-id="${CSS.escape(id)}"]`);
+        if (dot) {
+            dot.classList.toggle("online", !!isOnline);
+            dot.classList.toggle("offline", !isOnline);
+        }
+    });
+
+    async function sendRealtimeToStudent(studentId, message) {
+        try {
+            await connection.invoke("SendMessage", studentId, message);
+        } catch (e) {
+            console.error(e.toString());
+        }
+    }
+    </script>
+
+ 
+}
 
 
 

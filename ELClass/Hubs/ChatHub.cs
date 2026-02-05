@@ -74,19 +74,24 @@ public class ChatHub : Hub
 
     public async Task MarkAsRead(int conversationId, string otherUserId)
     {
-        var readerId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrWhiteSpace(readerId)) return;
+        var me = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(me)) return;
+        if (conversationId <= 0) return;
+        if (string.IsNullOrWhiteSpace(otherUserId)) return;
+
+        var unread = await _unitOfWork.CHMessageRepository.GetAsync(
+            m => m.ConversationId == conversationId
+                 && m.SenderId == otherUserId
+                 && m.ReceiverId == me
+                 && m.IsRead == false,
+            tracked: true,
+            orderBy: q => q.OrderBy(m => m.Id)
+        );
+
+        if (unread == null || !unread.Any()) return;
 
         var now = DateTime.UtcNow;
-
-        var unread = (await _unitOfWork.CHMessageRepository.GetAsync())
-             .Where(m => m.ConversationId == conversationId
-                      && m.SenderId == otherUserId
-                      && m.ReceiverId == readerId
-                      && !m.IsRead)
-             .ToList();
-
-        if (unread.Count == 0) return;
+        var ids = unread.Select(m => m.Id).ToList();
 
         foreach (var m in unread)
         {
@@ -96,18 +101,14 @@ public class ChatHub : Hub
 
         await _unitOfWork.CommitAsync();
 
-        var messageIds = unread.Select(m => m.Id).ToList();
-
         await Clients.User(otherUserId).SendAsync("MessagesRead", new
         {
-            conversationId,
-            messageIds,
-            readAt = now
+            conversationId = conversationId,
+            messageIds = ids
         });
-
- 
-        await Clients.Users(otherUserId, readerId).SendAsync("UpdateConversationList");
     }
+
+
 
     public Task<bool> IsUserOnline(string userId)
     {

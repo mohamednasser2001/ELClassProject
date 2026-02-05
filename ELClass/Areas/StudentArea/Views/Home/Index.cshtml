@@ -16,7 +16,7 @@
     </div>
 
     <div class="topbar__right">
-        
+
         @{
             var currentUser = await _userManager.GetUserAsync(User);
 
@@ -78,7 +78,7 @@
         <div class="stat-card__body">
             <div class="stat-card__label">المهام المنتهية</div>
             <div class="stat-card__value">@Model.CompletedLessons</div>
-          
+
         </div>
     </article>
 
@@ -237,7 +237,7 @@
         </ul>
     </div>
 
-    
+
 </section>
 
 <footer class="footer">
@@ -255,6 +255,7 @@
 </button>
 
 <div id="chatWidget" class="chat-widget" aria-hidden="true">
+    @Html.AntiForgeryToken()
     <div class="chat-header">
         <div class="header-left">
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
@@ -279,11 +280,23 @@
     @* Screen 2: Thread *@
     <div class="chat-screen hidden" id="screenThread">
         <div class="messages" id="messagesBox"></div>
-
         <div class="composer">
+            <div id="attachChip" class="attach-chip hidden">
+                <span id="attachName"></span>
+                <button type="button" id="attachClearBtn" class="attach-clear" aria-label="Remove file">×</button>
+            </div>
+
             <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+            <input type="file" id="chatFile" hidden />
+
+            <button type="button" id="attachBtn" class="chat-attach-btn" title="Attach file">
+                <i class="fa-solid fa-paperclip"></i>
+            </button>
+
             <button id="sendBtn" type="button" aria-label="Send">➤</button>
         </div>
+
+
     </div>
 </div>
 
@@ -303,7 +316,9 @@
             conversations: '/StudentArea/Home/GetMyConversations',
             history: '/StudentArea/Home/GetChatHistory',
             save: '/StudentArea/Home/SaveMessage',
-            markRead: '/StudentArea/Home/MarkAsRead'
+            saveWithFile: '/StudentArea/Home/SendMessageWithFile',
+            markRead: '/StudentArea/Home/MarkAsRead',
+            download: '/StudentArea/Home/DownloadAttachment'
         };
 
         // =========================
@@ -326,6 +341,17 @@
         const chatInput = document.getElementById('chatInput');
         const sendBtn = document.getElementById('sendBtn');
 
+        // ✅ Attachment elements
+        const attachBtn = document.getElementById("attachBtn");
+        const chatFile = document.getElementById("chatFile");
+
+        // ✅ old span (fallback)
+        const attachName = document.getElementById("attachName");
+
+        // ✅ new chip (if you added it in HTML)
+        const attachChip = document.getElementById("attachChip");
+        const attachClearBtn = document.getElementById("attachClearBtn");
+
         const currentUserId = document.getElementById('currentUserId')?.value;
 
         // ✅ Header elements (Student)
@@ -333,8 +359,25 @@
         const headerStatusEl = document.getElementById("chatHeaderStatus");
 
         // =========================
+        // ✅ Anti-forgery token helper
+        // =========================
+        function getAntiForgeryToken() {
+            // token موجود داخل chatWidget (لأنك حطيت @Html.AntiForgeryToken())
+            const el = chatWidget?.querySelector('input[name="__RequestVerificationToken"]')
+                || document.querySelector('input[name="__RequestVerificationToken"]');
+            return el?.value || '';
+        }
+
+        function addCsrfHeader(headersObj) {
+            const token = getAntiForgeryToken();
+            if (token) headersObj['RequestVerificationToken'] = token; // ASP.NET Core default header
+            return headersObj;
+        }
+
+        // =========================
         // State
         // =========================
+        const readCache = new Set();
         const state = {
             isOpen: false,
             currentInstructorId: null,
@@ -418,6 +461,50 @@
             return (first + second).toUpperCase();
         }
 
+        function isImageContentType(ct) {
+            return typeof ct === 'string' && ct.toLowerCase().startsWith('image/');
+        }
+
+        function buildDownloadUrl(messageId) {
+            return `${API.download}?messageId=${encodeURIComponent(messageId)}`;
+        }
+
+        // =========================
+        // ✅ Image Preview Modal (click to open)
+        // =========================
+        function ensureImageModal() {
+            if (document.getElementById('imgPreviewModal')) return;
+
+            const modal = document.createElement('div');
+            modal.id = 'imgPreviewModal';
+            modal.className = 'img-preview-modal hidden';
+            modal.innerHTML = `
+                <div class="img-preview-backdrop"></div>
+                <div class="img-preview-content" role="dialog" aria-modal="true">
+                    <button type="button" class="img-preview-close" aria-label="Close">✕</button>
+                    <img class="img-preview-img" alt="Preview" />
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const close = () => modal.classList.add('hidden');
+
+            modal.querySelector('.img-preview-backdrop')?.addEventListener('click', close);
+            modal.querySelector('.img-preview-close')?.addEventListener('click', close);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+            });
+        }
+
+        function openImagePreview(src) {
+            if (!src) return;
+            ensureImageModal();
+            const modal = document.getElementById('imgPreviewModal');
+            const img = modal.querySelector('.img-preview-img');
+            img.src = src;
+            modal.classList.remove('hidden');
+        }
+
         // =========================
         // ✅ Presence helpers
         // =========================
@@ -430,6 +517,56 @@
             headerStatusEl.classList.toggle("online", !!isOnline);
             headerStatusEl.classList.toggle("offline", !isOnline);
         }
+
+        // =========================
+        // ✅ Attachment helpers
+        // =========================
+        function getSelectedFile() {
+            return (chatFile && chatFile.files && chatFile.files.length > 0) ? chatFile.files[0] : null;
+        }
+
+        function showAttachmentName(name) {
+            if (attachChip) {
+                attachChip.classList.remove("hidden");
+                const nameEl = attachChip.querySelector("#attachName");
+                if (nameEl) nameEl.textContent = name;
+                return;
+            }
+
+            if (attachName) {
+                attachName.style.display = "inline-block";
+                attachName.textContent = name;
+            }
+        }
+
+        function hideAttachmentName() {
+            if (attachChip) {
+                attachChip.classList.add("hidden");
+                const nameEl = attachChip.querySelector("#attachName");
+                if (nameEl) nameEl.textContent = "";
+            }
+            if (attachName) {
+                attachName.style.display = "none";
+                attachName.textContent = "";
+            }
+        }
+
+        function clearAttachmentUI() {
+            if (chatFile) chatFile.value = "";
+            hideAttachmentName();
+        }
+
+        if (attachBtn && chatFile) {
+            attachBtn.addEventListener("click", () => chatFile.click());
+
+            chatFile.addEventListener("change", () => {
+                const f = getSelectedFile();
+                if (f) showAttachmentName(f.name);
+                else clearAttachmentUI();
+            });
+        }
+
+        attachClearBtn?.addEventListener("click", () => clearAttachmentUI());
 
         // =========================
         // Open / Close
@@ -463,6 +600,7 @@
             messagesBox.innerHTML = '';
             chatInput.value = '';
             chatSearch.value = '';
+            clearAttachmentUI();
 
             if (headerNameEl) headerNameEl.textContent = "Chats";
             if (headerStatusEl) headerStatusEl.textContent = "";
@@ -485,6 +623,7 @@
             state.isLoadingOlder = false;
 
             messagesBox.innerHTML = '';
+            clearAttachmentUI();
         }
 
         function showThreadScreen(instructorName) {
@@ -546,7 +685,6 @@
             }
         }
 
-        // ✅✅ FIX HERE: apply presenceMap when rendering list
         function renderConversations(list) {
             chatItemsBox.innerHTML = '';
 
@@ -567,25 +705,24 @@
 
                 const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
 
-                // 👇 أهم سطر: خُد الحالة من الكاش بدل default offline
                 const isOnline = presenceMap.get(idStr) === true;
                 const dotClass = isOnline ? 'online' : 'offline';
 
                 chatItemsBox.insertAdjacentHTML('beforeend', `
-                                                            <div class="chat-item"
-                                                                 data-instructor-id="${escapeHtml(idStr)}"
-                                                                 data-instructor-name="${escapeHtml(name)}">
-                                                                 <div class="avatar">
-                                                                    ${avatarHtml}
-                                                                    <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(idStr)}"></span>
-                                                                </div>
-                                                                <div class="meta">
-                                                                    <div class="name">${escapeHtml(name)}</div>
-                                                                    <div class="preview">${escapeHtml(preview)}</div>
-                                                                </div>
-                                                                ${unreadHtml}
-                                                            </div>
-                                                        `);
+                    <div class="chat-item"
+                         data-instructor-id="${escapeHtml(idStr)}"
+                         data-instructor-name="${escapeHtml(name)}">
+                         <div class="avatar">
+                            ${avatarHtml}
+                            <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(idStr)}"></span>
+                        </div>
+                        <div class="meta">
+                            <div class="name">${escapeHtml(name)}</div>
+                            <div class="preview">${escapeHtml(preview)}</div>
+                        </div>
+                        ${unreadHtml}
+                    </div>
+                `);
             }
 
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
@@ -609,7 +746,6 @@
 
             renderConversations(filtered);
 
-            // ✅ لو فاتح شات بالفعل خلي الـactive ثابت
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
         });
 
@@ -619,6 +755,8 @@
 
             setActiveItem(instructorId);
             showThreadScreen(instructorName);
+
+            clearAttachmentUI();
 
             await loadChatHistoryFirstPage();
 
@@ -654,7 +792,7 @@
             try {
                 await fetch(API.markRead, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
                     body: new URLSearchParams({ instructorId })
                 });
             } catch (e) {
@@ -706,7 +844,7 @@
                 for (const m of list) frag.appendChild(messageNode(m));
                 messagesBox.prepend(frag);
 
-                state.oldestId = list[0].id;
+                state.oldestId = list[0].id ?? list[0].Id;
 
                 const newScrollHeight = messagesBox.scrollHeight;
                 messagesBox.scrollTop = (newScrollHeight - prevScrollHeight) + prevScrollTop;
@@ -737,6 +875,29 @@
             return `<span class="${cls}" title="${isRead ? 'Read' : 'Sent'}">✓✓</span>`;
         }
 
+        // =========================
+        // ✅ Attachment parsing (supports your old + new payload)
+        // =========================
+        function readAttachmentFromMessage(m) {
+            const a = m.attachment ?? m.Attachment ?? null;
+
+            const storedName = m.attachmentStoredName ?? m.AttachmentStoredName ?? a?.storedName ?? a?.StoredName ?? null;
+            const originalName = m.attachmentOriginalName ?? m.AttachmentOriginalName ?? a?.name ?? a?.Name ?? null;
+            const contentType = m.attachmentContentType ?? m.AttachmentContentType ?? a?.type ?? a?.Type ?? null;
+            const size = m.attachmentSize ?? m.AttachmentSize ?? a?.size ?? a?.Size ?? null;
+
+            // ✅ الجديد عندنا: AttachmentUrl يرجع جاهز
+            const attachmentUrl = m.attachmentUrl ?? m.AttachmentUrl ?? null;
+
+            // ✅ القديم: previewUrl (optimistic local only)
+            const previewUrl = m.previewUrl ?? null;
+
+            return { storedName, originalName, contentType, size, attachmentUrl, previewUrl };
+        }
+
+        // =========================
+        // Render Message Node (Unified)
+        // =========================
         function messageNode(m) {
             const id = (m.id ?? m.Id ?? '');
             const senderId = (m.senderId ?? m.SenderId ?? '');
@@ -744,76 +905,250 @@
             const content = (m.content ?? m.Content ?? '');
             const sentAt = (m.sentAt ?? m.SentAt);
             const isRead = (m.isRead ?? m.IsRead) === true;
+            const idStr = String(id || '');
+            const alreadyRead = isRead || readCache.has(idStr);
 
             const isMine = currentUserId && senderId === currentUserId;
+
+            const att = readAttachmentFromMessage(m);
+
+            let attachmentHtml = '';
+            // ✅ لو فيه AttachmentUrl من السيرفر (الأفضل)
+            if (att.attachmentUrl) {
+                if (isImageContentType(att.contentType)) {
+                    attachmentHtml = `
+                        <div class="att">
+                            <img class="att-img js-preview-img"
+                                 src="${escapeHtml(att.attachmentUrl)}"
+                                 data-full-src="${escapeHtml(att.attachmentUrl)}"
+                                 alt="${escapeHtml(att.originalName || 'image')}" />
+                        </div>
+                    `;
+                } else {
+                    attachmentHtml = `
+                        <div class="att">
+                            <a class="att-file" href="${escapeHtml(att.attachmentUrl)}" target="_blank" rel="noopener">
+                                📎 ${escapeHtml(att.originalName || 'file')}
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+            // ✅ fallback للـ optimistic previewUrl (local)
+            else if (att.previewUrl && isImageContentType(att.contentType)) {
+                attachmentHtml = `
+                    <div class="att">
+                        <img class="att-img js-preview-img"
+                             src="${escapeHtml(att.previewUrl)}"
+                             data-full-src="${escapeHtml(att.previewUrl)}"
+                             alt="${escapeHtml(att.originalName || 'image')}" />
+                    </div>
+                `;
+            }
+            // ✅ fallback للـ download endpoint القديم (لو عندك history بيرجع storedName فقط)
+            else if (id && (att.storedName || att.originalName)) {
+                const downloadHref = buildDownloadUrl(id);
+                if (isImageContentType(att.contentType)) {
+                    attachmentHtml = `
+                        <div class="att">
+                            <img class="att-img js-preview-img"
+                                 src="${escapeHtml(downloadHref)}"
+                                 data-full-src="${escapeHtml(downloadHref)}"
+                                 alt="${escapeHtml(att.originalName || 'image')}" />
+                        </div>
+                    `;
+                } else {
+                    attachmentHtml = `
+                        <div class="att">
+                            <a class="att-file" href="${escapeHtml(downloadHref)}" target="_blank" rel="noopener">
+                                📎 ${escapeHtml(att.originalName || 'file')}
+                            </a>
+                        </div>
+                    `;
+                }
+            }
 
             const wrapper = document.createElement('div');
             wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
             wrapper.dataset.messageId = String(id || '');
 
+            const textHtml = content ? `<div class="att-text">${escapeHtml(content)}</div>` : '';
+
             wrapper.innerHTML = `
-                                                        <div class="bubble">
-                                                            ${escapeHtml(content)}
-                                                            <span class="time">
-                                                                ${escapeHtml(toTime(sentAt))}
-                                                                ${ticksHtml(isMine, isRead)}
-                                                            </span>
-                                                        </div>
-                                                    `;
+                <div class="bubble">
+                    ${textHtml}
+                    ${attachmentHtml}
+                    <span class="time">
+                        ${escapeHtml(toTime(sentAt))}
+                       ${ticksHtml(isMine, alreadyRead)}
+
+                    </span>
+                </div>
+            `;
+
             return wrapper;
         }
 
         function renderMessage(m) {
+            const id = (m.id ?? m.Id ?? null);
+            if (id) {
+                // ✅ منع التكرار: لو الرسالة موجودة بالفعل (مثلاً optimistic اتحول ل real)
+                const existing = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(id))}"]`);
+                if (existing) return existing;
+            }
+
             const node = messageNode(m);
             messagesBox.appendChild(node);
             return node;
         }
 
+        
         function markMessagesReadInUI(messageIds) {
             if (!Array.isArray(messageIds) || messageIds.length === 0) return;
 
             messageIds.forEach(id => {
-                const row = messagesBox.querySelector(`.msg-row.mine[data-message-id="${CSS.escape(String(id))}"]`);
+                readCache.add(String(id)); // 👈 خزنها
+
+                const row = messagesBox.querySelector(
+                    `.msg-row[data-message-id="${CSS.escape(String(id))}"]`
+                );
                 const tick = row?.querySelector('.ticks');
                 if (tick) {
-                    tick.classList.add('read');
-                    tick.title = 'Read';
+                    tick.classList.add("read");
+                    tick.title = "Read";
                 }
             });
         }
 
         // =========================
-        // Send Message (Student)
+        // ✅ click on image to preview
+        // =========================
+        messagesBox.addEventListener('click', (e) => {
+            const img = e.target.closest('img.js-preview-img');
+            if (!img) return;
+            const src = img.getAttribute('data-full-src') || img.src;
+            openImagePreview(src);
+        });
+
+        // =========================
+        // ✅ Optimistic patch helper (keep your old one but improved)
+        // =========================
+        function patchOptimisticToReal(optimisticRowEl, payload) {
+            if (!optimisticRowEl || !payload) return;
+
+            const realId = payload.id ?? payload.Id;
+            if (!realId) return;
+
+            // update id
+            optimisticRowEl.dataset.messageId = String(realId);
+
+            // replace attachment from previewUrl to attachmentUrl if exists
+            const attUrl = payload.attachmentUrl ?? payload.AttachmentUrl ?? null;
+            const ct = payload.attachmentContentType ?? payload.AttachmentContentType ?? '';
+
+            if (!attUrl) return;
+
+            const img = optimisticRowEl.querySelector('img.att-img');
+            const a = optimisticRowEl.querySelector('a.att-file');
+
+            if (isImageContentType(ct)) {
+                if (img) {
+                    img.src = attUrl;
+                    img.setAttribute('data-full-src', attUrl);
+                }
+            } else {
+                if (a) a.href = attUrl;
+            }
+        }
+
+        // =========================
+        // Send Message (Student) ✅ (Text OR File)
         // =========================
         async function sendMessageFromUI() {
             const text = (chatInput.value || '').trim();
-            if (!state.currentInstructorId || !text) return;
+            const file = getSelectedFile();
+
+            if (!state.currentInstructorId) return;
+            if (!text && !file) return;
 
             const nowIso = new Date().toISOString();
             const tempId = `tmp-${Date.now()}`;
 
+            let previewUrl = null;
+            let fileType = null;
+            let fileName = null;
+
+            if (file) {
+                fileType = file.type || '';
+                fileName = file.name || 'file';
+                if (isImageContentType(fileType)) {
+                    previewUrl = URL.createObjectURL(file);
+                }
+            }
+
+            // ✅ optimistic render
             const optimisticNode = renderMessage({
                 id: tempId,
                 senderId: currentUserId,
                 receiverId: state.currentInstructorId,
                 content: text,
                 sentAt: nowIso,
-                isRead: false
+                isRead: false,
+                attachment: file ? { name: fileName, type: fileType, size: file.size } : null,
+                previewUrl: previewUrl
             });
 
             messagesBox.scrollTop = messagesBox.scrollHeight;
             chatInput.value = '';
+            clearAttachmentUI();
 
+            // preview in list
             const item = findItem(state.currentInstructorId);
             if (item) {
                 const previewEl = item.querySelector('.preview');
-                if (previewEl) previewEl.textContent = text;
+                if (previewEl) previewEl.textContent = text || (file ? `📎 ${fileName}` : '');
             }
 
             try {
+                // ✅ File (with/without text)
+                if (file) {
+                    const fd = new FormData();
+                    fd.append("ReceiverId", state.currentInstructorId);
+                    fd.append("Content", text);
+                    fd.append("File", file);
+
+                    const res = await fetch(API.saveWithFile, {
+                        method: 'POST',
+                        headers: addCsrfHeader({}), // token
+                        body: fd
+                    });
+
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        console.error("SendMessageWithFile failed:", errText);
+                        return;
+                    }
+
+                    const payload = await res.json();
+
+                    // ✅ patch optimistic to real (id + attachmentUrl)
+                    patchOptimisticToReal(optimisticNode, payload);
+
+                    // ✅ free local preview url
+                    if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+                    // IMPORTANT:
+                    // - لا تبعت SendMessage hub هنا
+                    // - السيرفر بالفعل بيعمل SignalR broadcast (للـ receiver + للـ sender)
+                    // - وإحنا بنمنع التكرار بالـ messageId
+
+                    return;
+                }
+
+                // ✅ Text only
                 const res = await fetch(API.save, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
                     body: new URLSearchParams({ receiverId: state.currentInstructorId, content: text })
                 });
 
@@ -828,6 +1163,7 @@
                     optimisticNode.dataset.messageId = String(realId);
                 }
 
+                // القديم: لسه بتبعت realtime نص فقط
                 await sendRealtimeToInstructor(state.currentInstructorId, text);
 
             } catch (e) {
@@ -843,11 +1179,7 @@
         // =========================
         // Open/Close/Back
         // =========================
-        chatFab.addEventListener('click', () => {
-            initAudio();
-            showWidget();
-        });
-
+        chatFab.addEventListener('click', () => { initAudio(); showWidget(); });
         chatCloseBtn.addEventListener('click', hideWidget);
         chatBackBtn.addEventListener('click', showListScreen);
 
@@ -859,20 +1191,15 @@
             .withAutomaticReconnect()
             .build();
 
-        // ✅ PresenceChanged
         studentConnection.on("PresenceChanged", function (userId, isOnline) {
             const id = String(userId);
             presenceMap.set(id, !!isOnline);
 
-            // لو الشات مفتوح على نفس المدرس حدّث الهيدر
             if (state.currentInstructorId && String(state.currentInstructorId) === id) {
                 setHeaderStatus(!!isOnline);
             }
 
-            // ✅ حدّث الدوت في الليست
-            const dot = document.querySelector(
-                `.presence-dot[data-presence-id="${CSS.escape(id)}"]`
-            );
+            const dot = document.querySelector(`.presence-dot[data-presence-id="${CSS.escape(id)}"]`);
             if (dot) {
                 dot.classList.toggle("online", !!isOnline);
                 dot.classList.toggle("offline", !isOnline);
@@ -907,19 +1234,86 @@
             }, 200);
         }
 
-        studentConnection.on("ReceiveMessage", async function (senderId, message, timestamp) {
+        // ✅ ReceiveMessage: supports BOTH
+        // 1) new payload object (server sends payload)
+        // 2) old signature (senderId, message, timestamp)
+        studentConnection.on("ReceiveMessage", async function (arg1, arg2, arg3) {
+
+            // NEW payload object
+            if (arg1 && typeof arg1 === 'object') {
+                const p = arg1;
+
+                const senderId = String(p.senderId ?? p.SenderId ?? '');
+                const receiverId = String(p.receiverId ?? p.ReceiverId ?? '');
+                const messageId = (p.id ?? p.Id ?? null);
+
+                const sameOpenChat =
+                    state.isOpen
+                    && state.currentInstructorId
+                    && (
+                        // الرسالة جاية من المدرس للطالب
+                        senderId === String(state.currentInstructorId)
+                        // أو echo للطالب نفسه
+                        || senderId === String(currentUserId)
+                    );
+
+                if (sameOpenChat) {
+                    // منع التكرار لو موجودة
+                    if (messageId) {
+                        const exists = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(messageId))}"]`);
+                        if (exists) return;
+                    }
+
+                    renderMessage(p);
+                    messagesBox.scrollTop = messagesBox.scrollHeight;
+
+                    scheduleMarkAsReadHub();
+
+                    // لو جاية من المدرس (مش echo من الطالب)
+                    if (senderId === String(state.currentInstructorId)) {
+                        await markAsRead(senderId);
+                        removeBadge(senderId);
+                    }
+
+                    await loadMyConversations();
+                    return;
+                }
+
+                // لو مش فاتح نفس الشات: update preview + badge
+                const otherId = senderId === String(currentUserId) ? receiverId : senderId;
+
+                const item = findItem(otherId);
+                if (item) {
+                    const previewEl = item.querySelector('.preview');
+                    const previewText = (p.content ?? p.Content ?? '').trim()
+                        || (p.attachmentOriginalName ?? p.AttachmentOriginalName ? `📎 ${(p.attachmentOriginalName ?? p.AttachmentOriginalName)}` : '');
+
+                    if (previewEl) previewEl.textContent = previewText;
+
+                    // لو الرسالة جاية لينا من الطرف التاني زوّد badge
+                    if (senderId !== String(currentUserId)) {
+                        incrementBadge(otherId);
+                        syncFabUnreadFromList();
+                    }
+
+                    await loadMyConversations();
+                } else {
+                    await loadMyConversations();
+                }
+
+                return;
+            }
+
+            // OLD signature
+            const senderId = arg1;
+            const message = arg2;
+            const timestamp = arg3;
+
             const sameOpenChat = state.isOpen && state.currentInstructorId && senderId === state.currentInstructorId;
 
             if (sameOpenChat) {
-                renderMessage({
-                    senderId: senderId,
-                    receiverId: currentUserId,
-                    content: message,
-                    sentAt: timestamp
-                });
-
+                renderMessage({ senderId, receiverId: currentUserId, content: message, sentAt: timestamp });
                 messagesBox.scrollTop = messagesBox.scrollHeight;
-
                 scheduleMarkAsReadHub();
 
                 await markAsRead(senderId);
@@ -945,6 +1339,7 @@
         });
 
         studentConnection.on("MessagesRead", function (payload) {
+            console.log("وصلت إشارة القراءة بنجاح!", payload);
             if (!payload) return;
             if (!state.isOpen) return;
             if (!state.conversationId) return;
@@ -966,7 +1361,10 @@
             }
         }
     </script>
+
 }
+
+
 
 
 

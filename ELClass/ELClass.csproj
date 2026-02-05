@@ -16,6 +16,7 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="App_Data\chat_uploads\" />
     <Folder Include="wwwroot\HomePageAssets\Images\Home\" />
     <Folder Include="wwwroot\Images\Users\" />
     <Folder Include="wwwroot\js\Admin\Course\" />
