@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260203224418_InitFresh")]
-    partial class InitFresh
+    [Migration("20260206092831_intial")]
+    partial class intial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -306,7 +306,6 @@ namespace DataAccess.Migrations
                         .HasColumnType("nvarchar(260)");
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
@@ -554,12 +553,6 @@ namespace DataAccess.Migrations
                     b.Property<string>("CreatedById")
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("InstructorId1")
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("StudentId1")
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -567,11 +560,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.HasIndex("InstructorId1");
-
                     b.HasIndex("StudentId");
-
-                    b.HasIndex("StudentId1");
 
                     b.ToTable("InstructorStudents");
                 });
@@ -870,24 +859,16 @@ namespace DataAccess.Migrations
                         .HasForeignKey("CreatedById");
 
                     b.HasOne("Models.Instructor", "Instructor")
-                        .WithMany()
+                        .WithMany("InstructorStudents")
                         .HasForeignKey("InstructorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Models.Instructor", null)
-                        .WithMany("InstructorStudents")
-                        .HasForeignKey("InstructorId1");
-
                     b.HasOne("Models.Student", "Student")
-                        .WithMany()
+                        .WithMany("InstructorStudents")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Models.Student", null)
-                        .WithMany("InstructorStudents")
-                        .HasForeignKey("StudentId1");
 
                     b.Navigation("CreatedByUser");
 

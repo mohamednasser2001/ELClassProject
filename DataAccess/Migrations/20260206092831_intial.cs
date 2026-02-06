@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class InitFresh : Migration
+    public partial class intial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -390,8 +390,6 @@ namespace DataAccess.Migrations
                 {
                     InstructorId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     StudentId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    InstructorId1 = table.Column<string>(type: "nvarchar(255)", nullable: true),
-                    StudentId1 = table.Column<string>(type: "nvarchar(255)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedById = table.Column<string>(type: "nvarchar(255)", nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -411,21 +409,11 @@ namespace DataAccess.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_InstructorStudents_Instructors_InstructorId1",
-                        column: x => x.InstructorId1,
-                        principalTable: "Instructors",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_InstructorStudents_Students_StudentId",
                         column: x => x.StudentId,
                         principalTable: "Students",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_InstructorStudents_Students_StudentId1",
-                        column: x => x.StudentId1,
-                        principalTable: "Students",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -498,7 +486,7 @@ namespace DataAccess.Migrations
                     ConversationId = table.Column<int>(type: "int", nullable: false),
                     SenderId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ReceiverId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     AttachmentOriginalName = table.Column<string>(type: "nvarchar(260)", maxLength: 260, nullable: true),
                     AttachmentStoredName = table.Column<string>(type: "nvarchar(260)", maxLength: 260, nullable: true),
                     AttachmentContentType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -609,19 +597,9 @@ namespace DataAccess.Migrations
                 column: "CreatedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_InstructorStudents_InstructorId1",
-                table: "InstructorStudents",
-                column: "InstructorId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_InstructorStudents_StudentId",
                 table: "InstructorStudents",
                 column: "StudentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_InstructorStudents_StudentId1",
-                table: "InstructorStudents",
-                column: "StudentId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Lesson_CourseId",
