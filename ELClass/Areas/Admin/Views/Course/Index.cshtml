@@ -116,26 +116,46 @@
         });
 
         function deleteCourse(id) {
-            Swal.fire({
-                title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-                confirmButtonText: currentLang === 'ar' ? 'حذف' : 'Delete'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/Admin/Course/Delete',
-                        type: 'POST',
-                        data: { id: id },
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function () {
-                            $('#coursesTable').DataTable().ajax.reload(null, false);
-                        }
+    Swal.fire({
+        title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
+        text: currentLang === 'ar' ? 'هل أنت متأكد من حذف هذا الكورس؟' : 'Are you sure you want to delete this course?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+        confirmButtonText: currentLang === 'ar' ? 'نعم، احذف' : 'Yes, delete it',
+        cancelButtonText: currentLang === 'ar' ? 'إلغاء' : 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/Admin/Course/Delete',
+                type: 'POST',
+                data: { id: id },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                success: function () {
+                
+                    $('#coursesTable').DataTable().ajax.reload(null, false);
+                    
+                    
+                    Swal.fire({
+                        title: currentLang === 'ar' ? 'تم الحذف!' : 'Deleted!',
+                        text: currentLang === 'ar' ? 'تم حذف الكورس بنجاح.' : 'The course has been deleted.',
+                        icon: 'success',
+                        timer: 2000, 
+                        showConfirmButton: false
+                    });
+                },
+                error: function() {
+                  
+                    Swal.fire({
+                        title: currentLang === 'ar' ? 'خطأ!' : 'Error!',
+                        text: currentLang === 'ar' ? 'حدث خطأ أثناء الحذف.' : 'Something went wrong.',
+                        icon: 'error'
                     });
                 }
             });
         }
+    });
+}
 
        
 

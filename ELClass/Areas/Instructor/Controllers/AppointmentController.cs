@@ -37,20 +37,32 @@ namespace ELClass.Areas.Instructor.Controllers
             try
             {
 
-                var existingAppointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(a =>
+           
+                var newStart = vm.StartTime;
+                var newEnd = vm.StartTime.Add(TimeSpan.FromHours(vm.DurationInHours));
+
+                var instructorDayAppointments = await _unitOfWork.AppoinmentRepository.GetAsync(a =>
                     a.InstructorId == vm.InstructorId &&
-                    a.CourseId == vm.CourseId &&
-                    a.Type == (ScheduleType)vm.Type &&
-                    a.StartTime == vm.StartTime &&
                     (vm.Type == (int)ScheduleType.Recurring ? a.Day == vm.Day : a.SpecificDate == vm.SpecificDate)
                 );
 
-                if (existingAppointment != null)
+       
+                var overlappingAppointment = instructorDayAppointments.FirstOrDefault(a =>
+                    newStart < a.StartTime.Add(TimeSpan.FromHours(a.DurationInHours)) &&
+                    newEnd > a.StartTime
+                );
+
+                if (overlappingAppointment != null)
                 {
-                    return Json(new { success = false, message = "هذا الموعد موجود بالفعل لهذا المدرس" });
+                    var displayTime = DateTime.Today.Add(overlappingAppointment.StartTime).ToString("hh:mm tt");
+                    var msg = CultureHelper.IsArabic
+                        ? $"يوجد تعارض مع موعد يبدأ الساعة {displayTime}"
+                        : $"Conflict with an appointment starting at {displayTime}";
+
+                    return Json(new { success = false, message = msg });
                 }
 
-                // 2. إنشاء الموعد الجديد
+         
                 var appointment = new Appointment
                 {
                     InstructorId = vm.InstructorId,
@@ -66,7 +78,7 @@ namespace ELClass.Areas.Instructor.Controllers
                 await _unitOfWork.AppoinmentRepository.CreateAsync(appointment);
                 await _unitOfWork.CommitAsync();
 
-                return Json(new { success = true, message = "تم إنشاء الموعد بنجاح" });
+                return Json(new { success = true, message = CultureHelper.IsArabic ? "تم إنشاء الموعد بنجاح" : "Appointment created successfully" });
             }
             catch (Exception ex)
             {
@@ -75,39 +87,57 @@ namespace ELClass.Areas.Instructor.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> SearchStudents(string term)
+        public async Task<IActionResult> SearchStudents(string term, int courseId)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var students = await _unitOfWork.StudentRepository.GetAsync(
-                filter: s => string.IsNullOrEmpty(term) || s.NameEn.Contains(term) || s.NameAr.Contains(term) || s.ApplicationUser.Email!.Contains(term)
+            
+            var studentCourses = await _unitOfWork.StudentCourseRepository.GetAsync(
+                filter: sc => sc.CourseId == courseId &&
+                              (string.IsNullOrEmpty(term) ||
+                               sc.Student.NameEn.Contains(term) ||
+                               sc.Student.NameAr.Contains(term ) ||
+                               sc.Student.ApplicationUser.Email!.Contains(term)),
+                include: q => q.Include(sc => sc.Student)
+                               .ThenInclude(s => s.InstructorStudents) 
             );
 
-            var results = students.Select(s => new
-            {
-                id = s.Id,
-                text = $"{s.NameEn} - {s.NameAr}"
-            }).ToList();
+           
+            var results = studentCourses
+                .Where(sc => sc.Student.InstructorStudents.Any(isc => isc.InstructorId == userId))
+                .Select(sc => new
+                {
+                    id = sc.StudentId,
+                    text = CultureHelper.IsArabic
+                           ? $"{sc.Student.NameAr} - {sc.Student.NameEn}"
+                           : $"{sc.Student.NameEn} - {sc.Student.NameAr}"
+                }).ToList();
 
             return Json(results);
         }
+
         public async Task<JsonResult> SearchCourses(string term)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-
-            var courses = await _unitOfWork.CourseRepository.GetAsync(
-                filter: c => string.IsNullOrEmpty(term) || c.TitleAr.Contains(term) || c.TitleEn.Contains(term)
+            
+            var courses = await _unitOfWork.InstructorCourseRepository.GetAsync(
+                filter: ic => ic.InstructorId == userId &&
+                         (string.IsNullOrEmpty(term) ||
+                          ic.Course.TitleAr.Contains(term) ||
+                          ic.Course.TitleEn.Contains(term)) , include: ic => ic.Include(ic => ic.Course)
             );
 
             var results = courses.Select(c => new
             {
-                id = c.Id,
+                id = c.CourseId,
                 text = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar"
-                       ? c.TitleAr : c.TitleEn
-            });
+                       ? c.Course.TitleAr : c.Course.TitleEn
+            }).ToList();
 
             return Json(results);
         }
+
 
         public async Task<IActionResult> SearchInstructors(string term, int courseId)
         {

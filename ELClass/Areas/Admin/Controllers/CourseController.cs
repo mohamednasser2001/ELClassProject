@@ -136,6 +136,7 @@ namespace ELClass.Areas.Admin.Controllers
                     var succ = await unitOfWork.CommitAsync();
                     if (succ)
                     {
+                        TempData["Success"] = CultureHelper.IsArabic ? "تمت إضافة الطالب بنجاح." : "Student assigned successfully.";
                         return Json(new { success = true });
                     }
                 }
@@ -160,11 +161,12 @@ namespace ELClass.Areas.Admin.Controllers
                 var suc = await unitOfWork.CommitAsync();
                 if (suc)
                 {
+                    TempData["Success"] = CultureHelper.IsArabic ? "تمت إزالة الطالب بنجاح." : "Student removed successfully.";
                     return RedirectToAction("Details", "Course", new { id = courseId });
                 }
             }
 
-            
+            TempData["Error"] = CultureHelper.IsArabic ? "حدث خطأ أثناء محاولة إزالة الطالب." : "There was an error removing the student.";
             return Json(new { success = false, message = "There was an error removing the student." });
         }
 
@@ -182,10 +184,11 @@ namespace ELClass.Areas.Admin.Controllers
                 var suc = await unitOfWork.CommitAsync();
                 if (suc)
                 {
+                    TempData["Success"] = CultureHelper.IsArabic ? "تمت إزالة المدرس بنجاح." : "Instructor removed successfully.";
                     return RedirectToAction("Details", "Course", new { id = CourseId });
                 }
             }
-
+            TempData["Error"] = CultureHelper.IsArabic ? "حدث خطأ أثناء محاولة إزالة المدرس." : "There was an error removing the instructor.";
             return Json(new { success = false, message = "There was an error removing the instructor." });
         }
         [HttpPost]
@@ -355,7 +358,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return View(crs);
             }
 
-            TempData["success-notifications"] = isArabic ? "تم إضافة الكورس بنجاح" : "Course created successfully.";
+            TempData["success"] = isArabic ? "تم إضافة الكورس بنجاح" : "Course created successfully.";
 
             return RedirectToAction("Index");
         }
@@ -399,7 +402,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return View(crs);
             }
 
-            TempData["success-notifications"] = isArabic ? "تم تحديث الكورس بنجاح" : "Course updated successfully.";
+            TempData["success"] = isArabic ? "تم تحديث الكورس بنجاح" : "Course updated successfully.";
 
             return RedirectToAction("Index");
         }
@@ -428,12 +431,13 @@ namespace ELClass.Areas.Admin.Controllers
 
                 await unitOfWork.CommitAsync();
                 await transaction.CommitAsync();
+                TempData["success"] = CultureHelper.IsArabic ? "تم حذف الكورس بنجاح" : "Course deleted successfully.";
                 return RedirectToAction("Index");
             }
             catch (Exception)
             {
                 await transaction.RollbackAsync() ; 
-                                                  
+                TempData["error"] = CultureHelper.IsArabic ? "حدث خطأ ما أثناء حذف الكورس" : "Something went wrong while deleting the course.";
                 return View("Error");
             }
         }

@@ -1,8 +1,9 @@
 ﻿@using System.Security.Claims
+@using ELClass.services
 @model Models.Appointment
 
 @{
-    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var isArabic = CultureHelper.IsArabic;
     var direction = isArabic ? "rtl" : "ltr";
 }
 

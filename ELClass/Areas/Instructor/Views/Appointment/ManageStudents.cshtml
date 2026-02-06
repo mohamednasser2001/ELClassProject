@@ -148,7 +148,13 @@
                     url: '/Instructor/Appointment/SearchStudents',
                     dataType: 'json',
                     delay: 250,
-                    data: params => ({ term: params.term }),
+                    data:
+                    function (params) {
+                    return {
+                        term: params.term,
+                        courseId: "@Model.CourseId"
+                    };
+                    },
                     processResults: data => ({ results: data })
                 },
                 placeholder: "@(isArabic ? "ابحث بالاسم..." : "Search by name...")",
@@ -201,7 +207,13 @@
                 if(res.success) {
                     location.reload();
                 } else {
-                    alert(res.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: '@(isArabic ? "عذراً" : "Sorry...")',
+                        text: res.message,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '@(isArabic ? "تمام" : "OK")'
+                    });
                     btn.prop('disabled', false).removeClass('opacity-50');
                 }
             });
