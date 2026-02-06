@@ -120,12 +120,12 @@ namespace DataAccess
                 entity.Property(e => e.StudentId).HasMaxLength(idMaxLength);
 
                 entity.HasOne(e => e.Instructor)
-                    .WithMany()
+                    .WithMany(i => i.InstructorStudents) 
                     .HasForeignKey(e => e.InstructorId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.Student)
-                    .WithMany()
+                    .WithMany(s => s.InstructorStudents) 
                     .HasForeignKey(e => e.StudentId)
                     .OnDelete(DeleteBehavior.Restrict);
             });

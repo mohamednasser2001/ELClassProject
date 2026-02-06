@@ -262,23 +262,44 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> RemoveCourse(int courseId, string studentId)
         {
-            var course = await unitOfWork.StudentCourseRepository.GetOneAsync(filter: e => e.StudentId == studentId && e.CourseId == courseId);
-            if (course == null)
+           
+            var studentCourse = await unitOfWork.StudentCourseRepository.GetOneAsync(
+                filter: e => e.StudentId == studentId && e.CourseId == courseId);
+
+            if (studentCourse == null)
             {
                 return View("AdminNotFoundPage");
             }
 
-            var result = await unitOfWork.StudentCourseRepository.DeleteAsync(course);
-            if (result)
-            {
-                var suc = await unitOfWork.CommitAsync();
-                if (suc)
-                {
-                    return Json(new { success = true });
-                }
+            
+            await unitOfWork.StudentCourseRepository.DeleteAsync(studentCourse);
 
+            
+            var courseAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a => a.CourseId == courseId);
+            var appointmentIds = courseAppointments.Select(a => a.Id).ToList();
+
+            if (appointmentIds.Any())
+            {
+                
+                var studentAppointmentsToRemove = await unitOfWork.StudentAppointmentRepository.GetAsync(sa =>
+                    sa.StudentId == studentId && appointmentIds.Contains(sa.AppointmentId));
+
+                if (studentAppointmentsToRemove.Any())
+                {
+                    
+                    await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointmentsToRemove);
+                }
             }
-            return BadRequest();
+
+            
+            var success = await unitOfWork.CommitAsync();
+
+            if (success)
+            {
+                return Json(new { success = true });
+            }
+
+            return BadRequest(new { message = "Failed to remove course and related appointments" });
         }
 
         public async Task<IActionResult> RemoveInstructor(string stdId, string insId)
@@ -292,12 +313,21 @@ namespace ELClass.Areas.Admin.Controllers
             var result = await unitOfWork.InstructorStudentRepository.DeleteAsync(instructor);
             if (result)
             {
-                var suc = await unitOfWork.CommitAsync();
-                if (suc)
-                {
+                
+                
+                    var instructorAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a => a.InstructorId == insId);
+                    var appointmentIds = instructorAppointments.Select(a => a.Id).ToList();
+                    var studentAppointmentsToRemove = await unitOfWork.StudentAppointmentRepository.GetAsync(sa =>
+                        sa.StudentId == stdId && appointmentIds.Contains(sa.AppointmentId));
 
-                    return Json(new { success = true });
-                }
+                    if (studentAppointmentsToRemove.Any())
+                    {
+                        await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointmentsToRemove);
+                        
+                    }
+                await unitOfWork.CommitAsync();
+                return Json(new { success = true });
+                
 
             }
             return BadRequest();
@@ -607,7 +637,8 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
                 }
 
-                
+                var relatedAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(sa => sa.StudentId == id);
+                await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(relatedAppointments);
                 await unitOfWork.StudentRepository.DeleteAsync(student);
 
                 

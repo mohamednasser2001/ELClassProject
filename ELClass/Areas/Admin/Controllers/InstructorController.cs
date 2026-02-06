@@ -103,51 +103,96 @@ namespace ELClass.Areas.Admin.Controllers
                 return View("AdminNotFoundPage");
             }
         }
-        
+
 
 
         public async Task<IActionResult> RemoveCourse(int courseId, string instructorId)
         {
-            var course = await unitOfWork.InstructorCourseRepository.GetOneAsync(filter: e => e.InstructorId == instructorId && e.CourseId == courseId);
-            if (course == null)
+            
+            var instructorCourse = await unitOfWork.InstructorCourseRepository.GetOneAsync(
+                filter: e => e.InstructorId == instructorId && e.CourseId == courseId);
+
+            if (instructorCourse == null)
             {
                 return View("AdminNotFoundPage");
             }
 
-            var result = await unitOfWork.InstructorCourseRepository.DeleteAsync(course);
-            if (result)
-            {
-                var suc = await unitOfWork.CommitAsync();
-                if (suc)
-                {
+            
+            var appointmentsToDelete = await unitOfWork.AppoinmentRepository.GetAsync(
+                filter: a => a.InstructorId == instructorId && a.CourseId == courseId);
 
-                    return RedirectToAction("details", new { id = instructorId });
+            if (appointmentsToDelete.Any())
+            {
+                var appointmentIds = appointmentsToDelete.Select(a => a.Id).ToList();
+
+             
+                var studentAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(
+                    sa => appointmentIds.Contains(sa.AppointmentId));
+
+                if (studentAppointments.Any())
+                {
+                    await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointments);
                 }
 
+       
+                await unitOfWork.AppoinmentRepository.DeleteAllAsync(appointmentsToDelete);
             }
-            return BadRequest();
+
+            await unitOfWork.InstructorCourseRepository.DeleteAsync(instructorCourse);
+
+     
+            var success = await unitOfWork.CommitAsync();
+
+            if (success)
+            {
+                TempData["Success"] = CultureHelper.IsArabic ? "تم ازالة الكورس بنجاح" : "Course removed successfully";
+                return RedirectToAction("details", new { id = instructorId });
+            }
+
+            return BadRequest(new { message = CultureHelper.IsArabic ? "حدث خطأ أثناء محاولة حذف البيانات المرتبطة" : "there is error occurred" });
         }
 
         public async Task<IActionResult> RemoveStudent(string studentId, string instructorId)
         {
-            var student = await unitOfWork.InstructorStudentRepository.GetOneAsync(filter: e => e.InstructorId == instructorId && e.StudentId == studentId);
-            if (student == null)
+           
+            var instructorStudent = await unitOfWork.InstructorStudentRepository.GetOneAsync(
+                filter: e => e.InstructorId == instructorId && e.StudentId == studentId);
+
+            if (instructorStudent == null)
             {
                 return View("AdminNotFoundPage");
             }
 
-            var result = await unitOfWork.InstructorStudentRepository.DeleteAsync(student);
-            if (result)
+           
+            var instructorAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a => a.InstructorId == instructorId);
+            var appointmentIds = instructorAppointments.Select(a => a.Id).ToList();
+
+            if (appointmentIds.Any())
             {
-                var suc = await unitOfWork.CommitAsync();
-                if (suc)
+                
+                var studentAppointmentsToRemove = await unitOfWork.StudentAppointmentRepository.GetAsync(sa =>
+                    sa.StudentId == studentId && appointmentIds.Contains(sa.AppointmentId));
+
+                if (studentAppointmentsToRemove.Any())
                 {
-
-                    return RedirectToAction("details", new { id = instructorId });
+                 
+                    await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointmentsToRemove);
                 }
-
             }
-            return BadRequest();
+
+            
+            await unitOfWork.InstructorStudentRepository.DeleteAsync(instructorStudent);
+
+            
+            var success = await unitOfWork.CommitAsync();
+
+            if (success)
+            {
+                TempData["Success"] = CultureHelper.IsArabic ? "تم ازالة الطالب بنجاح" : "Student removed successfully";
+                return RedirectToAction("details", new { id = instructorId });
+            }
+
+            return BadRequest(new { message =CultureHelper.IsArabic ? "حدث خطأ أثناء محاولة حذف البيانات المرتبطة" :"there is error occurred" });
         }
 
 
@@ -654,13 +699,12 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 return Json(new { success = false, message = "Instructor not found" });
             }
-            var userCourses = await unitOfWork.CourseRepository.GetAsync(c => c.CreatedById == instructor.Id);
-            
+
             var user = instructor.ApplicationUser;
             using var transaction = await unitOfWork.BeginTransactionAsync();
             try
             {
-
+               
                 var relatedInstructors = await unitOfWork.InstructorRepository.GetAsync(isd => isd.CreatedById == id);
                 foreach (var ins in relatedInstructors)
                 {
@@ -668,11 +712,31 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.InstructorRepository.EditAsync(ins);
                 }
 
+                var userCourses = await unitOfWork.CourseRepository.GetAsync(c => c.CreatedById == instructor.Id);
                 foreach (var course in userCourses)
                 {
                     course.CreatedById = null;
                     await unitOfWork.CourseRepository.EditAsync(course);
                 }
+
+                
+                var instructorAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a => a.InstructorId == id);
+                if (instructorAppointments.Any())
+                {
+                    var appointmentIds = instructorAppointments.Select(a => a.Id).ToList();
+
+                   
+                    var studentAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(sa => appointmentIds.Contains(sa.AppointmentId));
+                    if (studentAppointments.Any())
+                    {
+                        await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointments);
+                    }
+
+                    
+                    await unitOfWork.AppoinmentRepository.DeleteAllAsync(instructorAppointments);
+                }
+
+                
                 var instructorCourses = await unitOfWork.InstructorCourseRepository.GetAsync(ic => ic.InstructorId == id);
                 foreach (var ic in instructorCourses)
                 {
@@ -685,33 +749,29 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
                 }
 
+                
                 await unitOfWork.InstructorRepository.DeleteAsync(instructor);
                 await unitOfWork.CommitAsync();
 
+             
                 if (user != null)
                 {
                     DeleteUserImage(user.Img);
                     var result = await userManager.DeleteAsync(user);
                     if (!result.Succeeded)
                     {
+                        await transaction.RollbackAsync();
                         return Json(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
                     }
                 }
+
                 await transaction.CommitAsync();
                 return Json(new { success = true });
             }
-            catch (DbUpdateException)
-            {
-                await transaction.RollbackAsync();
-                return Json(new
-                {
-                    success = false,
-                    message = "Cannot delete instructor. They are set as the creator of one or more courses. Please reassign or delete the courses first."
-                });
-            }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                await transaction.RollbackAsync();
+                return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
         private void DeleteUserImage(string? imageName)
