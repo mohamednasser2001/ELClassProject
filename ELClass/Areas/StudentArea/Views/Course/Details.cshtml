@@ -3,45 +3,71 @@
     Layout = "_StudentLayout";
 }
 
-<div class="content-wrapper" style="padding: 20px;">
-    <div class="header-section mb-4">
-        <h2 style="font-weight: bold; color: #333;">@Model.TitleAr</h2>
-        <p style="color: #666;">قائمة المحاضرات والمحتوى التعليمي</p>
+<div class="content-wrapper course-details-page">
+    <div class="header-section">
+        <h2 class="course-title">@Model.TitleEn</h2>
+        <p class="course-subtitle">Lectures and course learning materials</p>
     </div>
 
     <div class="lectures-container">
         @if (Model.Lessons != null && Model.Lessons.Any())
         {
             int count = 1;
-            foreach (var Lessons in Model.Lessons)
+            foreach (var lesson in Model.Lessons)
             {
                 <div class="lecture-item">
                     <div class="lecture-header" onclick="toggleLecture(this)">
                         <div class="lecture-title">
                             <span class="lecture-number">@count</span>
-                            <h3>المحاضرة @count: @Lessons.Title</h3>
+                            <h3 class="lecture-name">
+                                Lecture @count: @lesson.Title
+                            </h3>
                         </div>
-                        <i class="fas fa-chevron-down arrow-icon"></i>
+
+                        <!-- Arrow goes to LessonDetails (and does NOT toggle) -->
+                        <a asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="LessonDetails"
+                           asp-route-id="@lesson.Id"
+                           class="lecture-arrow"
+                           onclick="event.stopPropagation();"
+                           title="Open lesson details">
+                            <i class="fas fa-chevron-down arrow-icon"></i>
+                        </a>
                     </div>
 
                     <div class="lecture-content">
                         <div class="content-links">
-                            @if (!string.IsNullOrEmpty(Lessons.DriveLink))
+                            @if (!string.IsNullOrEmpty(lesson.DriveLink))
                             {
-                                <a href="@Lessons.DriveLink" target="_blank" class="content-link video">
-                                    <i class="fas fa-video"></i> مشاهدة المحاضرة
+                                <a href="@lesson.DriveLink"
+                                   target="_blank"
+                                   rel="noopener"
+                                   class="content-link video">
+                                    <i class="fas fa-video"></i>
+                                    Watch lecture
                                 </a>
                             }
-                            @if (!string.IsNullOrEmpty(Lessons.LecturePdfUrl))
+
+                            @if (!string.IsNullOrEmpty(lesson.LecturePdfUrl))
                             {
-                                <a href="@Lessons.LecturePdfUrl" target="_blank" class="content-link pdf">
-                                    <i class="fas fa-file-pdf"></i> تحميل الـ PDF
+                                <a href="@lesson.LecturePdfUrl"
+                                   target="_blank"
+                                   rel="noopener"
+                                   class="content-link pdf">
+                                    <i class="fas fa-file-pdf"></i>
+                                    Lecture PDF
                                 </a>
                             }
-                            @if (!string.IsNullOrEmpty(Lessons.AssignmentPdfUrl))
+
+                            @if (!string.IsNullOrEmpty(lesson.AssignmentPdfUrl))
                             {
-                                <a href="@Lessons.AssignmentPdfUrl" target="_blank" class="content-link assignment">
-                                    <i class="fas fa-tasks"></i> حل الواجب (Assignment)
+                                <a href="@lesson.AssignmentPdfUrl"
+                                   target="_blank"
+                                   rel="noopener"
+                                   class="content-link assignment">
+                                    <i class="fas fa-tasks"></i>
+                                    Assignment
                                 </a>
                             }
                         </div>
@@ -52,22 +78,38 @@
         }
         else
         {
-            <p class="text-muted">لا يوجد محاضرات مضافة لهذا الكورس بعد.</p>
+            <p class="text-muted">
+                No lectures have been added to this course yet.
+            </p>
         }
     </div>
 </div>
 
 <script>
     function toggleLecture(header) {
-        // بنجيب لعنصر الأب اللي هو lecture-item
         const item = header.closest('.lecture-item');
 
-        // بنشيل الـ active من أي محاضرة تانية مفتوحة (اختياري لو عايز واحدة بس تفتح)
+        // Close any other opened lecture (optional)
         document.querySelectorAll('.lecture-item').forEach(el => {
             if (el !== item) el.classList.remove('active');
         });
 
-        // بنعكس حالة المحاضرة اللي دوسنا عليها
+        // Toggle current lecture
         item.classList.toggle('active');
+
+        // Smooth height animation
+        const content = item.querySelector('.lecture-content');
+        if (item.classList.contains('active')) {
+            content.style.maxHeight = content.scrollHeight + "px";
+        } else {
+            content.style.maxHeight = null;
+        }
     }
+
+    // Ensure all lectures start collapsed
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.lecture-item .lecture-content').forEach(c => {
+            c.style.maxHeight = null;
+        });
+    });
 </script>

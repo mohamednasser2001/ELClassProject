@@ -86,26 +86,28 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             return View(course); 
         }
-     
+
 
         public async Task<IActionResult> LessonDetails(int id)
         {
             var userId = _userManager.GetUserId(User);
-           
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            // هات الـ Lesson
             var lesson = await _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id);
             if (lesson == null) return NotFound();
 
-      
-            bool isEnrolled = _unitOfWork.StudentCourseRepository.GetOneAsync(e =>
-                e.StudentId == userId && e.CourseId == lesson.Id) != null;
+            // تأكد إن الطالب مشترك في كورس الـ Lesson (مهم: lesson.CourseId مش lesson.Id)
+            var enrollment = await _unitOfWork.StudentCourseRepository.GetOneAsync(e =>
+                e.StudentId == userId && e.CourseId == lesson.CourseId
+            );
 
-            if (!isEnrolled) return Forbid();
-
-          
+            if (enrollment == null) return Forbid();
 
             return View(lesson);
         }
 
-     
+
+
     }
 }

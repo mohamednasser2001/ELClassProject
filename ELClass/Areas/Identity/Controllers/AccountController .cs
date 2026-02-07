@@ -157,7 +157,7 @@ namespace ELClass.Areas.Identity.Controllers
                 // Success
                 await _userManager.AddToRoleAsync(applicationUser, "Student");
 
-                var std = new Student
+                var std = new Models.Student
                 {
                     Id = applicationUser.Id,
                     NameAr = applicationUser.NameAR ?? "",
