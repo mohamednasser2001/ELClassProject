@@ -1,248 +1,380 @@
 ﻿@using Models
-@using System.Text.RegularExpressions
-@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager
 @model Models.ViewModels.StudentDashboardVM
 
 @{
     Layout = "_StudentLayout";
+    ViewData["Title"] = "Dashboard";
 }
 
+<div class="sd-wrap">
 
-<!-- Topbar -->
-<header class="topbar">
-    <div class="topbar__left">
-        <h1 class="page-title">لوحة الطالب</h1>
-        <p class="page-subtitle">نظرة سريعة على تقدمك ومهامك</p>
-    </div>
+    <!-- =========================
+         MAIN GRID
+    ========================== -->
+    <div class="sd-grid">
 
-    <div class="topbar__right">
+        <!-- LEFT -->
+        <aside class="sd-left">
 
-        @{
-            var currentUser = await _userManager.GetUserAsync(User);
-
-            var rawName = currentUser?.NameAR
-                ?? currentUser?.NameEN
-                ?? currentUser?.UserName
-                ?? "Student";
-
-            var displayName = Regex.Replace(rawName, "([a-z])([A-Z])", "$1 $2");
-
-            var nameParts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            var initials = nameParts.Length >= 2
-                ? $"{nameParts[0][0]}{nameParts[1][0]}"
-                : nameParts.Length == 1
-                    ? $"{nameParts[0][0]}"
-                    : "S";
-
-            var profileImage = !string.IsNullOrEmpty(currentUser?.Img)
-                ? Url.Content("~/Images/Users/" + currentUser.Img)
-                : null;
-        }
-
-        <div class="user">
-            @if (!string.IsNullOrWhiteSpace(profileImage))
-            {
-                <img class="user__avatar" src="@profileImage" alt="Student avatar" />
-            }
-            else
-            {
-                <div class="user__avatar user__avatar--initials">
-                    @initials
-                </div>
-            }
-
-            <div class="user__meta">
-                <div class="user__name">
-                    <span class="hello">Hello</span> @displayName
+            <!-- Courses -->
+            <div class="sd-card sd-courses">
+                <div class="sd-card-head sd-head-orange">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-book-open sd-ic-fa"></i>
+                        <span>My courses</span>
+                    </div>
                 </div>
 
+                <div class="sd-card-body">
+
+                    <div class="sd-course-list sd-course-list-simple">
+                        @if (Model.Courses != null && Model.Courses.Any())
+                        {
+                            foreach (var c in Model.Courses.Take(3))
+                            {
+                                var title = !string.IsNullOrWhiteSpace(c.CourseTitleEn) ? c.CourseTitleEn : c.CourseTitleAr;
+
+                                <div class="sd-course-card">
+                                    <div class="sd-course-row">
+                                        <div class="sd-course-left">
+                                            <div class="sd-course-name">@title</div>
+                                            <div class="sd-course-hint">Open course content & sections</div>
+                                        </div>
+
+                                        <a class="sd-course-action"
+                                           asp-area="StudentArea"
+                                           asp-controller="Course"
+                                           asp-action="Details"
+                                           asp-route-id="@c.CourseId">
+                                            View details <i class="fa-solid fa-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- All courses link -->
+                            <div class="sd-courses-footer">
+                                <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                                    All courses <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="sd-empty">No courses yet.</div>
+                        }
+
+                    </div>
+
+                 
+
+                </div>
             </div>
-        </div>
-    </div>
-</header>
 
-<!-- Stats -->
-<section class="stats">
-    <article class="stat-card">
-        <div class="stat-card__icon">🧾</div>
-        <div class="stat-card__body">
-            <div class="stat-card__label">إجمالي الدروس</div>
-            <div class="stat-card__value">@Model.TotalLessons</div>
+            <!-- Quick Actions -->
+            <div class="sd-card sd-quick">
+                <div class="sd-card-head">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-bolt sd-ic-fa"></i>
+                        <span>Quick actions</span>
+                    </div>
+                </div>
 
-        </div>
-    </article>
+                <div class="sd-card-body">
+                    <div class="sd-quick-grid">
+                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>All courses</span>
+                        </a>
 
-    <article class="stat-card">
-        <div class="stat-card__icon">✅</div>
-        <div class="stat-card__body">
-            <div class="stat-card__label">المهام المنتهية</div>
-            <div class="stat-card__value">@Model.CompletedLessons</div>
+                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
+                            <i class="fa-solid fa-video"></i>
+                            <span>Lectures</span>
+                        </a>
 
-        </div>
-    </article>
+                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Tests" asp-action="Index">
+                            <i class="fa-solid fa-file-circle-check"></i>
+                            <span>Lessons</span>
+                        </a>
 
-    <article class="stat-card">
-        <div class="stat-card__icon">
-            <i class="fas fa-book-reader"></i>
-        </div>
+                        <a class="sd-quick-item" asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
+                            <i class="fa-solid fa-user-gear"></i>
+                            <span>My profile</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-        <div class="stat-card__info">
-            <span class="stat-card__label">الكورسات المسجلة</span>
-            <div class="stat-card__value">@Model.TotalCoursesCount</div>
-            <span class="stat-card__hint">كورس نشط</span>
-        </div>
-    </article>
+            <!-- Help -->
+            <div class="sd-help">
+                <div class="sd-help-title">Need help?</div>
+                <div class="sd-help-sub">Please review our guides and help manuals</div>
+            </div>
 
-    <article class="stat-card">
-        <div class="stat-card__icon @(Model.NewNotifications > 0 ? "notification-pulse" : "")">
-            <i class="fas fa-bell"></i>
-        </div>
+        </aside>
 
-        <div class="stat-card__content">
-            <span class="stat-card__label">إشعارات جديدة</span>
+        <!-- CENTER -->
+        <main class="sd-center">
 
-            <div class="stat-card__value">@Model.NewNotifications</div>
+            <!-- Join -->
+            <div class="sd-join">
+                <div class="sd-join-icon">
+                    <i class="fa-solid fa-video sd-join-ic"></i>
+                </div>
 
-            <span class="stat-card__hint">محاضرات بانتظارك</span>
-        </div>
-    </article>
-</section>
+                <h2 class="sd-join-title">Join online lecture</h2>
 
-<!-- Content Grid -->
-<section class="grid">
-    <!-- Courses Progress -->
-    <div class="panel panel--courses" style="grid-area:courses; display: flex; flex-direction: column;">
-        <div class="panel__header">
-            <h2 class="panel__title">مقرراتي الدراسية</h2>
-            <a asp-area="StudentArea" asp-controller="Course" asp-action="Index" class="view-all-link">عرض الكل</a>
-        </div>
+                @{
+                    // أقرب محاضرة جاية (من اللي انت جايبهم في UpcomingLectures)
+                    var nextLecture = Model.UpcomingLectures?
+                        .OrderBy(x => x.Date)
+                        .FirstOrDefault();
 
-        <div class="courses" style="flex-grow: 1;">
-            @if (Model?.Courses != null && Model.Courses.Any())
-            {
-                // 1. تعريف القاموس مرة واحدة خارج اللفة للأداء
-                var courseIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "عربي", "📜" }, { "انجليزي", "🔤" }, { "رياضيات", "📐" },
-                { "الماني", "🇩🇪" }, { "كيميا", "🧪" }, { "فيزياء", "⚡" },
-                { "C#", "💻" }, { "ASP.NET", "🌐" }, { "LINQ", "🔍" },
-                { "Entity Framework", "💾" }
-            };
-
-                foreach (var c in Model.Courses)
-                {
-                    var title = c.CourseTitleAr ?? c.CourseTitleEn ?? "Course";
-                    string icon = courseIcons.FirstOrDefault(x => title.Contains(x.Key)).Value ?? "📘";
-
-                    <article class="course-card">
-                        <div class="course-card__media">@icon</div>
-
-                        <div class="course-card__body">
-                            <div class="course-card__name">@title</div>
-
-                            <div class="progress">
-                                <div class="progress__bar" style="width:@c.ProgressPercent%;"></div>
-                            </div>
-
-                            <div class="course-card__meta">
-                                <span>@c.ProgressPercent%</span>
-                                <span>@c.AttendedCount / @c.GoalCount حصة</span>
-                            </div>
-
-                            <a class="course-card__action"
-                               asp-area="StudentArea"
-                               asp-controller="Course"
-                               asp-action="Details"
-                               asp-route-id="@c.CourseId">
-                                عرض المزيد
-                            </a>
-                        </div>
-                    </article>
+                    var hasUpcoming = nextLecture != null;
                 }
-            }
-            else
-            {
-                <div style="padding:16px; color: var(--muted); text-align: center;">
-                    لا يوجد مقررات حالياً.
+
+
+                @if (Model.CanJoinNow && Model.NextStudentAppointmentId != null)
+                {
+                    <p class="sd-join-desc">
+                        A lecture is live right now. You can join immediately.
+                    </p>
+
+                    <div class="sd-join-actions" id="joinActions">
+                        <a class="sd-btn sd-btn-primary"
+                           id="joinNowBtn"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Join"
+                           asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
+                            <i class="fa-solid fa-play"></i> Join now
+                        </a>
+
+                        <a class="sd-btn sd-btn-ghost"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Schedule">
+                            All lectures <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="sd-status">
+                        <span class="sd-dot"></span>
+                        <span class="sd-status-text">Live session available</span>
+                    </div>
+                }
+                else
+                {
+                    <p class="sd-join-desc">
+                        @if (hasUpcoming)
+                        {
+                            <text>
+                                No live lecture at the moment. Next lecture:
+                                <b>@nextLecture!.Date.ToString("ddd, dd MMM • hh:mm tt")</b>
+                            </text>
+                        }
+                        else
+                        {
+                            <text>No live lecture at the moment. There are no upcoming lectures yet.</text>
+                        }
+                    </p>
+
+                    <div class="sd-join-actions" id="joinActions">
+                        <!-- بدل Not available: زرار Check -->
+                        <button class="sd-btn sd-btn-primary"
+                                type="button"
+                                onclick="location.reload();">
+                            <i class="fa-solid fa-rotate-right"></i> Check
+                        </button>
+
+
+                        <a class="sd-btn sd-btn-ghost"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Schedule">
+                            All lectures <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="sd-status">
+                        <span class="sd-dot"></span>
+                        <span class="sd-status-text">Auto-check is ready</span>
+                    </div>
+                }
+            </div>
+
+
+            <!-- Last 5 Lessons -->
+            <div class="sd-card sd-last">
+                <div class="sd-card-head">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-clock-rotate-left sd-ic-fa"></i>
+                        <span>Last lessons</span>
+                    </div>
                 </div>
-            }
-        </div>
+
+                <div class="sd-card-body">
+                    <div class="sd-last-list">
+
+                        @if (Model.LastLessons != null && Model.LastLessons.Any())
+                        {
+                            foreach (var l in Model.LastLessons.Take(5))
+                            {
+                                <a class="sd-last-item sd-last-click"
+                                   asp-area="StudentArea"
+                                   asp-controller="Course"
+                                   asp-action="LessonDetails"
+                                   asp-route-id="@l.LessonId">
+
+                                    <div class="sd-last-title">@l.LessonTitle</div>
+                                    <div class="sd-last-sub">
+                                        Course: @l.CourseTitle
+                                        @* لو عندك AttendedAt في الـVM تقدر تعرضه هنا *@
+                                        @* <span class="sd-last-date">• @l.AttendedAt.ToString("dd MMM, hh:mm tt")</span> *@
+                                    </div>
+
+                                    <i class="fa-solid fa-chevron-right sd-last-arrow"></i>
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <div class="sd-empty">No recent lessons yet.</div>
+                        }
+
+                    </div>
+
+                    <div class="sd-last-footer">
+                        <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                            View all lessons <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+        </main>
+
+        <!-- RIGHT -->
+        <aside class="sd-right">
+
+            <div class="sd-card sd-upcoming">
+                <div class="sd-card-head">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-calendar-days sd-ic-fa"></i>
+                        <span>Upcoming lectures</span>
+                    </div>
+                </div>
+
+                <div class="sd-card-body">
+
+                    @if (Model.UpcomingLectures != null && Model.UpcomingLectures.Any())
+                    {
+                        <div class="sd-up-table">
+
+                            <div class="sd-up-row sd-up-head">
+                                <div>TIME</div>
+                                <div>COURSE</div>
+                                <div>INSTRUCTOR</div>
+                                <div>ZOOM</div>
+                            </div>
+
+                            @foreach (var lec in Model.UpcomingLectures.Take(5))
+                            {
+                                var canJoinThis = DateTime.Now >= lec.Date;
+
+                                <div class="sd-up-row">
+                                    <div class="sd-up-time">
+                                        <div class="sd-up-time-main">@lec.Date.ToString("ddd, dd MMM")</div>
+                                        <div class="sd-up-time-sub">@lec.Date.ToString("hh:mm tt")</div>
+                                    </div>
+
+                                    <div class="sd-up-course">
+                                        <div class="sd-up-course-main" title="@lec.SubjectName">@lec.SubjectName</div>
+                                    </div>
+
+                                    <div class="sd-up-inst">
+                                        <div class="sd-up-inst-main" title="@lec.InstructorName">@lec.InstructorName</div>
+                                    </div>
+
+                                    <div class="sd-up-zoom">
+                                        @if (canJoinThis && !string.IsNullOrWhiteSpace(lec.ZoomLink))
+                                        {
+                                            <a class="sd-up-zoom-btn" href="@lec.ZoomLink" target="_blank" rel="noopener">
+                                                <i class="fa-solid fa-video"></i> Join
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="sd-up-zoom-muted">
+                                                <i class="fa-regular fa-clock"></i> Not started
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sd-empty">No upcoming lectures yet.</div>
+                    }
+
+                    <div class="sd-upcoming-footer">
+                        <a class="sd-link sd-link-danger"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Schedule">
+                            <i class="fa-solid fa-calendar-check"></i> View lecture schedule
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="sd-card sd-tips">
+                <div class="sd-card-head">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-lightbulb sd-ic-fa"></i>
+                        <span>Tips</span>
+                    </div>
+                </div>
+
+                <div class="sd-card-body">
+                    <div class="sd-tips-item">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Set a regular study time to stay focused and consistent.</span>
+                    </div>
+
+                    <div class="sd-tips-item">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Review lesson materials and resources after each session.</span>
+                    </div>
+
+                    <div class="sd-tips-item">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Track your progress and revisit topics you find challenging.</span>
+                    </div>
+
+                    <div class="sd-tips-item">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Don’t hesitate to ask questions or check course details when needed.</span>
+                    </div>
+                </div>
+            </div>
+
+
+        </aside>
+
     </div>
-
-    <!-- Join Online Lecture -->
-    <div class="panel panel--join" style="grid-area:join;">
-        <div class="join">
-            @if (Model.CanJoinNow && Model.NextStudentAppointmentId != null)
-            {
-                <h2 class="join__title">المحاضرة الآن!</h2>
-                <p class="join__text">المدرس بانتظارك، يمكنك الانضمام للمحاضرة مباشرة من هنا.</p>
-                <div class="join__actions">
-                    <a class="btn btn--primary"
-                       asp-area="StudentArea"
-                       asp-controller="Appointments"
-                       asp-action="Join"
-                       asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
-                        <i class="fas fa-video" style="margin-left: 8px;"></i> انضم الآن
-                    </a>
-                </div>
-            }
-            else
-            {
-                <h2 class="join__title">لا توجد محاضرة الآن</h2>
-                <p class="join__text">سيظهر زر الانضمام هنا فور بدء المحاضرة من قبل المدرس.</p>
-                <div class="join__actions">
-                    <button class="btn btn--outline" type="button" disabled>
-                        <i class="fas fa-clock" style="margin-left: 8px;"></i> بانتظار البدء...
-                    </button>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Schedule -->
-    <div class="panel panel--schedule" style="grid-area:schedule;">
-        <div class="panel__header">
-            <h2 class="panel__title">جدولي</h2>
-            <a class="panel__link" href="#">عرض</a>
-        </div>
-
-        <ul class="schedule">
-            <li class="schedule__item">
-                <div class="schedule__time">10:00 - 11:30</div>
-                <div class="schedule__info">
-                    <div class="schedule__title">محاضرة رياضيات</div>
-                    <div class="schedule__sub">أ/ محمد</div>
-                </div>
-                <span class="badge badge--upcoming">قادم</span>
-            </li>
-
-            <li class="schedule__item">
-                <div class="schedule__time">01:00 - 02:30</div>
-                <div class="schedule__info">
-                    <div class="schedule__title">محاضرة عربي</div>
-                    <div class="schedule__sub">أ/ أحمد</div>
-                </div>
-                <span class="badge badge--upcoming">قادم</span>
-            </li>
-
-            <li class="schedule__item">
-                <div class="schedule__time">04:00 - 05:00</div>
-                <div class="schedule__info">
-                    <div class="schedule__title">محاضرة علوم</div>
-                    <div class="schedule__sub">أ/ سارة</div>
-                </div>
-                <span class="badge badge--done">تم</span>
-            </li>
-        </ul>
-    </div>
+</div>
 
 
-</section>
 
-<footer class="footer">
-    © 2026 ElClass
-</footer>
+
+
+
+
 
 
 
@@ -1002,7 +1134,7 @@
             return node;
         }
 
-        
+
         function markMessagesReadInUI(messageIds) {
             if (!Array.isArray(messageIds) || messageIds.length === 0) return;
 
@@ -1360,6 +1492,48 @@
                 console.error(e.toString());
             }
         }
+    </script>
+
+    <script>
+            (function () {
+                // NextJoinAt from server (ISO string) - may be null
+                const nextJoinAtStr = '@(Model.NextJoinAt.HasValue ? Model.NextJoinAt.Value.ToString("O") : "")';
+                const nextId = '@(Model.NextStudentAppointmentId?.ToString() ?? "")';
+
+                if (!nextJoinAtStr || !nextId) return; // مفيش ميعاد جاي معروف
+
+                const nextJoinAt = new Date(nextJoinAtStr).getTime();
+                const container = document.getElementById("joinActions");
+
+                if (!container) return;
+
+                function switchToJoinNow() {
+                    // لو اتبدّل قبل كده، متعملش حاجة
+                    if (document.getElementById("joinNowBtn")) return;
+
+                    container.insertAdjacentHTML("afterbegin", `
+                        <a class="sd-btn sd-btn-primary" id="joinNowBtn"
+                           href="/Student/Lectures/Join?studentAppointmentId=${nextId}">
+                           <i class="fa-solid fa-play"></i> Join now
+                        </a>
+                    `);
+
+                    const notBtn = document.getElementById("notAvailableBtn");
+                    if (notBtn) notBtn.remove();
+                }
+
+                function tick() {
+                    const now = Date.now();
+                    if (now >= nextJoinAt) {
+                        switchToJoinNow();
+                        clearInterval(timer);
+                    }
+                }
+
+                // check immediately + every 10 seconds
+                tick();
+                const timer = setInterval(tick, 10000);
+            })();
     </script>
 
 }

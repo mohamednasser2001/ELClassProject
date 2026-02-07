@@ -385,7 +385,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         [ValidateAntiForgeryToken]
         [HttpPost]
-        public async Task<IActionResult> Create(Student std, string Password, string ConfirmPassword)
+        public async Task<IActionResult> Create(Models.Student std, string Password, string ConfirmPassword)
         {
             var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
 

@@ -1,0 +1,72 @@
+﻿@model List<Models.ViewModels.UpcomingLectureVM>
+
+@{
+    Layout = "_StudentLayout";
+    ViewData["Title"] = "Lecture Schedule";
+}
+
+<div class="sd-wrap">
+    <div class="sd-card">
+        <div class="sd-card-head">
+            <div class="sd-head-title">
+                <i class="fa-solid fa-calendar-check sd-ic-fa"></i>
+                <span>Lecture Schedule</span>
+            </div>
+        </div>
+
+        <div class="sd-card-body">
+
+            @if (Model == null || !Model.Any())
+            {
+                <div class="sd-empty">No lectures scheduled yet.</div>
+            }
+            else
+            {
+                <div class="sd-up-table">
+                    <div class="sd-up-row sd-up-head">
+                        <div>DATE</div>
+                        <div>COURSE</div>
+                        <div>INSTRUCTOR</div>
+                        <div>ZOOM</div>
+                    </div>
+
+                    @foreach (var lec in Model)
+                    {
+                        var canJoin = DateTime.Now >= lec.Date.AddMinutes(-3);
+
+                        <div class="sd-up-row">
+                            <div class="sd-up-time">
+                                <div class="sd-up-time-main">@lec.Date.ToString("ddd, dd MMM")</div>
+                                <div class="sd-up-time-sub">@lec.Date.ToString("hh:mm tt")</div>
+                            </div>
+
+                            <div class="sd-up-course">
+                                <div class="sd-up-course-main" title="@lec.SubjectName">@lec.SubjectName</div>
+                            </div>
+
+                            <div class="sd-up-inst">
+                                <div class="sd-up-inst-main" title="@lec.InstructorName">@lec.InstructorName</div>
+                            </div>
+
+                            <div class="sd-up-zoom">
+                                @if (canJoin && !string.IsNullOrWhiteSpace(lec.ZoomLink))
+                                {
+                                    <a class="sd-up-zoom-btn" href="@lec.ZoomLink" target="_blank" rel="noopener">
+                                        <i class="fa-solid fa-video"></i> Join
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="sd-up-zoom-muted">
+                                        <i class="fa-regular fa-clock"></i> Not started
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+        </div>
+    </div>
+</div>

@@ -1,60 +1,87 @@
-﻿@using Models.ViewModels 
+﻿@using Models.ViewModels
 @model IEnumerable<StudentCoursesVM>
 
-<div  class="courses-grid" style="padding: 50px;">
+@{
+    ViewData["Title"] = "All Courses";
+}
+
+<div class="ac-wrap">
+
+    <div class="ac-head">
+        <div class="ac-title">
+            <i class="fa-solid fa-book-open"></i>
+            <span>All courses</span>
+        </div>
+
+        <div class="ac-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="acSearch" type="text" placeholder="Search courses..." autocomplete="off" />
+        </div>
+    </div>
+
     @if (Model != null && Model.Any())
     {
-        var i = 0;
-        foreach (var c in Model)
-        {
-            var title = c.CourseTitleAr ?? c.CourseTitleEn ?? "Course";
-            var courseIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-              {
-              { "عربي", "📜" },
-              { "انجليزي", "🔤" },
-              { "رياضيات", "📐" },
-              { "الماني", "🇩🇪" },
-              { "كيميا", "🧪" },
-              { "فيزياء", "⚡" },
-              { "C#", "💻" },
-              { "ASP.NET", "🌐" },
-              { "LINQ", "🔍" },
-              { "Entity Framework", "💾" }
-              };
+        <div class="ac-grid" id="acGrid">
+            @foreach (var c in Model)
+            {
+                var title = !string.IsNullOrWhiteSpace(c.CourseTitleEn) ? c.CourseTitleEn : c.CourseTitleAr;
+                if (string.IsNullOrWhiteSpace(title)) { title = "Course"; }
 
-            string icon = courseIcons.FirstOrDefault(x => title.Contains(x.Key)).Value ?? "📘";
+                <article class="ac-card" data-title="@title.ToLower()">
+                    <div class="ac-card-top">
+                        <div class="ac-icon">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
 
-            i++;
-
-            <article class="course-card">
-                <div class="course-card__media">@icon</div>
-                <div class="course-card__body">
-                    <div class="course-card__name">@title</div>
-
-                    <div class="progress">
-                        @* حساب النسبة المئوية *@
-                        @{ var percent = (c.GoalCount > 0) ? (c.AttendedCount * 100 / c.GoalCount) : 0; }
-                        <div class="progress__bar" style="width:@percent%;"></div>
+                        <div class="ac-info">
+                            <div class="ac-name" title="@title">@title</div>
+                            <div class="ac-sub">Open course content & sections</div>
+                        </div>
                     </div>
 
-                    <div class="course-card__meta">
-                        <span>@percent%</span>
-                        <span>@c.AttendedCount / @c.GoalCount حصة</span>
+                    <div class="ac-actions">
+                        <a class="ac-btn"
+                           asp-area="StudentArea"
+                           asp-controller="Course"
+                           asp-action="Details"
+                           asp-route-id="@c.CourseId">
+                            View details <i class="fa-solid fa-arrow-right"></i>
+                        </a>
                     </div>
-
-                    <a class="course-card__action "
-                       asp-area="StudentArea"
-                       asp-controller="Course"
-                       asp-action="Details"
-                       asp-route-id="@c.CourseId">
-                        عرض المزيد
-                       
-                    </a>
-                </div>
-            </article>
-        }
+                </article>
+            }
+        </div>
     }
     else
     {
+        <div class="ac-empty">
+            <i class="fa-regular fa-circle-xmark"></i>
+            <div>
+                <div class="ac-empty-title">No courses yet</div>
+                <div class="ac-empty-sub">When you enroll in a course, it will appear here.</div>
+            </div>
+        </div>
     }
+
 </div>
+
+@section Scripts {
+    <script>
+        // فلترة بسيطة بالـ JS (اختياري)
+        (function () {
+            const input = document.getElementById('acSearch');
+            const grid = document.getElementById('acGrid');
+            if (!input || !grid) return;
+
+            input.addEventListener('input', function () {
+                const q = (input.value || '').trim().toLowerCase();
+                const cards = grid.querySelectorAll('.ac-card');
+                cards.forEach(c => {
+                    const t = (c.getAttribute('data-title') || '');
+                    c.style.display = (t.includes(q)) ? '' : 'none';
+                });
+            });
+        })();
+    </script>
+}
+
