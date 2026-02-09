@@ -37,7 +37,19 @@ namespace ELClass.Areas.Instructor.Controllers
             try
             {
 
-           
+                if (vm.Type == (int)ScheduleType.OneTime)
+                {
+                    if (!vm.SpecificDate.HasValue)
+                    {
+                        return Json(new { success = false, message = CultureHelper.IsArabic ? "يجب تحديد التاريخ" : "Date is required" });
+                    }
+
+                    if (vm.SpecificDate.Value.Date < DateTime.Today)
+                    {
+                        return Json(new { success = false, message = CultureHelper.IsArabic ? "لا يمكن إضافة موعد بتاريخ قديم" : "Cannot create appointment with a past date" });
+                    }
+                }
+
                 var newStart = vm.StartTime;
                 var newEnd = vm.StartTime.Add(TimeSpan.FromHours(vm.DurationInHours));
 
@@ -270,7 +282,13 @@ namespace ELClass.Areas.Instructor.Controllers
             {
                 return Json(new { success = false, message = "Appointment not found." });
             }
-
+            if (appointment.Type == ScheduleType.OneTime && appointment.SpecificDate.HasValue)
+            {
+                if (appointment.SpecificDate.Value.Date < DateTime.Now.Date)
+                {
+                    return Json(new { success = false, message = "لا يمكن إضافة طلاب لموعد قديم" });
+                }
+            }
             DateTime? expiryDate = null;
 
             if (appointment.Type == ScheduleType.Recurring)
