@@ -2,6 +2,31 @@
     var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
 }
 
+<style>
+    @@media (max-width: 991px) {
+        .navbar {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+        
+        .navbar-toggler {
+            order: 3; 
+        }
+
+        .navbar-brand {
+            order: 1;
+        }
+
+        .mx-2 { 
+            order: 2;
+            margin-left: auto !important; 
+        }
+
+        
+    }
+</style>
+
 <!DOCTYPE html>
 <html class="no-js" lang="@(isArabic ? "ar" : "en")" dir="@(isArabic ? "rtl" : "ltr")">
 <head>
@@ -47,6 +72,7 @@
             </div>
         </div>
     </div>
+   
     <section id="home" class="hero-section-wrapper-5">
         <header class="header header-6">
             <div class="navbar-area">
@@ -129,7 +155,7 @@
                 </div>
             </div>
         </header>
-
+        </section>
         <div>
             <main role="main">
                 @RenderBody()

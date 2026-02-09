@@ -71,7 +71,8 @@
 
                     <div class="col-md-6 mb-3" id="dateContainer" style="display:none;">
                         <label class="form-label fw-bold">@(isArabic ? "تاريخ المحاضرة" : "Specific Date")</label>
-                        <input type="date" name="SpecificDate" class="form-control" />
+                        
+                        <input type="date" name="SpecificDate" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     </div>
 
 
@@ -187,6 +188,18 @@
                 $('#timeCountInput').val(1);     // نرجع القيمة لـ 1 أوتوماتيك
             }
         });
+            const today = new Date().toISOString().split('T')[0];
+                $('input[name="SpecificDate"]').attr('min', today);
+
+                // إضافة قاعدة مخصصة للتحقق من أن التاريخ ليس في الماضي (اختياري)
+                $.validator.addMethod("minDate", function(value, element) {
+                    if (!value) return true; // اترك التحقق لـ required
+                    var inputDate = new Date(value);
+                    var todayDate = new Date();
+                    todayDate.setHours(0,0,0,0);
+                    return inputDate >= todayDate;
+                }, isAr ? "لا يمكن اختيار تاريخ قديم" : "Date cannot be in the past");
+
 
             const validator = $('#appointmentForm').validate({
             rules: {
@@ -195,7 +208,8 @@
                 MeetingLink: { required: true, url: true },
                 StartTime: { required: true },
                 SpecificDate: {
-                    required: function() { return $('#scheduleType').val() == "1"; }
+                    required: function() { return $('#scheduleType').val() == "1"; },
+                    minDate:true
                 }
             },
             messages: {
