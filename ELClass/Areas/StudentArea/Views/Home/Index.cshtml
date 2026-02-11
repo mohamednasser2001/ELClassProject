@@ -66,7 +66,7 @@
 
                     </div>
 
-                 
+
 
                 </div>
             </div>
@@ -205,6 +205,7 @@
 
 
             <!-- Last 5 Lessons -->
+            <!-- Last lessons -->
             <div class="sd-card sd-last">
                 <div class="sd-card-head">
                     <div class="sd-head-title">
@@ -220,21 +221,54 @@
                         {
                             foreach (var l in Model.LastLessons.Take(5))
                             {
-                                <a class="sd-last-item sd-last-click"
-                                   asp-area="StudentArea"
-                                   asp-controller="Course"
-                                   asp-action="LessonDetails"
-                                   asp-route-id="@l.LessonId">
-
-                                    <div class="sd-last-title">@l.LessonTitle</div>
-                                    <div class="sd-last-sub">
-                                        Course: @l.CourseTitle
-                                        @* لو عندك AttendedAt في الـVM تقدر تعرضه هنا *@
-                                        @* <span class="sd-last-date">• @l.AttendedAt.ToString("dd MMM, hh:mm tt")</span> *@
+                                <div class="sd-last-row">
+                                    <div class="sd-last-main">
+                                        <div class="sd-last-title">@l.LessonTitle</div>
+                                        <div class="sd-last-sub">Course: @l.CourseTitle</div>
                                     </div>
 
-                                    <i class="fa-solid fa-chevron-right sd-last-arrow"></i>
-                                </a>
+                                    <!-- Arrow button -->
+                                    <button type="button"
+                                            class="sd-last-toggle"
+                                            onclick="toggleLastLesson(this)"
+                                            aria-label="Open lesson resources">
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </button>
+
+                                    <!-- Hidden details -->
+                                    <div class="sd-last-details">
+                                        <div class="content-links">
+
+                                            @* نفس طريقة Course Details *@
+                                            @if (!string.IsNullOrEmpty(l.DriveLink))
+                                            {
+                                                <a href="@l.DriveLink" target="_blank" rel="noopener" class="content-link video">
+                                                    <i class="fas fa-video"></i> Watch lecture
+                                                </a>
+                                            }
+
+                                            @if (!string.IsNullOrEmpty(l.LecturePdfUrl))
+                                            {
+                                                <a href="@l.LecturePdfUrl" target="_blank" rel="noopener" class="content-link pdf">
+                                                    <i class="fas fa-file-pdf"></i> Lecture PDF
+                                                </a>
+                                            }
+
+                                            @if (!string.IsNullOrEmpty(l.AssignmentPdfUrl))
+                                            {
+                                                <a href="@l.AssignmentPdfUrl" target="_blank" rel="noopener" class="content-link assignment">
+                                                    <i class="fas fa-tasks"></i> Assignment
+                                                </a>
+                                            }
+
+                                            @* لو مفيش أي لينكات *@
+                                            @if (string.IsNullOrEmpty(l.DriveLink) && string.IsNullOrEmpty(l.LecturePdfUrl) && string.IsNullOrEmpty(l.AssignmentPdfUrl))
+                                            {
+                                                <div class="sd-empty">No resources added yet.</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             }
                         }
                         else
@@ -251,6 +285,11 @@
                     </div>
                 </div>
             </div>
+
+
+
+
+
 
 
         </main>
@@ -1535,6 +1574,32 @@
                 const timer = setInterval(tick, 10000);
             })();
     </script>
+    <script>
+        function toggleLastLesson(btn) {
+            const row = btn.closest('.sd-last-row');
+            const details = row.querySelector('.sd-last-details');
+
+            // اقفل أي واحد مفتوح
+            document.querySelectorAll('.sd-last-row').forEach(r => {
+                if (r !== row) {
+                    r.classList.remove('active');
+                    const d = r.querySelector('.sd-last-details');
+                    if (d) d.style.maxHeight = null;
+                }
+            });
+
+            // افتح/اقفل الحالي
+            row.classList.toggle('active');
+
+            if (row.classList.contains('active')) {
+                details.style.maxHeight = details.scrollHeight + "px";
+            } else {
+                details.style.maxHeight = null;
+            }
+        }
+
+    </script>
+
 
 }
 

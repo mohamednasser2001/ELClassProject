@@ -34,8 +34,10 @@ namespace ELClass.Areas.StudentArea.Controllers
             var userId = _userManager.GetUserId(User);
 
             var courses = await _unitOfWork.StudentCourseRepository
-                .GetAsync(e => e.StudentId == userId,
-                    q => q.Include(e => e.Course).ThenInclude(c => c.Lessons));
+                .GetAsync(
+                    e => e.StudentId == userId,
+                    q => q.Include(e => e.Course).ThenInclude(c => c.Lessons)
+                );
 
             var allStudentAppointments = await _unitOfWork.StudentAppointmentRepository
                 .GetAsync(
@@ -87,60 +89,60 @@ namespace ELClass.Areas.StudentArea.Controllers
             };
 
             // ============================================================
-            // ✅ LastLessons (آخر 5 دروس حضرهم الطالب فعلياً)
-            // اعتماداً على attendedCountByCourseId + ترتيب Lessons داخل كل كورس
+            // ✅ LastLessons (آخر 5 Lessons المدرس نشرهم للطالب)
             // ============================================================
-            model.LastLessons = courses
-                .Where(sc => sc.Course != null && sc.Course.Lessons != null && sc.Course.Lessons.Any())
-                .SelectMany(sc =>
-                {
-                    var courseId = sc.CourseId;
+            var enrolledCourseIds = courses.Select(x => x.CourseId).Distinct().ToList();
+            var nowForLessons = DateTime.Now;
 
-                    // عدد الدروس اللي "حضرها" في الكورس ده
-                    var attendedCount = attendedCountByCourseId.TryGetValue(courseId, out var cnt) ? cnt : 0;
-                    if (attendedCount <= 0) return Enumerable.Empty<Models.ViewModels.LastLessonVM>();
+            // published = LectureDate موجودة + مش مستقبل + عنده أي لينك من الثلاثة
+            var publishedLessons = await _unitOfWork.LessonRepository.GetAsync(
+                l => enrolledCourseIds.Contains(l.CourseId)
+                     && l.LectureDate != null
+                     && l.LectureDate <= nowForLessons
+                     && (
+                         !string.IsNullOrWhiteSpace(l.DriveLink)
+                         || !string.IsNullOrWhiteSpace(l.LecturePdfUrl)
+                         || !string.IsNullOrWhiteSpace(l.AssignmentPdfUrl)
+                     ),
+                tracked: false,
+                include: q => q.Include(l => l.Course),
+                orderBy: q => q.OrderByDescending(l => l.LectureDate)
+            );
 
-                    // هنفترض ترتيب الدروس حسب Id (انت ممكن تغيّره حسب Order/Number لو موجود)
-                    var attendedLessons = sc.Course.Lessons
-                        .OrderBy(l => l.Id)
-                        .Take(attendedCount);
-
-                    var courseTitle =
-                        !string.IsNullOrWhiteSpace(sc.Course.TitleEn) ? sc.Course.TitleEn :
-                        !string.IsNullOrWhiteSpace(sc.Course.TitleAr) ? sc.Course.TitleAr :
-                        "Course";
-
-                    return attendedLessons.Select(l => new Models.ViewModels.LastLessonVM
-                    {
-                        LessonId = l.Id,
-                        LessonTitle = string.IsNullOrWhiteSpace(l.Title) ? $"Lesson #{l.Id}" : l.Title,
-                        CourseId = courseId,
-                        CourseTitle = courseTitle,
-                        AttendedAt = null
-                    });
-                })
-                // آخر 5 "بالأحدث" (هنا اعتبرنا الأحدث = الأكبر Id)
-                .OrderByDescending(x => x.LessonId)
+            model.LastLessons = publishedLessons
                 .Take(5)
+                .Select(l => new Models.ViewModels.LastLessonVM
+                {
+                    LessonId = l.Id,
+                    LessonTitle = string.IsNullOrWhiteSpace(l.Title) ? $"Lesson #{l.Id}" : l.Title,
+                    CourseId = l.CourseId,
+                    CourseTitle = l.Course != null
+                        ? (!string.IsNullOrWhiteSpace(l.Course.TitleEn) ? l.Course.TitleEn : l.Course.TitleAr)
+                        : "Course",
+
+                    DriveLink = l.DriveLink,
+                    LecturePdfUrl = l.LecturePdfUrl,
+                    AssignmentPdfUrl = l.AssignmentPdfUrl,
+                    LectureDate = l.LectureDate!,
+                })
                 .ToList();
 
+            // ============================================================
             // Upcoming lectures + Join Now (فلترة اللي انتهى)
+            // ============================================================
             var now = DateTime.Now;
 
             DateTime? GetStartDateTime(Appointment appt)
             {
-                // OneTime: SpecificDate + StartTime
                 if (appt.Type == ScheduleType.OneTime)
                 {
                     if (!appt.SpecificDate.HasValue) return null;
                     return appt.SpecificDate.Value.Date + appt.StartTime;
                 }
 
-                // Recurring: أقرب occurrence من Day + StartTime
                 var daysAhead = ((int)appt.Day - (int)now.DayOfWeek + 7) % 7;
                 var candidate = now.Date.AddDays(daysAhead) + appt.StartTime;
 
-                // لو النهارده نفس اليوم لكن الوقت عدى → الأسبوع الجاي
                 if (daysAhead == 0 && candidate <= now)
                     candidate = candidate.AddDays(7);
 
@@ -192,33 +194,27 @@ namespace ELClass.Areas.StudentArea.Controllers
                 .Where(x => x.SA.IsAccessAllowed)
                 .FirstOrDefault(x => now >= x.Start!.Value && now <= x.End!.Value);
 
-            if (live != null)
-            {
-                model.NextStudentAppointmentId = live.SA.Id;
-                model.CanJoinNow = true;
-            }
-            else
-            {
-                model.NextStudentAppointmentId = null;
-                model.CanJoinNow = false;
-            }
+            model.NextStudentAppointmentId = live?.SA.Id;
+            model.CanJoinNow = live != null;
 
             model.TotalCoursesCount = courses.Count();
             model.TotalLessons = allStudentAppointments.Count();
             model.CompletedLessons = allStudentAppointments.Count(sa => sa.IsAttended);
 
-            if (model.TotalLessons > 0)
-                model.OverallProgress = (int)((double)model.CompletedLessons / model.TotalLessons * 100);
-            else
-                model.OverallProgress = 0;
+            model.OverallProgress = model.TotalLessons > 0
+                ? (int)((double)model.CompletedLessons / model.TotalLessons * 100)
+                : 0;
 
-            model.NewNotifications = allStudentAppointments
-               .Count(sa => sa.Appointment != null
-               && !sa.IsAttended
-               && sa.Appointment.IsActive == true);
+            model.NewNotifications = allStudentAppointments.Count(sa =>
+                sa.Appointment != null &&
+                !sa.IsAttended &&
+                sa.Appointment.IsActive == true
+            );
 
             return View(model);
         }
+
+
 
 
         //chat

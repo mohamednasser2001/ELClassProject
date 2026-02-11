@@ -1,6 +1,7 @@
 ﻿@model Models.Course
 @{
     Layout = "_StudentLayout";
+    int? openLessonId = ViewBag.OpenLessonId as int?;
 }
 
 <div class="content-wrapper course-details-page">
@@ -15,7 +16,7 @@
             int count = 1;
             foreach (var lesson in Model.Lessons)
             {
-                <div class="lecture-item">
+                <div class="lecture-item" data-lesson-id="@lesson.Id">
                     <div class="lecture-header" onclick="toggleLecture(this)">
                         <div class="lecture-title">
                             <span class="lecture-number">@count</span>
@@ -24,16 +25,8 @@
                             </h3>
                         </div>
 
-                        <!-- Arrow goes to LessonDetails (and does NOT toggle) -->
-                        <a asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="LessonDetails"
-                           asp-route-id="@lesson.Id"
-                           class="lecture-arrow"
-                           onclick="event.stopPropagation();"
-                           title="Open lesson details">
-                            <i class="fas fa-chevron-down arrow-icon"></i>
-                        </a>
+                        <!-- ✅ Arrow فقط Toggle (مش لينك) -->
+                        <i class="fas fa-chevron-down arrow-icon" title="Expand"></i>
                     </div>
 
                     <div class="lecture-content">
@@ -86,30 +79,51 @@
 </div>
 
 <script>
+    function closeLecture(item) {
+        item.classList.remove('active');
+        const content = item.querySelector('.lecture-content');
+        if (content) content.style.maxHeight = null;
+    }
+
+    function openLecture(item) {
+        item.classList.add('active');
+        const content = item.querySelector('.lecture-content');
+        if (content) content.style.maxHeight = content.scrollHeight + "px";
+    }
+
     function toggleLecture(header) {
         const item = header.closest('.lecture-item');
 
-        // Close any other opened lecture (optional)
+        // اقفل أي محاضرة تانية (اختياري)
         document.querySelectorAll('.lecture-item').forEach(el => {
-            if (el !== item) el.classList.remove('active');
+            if (el !== item) closeLecture(el);
         });
 
-        // Toggle current lecture
-        item.classList.toggle('active');
-
-        // Smooth height animation
-        const content = item.querySelector('.lecture-content');
+        // Toggle الحالية
         if (item.classList.contains('active')) {
-            content.style.maxHeight = content.scrollHeight + "px";
+            closeLecture(item);
         } else {
-            content.style.maxHeight = null;
+            openLecture(item);
         }
     }
 
-    // Ensure all lectures start collapsed
     document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll('.lecture-item .lecture-content').forEach(c => {
-            c.style.maxHeight = null;
-        });
+        // ابدأ كله مقفول
+        document.querySelectorAll('.lecture-item').forEach(el => closeLecture(el));
+
+        // ✅ افتح lecture معينة لو جاية من dashboard عبر openLessonId
+        const openId = @((openLessonId.HasValue) ? openLessonId.Value.ToString() : "null");
+        if (openId !== null) {
+            const target = document.querySelector(`.lecture-item[data-lesson-id="${openId}"]`);
+            if (target) {
+                // افتحها
+                openLecture(target);
+
+                // scroll لطيف عليها
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 50);
+            }
+        }
     });
 </script>
