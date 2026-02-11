@@ -20,6 +20,7 @@ namespace Models.ViewModels
         public int TotalCoursesCount { get; set; }
         public DateTime? NextJoinAt { get; set; }
         public List<LastLessonVM> LastLessons { get; set; } = new();
+
         public List<UpcomingLectureVM> UpcomingLectures { get; set; } = new();
 
     }

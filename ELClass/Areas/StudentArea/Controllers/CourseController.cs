@@ -60,19 +60,16 @@ namespace ELClass.Areas.StudentArea.Controllers
 
 
         [Authorize]
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, int? openLessonId = null)
         {
             var userId = _userManager.GetUserId(User);
-
 
             bool isEnrolled = await _unitOfWork.StudentCourseRepository.GetOneAsync(
                 sc => sc.StudentId == userId && sc.CourseId == id
             ) != null;
 
             if (!isEnrolled)
-            {
                 return Forbid();
-            }
 
             var course = await _unitOfWork.CourseRepository.GetOneAsync(
                 e => e.Id == id,
@@ -80,32 +77,36 @@ namespace ELClass.Areas.StudentArea.Controllers
             );
 
             if (course == null)
-            {
                 return NotFound();
-            }
 
-            return View(course); 
+            // ✅ ابعته للـ View عشان نفتح الـ lesson تلقائي
+            ViewBag.OpenLessonId = openLessonId;
+
+            return View(course);
         }
+
 
 
         public async Task<IActionResult> LessonDetails(int id)
         {
             var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            // هات الـ Lesson
-            var lesson = await _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id);
-            if (lesson == null) return NotFound();
-
-            // تأكد إن الطالب مشترك في كورس الـ Lesson (مهم: lesson.CourseId مش lesson.Id)
-            var enrollment = await _unitOfWork.StudentCourseRepository.GetOneAsync(e =>
-                e.StudentId == userId && e.CourseId == lesson.CourseId
+            var lesson = await _unitOfWork.LessonRepository.GetOneAsync(
+                l => l.Id == id,
+                q => q.Include(x => x.Course),
+                tracked: false
             );
 
-            if (enrollment == null) return Forbid();
+            if (lesson == null) return NotFound();
+
+            var isEnrolled = await _unitOfWork.StudentCourseRepository
+                .GetOneAsync(e => e.StudentId == userId && e.CourseId == lesson.CourseId, tracked: false);
+
+            if (isEnrolled == null) return Forbid();
 
             return View(lesson);
         }
+
 
 
 

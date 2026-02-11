@@ -56,6 +56,7 @@ namespace ELClass.Areas.Identity.Controllers
         [HttpGet]
         public IActionResult Register(string? email = null)
         {
+            TempData.Remove("success-notifications");
             ViewBag.GoogleEmail = email;
             ViewBag.IsExternalRegister = !string.IsNullOrWhiteSpace(email);
             return View();
