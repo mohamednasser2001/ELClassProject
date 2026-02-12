@@ -38,6 +38,33 @@ a {
     z-index: 1000;
 }
 
+/* transaction */
+/* 1. إضافة انسيابية لكل العناصر اللي هتتغير */
+.el-header-wrapper,
+.el-top-header-bar {
+    transition: all 0.4s ease-in-out;
+}
+
+/* 2. تعديل وضعية الـ Header الأساسي */
+.el-header-wrapper {
+    position: fixed; /* تغيير من sticky لـ fixed لضمان سلاسة أفضل */
+    width: 100%;
+    top: 45px; /* دي مساحة الـ top bar التقريبية، عدلها حسب رغبتك */
+    z-index: 1000;
+}
+
+/* 3. الكلاس اللي هيتضاف عن طريق الجافاسكريبت لما ننزل سكرول */
+.header-scrolled .el-top-header-bar {
+    margin-top: -50px; /* بيسحب الشريط العلوي لفوق عشان يختفي */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.header-scrolled .el-header-wrapper {
+    top: 0; /* بيخلي الهيدر الأساسي يلزق فوق خالص */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
 /* الحاوية الأساسية للشريط العلوي */
 .el-top-header-bar {
     background: #001a33; /* اللون الداكن المطابق للصورة */
@@ -111,6 +138,9 @@ a {
     width: 14px;
     height: 14px;
 }
+
+
+
 
 
 @media (max-width: 991px) {
@@ -287,7 +317,12 @@ a {
     color: rgba(255,255,255,0.9);
     margin-bottom: 30px;
 }
-
+.gray-p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #6E8DA0;
+    margin-bottom: 30px;
+}
 .el-banner-btns {
     display: flex;
     gap: 20px;
@@ -506,7 +541,7 @@ a {
 
 /* Counter Section */
 .el-counter-wrapper {
-    background: white;
+    background: #001A33;
     padding: 60px 0;
     box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
 }
@@ -571,24 +606,41 @@ a {
 
 .el-count-heading h5 {
     font-size: 1rem;
-    color: var(--gray);
+    color:#d5d2d2;
     font-weight: 600;
     margin: 0;
 }
 
 /* Section Headings */
-.el-top-heading,
-.el-top-heading-center {
-    color: var(--orange);
+.el-top-heading {
+    display: inline-flex;
+    color: #007bff;
     font-size: 1rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-bottom: 15px;
+    padding: 8px 30px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, rgba(130, 218, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 .el-top-heading-center {
-    text-align: center;
+    display: inline-flex; /* بنستخدم flex عشان نتحكم في المحاذاة الداخلية بسهولة */
+    align-items: center;
+    justify-content: center;
+    color: #007bff; /* اللون الأزرق اللي في الصورة */
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 8px 30px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    /* التدرج اللوني زي الصورة بالظبط */
+    background: linear-gradient(90deg, rgba(130, 218, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%);
+    /* تأكد من حذف left و transform القدام لو موجودين */
+    position: relative;
 }
 
 .el-main-heading {
@@ -606,8 +658,8 @@ a {
 
 /* About Section */
 .el-about-wrapper {
-    padding: 100px 0;
-    background: var(--light-gray);
+    /*    padding: 100px 0;*/
+    background:  rgba(255, 255, 255, 0.95);
 }
 
 .el-about-img {
@@ -617,7 +669,7 @@ a {
     .el-about-img > img {
         width: 100%;
         border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+/*        box-shadow: 0 20px 60px rgba(0,0,0,0.1);*/
     }
 
 .el-abt-review,
@@ -668,7 +720,8 @@ a {
 /* Course/Tab Section */
 .el-course-wrapper {
     padding: 100px 0;
-    background: white;
+    background: var(--light-gray);
+    
 }
 
 .el-course-heading {
