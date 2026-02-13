@@ -936,6 +936,7 @@ a {
     overflow: hidden;
     box-shadow: 0 5px 20px rgba(0,0,0,0.08);
     transition: all 0.3s;
+    margin-bottom:0;
 }
 
     .el-team-box:hover {
@@ -1021,6 +1022,7 @@ a {
         fill: white;
     }
 
+
 /* Contact/Enroll Section */
 .el-contact-wrapper {
     padding: 100px 0;
@@ -1029,22 +1031,26 @@ a {
 
 .el-contact-flex {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
+    grid-template-columns: 1.2fr 0.8fr; /* الجزء الأيسر أوسع قليلاً ليسمح بالتداخل */
+    gap: 30px;
     align-items: center;
 }
 
+/* الحاوية اللي شايلة الصورة والفورم */
 .el-contact-left-flex {
+    display: flex;
+    align-items: flex-end; /* عشان الفورم والصورة يبدأوا من تحت سوا */
     position: relative;
 }
 
 .el-contact-left-image {
     position: relative;
+    flex: 1;
+    max-width: 50%; /* الصورة تاخد نص مساحة الجزء الأيسر */
 }
-
     .el-contact-left-image .el-contact-image {
         width: 100%;
-        border-radius: 20px;
+        display: block;
     }
 
 .el-contact-review,
@@ -1072,17 +1078,68 @@ a {
 }
 
 .el-contact-left-form {
-    position: absolute;
-    bottom: -50px;
-    right: -50px;
+    flex: 1;
+    margin-left: -80px; /* السر هنا: سحب الفورم فوق الصورة بقيمة سالبة مرنة */
+    position: relative;
+    z-index: 2;
 }
 
 .el-contact-form-box {
     background: white;
     padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-    min-width: 350px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    width: 100%; /* عشان ياخد مساحة الـ flex المتاحة */
+}
+/* للشاشات المتوسطة (التابلت) */
+@media (max-width: 991px) {
+    .el-contact-flex {
+        grid-template-columns: 1fr; /* عمود واحد */
+        gap: 40px;
+    }
+
+    /* عكس الترتيب: الكلام يطلع فوق والفورم ينزل تحت */
+    .el-contact-right {
+        order: 1;
+        text-align: center; /* اختياري: توسيط الكلام لشكل أفضل في الموبايل */
+    }
+
+    .el-contact-left-flex {
+        order: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* إخفاء حاوية الصور بالكامل */
+    .el-contact-left-image {
+        display: none;
+    }
+
+    /* ضبط الفورم ليأخذ العرض الكامل بدون تداخل */
+    .el-contact-left-form {
+        margin-left: 0;
+        width: 100%;
+        max-width: 500px; /* عشان ميبقاش عريض بزيادة على التابلت */
+    }
+}
+
+
+/* للشاشات الصغيرة جداً (الموبايل) */
+@media (max-width: 767px) {
+    .el-contact-wrapper {
+        padding: 60px 0; /* تقليل البادينج للموبايل */
+    }
+
+    .el-contact-form-box {
+        padding: 20px;
+        min-width: unset;
+    }
+
+    .el-input-field-flex {
+        grid-template-columns: 1fr; /* جعل حقول الجنس والتاريخ تحت بعض */
+        gap: 0;
+    }
 }
 
 .el-contact-form-head h4 {
