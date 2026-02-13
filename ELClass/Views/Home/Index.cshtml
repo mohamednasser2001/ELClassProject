@@ -488,7 +488,7 @@
     </div> *@
     <!-- Service Section End -->
     <!-- Team Section Start -->
-    <div class="el-team-wrapper">
+    <div class="el-team-wrapper p-4">
         <div class="container">
             <div class="el-team-heading text-center">
                 <h4 class="el-top-heading-center">@(isArabic ? "مدرسونا" : "Our instructors")</h4>
@@ -567,10 +567,11 @@
                         <img src="~/HomePageAssets/assets/img/contact-image.png" alt="Image" class="el-contact-image">
                         <img src="~/HomePageAssets/assets/img/contact-review.png" alt="image" class="el-contact-review">
                         <img src="~/HomePageAssets/assets/img/students.png" alt="image" class="el-contact-student">
+                        <img src="~/HomePageAssets/assets/img/banner-arrow2.svg" alt="Arrow Shape" class="el-contact-arrow">
                         <img src="~/HomePageAssets/assets/img/star-smile.png" alt="star smile" class="el-contact-star">
                     </div>
                     <div class="el-contact-left-form">
-                        @* <img src="~/HomePageAssets/assets/img/about-video-icon.png" alt="video icon" style="position: absolute; top: -30px; left: 20px; width: 60px;"> *@
+                        <img src="~/HomePageAssets/assets/img/about-video-icon.png" alt="video icon">
                         <div class="el-contact-form-box">
                             <form>
                                 <div class="el-contact-form-head">
@@ -601,7 +602,7 @@
                                         </select>
                                     </div>
                                     <div class="el-input-field">
-                                        <input type="text" class="date" placeholder="@(isArabic ? "تاريخ الميلاد" : "Date of birth")">
+                                        <input type="text" id="datepicker" class="date" placeholder="@(isArabic ? "تاريخ الميلاد" : "Date of birth")" readonly>
                                     </div>
                                 </div>
                                 <div class="el-contact-form-btn">
@@ -615,16 +616,22 @@
                     <div class="el-about-content">
                         <h4 class="el-top-heading">@(isArabic ? "سجل الآن" : "Enroll Now")</h4>
                         <h2 class="el-main-heading">
-                            @(isArabic
-                                                        ? "سجل الآن! احجز مقعدك!"
-                                                        : "Register Now! Secure Your Seat!")
+                            @if (isArabic)
+                            {
+                                <text>سجل الآن! احجز <br> مقعدك!</text>
+                            }
+                            else
+                            {
+
+                                <text>Register Now! Secure <br> Your Seat!</text>
+                            }
                         </h2>
-                        <p class="el-para">
+                        <p class="gray-p">
                             @(isArabic
                                                         ? "انضم إلى آلاف الطلاب الذين حققوا نجاحاً باهراً مع منصتنا التعليمية. نوفر لك أفضل المدرسين والمناهج التعليمية المتطورة."
                                                         : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo eiusmod tempor incididunt ut laboreet dolore magnased doeiusmod tempor in cididunt utlaboreet dolore magna aliqua.")
                         </p>
-                        <p class="el-para">
+                        <p class="gray-p">
                             @(isArabic
                                                         ? "ابدأ رحلتك التعليمية اليوم واحصل على أفضل الدورات التعليمية المصممة خصيصاً لاحتياجاتك."
                                                         : "Get latest news in your inbox. Consectetur adipisce enng elitadipiscing elitseddo eiusmod tempor incid dunt ut labore et dolore.")
@@ -1477,6 +1484,7 @@
         const teamSwiper = new Swiper('.el-team-parent', {
             slidesPerView: 1,
             spaceBetween: 30,
+            autoHeight: true,
             pagination: {
                 el: '.swiper-pagination',
                 clickable: true,
