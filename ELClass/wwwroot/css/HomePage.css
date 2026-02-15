@@ -210,6 +210,11 @@ a {
 }
 
 
+
+
+
+
+
 /* Header */
 .el-header-wrapper {
     background: white;
@@ -270,6 +275,55 @@ a {
         height: 2px;
         background: var(--primary-blue);
     }
+
+
+.el-orange-btn {
+    display: inline-block;
+    padding: 12px 35px;
+    margin-top: 10px;
+    /* الألوان المستخرجة من صورة Submit التي أرفقتها */
+    background: linear-gradient(to right, #ffcc66 0%, #ff8866 50%, #ffcc66 100%);
+    background-size: 200% 100%;
+    background-position: right center;
+    color: #fff !important;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    /* شادو ناعم يتناسب مع ألوان الزر */
+    box-shadow: 0 4px 15px rgba(255, 136, 102, 0.4);
+    /* حركة أبطأ وانسيابية جداً (0.9 ثانية) */
+    transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+    .el-orange-btn:hover {
+        /* سحب التدرج اللوني من اليسار لليمين */
+        background-position: left center;
+        /* تباعد الحروف */
+        letter-spacing: 2.5px;
+        /* حركة للأعلى */
+        transform: translateY(-6px);
+        /* زيادة توهج الشادو عند الوقوف */
+        box-shadow: 0 8px 25px rgba(255, 136, 102, 0.6);
+        color: #fff !important;
+    }
+
+/* ضبط اتجاه النص لو الموقع عربي لضمان سلاسة حركة الحروف */
+[lang="ar"] .el-orange-btn {
+    letter-spacing: 0; /* الحروف العربية لا تفضل التباعد الكبير غالباً */
+}
+
+
+
+
+
+
+
+
+
 
 /* Banner/Hero Section */
 .el-banner-wrapper {
@@ -719,9 +773,8 @@ a {
 
 /* Course/Tab Section */
 .el-course-wrapper {
-    padding: 100px 0;
+    padding: 60px 0;
     background: var(--light-gray);
-    
 }
 
 .el-course-heading {
@@ -754,27 +807,58 @@ a {
     }
 
 .el-tab-content-box {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-    transition: all 0.3s;
-}
-
-    .el-tab-content-box:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-    }
-
-.el-tab-img {
+    border-radius: 30px;
+    padding: 25px; /* قللنا البادينج قليلاً */
+    text-align: center;
+    transition: all 0.4s ease;
+    flex: 1; /* يضمن ملء الكارت للسلايد بالكامل */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* يوزع المحتوى بانتظام */
+    /*    height: 300px;*/
+    min-height: 280px;
+    border: none;
     position: relative;
     overflow: hidden;
 }
 
+
+/* 1. إجبار الـ SVG على حجم صغير جداً ومرن */
+.el-tab-img svg {
+    width: 60px !important; /* صغرنا الحجم من 200 لـ 60 */
+    height: 60px !important; /* صغرنا الحجم من 200 لـ 60 */
+    max-width: 100%;
+    margin-bottom: 0;
+}
+
+
+
+
+
+.el-tab-content-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+
+.el-tab-img {
+    height: 70px; /* مساحة ثابتة للأيقونة */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+    .el-tab-img svg, .el-tab-img img {
+        max-width: 80px;
+        height: auto;
+        transition: transform 0.3s ease;
+    }
+
     .el-tab-img img {
-        width: 100%;
-        height: 220px;
-        object-fit: cover;
+        width: auto;
+        height: auto;
+        max-height: 70px; /* حجم معقول جداً للأيقونات */
+        object-fit: contain;
         transition: transform 0.3s;
     }
 
@@ -817,20 +901,18 @@ a {
 }
 
 .el-tab-inner {
-    padding: 25px;
+    padding: 10px 15px;
 }
 
     .el-tab-inner h4 {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--dark);
-        margin-bottom: 12px;
+        margin: 10px 0 5px 0;
+        font-size: 1.1rem;
     }
 
     .el-tab-inner p {
-        color: var(--gray);
         margin-bottom: 15px;
-        line-height: 1.6;
+        font-size: 0.9rem;
+        line-height: 1.4;
     }
 
     .el-tab-inner img {
@@ -838,20 +920,50 @@ a {
     }
 
     .el-tab-inner a {
-        color: var(--primary-blue);
         text-decoration: none;
+        color: #0053B3;
         font-weight: 600;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 8px;
-        transition: gap 0.3s;
+        transition: 0.3s;
     }
 
         .el-tab-inner a:hover {
             gap: 12px;
         }
 
+/* إزالة أي مساحة زائدة تحت السلايدر نفسه */
+.el-tab-slider-parent {
+    padding-bottom: 30px !important;
+    margin-bottom: 0 !important;
+}
 
+/* 1. إجبار الكروت في السطر الواحد على نفس الطول بدون زيادة */
+
+.el-tab-slider-parent .swiper-slide {
+    height: auto; /* يجعل السلايد يأخذ ارتفاع المحتوى فقط */
+    display: flex;
+}
+
+/* تأثير عند الوقوف على الكارت (Hover) */
+
+.el-tab-content-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+/* التأكد من أن الكارت لا يتمدد أكثر من اللازم */
+.el-tab-content-box {
+    min-height: 250px !important; /* ارتفاع معقول جداً */
+    height: auto !important; /* يمنع الـ 300px القديمة */
+    padding: 20px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* يجعل المحتوى يبدأ من الأعلى ولا يتوزع بفراغات */
+    align-items: center;
+    overflow: hidden;
+}
 
 /* Service Section */
 .el-service-wrapper {
@@ -936,6 +1048,7 @@ a {
     overflow: hidden;
     box-shadow: 0 5px 20px rgba(0,0,0,0.08);
     transition: all 0.3s;
+    margin-bottom:0;
 }
 
     .el-team-box:hover {
@@ -1021,30 +1134,35 @@ a {
         fill: white;
     }
 
+
 /* Contact/Enroll Section */
 .el-contact-wrapper {
-    padding: 100px 0;
+    padding: 35px 0;
     background: var(--light-gray);
 }
 
 .el-contact-flex {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
+    grid-template-columns: 1.2fr 0.8fr; /* الجزء الأيسر أوسع قليلاً ليسمح بالتداخل */
+    gap: 30px;
     align-items: center;
 }
 
+/* الحاوية اللي شايلة الصورة والفورم */
 .el-contact-left-flex {
+    display: flex;
+    align-items: flex-end; /* عشان الفورم والصورة يبدأوا من تحت سوا */
     position: relative;
 }
 
 .el-contact-left-image {
     position: relative;
+    flex: 1;
+    max-width: 50%; /* الصورة تاخد نص مساحة الجزء الأيسر */
 }
-
     .el-contact-left-image .el-contact-image {
         width: 100%;
-        border-radius: 20px;
+        display: block;
     }
 
 .el-contact-review,
@@ -1072,17 +1190,68 @@ a {
 }
 
 .el-contact-left-form {
-    position: absolute;
-    bottom: -50px;
-    right: -50px;
+    flex: 1;
+    margin-left: -80px; /* السر هنا: سحب الفورم فوق الصورة بقيمة سالبة مرنة */
+    position: relative;
+/*    z-index: 2;*/
 }
 
 .el-contact-form-box {
     background: white;
     padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-    min-width: 350px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    width: 100%; /* عشان ياخد مساحة الـ flex المتاحة */
+}
+/* للشاشات المتوسطة (التابلت) */
+@media (max-width: 991px) {
+    .el-contact-flex {
+        grid-template-columns: 1fr; /* عمود واحد */
+        gap: 40px;
+    }
+
+    /* عكس الترتيب: الكلام يطلع فوق والفورم ينزل تحت */
+    .el-contact-right {
+        order: 1;
+        text-align: center; /* اختياري: توسيط الكلام لشكل أفضل في الموبايل */
+    }
+
+    .el-contact-left-flex {
+        order: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* إخفاء حاوية الصور بالكامل */
+    .el-contact-left-image {
+        display: none;
+    }
+
+    /* ضبط الفورم ليأخذ العرض الكامل بدون تداخل */
+    .el-contact-left-form {
+        margin-left: 0;
+        width: 100%;
+        max-width: 500px; /* عشان ميبقاش عريض بزيادة على التابلت */
+    }
+}
+
+
+/* للشاشات الصغيرة جداً (الموبايل) */
+@media (max-width: 767px) {
+    .el-contact-wrapper {
+        padding: 60px 0; /* تقليل البادينج للموبايل */
+    }
+
+    .el-contact-form-box {
+        padding: 20px;
+        min-width: unset;
+    }
+
+    .el-input-field-flex {
+        grid-template-columns: 1fr; /* جعل حقول الجنس والتاريخ تحت بعض */
+        gap: 0;
+    }
 }
 
 .el-contact-form-head h4 {
@@ -1213,92 +1382,176 @@ a {
 }
 
 /* Testimonial Section */
+/* الحاوية الكلية للسيكشن */
 .el-testmnl-wrapper {
     padding: 100px 0;
     background: var(--light-gray);
+    overflow: hidden; /* لمنع أي مشاكل في الهوامش الخارجية */
+}
+
+
+/* تحسين النعومة لكل العناصر داخل السلايدر */
+.el-testmnl-slider .swiper-slide,
+.custom-card,
+.info-box {
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1) !important; /* توافق الوقت مع الـ speed في JS */
+}
+
+/* الحاوية الأساسية للسلايدر */
+.el-testmnl-slider {
+    overflow: visible !important;
+    padding: 60px 0 !important;
+    max-width: 500px; /* تقليل العرض الأقصى يلم الكروت لبعضها في النص */
+    margin: 0 auto;
 }
 
 .el-tesml-main-parent {
     position: relative;
-    margin-bottom: 40px;
+    width: 100%;
 }
 
-.el-tm-banner-media {
+/* الكارت الأساسي */
+.custom-card {
+    position: relative;
+    width: 280px;
+    height: 380px;
+    border-radius: 20px;
+    overflow: hidden; /* عشان الصورة تتقص على حدود الكارت */
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 15px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #eee;
+}
+
+    /* الصورة تملا الكارت بالكامل */
+    .custom-card > img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* تملأ المساحة بدون تمطيط */
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+
+/* الكروت الخلفية (غير النشطة) */
+.el-testmnl-slider .swiper-slide {
+    width: 280px !important; /* نفس عرض الكارت */
+    display: flex;
+    justify-content: center;
+    transition: all 0.5s ease;
+    /* إلغاء أي مسافات جانبية افتراضية */
+    margin: 0 -40px !important;
+}
+
+/* الكارت اللي في النص (النشط) */
+.el-testmnl-slider .swiper-slide-active {
+    z-index: 100 !important; /* رقم عالي جداً ليبرز فوق أي تداخل */
+    transform: scale(1) translateY(0) !important;
+    opacity: 1;
+}
+
+/* الكروت المجاورة (واحد قبله وواحد بعده) */
+.el-testmnl-slider .swiper-slide-next,
+.el-testmnl-slider .swiper-slide-prev {
+    opacity: 0.85 !important;
+    z-index: 50 !important; /* تحت النشط مباشرة */
+    transform: scale(0.85) translateY(30px) !important; /* تصغير وإزاحة لأسفل قليلاً */
+}
+
+/* باقي الكروت في الخلفية تماماً */
+.el-testmnl-slider .swiper-slide:not(.swiper-slide-active):not(.swiper-slide-next):not(.swiper-slide-prev) {
+    opacity: 0 !important; /* إخفاء باقي الكروت لتركيز العين على الـ 3 كروت الأساسية فقط */
+    pointer-events: none;
+}
+
+
+/* صندوق البيانات الأبيض (فوق الصورة) */
+.info-box {
     background: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    transition: all 0.3s;
+    width: 85%;
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    position: absolute;
+    bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    z-index: 5; /* يظهر فوق الصورة اللي جوه الكارت */
 }
 
-    .el-tm-banner-media:hover {
-        transform: scale(1.05);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    .info-box h6 {
+        margin: 0 0 5px;
+        font-weight: 700;
+        color: #333;
     }
 
-    .el-tm-banner-media img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-.el-tm-banner-media_content h6 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 5px;
-}
-
-.el-tm-banner-media_content p {
-    color: var(--gray);
+/* تنسيق الفقرة (gray-p) داخل البوكس */
+.gray-p {
+    color: #777;
     margin: 0;
     font-size: 0.85rem;
-}
-
-.el-temsl-text-slider {
-    background: white;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-
-    .el-temsl-text-slider img {
-        width: 50px;
-        margin-bottom: 20px;
-    }
-
-.el-tesmnl-rating {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-    .el-tesmnl-rating > img {
-        width: 40px;
-        height: 40px;
-    }
-
-    .el-tesmnl-rating > span:first-of-type {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--dark);
-    }
-
-.el-temnl-rating {
-    display: flex;
+    justify-content: center;
     gap: 5px;
 }
 
-    .el-temnl-rating img {
-        width: 20px;
-        height: 20px;
-    }
+.info-box p img {
+    width: 14px !important;
+    height: auto !important;
+    position: static !important; /* إلغاء أي absolute قديم */
+    transform: none !important;
+    margin: 0 !important;
+}
 
+/* سلايدر النص (الجهة اليمنى) */
+/* حاوية النصوص الأساسية */
+.el-temnl-text-slider {
+    background: white;
+    padding: 40px;
+    border-radius: 25px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden; /* ضروري جداً عشان النص يختفي بمجرد خروجه من الحدود */
+    /* تأثير اختفاء تدريجي عند الحواف (اختياري لجمالية الحركة) */
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+
+/* الأسهم (تعديل الأماكن عشان متدخلش في النص) */
+.el-tesml-main-parent .swiper-button-next,
+.el-tesml-main-parent .swiper-button-prev {
+    color: #00bcd4;
+    background: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* تنسيق محتوى النص */
+.el-temnl-text-slider p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #666;
+    margin-bottom: 20px;
+}
+.el-tesml-main-parent .swiper-button-prev {
+    left: -20px;
+}
+
+.el-tesml-main-parent .swiper-button-next {
+    right: -20px;
+}
+
+/* للهواتف: نلغي التداخل الجانبي */
+@media (max-width: 991px) {
+    .el-temnl-text-slider {
+        margin-right: 0;
+        margin-top: 20px;
+    }
+}
 /* Pricing Section */
 .el-pricing-wrapper {
     padding: 100px 0;

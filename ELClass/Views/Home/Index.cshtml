@@ -349,9 +349,9 @@
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="courses" role="tabpanel">
                         <div class="el-tab-slider-parent swiper">
-                            <div class="swiper-wrapper">
+                            <div class="swiper-wrapper" style="max-height:300px">
                                 <div class="swiper-slide">
-                                    <div class="el-tab-content-box el-tab-content-box1">
+                                    <div class="el-tab-content-box ">
                                         
                                         <div class="el-tab-img">
                                             <svg fill="#0053B3" height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g><g><path d="M436.833,262.291v-46.995c16.002-6.136,27.367-21.634,27.367-39.796c0-23.536-19.08-42.616-42.616-42.616 c-10.173,0-19.508,3.569-26.835,9.517l-40.71-23.504V32.101h-30.496v86.797L256,157.894l-67.543-38.997V32.101h-30.496v86.797 l-40.71,23.504c-7.327-5.948-16.662-9.517-26.835-9.517c-23.536,0-42.616,19.08-42.616,42.616 c0,18.162,11.366,33.66,27.368,39.796v46.995L0,305.688l15.248,26.41l75.162-43.394l67.549,39v77.986l-75.167,43.398l15.248,26.41 l75.167-43.398l82.791,47.8l55.958-32.308c7.327,5.948,16.662,9.517,26.835,9.517c23.536,0,42.616-19.08,42.616-42.616 c0-18.162-11.366-33.66-27.368-39.796v-46.995l67.55-38.998l75.162,43.394L512,305.689L436.833,262.291z M173.203,301.289 l-67.537-38.993v-47.001h-0.001c16.002-6.136,27.367-21.634,27.367-39.796c0-2.277-0.183-4.511-0.528-6.693l40.703-23.5 l67.543,38.997v47.001c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.276,0.183,4.508,0.527,6.687L173.203,301.289z M323.543,374.699c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.277,0.183,4.511,0.528,6.693L256,444.688l-67.543-38.999 v-77.985l40.71-23.504c7.327,5.947,16.662,9.516,26.834,9.516c10.172,0,19.508-3.569,26.834-9.516l40.71,23.504V374.699z M406.337,262.297l-67.539,38.993l-40.708-23.503c0.344-2.18,0.527-4.412,0.527-6.687c0-18.162-11.365-33.66-27.367-39.796 v-47.001l67.543-38.997l40.703,23.5c-0.345,2.182-0.528,4.416-0.528,6.693c0,18.162,11.366,33.66,27.368,39.796V262.297z" /></g></g></svg>
@@ -359,17 +359,16 @@
                                         <div class="el-tab-inner">
                                             <h4>@(isArabic ? "أحياء" : "Biology")</h4>
                                             <p>@(isArabic ? "تعلم علم الأحياء مع مدرسين متخصصين" : "Learn biology with expert tutors")</p>
-                                            <img src="~/HomePageAssets/assets/img/review.png" alt="rating">
-                                            <a href="javascript:;">
+                                            
+                                            <a href="javascript:;" class="el-orange-btn">
                                                 @(isArabic ? "احجز الآن" : "Enroll Now")
-                                                <img src="~/HomePageAssets/assets/img/arrow-icon.png" alt="arrow right" width="16">
                                             </a>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="swiper-slide">
-                                    <div class="el-tab-content-box el-tab-content-box2">
+                                    <div class="el-tab-content-box ">
                                        
                                         <div class="el-tab-img">
                                             <svg viewBox="0 0 24 24" fill="#FF716B" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10.5523 17 11 16.5523 11 16C11 15.4477 10.5523 15 10 15C9.44772 15 9 15.4477 9 16C9 16.5523 9.44772 17 10 17Z" /><path d="M15 18C15 18.5523 14.5523 19 14 19C13.4477 19 13 18.5523 13 18C13 17.4477 13.4477 17 14 17C14.5523 17 15 17.4477 15 18Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M15 3V7.58152C17.9318 8.76829 20 11.6426 20 15C20 19.4183 16.4183 23 12 23C7.58172 23 4 19.4183 4 15C4 11.6426 6.06817 8.76829 9 7.58152V3H8C7.44772 3 7 2.55228 7 2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2C17 2.55228 16.5523 3 16 3H15ZM9.75043 9.43539L10.3752 9.18249C10.7529 9.02962 11 8.66295 11 8.25555V3H13V8.25555C13 8.66295 13.2471 9.02962 13.6248 9.18249L14.2496 9.43539C15.1075 9.78268 15.8661 10.3221 16.4726 11L7.52739 11C8.13388 10.3221 8.89249 9.78268 9.75043 9.43539ZM6.3414 13C6.12025 13.6258 6 14.2991 6 15C6 18.3137 8.68629 21 12 21C15.3137 21 18 18.3137 18 15C18 14.2991 17.8798 13.6258 17.6586 13L6.3414 13Z" /></svg>
@@ -377,17 +376,16 @@
                                         <div class="el-tab-inner">
                                             <h4>@(isArabic ? "كيمياء" : "Chemistry")</h4>
                                             <p>@(isArabic ? "اكتشف عالم الكيمياء مع خبرائنا" : "Discover chemistry with our experts")</p>
-                                            <img src="~/HomePageAssets/assets/img/review.png" alt="rating">
-                                            <a href="javascript:;">
+                                           
+                                            <a href="javascript:;" class="el-orange-btn">
                                                 @(isArabic ? "احجز الآن" : "Enroll Now")
-                                                <img src="~/HomePageAssets/assets/img/arrow-icon.png" alt="arrow right" width="16">
                                             </a>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="swiper-slide">
-                                    <div class="el-tab-content-box el-tab-content-box3">
+                                    <div class="el-tab-content-box ">
                                        
                                         <div class="el-tab-img">
                                             <svg height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53.5 53.5" fill="#82DAFF"><path d="M52,50.5H3v-49C3,0.671,2.329,0,1.5,0S0,0.671,0,1.5V52c0,0.829,0.671,1.5,1.5,1.5H52 c0.829,0,1.5-0.671,1.5-1.5C53.5,51.172,52.828,50.5,52,50.5z" /><path d="M12.108,36.417l-4.375,8c-0.398,0.727-0.131,1.638,0.596,2.036c0.229,0.125,0.475,0.184,0.718,0.184 c0.531,0,1.045-0.282,1.317-0.781l4.375-8c0.712-1.302,1.616-2.337,2.585-3.004c0.155,0.027,0.312,0.048,0.474,0.048 c0.792,0,1.501-0.337,2.005-0.871c0.719,0.024,1.374,0.296,1.949,0.831c1.379,1.282,3.05,1.744,4.707,1.299 c2.452-0.658,4.512-3.172,5.651-6.896l1.445-4.719c0.515-1.681,1.047-2.754,1.489-3.432c0.312,0.122,0.649,0.195,1.004,0.195 c0.177,0,0.349-0.021,0.517-0.052l2.377,5.023c0.354,0.748,1.248,1.068,1.998,0.714c0.749-0.355,1.069-1.249,0.714-1.998 l-2.625-5.546c-0.083-0.176-0.173-0.319-0.261-0.47c0.023-0.143,0.044-0.286,0.044-0.435c0-1.526-1.237-2.764-2.764-2.764 c-1.516,0-2.745,1.222-2.761,2.734c-1.003,1.11-1.892,2.838-2.601,5.152l-1.445,4.719c-0.964,3.149-2.472,4.583-3.562,4.876 c-0.647,0.176-1.265-0.021-1.886-0.599c-0.99-0.921-2.181-1.459-3.449-1.598c-0.419-0.994-1.402-1.692-2.548-1.692 c-1.526,0-2.764,1.237-2.764,2.764c0,0.215,0.03,0.421,0.076,0.622C13.962,33.671,12.933,34.909,12.108,36.417z" /></svg>
@@ -395,10 +393,59 @@
                                         <div class="el-tab-inner">
                                             <h4>@(isArabic ? "رياضيات" : "Mathematics")</h4>
                                             <p>@(isArabic ? "تحسين مهاراتك في الرياضيات" : "Improve your math skills")</p>
-                                            <img src="~/HomePageAssets/assets/img/review.png" alt="rating">
-                                            <a href="javascript:;">
+                                           
+                                            <a href="javascript:;" class="el-orange-btn">
                                                 @(isArabic ? "احجز الآن" : "Enroll Now")
-                                                <img src="~/HomePageAssets/assets/img/arrow-icon.png" alt="arrow right" width="16">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide">
+                                    <div class="el-tab-content-box el-tab-content-box1">
+
+                                        <div class="el-tab-img">
+                                            <svg fill="#0053B3" height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g><g><path d="M436.833,262.291v-46.995c16.002-6.136,27.367-21.634,27.367-39.796c0-23.536-19.08-42.616-42.616-42.616 c-10.173,0-19.508,3.569-26.835,9.517l-40.71-23.504V32.101h-30.496v86.797L256,157.894l-67.543-38.997V32.101h-30.496v86.797 l-40.71,23.504c-7.327-5.948-16.662-9.517-26.835-9.517c-23.536,0-42.616,19.08-42.616,42.616 c0,18.162,11.366,33.66,27.368,39.796v46.995L0,305.688l15.248,26.41l75.162-43.394l67.549,39v77.986l-75.167,43.398l15.248,26.41 l75.167-43.398l82.791,47.8l55.958-32.308c7.327,5.948,16.662,9.517,26.835,9.517c23.536,0,42.616-19.08,42.616-42.616 c0-18.162-11.366-33.66-27.368-39.796v-46.995l67.55-38.998l75.162,43.394L512,305.689L436.833,262.291z M173.203,301.289 l-67.537-38.993v-47.001h-0.001c16.002-6.136,27.367-21.634,27.367-39.796c0-2.277-0.183-4.511-0.528-6.693l40.703-23.5 l67.543,38.997v47.001c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.276,0.183,4.508,0.527,6.687L173.203,301.289z M323.543,374.699c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.277,0.183,4.511,0.528,6.693L256,444.688l-67.543-38.999 v-77.985l40.71-23.504c7.327,5.947,16.662,9.516,26.834,9.516c10.172,0,19.508-3.569,26.834-9.516l40.71,23.504V374.699z M406.337,262.297l-67.539,38.993l-40.708-23.503c0.344-2.18,0.527-4.412,0.527-6.687c0-18.162-11.365-33.66-27.367-39.796 v-47.001l67.543-38.997l40.703,23.5c-0.345,2.182-0.528,4.416-0.528,6.693c0,18.162,11.366,33.66,27.368,39.796V262.297z" /></g></g></svg>
+                                        </div>
+                                        <div class="el-tab-inner">
+                                            <h4>@(isArabic ? "أحياء" : "Biology")</h4>
+                                            <p>@(isArabic ? "تعلم علم الأحياء مع مدرسين متخصصين" : "Learn biology with expert tutors")</p>
+
+                                            <a href="javascript:;" class="el-orange-btn">
+                                                @(isArabic ? "احجز الآن" : "Enroll Now")
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="swiper-slide">
+                                    <div class="el-tab-content-box el-tab-content-box2">
+
+                                        <div class="el-tab-img">
+                                            <svg viewBox="0 0 24 24" fill="#FF716B" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10.5523 17 11 16.5523 11 16C11 15.4477 10.5523 15 10 15C9.44772 15 9 15.4477 9 16C9 16.5523 9.44772 17 10 17Z" /><path d="M15 18C15 18.5523 14.5523 19 14 19C13.4477 19 13 18.5523 13 18C13 17.4477 13.4477 17 14 17C14.5523 17 15 17.4477 15 18Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M15 3V7.58152C17.9318 8.76829 20 11.6426 20 15C20 19.4183 16.4183 23 12 23C7.58172 23 4 19.4183 4 15C4 11.6426 6.06817 8.76829 9 7.58152V3H8C7.44772 3 7 2.55228 7 2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2C17 2.55228 16.5523 3 16 3H15ZM9.75043 9.43539L10.3752 9.18249C10.7529 9.02962 11 8.66295 11 8.25555V3H13V8.25555C13 8.66295 13.2471 9.02962 13.6248 9.18249L14.2496 9.43539C15.1075 9.78268 15.8661 10.3221 16.4726 11L7.52739 11C8.13388 10.3221 8.89249 9.78268 9.75043 9.43539ZM6.3414 13C6.12025 13.6258 6 14.2991 6 15C6 18.3137 8.68629 21 12 21C15.3137 21 18 18.3137 18 15C18 14.2991 17.8798 13.6258 17.6586 13L6.3414 13Z" /></svg>
+                                        </div>
+                                        <div class="el-tab-inner">
+                                            <h4>@(isArabic ? "كيمياء" : "Chemistry")</h4>
+                                            <p>@(isArabic ? "اكتشف عالم الكيمياء مع خبرائنا" : "Discover chemistry with our experts")</p>
+
+                                            <a href="javascript:;" class="el-orange-btn">
+                                                @(isArabic ? "احجز الآن" : "Enroll Now")
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="swiper-slide">
+                                    <div class="el-tab-content-box el-tab-content-box3">
+
+                                        <div class="el-tab-img">
+                                            <svg height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53.5 53.5" fill="#82DAFF"><path d="M52,50.5H3v-49C3,0.671,2.329,0,1.5,0S0,0.671,0,1.5V52c0,0.829,0.671,1.5,1.5,1.5H52 c0.829,0,1.5-0.671,1.5-1.5C53.5,51.172,52.828,50.5,52,50.5z" /><path d="M12.108,36.417l-4.375,8c-0.398,0.727-0.131,1.638,0.596,2.036c0.229,0.125,0.475,0.184,0.718,0.184 c0.531,0,1.045-0.282,1.317-0.781l4.375-8c0.712-1.302,1.616-2.337,2.585-3.004c0.155,0.027,0.312,0.048,0.474,0.048 c0.792,0,1.501-0.337,2.005-0.871c0.719,0.024,1.374,0.296,1.949,0.831c1.379,1.282,3.05,1.744,4.707,1.299 c2.452-0.658,4.512-3.172,5.651-6.896l1.445-4.719c0.515-1.681,1.047-2.754,1.489-3.432c0.312,0.122,0.649,0.195,1.004,0.195 c0.177,0,0.349-0.021,0.517-0.052l2.377,5.023c0.354,0.748,1.248,1.068,1.998,0.714c0.749-0.355,1.069-1.249,0.714-1.998 l-2.625-5.546c-0.083-0.176-0.173-0.319-0.261-0.47c0.023-0.143,0.044-0.286,0.044-0.435c0-1.526-1.237-2.764-2.764-2.764 c-1.516,0-2.745,1.222-2.761,2.734c-1.003,1.11-1.892,2.838-2.601,5.152l-1.445,4.719c-0.964,3.149-2.472,4.583-3.562,4.876 c-0.647,0.176-1.265-0.021-1.886-0.599c-0.99-0.921-2.181-1.459-3.449-1.598c-0.419-0.994-1.402-1.692-2.548-1.692 c-1.526,0-2.764,1.237-2.764,2.764c0,0.215,0.03,0.421,0.076,0.622C13.962,33.671,12.933,34.909,12.108,36.417z" /></svg>
+                                        </div>
+                                        <div class="el-tab-inner">
+                                            <h4>@(isArabic ? "رياضيات" : "Mathematics")</h4>
+                                            <p>@(isArabic ? "تحسين مهاراتك في الرياضيات" : "Improve your math skills")</p>
+
+                                            <a href="javascript:;" class="el-orange-btn">
+                                                @(isArabic ? "احجز الآن" : "Enroll Now")
                                             </a>
                                         </div>
                                     </div>
@@ -488,7 +535,7 @@
     </div> *@
     <!-- Service Section End -->
     <!-- Team Section Start -->
-    <div class="el-team-wrapper">
+    <div class="el-team-wrapper p-4">
         <div class="container">
             <div class="el-team-heading text-center">
                 <h4 class="el-top-heading-center">@(isArabic ? "مدرسونا" : "Our instructors")</h4>
@@ -567,10 +614,11 @@
                         <img src="~/HomePageAssets/assets/img/contact-image.png" alt="Image" class="el-contact-image">
                         <img src="~/HomePageAssets/assets/img/contact-review.png" alt="image" class="el-contact-review">
                         <img src="~/HomePageAssets/assets/img/students.png" alt="image" class="el-contact-student">
+                        <img src="~/HomePageAssets/assets/img/banner-arrow2.svg" alt="Arrow Shape" class="el-contact-arrow">
                         <img src="~/HomePageAssets/assets/img/star-smile.png" alt="star smile" class="el-contact-star">
                     </div>
                     <div class="el-contact-left-form">
-                        @* <img src="~/HomePageAssets/assets/img/about-video-icon.png" alt="video icon" style="position: absolute; top: -30px; left: 20px; width: 60px;"> *@
+                        <img src="~/HomePageAssets/assets/img/about-video-icon.png" alt="video icon">
                         <div class="el-contact-form-box">
                             <form>
                                 <div class="el-contact-form-head">
@@ -601,11 +649,11 @@
                                         </select>
                                     </div>
                                     <div class="el-input-field">
-                                        <input type="text" class="date" placeholder="@(isArabic ? "تاريخ الميلاد" : "Date of birth")">
+                                        <input type="text" id="datepicker" class="date" placeholder="@(isArabic ? "تاريخ الميلاد" : "Date of birth")" readonly>
                                     </div>
                                 </div>
                                 <div class="el-contact-form-btn">
-                                    <a href="javascript:;" class="el-btn">@(isArabic ? "إرسال" : "Submit")</a>
+                                    <a href="javascript:; " class="el-btn el-orange-btn">@(isArabic ? "إرسال" : "Submit")</a>
                                 </div>
                             </form>
                         </div>
@@ -615,21 +663,27 @@
                     <div class="el-about-content">
                         <h4 class="el-top-heading">@(isArabic ? "سجل الآن" : "Enroll Now")</h4>
                         <h2 class="el-main-heading">
-                            @(isArabic
-                                                        ? "سجل الآن! احجز مقعدك!"
-                                                        : "Register Now! Secure Your Seat!")
+                            @if (isArabic)
+                            {
+                                <text>سجل الآن! احجز <br> مقعدك!</text>
+                            }
+                            else
+                            {
+
+                                <text>Register Now! Secure <br> Your Seat!</text>
+                            }
                         </h2>
-                        <p class="el-para">
+                        <p class="gray-p">
                             @(isArabic
                                                         ? "انضم إلى آلاف الطلاب الذين حققوا نجاحاً باهراً مع منصتنا التعليمية. نوفر لك أفضل المدرسين والمناهج التعليمية المتطورة."
                                                         : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo eiusmod tempor incididunt ut laboreet dolore magnased doeiusmod tempor in cididunt utlaboreet dolore magna aliqua.")
                         </p>
-                        <p class="el-para">
+                        <p class="gray-p">
                             @(isArabic
                                                         ? "ابدأ رحلتك التعليمية اليوم واحصل على أفضل الدورات التعليمية المصممة خصيصاً لاحتياجاتك."
                                                         : "Get latest news in your inbox. Consectetur adipisce enng elitadipiscing elitseddo eiusmod tempor incid dunt ut labore et dolore.")
                         </p>
-                        <a href="javascript:;" class="el-btn">@(isArabic ? "سجل الآن" : "enroll now")</a>
+                        <a href="javascript:;" class="el-btn el-orange-btn">@(isArabic ? "سجل الآن" : "enroll now")</a>
                     </div>
                 </div>
             </div>
@@ -642,7 +696,7 @@
             <div class="el-work-heading text-center">
                 <h4 class="el-top-heading-center">@(isArabic ? "انضم إلينا" : "JOIN US")</h4>
                 <h2 class="el-main-heading">@(isArabic ? "كيف يعمل؟ احصل على شهادتك الآن" : "How It Work? Get Your Certificate Now")</h2>
-                <p class="el-para">
+                <p class="gray-p">
                     @(isArabic
                                         ? "خطوات بسيطة للبدء في رحلتك التعليمية وتحقيق أهدافك الأكاديمية"
                                         : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
@@ -739,7 +793,7 @@
             <div class="el-team-heading text-center">
                 <h4 class="el-top-heading-center">@(isArabic ? "آراء العملاء" : "Testimonials")</h4>
                 <h2 class="el-main-heading">@(isArabic ? "ماذا يقول طلابنا عنا" : "What Our Students Say About Us")</h2>
-                <p class="el-para">
+                <p class="gray-p">
                     @(isArabic
                                         ? "اقرأ تجارب طلابنا وأولياء الأمور مع منصتنا التعليمية"
                                         : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
@@ -753,41 +807,79 @@
                         <div class="swiper el-testmnl-slider">
                             <div class="swiper-wrapper">
                                 <div class="swiper-slide">
-                                    <div class="el-tm-banner-media">
+                                    <div class="el-tm-banner-media custom-card" >
                                         <img src="~/HomePageAssets/assets/img/client-1.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content">
+                                       
+
+
+                                        @* <div class="avatar-container">
+                                            @if (!string.IsNullOrEmpty(studentImagePath))
+                                            {
+                                                <img src="@studentImagePath" alt="Student">
+                                            }
+                                            else
+                                            {
+                                                <div class="avatar-letters">
+                                                    @(isArabic ? "أ م" : "JD")
+                                                </div>
+                                            }
+                                        </div> *@
+
+                                        <div class="el-tm-banner-media_content info-box">
                                             <h6>@(isArabic ? "أحمد محمد" : "John Deo")</h6>
-                                            <p class="el-para">
-                                                <img src="~/HomePageAssets/assets/img/team-icon.png" alt="icon" width="14">
-                                                @(isArabic ? "ولي أمر" : "Parent")
-                                            </p>
                                         </div>
+
+
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
-                                    <div class="el-tm-banner-media">
+                                    <div class="el-tm-banner-media custom-card" >
                                         <img src="~/HomePageAssets/assets/img/client-2.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content">
+                                        <div class="el-tm-banner-media_content info-box">
                                             <h6>@(isArabic ? "فاطمة علي" : "Charlie Burns")</h6>
-                                            <p class="el-para">
-                                                <img src="~/HomePageAssets/assets/img/team-icon.png" alt="icon" width="14">
-                                                @(isArabic ? "ولي أمر" : "Parent")
-                                            </p>
+                                           
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="swiper-slide">
+                                    <div class="el-tm-banner-media custom-card" >
+                                        <img src="~/HomePageAssets/assets/img/client-3.png" alt="Client Image">
+                                        <div class="el-tm-banner-media_content info-box">
+                                            <h6>@(isArabic ? "سارة حسن" : "Nina Bennett")</h6>
+                                           
                                         </div>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
-                                    <div class="el-tm-banner-media">
-                                        <img src="~/HomePageAssets/assets/img/client-3.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content">
-                                            <h6>@(isArabic ? "سارة حسن" : "Nina Bennett")</h6>
-                                            <p class="el-para">
-                                                <img src="~/HomePageAssets/assets/img/team-icon.png" alt="icon" width="14">
-                                                @(isArabic ? "ولي أمر" : "Parent")
-                                            </p>
+                                    <div class="el-tm-banner-media custom-card">
+                                        <img src="~/HomePageAssets/assets/img/client-2.png" alt="Client Image">
+                                        <div class="el-tm-banner-media_content info-box">
+                                            <h6>@(isArabic ? "فاطمة علي" : "Charlie Burns")</h6>
+                                           
                                         </div>
                                     </div>
                                 </div>
+
+                                <div class="swiper-slide">
+                                    <div class="el-tm-banner-media custom-card">
+                                        <img src="~/HomePageAssets/assets/img/client-3.png" alt="Client Image">
+                                        <div class="el-tm-banner-media_content info-box">
+                                            <h6>@(isArabic ? "سارة حسن" : "Nina Bennett")</h6>
+                                           
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide">
+                                    <div class="el-tm-banner-media custom-card">
+                                        <img src="~/HomePageAssets/assets/img/client-2.png" alt="Client Image">
+                                        <div class="el-tm-banner-media_content info-box">
+                                            <h6>@(isArabic ? "فاطمة علي" : "Charlie Burns")</h6>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -798,7 +890,7 @@
                             <div class="swiper-slide">
                                 <div class="el-temsl-text-slider">
                                     <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="el-para">
+                                    <p class="gray-p">
                                         @(isArabic
                                                                                 ? "تجربة رائعة! ابني تحسن كثيراً في الرياضيات بفضل المدرسين المتميزين. أنصح بشدة بهذه المنصة لكل ولي أمر يبحث عن أفضل تعليم لأبنائه."
                                                                                 : "Get latest news in your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
@@ -819,7 +911,7 @@
                             <div class="swiper-slide">
                                 <div class="el-temsl-text-slider">
                                     <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="el-para">
+                                    <p class="gray-p">
                                         @(isArabic
                                                                                 ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة وتحصل على درجات ممتازة. شكراً لكم!"
                                                                                 : "Get latest news in your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
@@ -840,10 +932,75 @@
                             <div class="swiper-slide">
                                 <div class="el-temsl-text-slider">
                                     <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="el-para">
+                                    <p class="gray-p">
                                         @(isArabic
-                                                                                ? "أفضل استثمار في تعليم أولادي. المدرسون محترفون والنتائج واضحة. ممتنة جداً لهذه المنصة الرائعة."
-                                                                                : "Get latest news in your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
+                                                                                ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة2  وتحصل على درجات ممتازة. شكراً لكم!"
+                                                                                : "Get latest news in your inbox.  2 Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
+                                    </p>
+                                    <div class="el-tesmnl-rating">
+                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
+                                        <span>5.0</span>
+                                        <span class="el-temnl-rating">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="swiper-slide">
+                                <div class="el-temsl-text-slider">
+                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
+                                    <p class="gray-p">
+                                        @(isArabic
+                                                                                ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة وتحصل على 3 درجات ممتازة. شكراً لكم!"
+                                                                                : "Get latest news in 3 your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
+                                    </p>
+                                    <div class="el-tesmnl-rating">
+                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
+                                        <span>5.0</span>
+                                        <span class="el-temnl-rating">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="swiper-slide">
+                                <div class="el-temsl-text-slider">
+                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
+                                    <p class="gray-p">
+                                        @(isArabic
+                                                                                ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة وتحصل على درجات ممتازة6 . شكراً لكم!"
+                                                                                : "Get latest  6news in your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
+                                    </p>
+                                    <div class="el-tesmnl-rating">
+                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
+                                        <span>5.0</span>
+                                        <span class="el-temnl-rating">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="swiper-slide">
+                                <div class="el-temsl-text-slider">
+                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
+                                    <p class="gray-p">
+                                        @(isArabic
+                                                                                ? "أفضل استثمار في تعليم أولادي. المدرسون محترفون والنتائج واضحة. ممتنة 43 جداً لهذه المنصة الرائعة."
+                                                                                : "Get latest news in 4  3 your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
                                     </p>
                                     <div class="el-tesmnl-rating">
                                         <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
@@ -1198,7 +1355,7 @@
             <div class="el-team-heading text-center">
                 <h4 class="el-top-heading-center">@(isArabic ? "مدونتنا" : "Our Blogs")</h4>
                 <h2 class="el-main-heading">@(isArabic ? "أخبار ونصائح ورؤى" : "News, Tips, Blogs & Insights")</h2>
-                <p class="el-para">
+                <p class="gray-p">
                     @(isArabic
                                         ? "ابق على اطلاع بأحدث الأخبار والنصائح التعليمية"
                                         : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
@@ -1218,7 +1375,7 @@
                                     @(isArabic
                                                                         ? "اكتشف أفضل الطرق لتحسين تجربة التعلم عبر الإنترنت..."
                                                                         : "After working in coffee shops around the world Mark finds himself...")
-                                    <a href="javascript:;">@(isArabic ? "اقرأ المزيد" : "read more")</a>
+                                    <a href="javascript:;" class="el-orange-btn">@(isArabic ? "اقرأ المزيد" : "read more")</a>
                                 </p>
                                 <div class="el-blog-footer">
                                     <p class="el-para">@(isArabic ? "12 يناير 2023، 5:45 صباحاً" : "12 Jan 2023, 5:45AM")</p>
@@ -1242,7 +1399,7 @@
                                     @(isArabic
                                                                         ? "تعرف على أحدث التقنيات في مجال التعليم..."
                                                                         : "After working in coffee shops around the world Mark finds himself...")
-                                    <a href="javascript:;">@(isArabic ? "اقرأ المزيد" : "read more")</a>
+                                    <a href="javascript:;" class="el-orange-btn">@(isArabic ? "اقرأ المزيد" : "read more")</a>
                                 </p>
                                 <div class="el-blog-footer">
                                     <p class="el-para">@(isArabic ? "15 يناير 2023، 3:30 مساءً" : "15 Jan 2023, 3:30PM")</p>
@@ -1266,7 +1423,7 @@
                                     @(isArabic
                                                                         ? "كيف يغير الذكاء الاصطناعي مجال التعليم..."
                                                                         : "After working in coffee shops around the world Mark finds himself...")
-                                    <a href="javascript:;">@(isArabic ? "اقرأ المزيد" : "read more")</a>
+                                    <a href="javascript:;" class="el-orange-btn">@(isArabic ? "اقرأ المزيد" : "read more")</a>
                                 </p>
                                 <div class="el-blog-footer">
                                     <p class="el-para">@(isArabic ? "20 يناير 2023، 10:15 صباحاً" : "20 Jan 2023, 10:15AM")</p>
@@ -1320,7 +1477,7 @@
                         <div class="el-social-icons">
                             <ul>
                                 <li>
-                                    <a href="javascript:;">
+                                    <a href="javascript:;" >
                                         <svg width="10" height="16" viewBox="0 0 8 14">
                                             <path d="M4.61903 13.1094V7.13001H6.71611L7.03074 4.79906H4.61903V3.31108C4.61903 2.63643 4.81405 2.17666 5.82647 2.17666L7.11562 2.17615V0.0912609C6.89268 0.0635446 6.1274 0 5.2367 0C3.37678 0 2.10344 1.08609 2.10344 3.08022V4.79906H0V7.13001H2.10344V13.1094H4.61903Z" />
                                         </svg>
@@ -1457,26 +1614,50 @@
         });
 
         // Swiper Sliders
-        const courseSwiper = new Swiper('.el-tab-slider-parent', {
-            slidesPerView: 1,
-            spaceBetween: 30,
+            const courseSwiper = new Swiper('.el-tab-slider-parent', {
+            slidesPerView: 1,      // افتراضياً للموبايل
+            spaceBetween: 20,
+            loop: true,
+            speed: 800,
+            autoHeight: false,
+            autoplay: {
+                delay: 3000,
+                disableOnInteraction: false,
+            },
+            // هذه الإعدادات ضرورية جداً لعمل السلايدر داخل الـ Tabs
+            observer: true,
+            observeParents: true,
+            // أزرار التنقل (تأكد من وجودها في الـ HTML أو تفعيلها هنا)
             navigation: {
                 nextEl: '.swiper-button-next',
                 prevEl: '.swiper-button-prev',
             },
+            // جعل السلايدر متجاوب حسب حجم الشاشة
             breakpoints: {
-                640: {
+                768: {
                     slidesPerView: 2,
+                    spaceBetween: 30,
                 },
                 1024: {
                     slidesPerView: 3,
-                },
+                    spaceBetween: 30,
+                }
+            }
+        });
+        // كود إضافي للتأكد من تحديث السلايدر عند التبديل بين الـ Tabs
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+            // تحديث السلايدر لإعادة حساب الارتفاع الحقيقي فوراً
+            if (typeof courseSwiper !== 'undefined') {
+                courseSwiper.update();
+                courseSwiper.updateSize();
+                courseSwiper.updateSlides();
             }
         });
 
         const teamSwiper = new Swiper('.el-team-parent', {
             slidesPerView: 1,
             spaceBetween: 30,
+            autoHeight: true,
             pagination: {
                 el: '.swiper-pagination',
                 clickable: true,
@@ -1493,34 +1674,46 @@
                 },
             }
         });
+        // تهيئة سلايدر الصور
+         const testimonialsSwiper = new Swiper('.el-testmnl-slider', {
+            effect: 'coverflow',
+            grabCursor: true,
+            centeredSlides: true, // يضمن بقاء الكارت النشط في المنتصف تماماً
+            slidesPerView: 'auto',
+            loop: true,           // يضمن وجود كروت قبل وبعد دائماً حتى لو البيانات قليلة
 
-        const testimonialsSwiper = new Swiper('.el-testmnl-slider', {
-            slidesPerView: 1,
-            spaceBetween: 20,
+            speed: 1000,          // سرعة الانتقال (1000ms = ثانية كاملة) لجعل الحركة أبطأ وأنعيم
+            observer: true,
+            observeParents: true,
+            autoplay: {
+                delay: 4000,      // التأخير بين النقلات
+                disableOnInteraction: false,
+            },
+            coverflowEffect: {
+                rotate: 0,
+                stretch: -010,    // سحب الكروت لتقترب من الكارت النشط وتتداخل خلفه
+                depth: 150,       // خلق عمق بصري للكروت الخلفية
+                modifier: 1,
+                slideShadows: false,
+            },
             navigation: {
                 nextEl: '.el-tesml-main-parent .swiper-button-next',
                 prevEl: '.el-tesml-main-parent .swiper-button-prev',
             },
-            breakpoints: {
-                640: {
-                    slidesPerView: 2,
-                },
-                1024: {
-                    slidesPerView: 3,
-                },
-            }
         });
 
+        // سلايدر النصوص (تعديل السرعة ليتزامن مع الصور)
         const testimonialsTextSwiper = new Swiper('.el-temnl-text-slider', {
             slidesPerView: 1,
-            spaceBetween: 30,
-            effect: 'fade',
-            fadeEffect: {
-                crossFade: true
-            },
+            loop: true,
+            speed: 1000,        // نفس سرعة الصور لضمان التزامن
+            grabCursor: true,
+            effect: 'slide',    // الحركة الافتراضية هي الانزلاق من اليمين لليسار
+            spaceBetween: 50,   // مسافة بين النصوص أثناء الحركة عشان ميبانوش لازقين في بعض
+            autoHeight: true,
         });
 
-        // Sync testimonials sliders
+        // الربط
         testimonialsSwiper.controller.control = testimonialsTextSwiper;
         testimonialsTextSwiper.controller.control = testimonialsSwiper;
 
