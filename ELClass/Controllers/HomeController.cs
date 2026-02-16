@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories.IRepositories;
 using ELClass.Hubs;
+using ELClass.services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -44,12 +45,15 @@ namespace ELClass.Controllers
         [HttpPost]
         public async Task<IActionResult> ContactUs(ContactUs contactUs)
         {
+            var isArabic = CultureHelper.IsArabic;
             if (ModelState.IsValid)
             {
                 await _unitOfWork.ContactUsRepository.CreateAsync(contactUs);
                 await _unitOfWork.CommitAsync();
+                TempData["Success"] = isArabic ? "تم إرسال رسالتك بنجاح!" : "Your message has been sent successfully!";
                 await _realHub.Clients.All.SendAsync("ReceiveMessage", "New Contact Us Message", $"You have a new message from {contactUs.Name} - {contactUs.Email}");
             }
+            //TempData["Error"] = isArabic ? "حدث خطأ أثناء إرسال رسالتك. الرجاء المحاولة مرة أخرى." : "An error occurred while sending your message. Please try again.";
             return RedirectToAction("Index");
 
         }
