@@ -56,6 +56,8 @@
     <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
     <link rel="stylesheet" href="/HomePageAssets/assets/css/lindy-uikit.css" />
 
+    @* sweet alert *@
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
     <div class="preloader">
@@ -238,6 +240,48 @@
         <script src="/HomePageAssets/assets/js/bootstrap-5.0.0-beta1.min.js"></script>
         <script src="/HomePageAssets/assets/js/tiny-slider.js"></script>
         <script src="/HomePageAssets/assets/js/wow.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="/HomePageAssets/assets/js/main.js"></script>
+    <script>
+        $(document).ready(function () {
+            var successMessage = '@TempData["Success"]';
+            var errorMessage = '@TempData["Error"]';
+
+
+            function showToast(message, icon) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    },
+
+                    showClass: {
+                        popup: 'animate__animated animate__shakeX'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutRight'
+                    }
+                });
+
+                Toast.fire({
+                    icon: icon,
+                    title: message
+                });
+            }
+
+            if (successMessage && successMessage !== '') {
+                showToast(successMessage, 'success');
+            }
+
+            if (errorMessage && errorMessage !== '') {
+                showToast(errorMessage, 'error');
+            }
+        });
+    </script>
 </body>
 </html>

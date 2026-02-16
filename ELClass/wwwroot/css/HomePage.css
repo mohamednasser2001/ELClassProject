@@ -277,6 +277,8 @@ a {
     }
 
 
+
+
 .el-orange-btn {
     display: inline-block;
     padding: 12px 35px;
@@ -1297,6 +1299,26 @@ a {
     width: 100%;
     justify-content: center;
 }
+
+
+/* استهداف الـ textarea جوه الـ input-field */
+.el-input-field textarea {
+    width: 100%; /* عشان تاخد العرض الكامل للفورم */
+    min-height: 100px; /* حدد الارتفاع اللي يريحك */
+    padding: 12px 20px; /* نفس الـ padding بتاع الـ inputs اللي فوق */
+    border: 1px solid #ccc; /* لون الإطار */
+    border-radius: 12px; /* عشان تكون دائرية من الحواف زي الصورة */
+    font-family: inherit; /* عشان تستخدم نفس الخط */
+    resize: vertical; /* بتسمح للمستخدم يكبرها طولياً فقط عشان ميبوظش التصميم */
+    box-sizing: border-box; /* مهم جداً عشان الـ padding ميخرجش العرض بره الإطار */
+    outline: none; /* بيشيل الإطار الأزرق الافتراضي عند الضغط */
+}
+
+    /* لو عايز تغير لون الإطار لما المستخدم يضغط عليها */
+    .el-input-field textarea:focus {
+        border-color: #ff8a65; /* لون قريب من لون الزرار البرتقالي */
+    }
+
 
 /* Work/Steps Section */
 .el-work-wrapper {

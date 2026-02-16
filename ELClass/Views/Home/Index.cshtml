@@ -203,7 +203,7 @@
     <div class="el-counter-wrapper">
         <div class="container">
             <div class="el-counter-parent">
-                <img src="~/HomePageAssets/assets/img/students.png" alt="students">
+                <img src="~/HomePageAssets/assets/img/stdss.png" alt="students">
                 <div class="el-count">
                     <div class="el-counting" data-to="22000">0</div>
                     <div class="el-count-heading">
@@ -606,7 +606,7 @@
     </div>
     <!-- Team Section End -->
     <!-- Contact/Enroll Section Start -->
-    <div class="el-contact-wrapper">
+    <div class="el-contact-wrapper" dir="ltr">
         <div class="container">
             <div class="el-contact-flex">
                 <div class="el-contact-left-flex">
@@ -620,40 +620,28 @@
                     <div class="el-contact-left-form">
                         <img src="~/HomePageAssets/assets/img/about-video-icon.png" alt="video icon">
                         <div class="el-contact-form-box">
-                            <form>
+                            <form action="/home/ContactUs" method="post">
                                 <div class="el-contact-form-head">
                                     <h4>@(isArabic ? "سجل الآن" : "enroll now")</h4>
                                     <p class="el-para">@(isArabic ? "احصل على التفاصيل في بريدك الإلكتروني الآن" : "Get details in your inbox right now")</p>
                                 </div>
                                 <div class="el-input-field">
-                                    <input type="text" placeholder="@(isArabic ? "الاسم الكامل" : "Full Name")">
+                                    <input type="text" name="name" placeholder="@(isArabic ? "الاسم الكامل" : "Full Name")">
                                 </div>
                                 <div class="el-input-field">
-                                    <input type="text" placeholder="@(isArabic ? "البريد الإلكتروني" : "Email")">
+                                    <input type="text" name="email" placeholder="@(isArabic ? "البريد الإلكتروني" : "Email")">
                                 </div>
                                 <div class="el-input-field">
-                                    <input type="number" placeholder="@(isArabic ? "رقم الهاتف" : "Mobile Number")">
+                                    <input type="text" name="PhoneNumber" placeholder="@(isArabic ? "رقم الهاتف" : "Mobile Number")">
                                 </div>
                                 <div class="el-input-field">
-                                    <select class="mySelect">
-                                        <option>@(isArabic ? "نوع الدورة 1" : "Course Type 1")</option>
-                                        <option>@(isArabic ? "نوع الدورة 2" : "Course Type 2")</option>
-                                        <option>@(isArabic ? "نوع الدورة 3" : "Course Type 3")</option>
-                                    </select>
+                                    <input type="text" name="message" placeholder="@(isArabic ? "رسالة" : "Message")">
                                 </div>
-                                <div class="el-input-field-flex">
-                                    <div class="el-input-field">
-                                        <select class="mySelect">
-                                            <option>@(isArabic ? "ذكر" : "Male")</option>
-                                            <option>@(isArabic ? "أنثى" : "Female")</option>
-                                        </select>
-                                    </div>
-                                    <div class="el-input-field">
-                                        <input type="text" id="datepicker" class="date" placeholder="@(isArabic ? "تاريخ الميلاد" : "Date of birth")" readonly>
-                                    </div>
+                                <div class="el-input-field">
+                                   <textarea name="Topic" placeholder="@(isArabic ? "الموضوع" : "Topic")"></textarea>
                                 </div>
                                 <div class="el-contact-form-btn">
-                                    <a href="javascript:; " class="el-btn el-orange-btn">@(isArabic ? "إرسال" : "Submit")</a>
+                                    <input type="submit" value="@(isArabic ? "إرسال" : "Submit")" class="el-btn el-orange-btn">
                                 </div>
                             </form>
                         </div>
@@ -1362,7 +1350,7 @@
                 </p>
             </div>
             <div class="swiper el-blog-slider-parent">
-                <div class="swiper-wrapper">
+                <div class="swiper-wrapper" style="max-height:570px">
                     <div class="swiper-slide">
                         <div class="el-blog-box el-blog-box-1">
                             <div class="el-blog-img">
@@ -1441,7 +1429,7 @@
     </div>
     <!-- Blog Section End -->
     <!-- Newsletter Section Start -->
-    <div class="el-newsletter-wrapper">
+    @* <div class="el-newsletter-wrapper">
         <div class="container">
             <div class="el-newsltr-flex">
                 <div class="el-nesltr-left">
@@ -1460,7 +1448,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> *@
     <!-- Newsletter Section End -->
     <!-- Footer Start -->
     <div class="el-footer-wrapper">
@@ -1468,7 +1456,7 @@
             <div class="row gy-4">
                 <div class="col-lg-4 col-md-6">
                     <div class="el-footer-info">
-                        <a href="/"><img src="~/Images/Logos/Logos-02.png" alt="logo"></a>
+                        <a href="/"><img src="~/Images/Logos/Logos-02.png" width="300" alt="logo"></a>
                         <p class="el-para">
                             @(isArabic
                                                         ? "اشترك في نشرتنا الإخبارية للحصول على التحديثات المنتظمة حول دوراتنا. احصل على أحدث الأخبار في بريدك الوارد."
@@ -1658,6 +1646,11 @@
             slidesPerView: 1,
             spaceBetween: 30,
             autoHeight: true,
+            loop: true,
+            autoplay: {
+                delay: 3000,
+                disableOnInteraction: false,
+            },
             pagination: {
                 el: '.swiper-pagination',
                 clickable: true,
