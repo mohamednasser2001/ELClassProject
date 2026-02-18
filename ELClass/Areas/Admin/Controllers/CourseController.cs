@@ -31,6 +31,7 @@ namespace ELClass.Areas.Admin.Controllers
             return View();
         }
 
+        
         public async Task<IActionResult> Details(int id)
         {
             var course = await unitOfWork.CourseRepository.GetOneAsync(e => e.Id == id);

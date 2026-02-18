@@ -92,11 +92,14 @@
                 <a href="/Instructor/Home/Index" class="b-brand text-primary">
                     <!-- ========   Change your logo from here   ============ -->
                     @* <<img src="~/Images/Logos/logos-03.png" alt="logo " class="logo logo-lg" /> *@
-                    <img src="/images/logos/logos-01.png" alt="logo" width="150" class="logo " />
+                    <img src="/images/logos/logos-02.png" alt="logo" width="150" class="logo " />
                 </a>
             </div>
             <div class="navbar-content">
                 <ul class="pc-navbar">
+
+                    @await Component.InvokeAsync("LiveMeeting")
+
                     <li class="pc-item pc-caption">
                         <label>Dashboard</label>
                         <i class="ti ti-dashboard"></i>
@@ -111,13 +114,13 @@
                     </li>
                     <li class="pc-item">
                         <a href="/Instructor/Course/index" class="pc-link">
-                            <span class="pc-micon"> 
+                            <span class="pc-micon">
                                 <i class="fa-solid fa-laptop-code"></i>
                             </span>
                             <span class="pc-mtext">Courses</span>
                         </a>
                     </li>
-                    
+
                     <li class="pc-item">
                         <a href="/Instructor/Student/index" class="pc-link">
                             <span class="pc-micon">
@@ -127,15 +130,24 @@
                         </a>
                     </li>
 
-                    <li class="pc-item">
-                        <a href="/Instructor/appointment/index" class="pc-link">
+                    <li class="pc-item pc-hasmenu">
+                        <a href="#!" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fa-regular fa-calendar-days"></i>
                             </span>
                             <span class="pc-mtext">Appointments</span>
+                            <span class="pc-arrow"><i class="ti ti-chevron-right"></i></span>
                         </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item">
+                                <a class="pc-link" href="/Instructor/appointment/index">View All Appointments</a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="/Instructor/appointment/create">Add New Appointment</a>
+                            </li>
+                        </ul>
                     </li>
-                    
+
                 </ul>
 
             </div>
@@ -223,44 +235,7 @@
                         </a>
                     </li>
 
-                    <li class="dropdown pc-h-item">
-                        <a class="pc-head-link head-link-secondary dropdown-toggle arrow-none me-0 position-relative"
-                           data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                            <i class="ti ti-bell"></i>
-                            <span id="notification-badge-outer"
-                                  class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-circle @(unreadCount > 0 ? "" : "d-none")"
-                                  style="font-size: 10px; padding: 3px 6px; border: 2px solid #fff;">
-                                @unreadCount
-                            </span>
-                        </a>
-
-                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown p-0" style="width: 300px; border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-                            <div class="p-3 text-white" style="background-color: #0053B3;">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <h6 class="m-0 text-white">@(isArabic ? "التنبيهات" : "Notifications")</h6>
-                                    <span id="notification-badge" class="badge bg-white text-primary" style="color: #0053B3 !important;">
-                                        @unreadCount.ToString("00")
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div id="notification-list" style="max-height: 250px; overflow-y: auto; background: #fff;">
-                                @if (unreadCount == 0)
-                                {
-                                    <div id="no-notifications-msg" class="p-4 text-center">
-                                        <i class="ti ti-mail-opened d-block mb-2 text-muted" style="font-size: 24px;"></i>
-                                        <p class="text-muted small mb-0">@(isArabic ? "لا توجد رسائل جديدة" : "No new messages")</p>
-                                    </div>
-                                }
-                            </div>
-
-                            <div class="p-2 bg-light border-top">
-                                <a href="/Admin/ContactUs" class="btn btn-sm w-100 text-white" style="background-color: #0053B3; transition: 0.3s; border-radius: 8px;">
-                                    @(isArabic ? "عرض كل الرسائل" : "View All Messages")
-                                </a>
-                            </div>
-                        </div>
-                    </li>
+                   
 
                     <li class="dropdown pc-h-item header-user-profile">
                         <a class="pc-head-link head-link-primary dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button">
@@ -308,25 +283,7 @@
         </div>
     </div>
     <!-- [ Main Content ] end -->
-    <footer class="pc-footer">
-        <div class="footer-wrapper container-fluid">
-            <div class="row">
-                <div class="col-sm-6 my-1">
-                    <p class="m-0">
-                        Berry &#9829; crafted by Team
-                        <a href="https://themeforest.net/user/codedthemes" target="_blank">CodedThemes</a>
-                    </p>
-                </div>
-                <div class="col-sm-6 ms-auto my-1">
-                    <ul class="list-inline footer-link mb-0 justify-content-sm-end d-flex">
-                        <li class="list-inline-item"><a href="../index.html">Home</a></li>
-                        <li class="list-inline-item"><a href="https://codedthemes.gitbook.io/berry-bootstrap/" target="_blank">Documentation</a></li>
-                        <li class="list-inline-item"><a href="https://codedthemes.support-hub.io/" target="_blank">Support</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
+   
     <!-- Required Js -->
     <script src="~/assets/js/plugins/popper.min.js"></script>
     <script src="~/assets/js/plugins/simplebar.min.js"></script>
@@ -369,7 +326,7 @@
     <script src="~/assets/js/plugins/apexcharts.min.js"></script>
     <script src="~/assets/js/pages/dashboard-default.js"></script>
     <script src="/lib/jquery/dist/jquery.min.js"></script>
-    
+
     <!-- data table -->
     <!-- DataTables core -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -393,11 +350,11 @@
             var successMessage = '@TempData["Success"]';
             var errorMessage = '@TempData["Error"]';
 
-            
+
             function showToast(message, icon) {
                 const Toast = Swal.mixin({
                     toast: true,
-                    position: 'top-end', 
+                    position: 'top-end',
                     showConfirmButton: false,
                     timer: 4000,
                     timerProgressBar: true,
@@ -405,12 +362,12 @@
                         toast.addEventListener('mouseenter', Swal.stopTimer)
                         toast.addEventListener('mouseleave', Swal.resumeTimer)
                     },
-                    
+
                     showClass: {
-                        popup: 'animate__animated animate__shakeX' 
+                        popup: 'animate__animated animate__shakeX'
                     },
                     hideClass: {
-                        popup: 'animate__animated animate__fadeOutRight' 
+                        popup: 'animate__animated animate__fadeOutRight'
                     }
                 });
 
@@ -435,60 +392,4 @@
 </html>
 
 
-<script>
-    var connection = new signalR.HubConnectionBuilder()
-        .withUrl("/realTimeHub")
-        .build();
-
-           connection.on("ReceiveMessage", function (title, message) {
-        
-        var badgeOuter = document.getElementById("notification-badge-outer");
-        var badgeInner = document.getElementById("notification-badge");
-
-        var currentCount = parseInt(badgeOuter.innerText) || 0;
-        var newCount = currentCount + 1;
-
-        if (badgeOuter) {
-            badgeOuter.innerText = newCount;
-            badgeOuter.classList.remove("d-none");
-        }
-        if (badgeInner) {
-            badgeInner.innerText = newCount < 10 ? "0" + newCount : newCount;
-        }
-
-        // 2. إخفاء رسالة "لا يوجد إشعارات" إذا كانت موجودة
-        var noMsg = document.getElementById("no-notifications-msg");
-        if (noMsg) noMsg.style.display = 'none';
-
-        // 3. إضافة الإشعار الجديد بتنسيق متوافق مع الألوان (استخدام اللون الأصفر من Palette)
-        var list = document.getElementById("notification-list");
-        var item = `
-            <a href="/Admin/ContactUs" class="dropdown-item py-3 border-bottom animate__animated animate__fadeInDown" style="background: #f8f9fa;">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="avtar avtar-s bg-light-warning">
-                            <i class="ti ti-mail text-warning" style="color: #FCC247 !important;"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-0 fw-bold" style="font-size: 13px;">${title}</h6>
-                        <small class="text-muted">@(isArabic ? "رسالة جديدة الآن" : "New message just now")</small>
-                    </div>
-                </div>
-            </a>`;
-
-        list.insertAdjacentHTML('afterbegin', item);
-
-        // 4. تشغيل الصوت
-        try {
-            var audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-            audio.play();
-        } catch (e) { console.log("Audio play blocked"); }
-
-        // 5. الـ Toast
-        showToast(title, 'info');
-    });
-
-    connection.start().catch(err => console.error(err.toString()));
-</script>
 

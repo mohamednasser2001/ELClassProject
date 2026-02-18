@@ -1,0 +1,216 @@
+﻿@using ELClass.services
+@model IEnumerable<Models.Appointment>
+
+@{
+    var isArabic = CultureHelper.IsArabic;
+}
+
+<div class="p-6 bg-gray-50 min-h-screen" dir="@(isArabic ? "rtl" : "ltr")">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-calendar-alt text-blue-800"></i>
+                @(isArabic ? "إدارة جدول المحاضرات" : "Lectures Schedule Management")
+            </h1>
+            <p class="text-gray-500 text-sm mt-1">@(isArabic ? "تعديل موعد واحد يطبق على جميع الطلاب المشتركين" : "Editing one appointment applies to all linked students")</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500 uppercase">@(isArabic ? "تصفية بالمحاضر:" : "Filter:")</label>
+                <select id="instructorFilter" class="rounded-lg border-gray-300 text-sm py-2 dark:bg-white focus:ring-blue-500 shadow-sm">
+                    <option value="all">@(isArabic ? "كل المحاضرين" : "All Instructors")</option>
+                    @foreach (var instructor in Model.Where(m => m.Instructor != null).Select(m => m.Instructor).GroupBy(i => i.Id).Select(g => g.First()))
+                    {
+                        <option value="@instructor!.Id">@(isArabic? instructor!.NameAr: instructor!.NameEn)</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <a href="/Admin/Appointment/AddNewAppointment" class="inline-flex items-center px-5 py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-medium rounded-lg transition-all shadow-sm gap-2 w-fit">
+            <i class="fas fa-plus text-sm"></i>
+            @(isArabic ? "إضافة ميعاد جديد" : "Add New Appointment")
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-right">
+                <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-center">#</th>
+                        <th class="px-6 py-4">@(isArabic ? "الكورس" : "Course")</th>
+                        <th class="px-6 py-4">@(isArabic ? "المحاضر" : "Instructor")</th>
+                        <th class="px-6 py-4">@(isArabic ? "اليوم / الوقت" : "Day / Time")</th>
+                        <th class="px-6 py-4 text-center">@(isArabic ? "عدد الطلاب" : "Students")</th>
+                        <th class="px-6 py-4">@(isArabic ? "الحالة" : "Status")</th>
+                        <th class="px-6 py-4 text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
+                    </tr>
+                </thead>
+                    <tbody class="divide-y  divide-gray-50" id="appointmentsTableBody">
+                    @foreach (var item in Model.Select((value, index) => new { value, index }))
+                    {
+                            <tr class="hover:bg-blue-80/30 appointment-row transition-colors" data-instructor-id="@item.value.InstructorId">
+                                <td class="px-6 py-4 text-center text-gray-400 font-medium row-index">@(item.index + 1)</td>
+
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900">@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)</div>
+                                <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                                    @(item.value.Type == Models.ScheduleType.Recurring ? (isArabic ? "أسبوعي" : "Weekly") : (isArabic ? "مرة واحدة" : "One-Time"))
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <a href="/Admin/Instructor/Details/@item.value.InstructorId"
+                                   class="inline-flex items-center px-3 py-1  text-blue-700 rounded-full font-bold hover:bg-blue-100 transition-colors cursor-pointer">
+                                    <i class="fas fa-user mr-1 ml-1 text-xs text-blue-400"></i>
+                                    @(isArabic ? item.value.Instructor!.NameAr : item.value.Instructor!.NameEn)   
+                                </a>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-gray-900 font-medium">
+                                        @if (item.value.Type == Models.ScheduleType.Recurring)
+                                        {
+                                            // حل مباشر بدون الاعتماد على دالة خارجية لتجنب الـ Error
+                                            @(isArabic ?
+                                                                                (item.value.Day == DayOfWeek.Saturday ? "السبت" :
+                                                                                item.value.Day == DayOfWeek.Sunday ? "الأحد" :
+                                                                                item.value.Day == DayOfWeek.Monday ? "الاثنين" :
+                                                                                item.value.Day == DayOfWeek.Tuesday ? "الثلاثاء" :
+                                                                                item.value.Day == DayOfWeek.Wednesday ? "الأربعاء" :
+                                                                                item.value.Day == DayOfWeek.Thursday ? "الخميس" : "الجمعة")
+                                                                                : item.value.Day.ToString())
+                                        }
+                                        else
+                                        {
+                                            @item.value.SpecificDate?.ToString("yyyy-MM-dd")
+                                        }
+                                    </span>
+                                    <span class="text-orange-600 text-xs">
+                                        <i class="far fa-clock"></i> @DateTime.Today.Add(item.value.StartTime).ToString("hh:mm tt")
+                                        (@item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs"))
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <a href="/Admin/Appointment/ManageStudents/@item.value.Id"
+                                   class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-bold hover:bg-blue-100 transition-colors cursor-pointer">
+                                    <i class="fas fa-users mr-1 ml-1 text-xs text-blue-400"></i>
+                                    @item.value.StudentAppointments.Count
+                                </a>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                @if (item.value.IsActive)
+                                {
+                                    <span class="flex items-center gap-1.5 text-green-600 font-bold animate-pulse">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        @(isArabic ? "مباشر الآن" : "Live Now")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">@(isArabic ? "غير نشط" : "Inactive")</span>
+                                }
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <div class="flex justify-center gap-2">
+                                    @* زر التعديل *@
+                                    <a href="/Admin/Appointment/Edit/@item.value.Id" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors border border-gray-100" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    @if (item.value.IsActive)
+                                    {
+                                        @* الزرار وهو شغال *@
+                                        <a href="@item.value.MeetingLink" target="_blank"
+                                           class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm"
+                                           title="@(isArabic ? "انضم الآن" : "Join Now")">
+                                            <i class="fas fa-video animate-pulse"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        @* الزرار وهو غير نشط (مقفول) *@
+                                        <span class="p-2 text-gray-300 bg-gray-50 border border-gray-100 rounded-lg cursor-not-allowed"
+                                              title="@(isArabic ? "الموعد غير متاح حالياً" : "Meeting not available yet")">
+                                            <i class="fas fa-video-slash"></i>
+                                        </span>
+                                    }
+
+                                    @* زر الحذف *@
+                                    <button onclick="deleteAppointment(@item.value.Id)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+
+@section Scripts {
+    <script>
+
+            document.getElementById('instructorFilter').addEventListener('change', function () {
+                const selectedId = this.value;
+                const rows = document.querySelectorAll('.appointment-row');
+                let visibleIndex = 1;
+
+                rows.forEach(row => {
+                    const rowInstructorId = row.getAttribute('data-instructor-id');
+
+                    if (selectedId === 'all' || rowInstructorId === selectedId) {
+                        row.style.display = '';
+                        // تحديث الرقم التسلسلي للصفوف الظاهرة فقط
+                        const indexCell = row.querySelector('.row-index');
+                        if (indexCell) indexCell.textContent = visibleIndex++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+
+        function deleteAppointment(id) {
+            const isAr = "@isArabic".toLowerCase() === "true";
+
+            Swal.fire({
+                title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+                text: isAr ? 'لن تتمكن من استعادة هذا الموعد!' : "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, delete it!',
+                cancelButtonText: isAr ? 'إلغاء' : 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Admin/Appointment/Delete', { id: id }, function (res) {
+                        if (res.success) {
+                            Swal.fire(
+                                isAr ? 'تم الحذف!' : 'Deleted!',
+                                isAr ? 'تم حذف الموعد بنجاح.' : 'The appointment has been deleted.',
+                                'success'
+                            ).then(() => {
+
+                                location.reload();
+
+                            });
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

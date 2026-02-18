@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace ELClass.Areas.Instructor.Controllers
 {
     [Area("Instructor")]
-    // [Authorize(Roles = "Instructor")]
+     [Authorize(Roles = "Instructor")]
     public class CourseController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -73,6 +73,7 @@ namespace ELClass.Areas.Instructor.Controllers
                             _ => q.OrderBy(c => c.CreatedAt)
                         };
                     }
+                    
                     return orderColumnIndex switch
                     {
                         "1" => q.OrderByDescending(c => lang == "en" ? c.TitleEn : c.TitleAr),
@@ -118,7 +119,8 @@ namespace ELClass.Areas.Instructor.Controllers
             }
             ViewData["CourseId"] = course.Id;
             ViewData["CourseTitle"] = course.TitleEn;
-            var lessons = await _unitOfWork.LessonRepository.GetAsync(l => l.CourseId == id);
+            var insId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var lessons = await _unitOfWork.LessonRepository.GetAsync(l => l.CourseId == id && l.InstructorId == insId);
             return View(lessons);
         }
 
@@ -150,10 +152,12 @@ namespace ELClass.Areas.Instructor.Controllers
         public async Task<IActionResult> createLesson(Lesson lsn)
         {
             ModelState.Remove("Course");
+            ModelState.Remove("Instructor");
             if (ModelState.IsValid)
             {
                 lsn.CreatedAt = DateTime.Now;
                 lsn.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                lsn.InstructorId= User.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 await _unitOfWork.LessonRepository.CreateAsync(lsn);
                 await _unitOfWork.CommitAsync();
                 TempData["success"] = "Lesson created successfully";
@@ -177,9 +181,11 @@ namespace ELClass.Areas.Instructor.Controllers
         public async Task<IActionResult> EditLesson(Lesson lsn)
         {
             ModelState.Remove("Course");
+            ModelState.Remove("Instructor");
             if (ModelState.IsValid)
             {
                 lsn.UpdatedAt = DateTime.Now;
+                lsn.InstructorId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 await _unitOfWork.LessonRepository.EditAsync(lsn);
                 await _unitOfWork.CommitAsync();
                 TempData["success"] = "Lesson updated successfully";

@@ -30,7 +30,7 @@
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "العنوان" : "Title")</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")" class="d-none d-md-table-cell">@(currentLang == "ar" ? "الوصف" : "Description")</th>
-                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -73,6 +73,7 @@
                 serverSide: true,
                 stateSave: true,
                 ordering: true,
+                "order":[[1,"desc"]],
                 ajax: {
                     url: '@Url.Action("GetCourses", "Course", new { area = "Instructor" })',
                     type: 'POST',
@@ -97,16 +98,6 @@
                         render: function (data) {
                             return `<span class="text-muted small">${data.length > 50 ? data.substring(0, 50) + '...' : data}</span>`;
                         }
-                    },
-                    {
-                        data: 'id',
-                        render: function (data) {
-                            return `
-                                <div class="d-flex gap-1 justify-content-center">
-                                    <a href="/instructor/Course/Edit/${data}" class="btn btn-sm btn-light border text-warning"><i class="fa fa-edit"></i></a>
-                                    <button class="btn btn-sm btn-light border text-danger" onclick="deleteCourse(${data})"><i class="fa fa-trash"></i></button>
-                                </div>`;
-                        }
                     }
                 ],
                 language: languageSettings[currentLang],
@@ -119,26 +110,6 @@
 
 
 
-        function deleteCourse(id) {
-            Swal.fire({
-                title: currentLang === 'ar' ? 'تأكيد الحذف' : 'Delete Confirmation',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-                confirmButtonText: currentLang === 'ar' ? 'حذف' : 'Delete'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/Instructor/Course/Delete',
-                        type: 'POST',
-                        data: { id: id },
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        success: function () {
-                            $('#coursesTable').DataTable().ajax.reload(null, false);
-                        }
-                    });
-                }
-            });
-        }
+        
     </script>
 }
