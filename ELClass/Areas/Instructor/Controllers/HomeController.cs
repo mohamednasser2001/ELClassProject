@@ -13,6 +13,7 @@ using Models.ViewModels.Instructor;
 
 namespace ELClass.Areas.Instructor.Controllers
 {
+    [Authorize(Roles = "Instructor")]
     [Area("Instructor")]
     public class HomeController : Controller
     {

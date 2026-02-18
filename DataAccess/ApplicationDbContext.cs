@@ -84,7 +84,15 @@ namespace DataAccess
                     .WithMany()
                     .HasForeignKey(i => i.CreatedById)
                     .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(l => l.Instructor)
+                .WithMany(i => i.Lessons)
+                .HasForeignKey(l => l.InstructorId)
+                .OnDelete(DeleteBehavior.Restrict);
             });
+
+      
+
 
             builder.Entity<Conversation>(entity =>
             {

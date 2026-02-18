@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories.IRepositories;
 using ELClass.services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 namespace ELClass.Areas.Instructor.Controllers
 {
     [Area("Instructor")]
+    [Authorize(Roles = "Instructor")]
     public class AppointmentController(IUnitOfWork unitOfWork) : Controller
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -220,29 +222,99 @@ namespace ELClass.Areas.Instructor.Controllers
             return View(appointment);
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Models.Appointment model)
         {
-            if (ModelState.IsValid)
+            try
             {
+
                 var existing = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == model.Id);
-                if (existing == null) return NotFound();
+                if (existing == null)
+                {
+                    return Json(new { success = false, message = CultureHelper.IsArabic ? "الموعد غير موجود" : "Appointment not found" });
+                }
+
+
+                int targetDayInt = (int)model.Day;
+                var newStart = model.StartTime;
+                var newEnd = model.StartTime.Add(TimeSpan.FromHours(model.DurationInHours));
+
+
+                var potentialConflicts = await _unitOfWork.AppoinmentRepository.GetAsync(a =>
+                    a.Id != model.Id &&
+                    a.InstructorId == existing.InstructorId &&
+                    (
+                        (a.Type == ScheduleType.Recurring && (int)a.Day == targetDayInt) ||
+                        (a.Type == ScheduleType.OneTime)
+                    )
+                );
+
+
+                var overlapping = potentialConflicts.FirstOrDefault(a =>
+                {
+                    bool isSameDay = false;
+
+                    if (model.Type == ScheduleType.Recurring)
+                    {
+
+                        if (a.Type == ScheduleType.Recurring && a.Day == model.Day) isSameDay = true;
+                        else if (a.Type == ScheduleType.OneTime && a.SpecificDate.Value.DayOfWeek == (DayOfWeek)model.Day) isSameDay = true;
+                    }
+                    else
+                    {
+
+                        if (a.Type == ScheduleType.Recurring && a.Day == (DayOfWeek)model.SpecificDate.Value.DayOfWeek) isSameDay = true;
+                        else if (a.Type == ScheduleType.OneTime && a.SpecificDate.Value.Date == model.SpecificDate.Value.Date) isSameDay = true;
+                    }
+
+                    if (!isSameDay) return false;
+
+
+                    var existingStart = a.StartTime;
+                    var existingEnd = a.StartTime.Add(TimeSpan.FromHours(a.DurationInHours));
+
+                    return newStart < existingEnd && newEnd > existingStart;
+                });
+
+                if (overlapping != null)
+                {
+                    var displayTime = DateTime.Today.Add(overlapping.StartTime).ToString("hh:mm tt");
+                    var msg = CultureHelper.IsArabic
+                        ? $"يوجد تعارض مع موعد آخر يبدأ الساعة {displayTime}"
+                        : $"Conflict with another appointment starting at {displayTime}";
+
+                    return Json(new { success = false, message = msg });
+                }
 
 
                 existing.Type = model.Type;
-                existing.Day = model.Day;
                 existing.StartTime = model.StartTime;
-                existing.SpecificDate = model.SpecificDate;
                 existing.DurationInHours = model.DurationInHours;
                 existing.MeetingLink = model.MeetingLink;
+
+                if (model.Type == ScheduleType.Recurring)
+                {
+                    existing.Day = model.Day;
+                    existing.SpecificDate = null;
+                }
+                else
+                {
+                    existing.SpecificDate = model.SpecificDate;
+                    existing.Day = 0;
+                }
+
 
                 await _unitOfWork.AppoinmentRepository.EditAsync(existing);
                 await _unitOfWork.CommitAsync();
 
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = true, message = CultureHelper.IsArabic ? "تم تعديل الموعد بنجاح" : "Appointment updated successfully" });
             }
-            return View(model);
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
         }
 
 

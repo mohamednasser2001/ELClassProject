@@ -1,5 +1,6 @@
-﻿@{
-    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+﻿@using ELClass.services
+@{
+    var isArabic = CultureHelper.IsArabic;
     var currentLang = isArabic ?"ar" :"en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
@@ -25,7 +26,7 @@
                                 <tr>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "الاسم" : "Name")</th>
-                                    <th style="text-align: center">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -36,6 +37,33 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* إجبار الجدول على أخذ العرض الكامل */
+    #StudentsTable {
+        width: 100% !important;
+        margin: 0 auto;
+    }
+
+    /* تحسين شكل الـ Card وتقليل الفراغات الجانبية */
+    .card-body {
+        padding: 1.5rem !important;
+    }
+
+    /* تنسيق شريط البحث ليكون أقرب للجدول */
+    .dataTables_filter {
+        margin-bottom: 15px;
+    }
+
+    /* لضمان توسيط الجدول في الشاشات الكبيرة */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+</style>
+
 
 @section scripts {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -69,6 +97,7 @@
                 stateSave: true,
                 ordering: true,
                 stateSave: true,
+                "order": [[1, "desc"]],
                 ajax: {
                     url: '@Url.Action("GetStudents", "Student", new { area = "Instructor" })',
                     type: 'POST',
@@ -77,43 +106,29 @@
                 columns: [
                     {
                         data: null,
+                        width:"10%",
+                        orderable: false,
                         render: function (data, type, row, meta) {
                             return `<span class="text-muted small">${meta.row + meta.settings._iDisplayStart + 1}</span>`;
                         }
                     },
                     {
                         data: 'name',
+                        width:"50%",
                         render: function (data, type, row) {
                             return `
                                     <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
                                     `;
                         }
                     },
-                            {
-            data: 'id',
-            render: function (data, type, row) {
                 
-                var url = `/instructor/Appointment/create?StudentId=${row.id}`;
-
-                
-                if(row.courseId) {
-                    url += `&CourseId=${row.courseId}`;
-                }
-
-                return `
-                    <div class="d-flex gap-1 justify-content-center">
-                        <a href="${url}" class="btn btn-sm rounded btn-outline-primary">
-                            <i class="fas fa-plus-circle"></i>
-                            ${currentLang === 'ar' ? 'إضافة موعد' : 'Add Appointment'}
-                        </a>
-                    </div>`;
-            }
-        }
                 ],
                 language: languageSettings[currentLang],
                 pageLength: 10,
                 responsive: true,
-                dom: '<"d-flex justify-content-between mb-2"lf>rt<"d-flex justify-content-between mt-2"ip>'
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
             });
         });
 

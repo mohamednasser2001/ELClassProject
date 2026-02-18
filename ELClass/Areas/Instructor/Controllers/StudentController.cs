@@ -1,5 +1,6 @@
 ﻿using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using System.Security.Claims;
 namespace ELClass.Areas.Instructor.Controllers
 {
     [Area("Instructor")]
+    [Authorize(Roles = "Instructor")]
     public class StudentController (IUnitOfWork unitOfWork , UserManager<ApplicationUser> userManager) : Controller
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -33,8 +35,8 @@ namespace ELClass.Areas.Instructor.Controllers
                 var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
                 var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
                 var searchValue = Request.Form["search[value]"].FirstOrDefault() ?? "";
-                var orderColumnIndex = Request.Form["order[0][column]"].FirstOrDefault();
-                var orderDir = Request.Form["order[0][dir]"].FirstOrDefault();
+                var orderColumnIndex = Request.Form["order[0][column]"].FirstOrDefault() ;
+                var orderDir = Request.Form["order[0][dir]"].FirstOrDefault() ?? "desc"; ;
                 var lang = isArabic ? "ar" : "en";
 
                 
@@ -52,12 +54,16 @@ namespace ELClass.Areas.Instructor.Controllers
                         return orderColumnIndex switch
                         {
                             "1" => q.OrderBy(x => lang == "en" ? x.Student.NameEn : x.Student.NameAr),
+                            
                             _ => q.OrderBy(x => x.StudentId)
                         };
                     }
+
+                    
                     return orderColumnIndex switch
                     {
                         "1" => q.OrderByDescending(x => lang == "en" ? x.Student.NameEn : x.Student.NameAr),
+                        
                         _ => q.OrderByDescending(x => x.StudentId)
                     };
                 };

@@ -23,12 +23,22 @@
                 <input type="hidden" asp-for="InstructorId" />
 
                 <div class="row">
+
+                    <div class="col-12 mb-3">
+                        <div class="p-3 bg-light rounded-2 border-start border-4 border-primary">
+                            <label class="form-label fw-bold text-primary">
+                                <i class="fas fa-chalkboard-teacher me-1"></i> @(isArabic ? "المحاضر" : "Instructor")
+                            </label>
+                            <input type="text" class="form-control bg-white" value="@(isArabic? Model.Instructor?.NameAr : Model.Instructor?.NameEn)" readonly />
+                        </div>
+                    </div>
+
                     <div class="col-12 mb-3">
                         <div class="p-3 bg-light rounded-2 border-start border-4 border-primary">
                             <label class="form-label fw-bold text-primary">
                                 <i class="fas fa-book me-1"></i> @(isArabic ? "الكورس" : "Course")
                             </label>
-                            <input type="text" class="form-control bg-white" value="@(isArabic ? Model.Course?.TitleAr : Model.Course?.TitleEn)" readonly />
+                            <input type="text" class="form-control bg-white" value="@(isArabic? Model.Course?.TitleAr : Model.Course?.TitleEn)" readonly />
                         </div>
                     </div>
 
@@ -110,10 +120,10 @@
         $(document).ready(function () {
             const isAr = "@isArabic".toLowerCase() === "true";
 
-            // 1. التبديل بين الحقول (Day / Date)
+
             function toggleFields() {
                 const type = $('#scheduleType').val();
-                // التعامل مع enum سواء كان نص أو رقم
+
                 if (type === "Recurring" || type === "0") {
                     $('#dayContainer').fadeIn();
                     $('#dateContainer').hide();
@@ -126,7 +136,6 @@
             $('#scheduleType').change(toggleFields);
             toggleFields();
 
-            // 2. إرسال الفورم عبر AJAX
             $('#editAppointmentForm').submit(function (e) {
                 e.preventDefault(); // منع الصفحة من التحميل
 
@@ -134,7 +143,7 @@
                 const url = form.attr('action');
                 const formData = form.serialize();
 
-                // إظهار حالة تحميل على الزر
+
                 const submitBtn = form.find('button[type="submit"]');
                 const originalText = submitBtn.html();
                 submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
@@ -148,7 +157,7 @@
                             timer: 2000,
                             showConfirmButton: false
                         }).then(() => {
-                            window.location.href = '/instructor/Appointment/Index';
+                            window.location.href = '/Admin/Appointment/Index';
                         });
                     } else {
                         // إظهار رسالة الخطأ (التعارض أو غيره) القادمة من الباك اند

@@ -18,6 +18,8 @@ namespace Models
         public string LecturePdfUrl { get; set; } = string.Empty;
         public string AssignmentPdfUrl { get; set; }  = string.Empty;
 
+        public  string InstructorId { get; set; } = string.Empty;
+        public Instructor Instructor { get; set; } = null!;
 
         public int CourseId { get; set; }
         public Course Course { get; set; } = null!;
