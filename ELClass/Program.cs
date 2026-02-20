@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 // cultures
 var supportedCultures = new[] { "en-US", "ar-EG" };
 var localizationOptions = new RequestLocalizationOptions()
-    .SetDefaultCulture(supportedCultures[0]) // الإنجليزية كافتراضي
+    .SetDefaultCulture(supportedCultures[0])
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
 

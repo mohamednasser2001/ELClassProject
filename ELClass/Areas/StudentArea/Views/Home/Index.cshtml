@@ -4,304 +4,26 @@
 @{
     Layout = "_StudentLayout";
     ViewData["Title"] = "Dashboard";
+
+    // =========================
+    // Language (Session-based)
+    // =========================
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var isArabic = currentLang == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
 }
 
 <div class="sd-wrap">
 
-    <!-- =========================
-         MAIN GRID
-    ========================== -->
     <div class="sd-grid">
 
-        <!-- LEFT -->
         <aside class="sd-left">
-
-            <!-- Courses -->
-            <div class="sd-card sd-courses">
-                <div class="sd-card-head sd-head-orange">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-book-open sd-ic-fa"></i>
-                        <span>My courses</span>
-                    </div>
-                </div>
-
-                <div class="sd-card-body">
-
-                    <div class="sd-course-list sd-course-list-simple">
-                        @if (Model.Courses != null && Model.Courses.Any())
-                        {
-                            foreach (var c in Model.Courses.Take(3))
-                            {
-                                var title = !string.IsNullOrWhiteSpace(c.CourseTitleEn) ? c.CourseTitleEn : c.CourseTitleAr;
-
-                                <div class="sd-course-card">
-                                    <div class="sd-course-row">
-                                        <div class="sd-course-left">
-                                            <div class="sd-course-name">@title</div>
-                                            <div class="sd-course-hint">Open course content & sections</div>
-                                        </div>
-
-                                        <a class="sd-course-action"
-                                           asp-area="StudentArea"
-                                           asp-controller="Course"
-                                           asp-action="Details"
-                                           asp-route-id="@c.CourseId">
-                                            View details <i class="fa-solid fa-arrow-right"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            }
-
-                            <!-- All courses link -->
-                            <div class="sd-courses-footer">
-                                <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                                    All courses <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="sd-empty">No courses yet.</div>
-                        }
-
-                    </div>
-
-
-
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="sd-card sd-quick">
-                <div class="sd-card-head">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-bolt sd-ic-fa"></i>
-                        <span>Quick actions</span>
-                    </div>
-                </div>
-
-                <div class="sd-card-body">
-                    <div class="sd-quick-grid">
-                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                            <i class="fa-solid fa-layer-group"></i>
-                            <span>All courses</span>
-                        </a>
-
-                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
-                            <i class="fa-solid fa-video"></i>
-                            <span>Lectures</span>
-                        </a>
-
-                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Tests" asp-action="Index">
-                            <i class="fa-solid fa-file-circle-check"></i>
-                            <span>Lessons</span>
-                        </a>
-
-                        <a class="sd-quick-item" asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
-                            <i class="fa-solid fa-user-gear"></i>
-                            <span>My profile</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Help -->
-            <div class="sd-help">
-                <div class="sd-help-title">Need help?</div>
-                <div class="sd-help-sub">Please review our guides and help manuals</div>
-            </div>
-
-        </aside>
-
-        <!-- CENTER -->
-        <main class="sd-center">
-
-            <!-- Join -->
-            <div class="sd-join">
-                <div class="sd-join-icon">
-                    <i class="fa-solid fa-video sd-join-ic"></i>
-                </div>
-
-                <h2 class="sd-join-title">Join online lecture</h2>
-
-                @{
-                    // أقرب محاضرة جاية (من اللي انت جايبهم في UpcomingLectures)
-                    var nextLecture = Model.UpcomingLectures?
-                        .OrderBy(x => x.Date)
-                        .FirstOrDefault();
-
-                    var hasUpcoming = nextLecture != null;
-                }
-
-
-                @if (Model.CanJoinNow && Model.NextStudentAppointmentId != null)
-                {
-                    <p class="sd-join-desc">
-                        A lecture is live right now. You can join immediately.
-                    </p>
-
-                    <div class="sd-join-actions" id="joinActions">
-                        <a class="sd-btn sd-btn-primary"
-                           id="joinNowBtn"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Join"
-                           asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
-                            <i class="fa-solid fa-play"></i> Join now
-                        </a>
-
-                        <a class="sd-btn sd-btn-ghost"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Schedule">
-                            All lectures <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-
-                    <div class="sd-status">
-                        <span class="sd-dot"></span>
-                        <span class="sd-status-text">Live session available</span>
-                    </div>
-                }
-                else
-                {
-                    <p class="sd-join-desc">
-                        @if (hasUpcoming)
-                        {
-                            <text>
-                                No live lecture at the moment. Next lecture:
-                                <b>@nextLecture!.Date.ToString("ddd, dd MMM • hh:mm tt")</b>
-                            </text>
-                        }
-                        else
-                        {
-                            <text>No live lecture at the moment. There are no upcoming lectures yet.</text>
-                        }
-                    </p>
-
-                    <div class="sd-join-actions" id="joinActions">
-                        <!-- بدل Not available: زرار Check -->
-                        <button class="sd-btn sd-btn-primary"
-                                type="button"
-                                onclick="location.reload();">
-                            <i class="fa-solid fa-rotate-right"></i> Check
-                        </button>
-
-
-                        <a class="sd-btn sd-btn-ghost"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Schedule">
-                            All lectures <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-
-                    <div class="sd-status">
-                        <span class="sd-dot"></span>
-                        <span class="sd-status-text">Auto-check is ready</span>
-                    </div>
-                }
-            </div>
-
-
-            <!-- Last 5 Lessons -->
-            <!-- Last lessons -->
-            <div class="sd-card sd-last">
-                <div class="sd-card-head">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-clock-rotate-left sd-ic-fa"></i>
-                        <span>Last lessons</span>
-                    </div>
-                </div>
-
-                <div class="sd-card-body">
-                    <div class="sd-last-list">
-
-                        @if (Model.LastLessons != null && Model.LastLessons.Any())
-                        {
-                            foreach (var l in Model.LastLessons.Take(5))
-                            {
-                                <div class="sd-last-row">
-                                    <div class="sd-last-main">
-                                        <div class="sd-last-title">@l.LessonTitle</div>
-                                        <div class="sd-last-sub">Course: @l.CourseTitle</div>
-                                    </div>
-
-                                    <!-- Arrow button -->
-                                    <button type="button"
-                                            class="sd-last-toggle"
-                                            onclick="toggleLastLesson(this)"
-                                            aria-label="Open lesson resources">
-                                        <i class="fa-solid fa-chevron-down"></i>
-                                    </button>
-
-                                    <!-- Hidden details -->
-                                    <div class="sd-last-details">
-                                        <div class="content-links">
-
-                                            @* نفس طريقة Course Details *@
-                                            @if (!string.IsNullOrEmpty(l.DriveLink))
-                                            {
-                                                <a href="@l.DriveLink" target="_blank" rel="noopener" class="content-link video">
-                                                    <i class="fas fa-video"></i> Watch lecture
-                                                </a>
-                                            }
-
-                                            @if (!string.IsNullOrEmpty(l.LecturePdfUrl))
-                                            {
-                                                <a href="@l.LecturePdfUrl" target="_blank" rel="noopener" class="content-link pdf">
-                                                    <i class="fas fa-file-pdf"></i> Lecture PDF
-                                                </a>
-                                            }
-
-                                            @if (!string.IsNullOrEmpty(l.AssignmentPdfUrl))
-                                            {
-                                                <a href="@l.AssignmentPdfUrl" target="_blank" rel="noopener" class="content-link assignment">
-                                                    <i class="fas fa-tasks"></i> Assignment
-                                                </a>
-                                            }
-
-                                            @* لو مفيش أي لينكات *@
-                                            @if (string.IsNullOrEmpty(l.DriveLink) && string.IsNullOrEmpty(l.LecturePdfUrl) && string.IsNullOrEmpty(l.AssignmentPdfUrl))
-                                            {
-                                                <div class="sd-empty">No resources added yet.</div>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="sd-empty">No recent lessons yet.</div>
-                        }
-
-                    </div>
-
-                    <div class="sd-last-footer">
-                        <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                            View all lessons <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-
-
-
-
-
-
-        </main>
-
-        <!-- RIGHT -->
-        <aside class="sd-right">
 
             <div class="sd-card sd-upcoming">
                 <div class="sd-card-head">
                     <div class="sd-head-title">
                         <i class="fa-solid fa-calendar-days sd-ic-fa"></i>
-                        <span>Upcoming lectures</span>
+                        <span>@(isArabic ? "المحاضرات القادمة" : "Upcoming lectures")</span>
                     </div>
                 </div>
 
@@ -312,10 +34,10 @@
                         <div class="sd-up-table">
 
                             <div class="sd-up-row sd-up-head">
-                                <div>TIME</div>
-                                <div>COURSE</div>
-                                <div>INSTRUCTOR</div>
-                                <div>ZOOM</div>
+                                <div>@(isArabic ? "الوقت" : "TIME")</div>
+                                <div>@(isArabic ? "الكورس" : "COURSE")</div>
+                                <div>@(isArabic ? "المُدرس" : "INSTRUCTOR")</div>
+                                <div>@(isArabic ? "لينك المحاضرة " : "ZOOM")</div>
                             </div>
 
                             @foreach (var lec in Model.UpcomingLectures.Take(5))
@@ -325,7 +47,7 @@
                                 <div class="sd-up-row">
                                     <div class="sd-up-time">
                                         <div class="sd-up-time-main">@lec.Date.ToString("ddd, dd MMM")</div>
-                                        <div class="sd-up-time-sub">@lec.Date.ToString("hh:mm tt")</div>
+                                        <div class="sd-up-time-sub">@lec.Date.ToString(isArabic ? "HH:mm" : "hh:mm tt")</div>
                                     </div>
 
                                     <div class="sd-up-course">
@@ -340,13 +62,13 @@
                                         @if (canJoinThis && !string.IsNullOrWhiteSpace(lec.ZoomLink))
                                         {
                                             <a class="sd-up-zoom-btn" href="@lec.ZoomLink" target="_blank" rel="noopener">
-                                                <i class="fa-solid fa-video"></i> Join
+                                                <i class="fa-solid fa-video"></i> @(isArabic ? "انضم" : "Join")
                                             </a>
                                         }
                                         else
                                         {
                                             <span class="sd-up-zoom-muted">
-                                                <i class="fa-regular fa-clock"></i> Not started
+                                                <i class="fa-regular fa-clock"></i> @(isArabic ? "لم تبدأ بعد" : "Not started")
                                             </span>
                                         }
                                     </div>
@@ -356,7 +78,7 @@
                     }
                     else
                     {
-                        <div class="sd-empty">No upcoming lectures yet.</div>
+                        <div class="sd-empty">@(isArabic ? "لا توجد محاضرات قادمة بعد." : "No upcoming lectures yet.")</div>
                     }
 
                     <div class="sd-upcoming-footer">
@@ -364,66 +86,306 @@
                            asp-area="StudentArea"
                            asp-controller="Lectures"
                            asp-action="Schedule">
-                            <i class="fa-solid fa-calendar-check"></i> View lecture schedule
+                            <i class="fa-solid fa-calendar-check"></i> @(isArabic ? "عرض جدول المحاضرات" : "View lecture schedule")
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Tips -->
             <div class="sd-card sd-tips">
                 <div class="sd-card-head">
                     <div class="sd-head-title">
                         <i class="fa-solid fa-lightbulb sd-ic-fa"></i>
-                        <span>Tips</span>
+                        <span>@(isArabic ? "نصائح" : "Tips")</span>
                     </div>
                 </div>
 
                 <div class="sd-card-body">
                     <div class="sd-tips-item">
                         <i class="fa-solid fa-circle-check"></i>
-                        <span>Set a regular study time to stay focused and consistent.</span>
+                        <span>@(isArabic ? "حدد وقتًا ثابتًا للمذاكرة لتبقى مركزًا ومنتظمًا." : "Set a regular study time to stay focused and consistent.")</span>
                     </div>
 
                     <div class="sd-tips-item">
                         <i class="fa-solid fa-circle-check"></i>
-                        <span>Review lesson materials and resources after each session.</span>
+                        <span>@(isArabic ? "راجع مواد الدرس والموارد بعد كل جلسة." : "Review lesson materials and resources after each session.")</span>
                     </div>
 
                     <div class="sd-tips-item">
                         <i class="fa-solid fa-circle-check"></i>
-                        <span>Track your progress and revisit topics you find challenging.</span>
+                        <span>@(isArabic ? "تابع تقدمك وارجع للمواضيع التي تجدها صعبة." : "Track your progress and revisit topics you find challenging.")</span>
                     </div>
 
                     <div class="sd-tips-item">
                         <i class="fa-solid fa-circle-check"></i>
-                        <span>Don’t hesitate to ask questions or check course details when needed.</span>
+                        <span>@(isArabic ? "لا تتردد في السؤال أو مراجعة تفاصيل الكورس عند الحاجة." : "Don’t hesitate to ask questions or check course details when needed.")</span>
+                    </div>
+                    <div class="sd-tips-item">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>@(isArabic ? "قسّم وقتك بين الدراسة والراحة لتجنب الإرهاق وزيادة الإنتاجية." : "Balance study time with breaks to avoid burnout and boost productivity.")</span>
+                    </div>
+
+
+                </div>
+            </div>
+
+        </aside>
+
+        <main class="sd-center">
+
+            <div class="sd-join">
+                <div class="sd-join-icon">
+                    <i class="fa-solid fa-video sd-join-ic"></i>
+                </div>
+
+                <h2 class="sd-join-title">@(isArabic ? "انضم لمحاضرة أونلاين" : "Join online lecture")</h2>
+
+                @{
+                    var nextLecture = Model.UpcomingLectures?
+                        .OrderBy(x => x.Date)
+                        .FirstOrDefault();
+                    var hasUpcoming = nextLecture != null;
+                }
+
+                @if (Model.CanJoinNow && Model.NextStudentAppointmentId != null)
+                {
+                    <p class="sd-join-desc">
+                        @(isArabic ? "هناك محاضرة مباشرة الآن. يمكنك الانضمام فورًا." : "A lecture is live right now. You can join immediately.")
+                    </p>
+
+                    <div class="sd-join-actions" id="joinActions">
+                        <a class="sd-btn sd-btn-primary"
+                           id="joinNowBtn"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Join"
+                           asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
+                            <i class="fa-solid fa-play"></i> @(isArabic ? "انضم الآن" : "Join now")
+                        </a>
+
+                        <a class="sd-btn sd-btn-ghost"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Schedule">
+                            @(isArabic ? "كل المحاضرات" : "All lectures") <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="sd-status">
+                        <span class="sd-dot"></span>
+                        <span class="sd-status-text">@(isArabic ? "جلسة مباشرة متاحة" : "Live session available")</span>
+                    </div>
+                }
+                else
+                {
+                    <p class="sd-join-desc">
+                        @if (hasUpcoming)
+                        {
+                            <text>
+                                @(isArabic ? "لا توجد محاضرة مباشرة الآن. المحاضرة القادمة:" : "No live lecture at the moment. Next lecture:")
+                                <b>@nextLecture!.Date.ToString(isArabic ? "ddd, dd MMM • HH:mm" : "ddd, dd MMM • hh:mm tt")</b>
+                            </text>
+                        }
+                        else
+                        {
+                            <text>@(isArabic ? "لا توجد محاضرة مباشرة الآن. لا توجد محاضرات قادمة بعد." : "No live lecture at the moment. There are no upcoming lectures yet.")</text>
+                        }
+                    </p>
+
+                    <div class="sd-join-actions" id="joinActions">
+                        <button class="sd-btn sd-btn-primary"
+                                type="button"
+                                onclick="location.reload();">
+                            <i class="fa-solid fa-rotate-right"></i> @(isArabic ? "تحقق" : "Check")
+                        </button>
+
+                        <a class="sd-btn sd-btn-ghost"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Schedule">
+                            @(isArabic ? "كل المحاضرات" : "All lectures") <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="sd-status">
+                        <span class="sd-dot"></span>
+                        <span class="sd-status-text">@(isArabic ? "التحقق التلقائي جاهز" : "Auto-check is ready")</span>
+                    </div>
+                }
+            </div>
+
+            <div class="sd-card sd-last">
+                <div class="sd-card-head">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-clock-rotate-left sd-ic-fa"></i>
+                        <span>@(isArabic ? "آخر الدروس" : "Last lessons")</span>
+                    </div>
+                </div>
+
+                <div class="sd-card-body">
+                    <div class="sd-last-list">
+                        @if (Model.LastLessons != null && Model.LastLessons.Any())
+                        {
+                            foreach (var l in Model.LastLessons.Take(5))
+                            {
+                                <div class="sd-last-row">
+                                    <div class="sd-last-main">
+                                        <div class="sd-last-title">@l.LessonTitle</div>
+                                        <div class="sd-last-sub">@(isArabic ? "الكورس:" : "Course:") @l.CourseTitle</div>
+                                    </div>
+
+                                    <button type="button" class="sd-last-toggle" onclick="toggleLastLesson(this)">
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </button>
+
+                                    <div class="sd-last-details">
+                                        <div class="content-links">
+                                            @if (!string.IsNullOrEmpty(l.DriveLink))
+                                            {
+                                                <a href="@l.DriveLink" target="_blank" rel="noopener" class="content-link video">
+                                                    <i class="fas fa-video"></i> @(isArabic ? "مشاهدة المحاضرة" : "Watch lecture")
+                                                </a>
+                                            }
+                                            @if (!string.IsNullOrEmpty(l.LecturePdfUrl))
+                                            {
+                                                <a href="@l.LecturePdfUrl" target="_blank" rel="noopener" class="content-link pdf">
+                                                    <i class="fas fa-file-pdf"></i> @(isArabic ? "ملف المحاضرة PDF" : "Lecture PDF")
+                                                </a>
+                                            }
+                                            @if (!string.IsNullOrEmpty(l.AssignmentPdfUrl))
+                                            {
+                                                <a href="@l.AssignmentPdfUrl" target="_blank" rel="noopener" class="content-link assignment">
+                                                    <i class="fas fa-tasks"></i> @(isArabic ? "الواجب" : "Assignment")
+                                                </a>
+                                            }
+                                            @if (string.IsNullOrEmpty(l.DriveLink) && string.IsNullOrEmpty(l.LecturePdfUrl) && string.IsNullOrEmpty(l.AssignmentPdfUrl))
+                                            {
+                                                <div class="sd-empty">@(isArabic ? "لا توجد ملفات/روابط مضافة بعد." : "No resources added yet.")</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="sd-empty">@(isArabic ? "لا توجد دروس حديثة بعد." : "No recent lessons yet.")</div>
+                        }
+                    </div>
+
+                    <div class="sd-last-footer">
+                        <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                            @(isArabic ? "عرض كل الدروس" : "View all lessons") <i class="fa-solid fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
 
+        </main>
+
+        <aside class="sd-right">
+
+            <div class="sd-card sd-courses">
+                <div class="sd-card-head sd-head-orange">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-book-open sd-ic-fa"></i>
+                        <span>@(isArabic ? "كورساتي" : "My courses")</span>
+                    </div>
+                </div>
+
+                <div class="sd-card-body">
+                    <div class="sd-course-list sd-course-list-simple">
+                        @if (Model.Courses != null && Model.Courses.Any())
+                        {
+                            foreach (var c in Model.Courses.Take(3))
+                            {
+                                var title = !string.IsNullOrWhiteSpace(c.CourseTitleEn) ? c.CourseTitleEn : c.CourseTitleAr;
+
+                                <div class="sd-course-card">
+                                    <div class="sd-course-row">
+                                        <div class="sd-course-left">
+                                            <div class="sd-course-name">@title</div>
+                                            <div class="sd-course-hint">@(isArabic ? "افتح محتوى الكورس والأقسام" : "Open course content & sections")</div>
+                                        </div>
+
+                                        <a class="sd-course-action"
+                                           asp-area="StudentArea"
+                                           asp-controller="Course"
+                                           asp-action="Details"
+                                           asp-route-id="@c.CourseId">
+                                            @(isArabic ? "عرض التفاصيل" : "View details") <i class="fa-solid fa-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="sd-courses-footer">
+                                <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                                    @(isArabic ? "كل الكورسات" : "All courses") <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="sd-empty">@(isArabic ? "لا توجد كورسات بعد." : "No courses yet.")</div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="sd-card sd-quick">
+                <div class="sd-card-head">
+                    <div class="sd-head-title">
+                        <i class="fa-solid fa-bolt sd-ic-fa"></i>
+                        <span>@(isArabic ? "إجراءات سريعة" : "Quick actions")</span>
+                    </div>
+                </div>
+
+                <div class="sd-card-body">
+                    <div class="sd-quick-grid">
+                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>@(isArabic ? "كل الكورسات" : "All courses")</span>
+                        </a>
+
+                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
+                            <i class="fa-solid fa-video"></i>
+                            <span>@(isArabic ? "المحاضرات" : "Lectures")</span>
+                        </a>
+
+                        <!-- ✅ تعديل الزر الأخير ليكون تواصل معنا -->
+                        <a class="sd-quick-item" target="_blank"
+                           href="https://mail.google.com/mail/?view=cm&fs=1&to=elclassplatform@gmail.com">
+                            <i class="fa-solid fa-envelope"></i>
+                            <span>@(isArabic ? "تواصل معنا" : "Contact Us")</span>
+                        </a>
+
+
+                        <a class="sd-quick-item" asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
+                            <i class="fa-solid fa-user-gear"></i>
+                            <span>@(isArabic ? "حسابي" : "My profile")</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="sd-help">
+                <div class="sd-help-title">@(isArabic ? "تحتاج مساعدة؟" : "Need help?")</div>
+                <div class="sd-help-sub">@(isArabic ? "راجع الأدلة وكتيبات المساعدة الخاصة بنا" : "Please review our guides and help manuals")</div>
+            </div>
 
         </aside>
 
     </div>
 </div>
 
-
-
-
-
-
-
-
-
-
 @* Chat Widget (Student) *@
-<button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
+<button id="chatFab" class="chat-fab" type="button" aria-label="Open chat"> 
     <span class="chat-fab-icon" aria-hidden="true">
-        <i class="fab fa-whatsapp"></i>
-    </span>
-    <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
-</button>
+        <i class="fa-regular fa-comment-dots"></i>
+    </span> 
+    <span id="chatFabBadge" class="chat-fab-badge hidden">0</span> </button>
 
 <div id="chatWidget" class="chat-widget" aria-hidden="true">
     @Html.AntiForgeryToken()
@@ -431,7 +393,7 @@
         <div class="header-left">
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
             <div class="title" id="chatHeaderTitle">
-                <div id="chatHeaderName">Chats</div>
+                <div id="chatHeaderName">@(isArabic ? "المحادثات" : "Chats")</div>
                 <div id="chatHeaderStatus" class="chat-status"></div>
             </div>
         </div>
@@ -443,7 +405,7 @@
     @* Screen 1: List *@
     <div class="chat-screen" id="screenList">
         <div class="chat-search">
-            <input id="chatSearch" type="text" placeholder="Search instructors..." autocomplete="off" />
+            <input id="chatSearch" type="text" placeholder="@(isArabic ? "ابحث عن المُدرسين..." : "Search instructors...")" autocomplete="off" />
         </div>
         <div class="chat-items" id="chatItems"></div>
     </div>
@@ -457,7 +419,7 @@
                 <button type="button" id="attachClearBtn" class="attach-clear" aria-label="Remove file">×</button>
             </div>
 
-            <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+            <input id="chatInput" type="text" placeholder="@(isArabic ? "اكتب رسالة..." : "Type a message...")" autocomplete="off" />
             <input type="file" id="chatFile" hidden />
 
             <button type="button" id="attachBtn" class="chat-attach-btn" title="Attach file">
@@ -466,10 +428,9 @@
 
             <button id="sendBtn" type="button" aria-label="Send">➤</button>
         </div>
-
-
     </div>
 </div>
+
 
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">

@@ -1,0 +1,58 @@
+﻿
+@using Models.ViewModels.Student
+@model List<AppointmentNotifyVM>
+
+@{
+    bool isArabic = (ViewBag.IsArabic as bool?) ?? false;
+    int notifyCount = (ViewBag.NotifyCount as int?) ?? 0;
+}
+
+<div class="dropdown">
+    <button class="btn-bell-only shadow-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa-regular fa-bell"></i>
+        @if (notifyCount > 0)
+        {
+            <span class="pill-badge">@notifyCount</span>
+        }
+    </button>
+
+    <ul class="dropdown-menu dropdown-menu-end shadow student-notify-menu border-0">
+        @if (Model != null && Model.Any())
+        {
+            <li class="px-3 py-2 pb-1 @(isArabic ? "text-end" : "text-start")">
+
+                <div class="fw-bold">@(isArabic ? "المحاضرات القادمة" : "Upcoming lectures")</div>
+                <div class="text-muted small">@(isArabic ? "أقرب مواعيدك" : "Your next appointments")</div>
+            </li>
+
+            <li><hr class="dropdown-divider"></li>
+
+            @foreach (var n in Model)
+            {
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 @(isArabic ? "text-end" : "text-start")"
+                       href="@(string.IsNullOrEmpty(n.MeetingLink) ? "#" : n.MeetingLink)"
+                       target="@(string.IsNullOrEmpty(n.MeetingLink) ? "_self" : "_blank")">
+
+                        <span class="fw-semibold flex-grow-1">
+                            @n.CourseName
+                        </span>
+
+                        <small class="text-muted text-nowrap">
+                            @n.DisplayText
+                        </small>
+                    </a>
+                </li>
+            }
+
+
+        }
+        else
+        {
+            <li class="px-3 py-3 @(isArabic ? "text-end" : "text-start")">
+                <div class="fw-bold">@(isArabic ? "لا يوجد محاضرات قادمة" : "No upcoming lectures")</div>
+                <div class="text-muted small">@(isArabic ? "عند إضافة مواعيد ستظهر هنا" : "When schedules are added, they will appear here")</div>
+            </li>
+        }
+    </ul>
+</div>
