@@ -1,57 +1,110 @@
-﻿
-
-@model Models.Lesson
+﻿@model Models.Lesson
 @{
     Layout = "_StudentLayout";
+
+    // =========================
+    // Language (Session-based)
+    // =========================
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var isArabic = currentLang == "ar";
 }
 
 <div class="container py-5">
     <div class="card border-0 shadow-lg" style="border-radius: 20px;">
         <div class="card-header bg-dark text-white p-4" style="border-radius: 20px 20px 0 0;">
             <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-0 text-white"> <i class="fas fa-play-circle me-2"></i> @Model.Title</h3>
-                <a asp-action="Details" asp-route-id="@Model.CourseId" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-chevron-left"></i> Back to Lessons
+                <h3 class="mb-0 text-white">
+                    <i class="fas fa-play-circle me-2"></i> @Model.Title
+                </h3>
+
+                <a asp-action="Details"
+                   asp-route-id="@Model.CourseId"
+                   class="btn btn-outline-light btn-sm">
+                    <i class="fas @(isArabic ? "fa-chevron-right" : "fa-chevron-left")"></i>
+                    @(isArabic ? "العودة إلى المحاضرات" : "Back to Lessons")
                 </a>
             </div>
         </div>
 
         <div class="card-body p-5 bg-light">
             <div class="row g-4">
+
+                <!-- Lecture Video -->
                 <div class="col-md-4">
-                    <div class="text-center p-4 h-100 shadow-sm bg-white" style="border-radius: 15px; border-bottom: 5px solid #d35400;">
+                    <div class="text-center p-4 h-100 shadow-sm bg-white"
+                         style="border-radius: 15px; border-bottom: 5px solid #d35400;">
                         <i class="fab fa-google-drive fa-3x mb-3" style="color: #d35400;"></i>
-                        <h5 class="fw-bold">Lecture Link</h5>
-                        <p class="text-muted small">Watch the recorded session on Google Drive</p>
-                        <a href="@Model.DriveLink" target="_blank" class="btn w-100 text-white" style="background-color: #d35400;">
-                            Open Video
+
+                        <h5 class="fw-bold">
+                            @(isArabic ? "رابط المحاضرة" : "Lecture Link")
+                        </h5>
+
+                        <p class="text-muted small">
+                            @(isArabic
+                                ? "شاهد المحاضرة المسجلة على Google Drive"
+                                : "Watch the recorded session on Google Drive")
+                        </p>
+
+                        <a href="@Model.DriveLink"
+                           target="_blank"
+                           class="btn w-100 text-white"
+                           style="background-color: #d35400;">
+                            @(isArabic ? "فتح الفيديو" : "Open Video")
                         </a>
                     </div>
                 </div>
 
+                <!-- PDF -->
                 <div class="col-md-4">
-                    <div class="text-center p-4 h-100 shadow-sm bg-white" style="border-radius: 15px; border-bottom: 5px solid #9dbfad;">
+                    <div class="text-center p-4 h-100 shadow-sm bg-white"
+                         style="border-radius: 15px; border-bottom: 5px solid #9dbfad;">
                         <i class="fas fa-file-pdf fa-3x mb-3" style="color: #9dbfad;"></i>
-                        <h5 class="fw-bold">Study Notes</h5>
-                        <p class="text-muted small">Download or view the lecture PDF materials</p>
-                        <a href="@Model.LecturePdfUrl" target="_blank" class="btn w-100 text-white" style="background-color: #9dbfad;">
-                            View PDF
+
+                        <h5 class="fw-bold">
+                            @(isArabic ? "مذكرة الشرح" : "Study Notes")
+                        </h5>
+
+                        <p class="text-muted small">
+                            @(isArabic
+                                ? "تحميل أو عرض ملف المحاضرة PDF"
+                                : "Download or view the lecture PDF materials")
+                        </p>
+
+                        <a href="@Model.LecturePdfUrl"
+                           target="_blank"
+                           class="btn w-100 text-white"
+                           style="background-color: #9dbfad;">
+                            @(isArabic ? "عرض الملف" : "View PDF")
                         </a>
                     </div>
                 </div>
 
+                <!-- Assignment -->
                 <div class="col-md-4">
-                    <div class="text-center p-4 h-100 shadow-sm bg-white" style="border-radius: 15px; border-bottom: 5px solid #2c3e50;">
+                    <div class="text-center p-4 h-100 shadow-sm bg-white"
+                         style="border-radius: 15px; border-bottom: 5px solid #2c3e50;">
                         <i class="fas fa-tasks fa-3x mb-3" style="color: #2c3e50;"></i>
-                        <h5 class="fw-bold">Assignment</h5>
-                        <p class="text-muted small">Solve the tasks and check your understanding</p>
-                        <a href="@Model.AssignmentPdfUrl" target="_blank" class="btn w-100 text-white" style="background-color: #2c3e50;">
-                            Go to Tasks
+
+                        <h5 class="fw-bold">
+                            @(isArabic ? "الواجب" : "Assignment")
+                        </h5>
+
+                        <p class="text-muted small">
+                            @(isArabic
+                                ? "قم بحل المهام وتأكد من فهمك للدرس"
+                                : "Solve the tasks and check your understanding")
+                        </p>
+
+                        <a href="@Model.AssignmentPdfUrl"
+                           target="_blank"
+                           class="btn w-100 text-white"
+                           style="background-color: #2c3e50;">
+                            @(isArabic ? "عرض المهام" : "Go to Tasks")
                         </a>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
-

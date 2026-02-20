@@ -3,6 +3,12 @@
 
 @{
     ViewData["Title"] = "All Courses";
+
+    // =========================
+    // Language (Session-based)
+    // =========================
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var isArabic = currentLang == "ar";
 }
 
 <div class="ac-wrap">
@@ -10,12 +16,12 @@
     <div class="ac-head">
         <div class="ac-title">
             <i class="fa-solid fa-book-open"></i>
-            <span>All courses</span>
+            <span>@(isArabic ? "كل الكورسات" : "All courses")</span>
         </div>
 
         <div class="ac-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input id="acSearch" type="text" placeholder="Search courses..." autocomplete="off" />
+            <input id="acSearch" type="text" placeholder="@(isArabic ? "ابحث عن كورسات..." : "Search courses...")" autocomplete="off" />
         </div>
     </div>
 
@@ -25,7 +31,7 @@
             @foreach (var c in Model)
             {
                 var title = !string.IsNullOrWhiteSpace(c.CourseTitleEn) ? c.CourseTitleEn : c.CourseTitleAr;
-                if (string.IsNullOrWhiteSpace(title)) { title = "Course"; }
+                if (string.IsNullOrWhiteSpace(title)) { title = (isArabic ? "كورس" : "Course"); }
 
                 <article class="ac-card" data-title="@title.ToLower()">
                     <div class="ac-card-top">
@@ -35,7 +41,7 @@
 
                         <div class="ac-info">
                             <div class="ac-name" title="@title">@title</div>
-                            <div class="ac-sub">Open course content & sections</div>
+                            <div class="ac-sub">@(isArabic ? "افتح محتوى الكورس والأقسام" : "Open course content & sections")</div>
                         </div>
                     </div>
 
@@ -45,7 +51,7 @@
                            asp-controller="Course"
                            asp-action="Details"
                            asp-route-id="@c.CourseId">
-                            View details <i class="fa-solid fa-arrow-right"></i>
+                            @(isArabic ? "عرض التفاصيل" : "View details") <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
                 </article>
@@ -57,8 +63,8 @@
         <div class="ac-empty">
             <i class="fa-regular fa-circle-xmark"></i>
             <div>
-                <div class="ac-empty-title">No courses yet</div>
-                <div class="ac-empty-sub">When you enroll in a course, it will appear here.</div>
+                <div class="ac-empty-title">@(isArabic ? "لا توجد كورسات بعد" : "No courses yet")</div>
+                <div class="ac-empty-sub">@(isArabic ? "عندما تشترك في كورس، سيظهر هنا." : "When you enroll in a course, it will appear here.")</div>
             </div>
         </div>
     }
@@ -84,4 +90,3 @@
         })();
     </script>
 }
-

@@ -2,12 +2,18 @@
 @{
     Layout = "_StudentLayout";
     int? openLessonId = ViewBag.OpenLessonId as int?;
+
+    // =========================
+    // Language (Session-based)
+    // =========================
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var isArabic = currentLang == "ar";
 }
 
 <div class="content-wrapper course-details-page">
     <div class="header-section">
-        <h2 class="course-title">@Model.TitleEn</h2>
-        <p class="course-subtitle">Lectures and course learning materials</p>
+        <h2 class="course-title">@(!string.IsNullOrWhiteSpace(Model.TitleEn) ? Model.TitleEn : Model.TitleAr)</h2>
+        <p class="course-subtitle">@(isArabic ? "محاضرات ومواد تعلم الكورس" : "Lectures and course learning materials")</p>
     </div>
 
     <div class="lectures-container">
@@ -21,12 +27,12 @@
                         <div class="lecture-title">
                             <span class="lecture-number">@count</span>
                             <h3 class="lecture-name">
-                                Lecture @count: @lesson.Title
+                                @(isArabic ? "محاضرة" : "Lecture") @count: @lesson.Title
                             </h3>
                         </div>
 
                         <!-- ✅ Arrow فقط Toggle (مش لينك) -->
-                        <i class="fas fa-chevron-down arrow-icon" title="Expand"></i>
+                        <i class="fas fa-chevron-down arrow-icon" title="@(isArabic ? "توسيع" : "Expand")"></i>
                     </div>
 
                     <div class="lecture-content">
@@ -38,7 +44,7 @@
                                    rel="noopener"
                                    class="content-link video">
                                     <i class="fas fa-video"></i>
-                                    Watch lecture
+                                    @(isArabic ? "مشاهدة المحاضرة" : "Watch lecture")
                                 </a>
                             }
 
@@ -49,7 +55,7 @@
                                    rel="noopener"
                                    class="content-link pdf">
                                     <i class="fas fa-file-pdf"></i>
-                                    Lecture PDF
+                                    @(isArabic ? "ملف المحاضرة PDF" : "Lecture PDF")
                                 </a>
                             }
 
@@ -60,7 +66,7 @@
                                    rel="noopener"
                                    class="content-link assignment">
                                     <i class="fas fa-tasks"></i>
-                                    Assignment
+                                    @(isArabic ? "الواجب" : "Assignment")
                                 </a>
                             }
                         </div>
@@ -72,7 +78,7 @@
         else
         {
             <p class="text-muted">
-                No lectures have been added to this course yet.
+                @(isArabic ? "لم يتم إضافة أي محاضرات لهذا الكورس بعد." : "No lectures have been added to this course yet.")
             </p>
         }
     </div>

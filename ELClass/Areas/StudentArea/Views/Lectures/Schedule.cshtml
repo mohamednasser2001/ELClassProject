@@ -3,6 +3,12 @@
 @{
     Layout = "_StudentLayout";
     ViewData["Title"] = "Lecture Schedule";
+
+    // =========================
+    // Language (Session-based)
+    // =========================
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var isArabic = currentLang == "ar";
 }
 
 <div class="sd-wrap">
@@ -10,7 +16,7 @@
         <div class="sd-card-head">
             <div class="sd-head-title">
                 <i class="fa-solid fa-calendar-check sd-ic-fa"></i>
-                <span>Lecture Schedule</span>
+                <span>@(isArabic ? "جدول المحاضرات" : "Lecture Schedule")</span>
             </div>
         </div>
 
@@ -18,16 +24,16 @@
 
             @if (Model == null || !Model.Any())
             {
-                <div class="sd-empty">No lectures scheduled yet.</div>
+                <div class="sd-empty">@(isArabic ? "لا توجد محاضرات مجدولة بعد." : "No lectures scheduled yet.")</div>
             }
             else
             {
                 <div class="sd-up-table">
                     <div class="sd-up-row sd-up-head">
-                        <div>DATE</div>
-                        <div>COURSE</div>
-                        <div>INSTRUCTOR</div>
-                        <div>ZOOM</div>
+                        <div>@(isArabic ? "التاريخ" : "DATE")</div>
+                        <div>@(isArabic ? "الكورس" : "COURSE")</div>
+                        <div>@(isArabic ? "المُدرس" : "INSTRUCTOR")</div>
+                        <div>@(isArabic ? "زووم" : "ZOOM")</div>
                     </div>
 
                     @foreach (var lec in Model)
@@ -37,7 +43,7 @@
                         <div class="sd-up-row">
                             <div class="sd-up-time">
                                 <div class="sd-up-time-main">@lec.Date.ToString("ddd, dd MMM")</div>
-                                <div class="sd-up-time-sub">@lec.Date.ToString("hh:mm tt")</div>
+                                <div class="sd-up-time-sub">@lec.Date.ToString(isArabic ? "HH:mm" : "hh:mm tt")</div>
                             </div>
 
                             <div class="sd-up-course">
@@ -52,13 +58,13 @@
                                 @if (canJoin && !string.IsNullOrWhiteSpace(lec.ZoomLink))
                                 {
                                     <a class="sd-up-zoom-btn" href="@lec.ZoomLink" target="_blank" rel="noopener">
-                                        <i class="fa-solid fa-video"></i> Join
+                                        <i class="fa-solid fa-video"></i> @(isArabic ? "انضم" : "Join")
                                     </a>
                                 }
                                 else
                                 {
                                     <span class="sd-up-zoom-muted">
-                                        <i class="fa-regular fa-clock"></i> Not started
+                                        <i class="fa-regular fa-clock"></i> @(isArabic ? "لم تبدأ بعد" : "Not started")
                                     </span>
                                 }
                             </div>

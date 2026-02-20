@@ -29,6 +29,16 @@ namespace ELClass.Areas.StudentArea.Controllers
             _hub = hub;
         }
 
+
+        [HttpPost]
+        public IActionResult ChangeLanguage(string lang)
+        {
+
+            HttpContext.Session.SetString("Language", lang);
+
+
+            return Redirect(Request.Headers["Referer"].ToString());
+        }
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
@@ -197,10 +207,6 @@ namespace ELClass.Areas.StudentArea.Controllers
             model.NextStudentAppointmentId = live?.SA.Id;
             model.CanJoinNow = live != null;
 
-            model.TotalCoursesCount = courses.Count();
-            model.TotalLessons = allStudentAppointments.Count();
-            model.CompletedLessons = allStudentAppointments.Count(sa => sa.IsAttended);
-
             model.OverallProgress = model.TotalLessons > 0
                 ? (int)((double)model.CompletedLessons / model.TotalLessons * 100)
                 : 0;
@@ -213,7 +219,6 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             return View(model);
         }
-
 
 
 

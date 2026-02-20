@@ -28,30 +28,35 @@
         : null;
 }
 
-
-
 @{
     Layout = null;
     var title = ViewData["Title"] ?? "Student";
 
     // =========================
+    // Language (Session-based)
+    // =========================
+    var currentLang = Context.Session.GetString("Language") ?? "en";
+    var isArabic = currentLang == "ar";
+    var htmlLang = isArabic ? "ar" : "en";
+
+    // ===== Flag icon paths (change if needed) =====
+    var flagSA = Url.Content("~/images/flags/sa.png");
+    var flagGB = Url.Content("~/images/flags/gb.png");
+
+    // =========================
     // Notifications (Server-side)
-    // - Count lectures starting soon (next 30 min)
-    // - Show top 3 items
     // =========================
     var userId = UserManager.GetUserId(User);
     var now = DateTime.Now;
 
     DateTime? GetStartDateTime(Appointment appt)
     {
-        // OneTime: SpecificDate + StartTime
         if (appt.Type == ScheduleType.OneTime)
         {
             if (!appt.SpecificDate.HasValue) return null;
             return appt.SpecificDate.Value.Date + appt.StartTime;
         }
 
-        // Recurring: next occurrence of Day + StartTime
         var daysAhead = ((int)appt.Day - (int)now.DayOfWeek + 7) % 7;
         var candidate = now.Date.AddDays(daysAhead) + appt.StartTime;
 
@@ -61,7 +66,6 @@
         return candidate;
     }
 
-    // default
     var notifyCount = 0;
     var notifyItems = new List<(DateTime start, string course, string instructor, int studentAppointmentId)>();
 
@@ -89,19 +93,17 @@
                 var courseTitle =
                     appt.Course != null
                         ? (!string.IsNullOrWhiteSpace(appt.Course.TitleEn) ? appt.Course.TitleEn : appt.Course.TitleAr)
-                        : "Lecture";
+                        : (isArabic ? "محاضرة" : "Lecture");
 
                 var instructorName =
                     appt.Instructor != null
                         ? (!string.IsNullOrWhiteSpace(appt.Instructor.NameEn) ? appt.Instructor.NameEn : appt.Instructor.NameAr)
-                        : "Instructor";
+                        : (isArabic ? "المُدرس" : "Instructor");
 
                 return new { saId = sa.Id, start, end, courseTitle, instructorName };
             })
             .Where(x => x.start.HasValue && x.end.HasValue)
-            // upcoming (not ended)
             .Where(x => x.end!.Value > now)
-            // starting soon: in the next 30 minutes
             .Where(x => x.start!.Value >= now && x.start!.Value <= now.AddMinutes(30))
             .OrderBy(x => x.start)
             .ToList();
@@ -116,7 +118,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@htmlLang" dir="rtl">
 <head>
     <meta charset="utf-8" />
     <title>@title - ELClass</title>
@@ -136,182 +138,171 @@
     <link rel="stylesheet" href="~/css/DashboardStudent.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
+
+    <style>
+        /* 3 columns layout */
+        .student-nav-wrap {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        /* Brand on LEFT even with RTL */
+        .student-brand-left {
+            margin-left: auto;
+        }
+
+        /* Center menu */
+        .student-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Actions on RIGHT */
+        .student-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Flag button as image */
+        .lang-flag-btn {
+            width: 40px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.06);
+            transition: .15s ease;
+            padding: 0;
+            overflow: hidden;
+        }
+
+            .lang-flag-btn:hover {
+                background: rgba(255,255,255,.12);
+                transform: translateY(-1px);
+            }
+
+        .lang-flag-img {
+            width: 26px;
+            height: 18px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ===============================
-         TOP NAVBAR
-    ================================ -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 student-navbar">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 px-lg-4 student-navbar">
+        <div class="container-fluid student-nav-wrap">
 
-            <!-- Brand (LEFT) -->
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2 student-brand"
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2 student-brand order-1"
                asp-area="StudentArea" asp-controller="Home" asp-action="Index">
                 <img src="~/Images/Logos/logos-01.png" alt="ELClass" height="30" />
-                <span>ELClass</span>
+                <span class="d-none d-sm-inline">ELClass</span>
             </a>
 
-            <!-- Toggle -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#studentNav">
+            <button class="navbar-toggler student-toggler order-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#studentNav"
+                    aria-controls="studentNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Menu -->
-            <div class="collapse navbar-collapse" id="studentNav">
+            <div class="collapse navbar-collapse student-center order-last order-lg-2 justify-content-center" id="studentNav">
+                <ul class="navbar-nav gap-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link text-center" asp-area="StudentArea" asp-controller="Home" asp-action="Index">
+                            <i class="fa-solid fa-house me-1"></i> @(isArabic ? "الرئيسية" : "Home")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-center" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                            <i class="fa-solid fa-book me-1"></i> @(isArabic ? "الكورسات" : "Courses")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-center" asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
+                            <i class="fa-solid fa-video me-1"></i> @(isArabic ? "المحاضرات" : "Lectures")
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
-                <!-- CENTER -->
-                <div class="student-nav-center">
-                    <ul class="navbar-nav gap-lg-4">
-                        <li class="nav-item">
-                            <a class="nav-link"
-                               asp-area="StudentArea" asp-controller="Home" asp-action="Index">
-                                <i class="fa-solid fa-house me-1"></i> Home
+            <div class="student-actions d-flex align-items-center gap-2 gap-md-3 order-3">
+
+                @await Component.InvokeAsync("StudentNotifications", new { isArabic = isArabic })
+
+
+                <div class="dropdown position-relative">
+                    <div class="user-capsule shadow-sm" data-bs-toggle="dropdown" data-bs-display="static" role="button" aria-expanded="false">
+                        <i class="fa-solid fa-gear capsule-gear"></i>
+                        <div class="capsule-avatar">
+                            @if (!string.IsNullOrEmpty(profileImage))
+                            {<img src="@profileImage" alt="Profile" /> }
+                            else
+                            { <span>@initials</span>}
+                        </div>
+                    </div>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow student-account-menu border-0">
+                        <li class="px-3 py-2 text-end">
+                            <div class="fw-bold">@User.Identity?.Name @(isArabic ? "،مرحباً" : ", Welcome")</div>
+                            <div class="text-muted small">@(isArabic ? "لوحة تحكم الطالب" : "Student Dashboard")</div>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <a class="dropdown-item text-end d-flex align-items-center justify-content-end gap-2"
+                               asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
+                                <span>@(isArabic ? "إعدادات الحساب" : "Account Settings")</span> <i class="fa-solid fa-gear"></i>
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link"
-                               asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                                <i class="fa-solid fa-book me-1"></i> Courses
-                            </a>
+                        <!-- ✅ Language Switch -->
+                        <li>
+                            <form asp-area="StudentArea" asp-controller="Home" asp-action="ChangeLanguage" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="lang" value="@(isArabic ? "en" : "ar")" />
+
+                                <button type="submit"
+                                        class="dropdown-item text-end d-flex align-items-center justify-content-end gap-2 student-lang-item border-0 bg-transparent w-100">
+                                    <span>@(isArabic ? "English" : "العربية")</span>
+                                    <i class="fa-solid fa-language"></i>
+                                </button>
+                            </form>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link"
-                               asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
-                                <i class="fa-solid fa-video me-1"></i> Lectures
-                            </a>
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <form asp-area="Identity" asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item text-end d-flex align-items-center justify-content-end gap-2 text-danger border-0 bg-transparent w-100">
+                                    <span>@(isArabic ? "تسجيل الخروج" : "Logout")</span> <i class="fa-solid fa-right-from-bracket"></i>
+                                </button>
+                            </form>
                         </li>
                     </ul>
                 </div>
 
-                <!-- RIGHT -->
-                <ul class="navbar-nav ms-lg-auto align-items-center gap-3 student-nav-right">
-
-                    <!-- Notifications -->
-                    <li class="nav-item dropdown position-relative">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fa-regular fa-bell"></i>
-
-                            @if (notifyCount > 0)
-                            {
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    @notifyCount
-                                </span>
-                            }
-                        </a>
-
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm student-notify-menu">
-                            <li class="dropdown-header">Upcoming soon</li>
-
-                            @if (notifyItems.Any())
-                            {
-                                foreach (var n in notifyItems)
-                                {
-                                    <li>
-                                        <a class="dropdown-item small"
-                                           asp-area="StudentArea"
-                                           asp-controller="Lectures"
-                                           asp-action="Schedule">
-                                            <div class="fw-bold">@n.course</div>
-                                            <div class="text-muted">
-                                                @n.instructor • @n.start.ToString("ddd, dd MMM • hh:mm tt")
-                                            </div>
-                                        </a>
-                                    </li>
-                                }
-                            }
-                            else
-                            {
-                                <li>
-                                    <span class="dropdown-item-text text-muted small">
-                                        No lectures starting soon.
-                                    </span>
-                                </li>
-                            }
-
-                            <li><hr class="dropdown-divider" /></li>
-
-                            <li>
-                                <a class="dropdown-item"
-                                   asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
-                                    <i class="fa-solid fa-calendar-check me-2"></i> View schedule
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Account -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-                           href="#"
-                           role="button"
-                           data-bs-toggle="dropdown">
-
-                            <span class="student-avatar">
-                                @if (!string.IsNullOrEmpty(profileImage))
-                                {
-                                    <img src="@profileImage"
-                                         alt="Profile"
-                                         class="student-avatar-img"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-
-                                    <span class="student-avatar-text" style="display:none;">
-                                        @initials
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="student-avatar-text">
-                                        @initials
-                                    </span>
-                                }
-                            </span>
-
-
-
-                            <span class="d-none d-lg-inline">Account</span>
-                        </a>
-
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                            <li>
-                                <a class="dropdown-item"
-                                   asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
-                                    <i class="fa-regular fa-user me-2"></i> My Profile
-                                </a>
-                            </li>
-
-
-
-                            <li><hr class="dropdown-divider" /></li>
-
-                            <li>
-                                <form asp-area="Identity" asp-controller="Account" asp-action="Logout" method="post" class="m-0">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fa-solid fa-right-from-bracket me-2"></i> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-
-                </ul>
             </div>
         </div>
     </nav>
 
-    <!-- ===============================
-         PAGE CONTENT
-    ================================ -->
+
+
+
     <main>
         @RenderBody()
     </main>
 
-    <!-- ===============================
-         SCRIPTS
-    ================================ -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     @RenderSection("Scripts", required: false)
