@@ -17,7 +17,41 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var appointments = await unitOfWork.AppoinmentRepository.GetAsync(include: e => e.Include(e => e.Course!).Include(e => e.StudentAppointments).Include(e => e.Instructor!));
+
+            var appointments = (await unitOfWork.AppoinmentRepository.GetAsync(
+                include: e => e.Include(e => e.Course!)
+                              .Include(e => e.StudentAppointments)
+                              .Include(e => e.Instructor!)
+            )).ToList();
+
+
+            var expiredApps = appointments
+                .Where(app => app.Type == ScheduleType.OneTime &&
+                              app.SpecificDate.HasValue &&
+                              app.SpecificDate.Value.Date < DateTime.Now.Date)
+                .ToList();
+
+            if (expiredApps.Any())
+            {
+
+                var studentAppsToDelete = expiredApps
+                    .SelectMany(a => a.StudentAppointments)
+                    .ToList();
+
+                if (studentAppsToDelete.Any())
+                {
+                    await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppsToDelete);
+                }
+
+
+                await unitOfWork.AppoinmentRepository.DeleteAllAsync(expiredApps);
+
+                await unitOfWork.CommitAsync();
+
+
+                appointments = appointments.Except(expiredApps).ToList();
+            }
+
             return View(appointments);
         }
 
@@ -25,7 +59,7 @@ namespace ELClass.Areas.Admin.Controllers
         public async Task<IActionResult> ManageStudents(int id)
         {
 
-            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(
+            var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(
                 a => a.Id == id,
                 include: e => e.Include(e => e.Course).Include(e => e.StudentAppointments).ThenInclude(e => e.Student!));
 
@@ -40,12 +74,12 @@ namespace ELClass.Areas.Admin.Controllers
             string? insId = null;
             if (appointmentId.HasValue)
             {
-                var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(a => a.Id == appointmentId);
+                var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(a => a.Id == appointmentId);
                 insId = appointment?.InstructorId;
             }
 
             // 2. الفلترة الأساسية (تتم داخل قاعدة البيانات لتحسين الأداء)
-            var studentCourses = await _unitOfWork.StudentCourseRepository.GetAsync(
+            var studentCourses = await unitOfWork.StudentCourseRepository.GetAsync(
                 filter: sc =>
                     // فلتر الكورس لو موجود
                     (!courseId.HasValue || sc.CourseId == courseId) &&
@@ -78,7 +112,7 @@ namespace ELClass.Areas.Admin.Controllers
         public async Task<IActionResult> AddStudentToAppointment(string StudentId, int AppointmentId, int TimeCount)
         {
 
-            var isExists = await _unitOfWork.StudentAppointmentRepository
+            var isExists = await unitOfWork.StudentAppointmentRepository
                 .GetOneAsync(e => e.StudentId == StudentId && e.AppointmentId == AppointmentId);
 
             if (isExists != null)
@@ -92,7 +126,7 @@ namespace ELClass.Areas.Admin.Controllers
             }
 
 
-            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == AppointmentId);
+            var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == AppointmentId);
             if (appointment == null)
             {
                 return Json(new { success = false, message = "Appointment not found." });
@@ -120,8 +154,8 @@ namespace ELClass.Areas.Admin.Controllers
             };
 
 
-            await _unitOfWork.StudentAppointmentRepository.CreateAsync(link);
-            await _unitOfWork.CommitAsync();
+            await unitOfWork.StudentAppointmentRepository.CreateAsync(link);
+            await unitOfWork.CommitAsync();
             TempData["Success"] = CultureHelper.IsArabic ? "تم اضافة الطالب بنجاح " : " the student has been added successfully";
             return Json(new { success = true });
         }
@@ -129,11 +163,11 @@ namespace ELClass.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveStudentFromAppointment(int studentAppointmentId)
         {
-            var item = await _unitOfWork.StudentAppointmentRepository.GetOneAsync(e => e.Id == studentAppointmentId);
+            var item = await unitOfWork.StudentAppointmentRepository.GetOneAsync(e => e.Id == studentAppointmentId);
             if (item != null)
             {
-                await _unitOfWork.StudentAppointmentRepository.DeleteAsync(item);
-                await _unitOfWork.CommitAsync();
+                await unitOfWork.StudentAppointmentRepository.DeleteAsync(item);
+                await unitOfWork.CommitAsync();
 
                 return Json(new { success = true });
             }
@@ -146,7 +180,7 @@ namespace ELClass.Areas.Admin.Controllers
         public async Task<IActionResult> SearchInstructors(string term)
         {
 
-            var instructors = await _unitOfWork.InstructorRepository.GetAsync(
+            var instructors = await unitOfWork.InstructorRepository.GetAsync(
                 filter: i => string.IsNullOrEmpty(term) ||
                              i.NameEn.Contains(term) ||
                              i.NameAr.Contains(term) ||
@@ -175,7 +209,7 @@ namespace ELClass.Areas.Admin.Controllers
 
 
 
-            var courses = await _unitOfWork.InstructorCourseRepository.GetAsync(
+            var courses = await unitOfWork.InstructorCourseRepository.GetAsync(
                 filter: ic =>
                          (string.IsNullOrEmpty(term) ||
                           ic.Course.TitleAr.Contains(term) ||
@@ -200,7 +234,7 @@ namespace ELClass.Areas.Admin.Controllers
 
             try
             {
-                var isAuthorized = await _unitOfWork.InstructorCourseRepository.GetOneAsync(ic =>
+                var isAuthorized = await unitOfWork.InstructorCourseRepository.GetOneAsync(ic =>
                 ic.InstructorId == vm.InstructorId && ic.CourseId == vm.CourseId);
 
                 if (isAuthorized == null)
@@ -230,7 +264,7 @@ namespace ELClass.Areas.Admin.Controllers
                 var newStart = vm.StartTime;
                 var newEnd = vm.StartTime.Add(TimeSpan.FromHours(vm.DurationInHours));
 
-                var instructorDayAppointments = await _unitOfWork.AppoinmentRepository.GetAsync(a =>
+                var instructorDayAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a =>
                     a.InstructorId == vm.InstructorId &&
                     (vm.Type == (int)ScheduleType.Recurring ? a.Day == vm.Day : a.SpecificDate == vm.SpecificDate)
                 );
@@ -264,8 +298,8 @@ namespace ELClass.Areas.Admin.Controllers
                     SpecificDate = vm.Type == (int)ScheduleType.OneTime ? vm.SpecificDate : null
                 };
 
-                await _unitOfWork.AppoinmentRepository.CreateAsync(appointment);
-                await _unitOfWork.CommitAsync();
+                await unitOfWork.AppoinmentRepository.CreateAsync(appointment);
+                await unitOfWork.CommitAsync();
 
                 return Json(new { success = true, message = CultureHelper.IsArabic ? "تم إنشاء الموعد بنجاح" : "Appointment created successfully" });
             }
@@ -277,7 +311,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id
+            var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id
                 , include: e => e.Include(e => e.Course!).Include(e => e.Instructor!));
             return View(appointment);
         }
@@ -289,7 +323,7 @@ namespace ELClass.Areas.Admin.Controllers
             try
             {
 
-                var existing = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == model.Id);
+                var existing = await unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == model.Id);
                 if (existing == null)
                 {
                     return Json(new { success = false, message = CultureHelper.IsArabic ? "الموعد غير موجود" : "Appointment not found" });
@@ -301,7 +335,7 @@ namespace ELClass.Areas.Admin.Controllers
                 var newEnd = model.StartTime.Add(TimeSpan.FromHours(model.DurationInHours));
 
 
-                var potentialConflicts = await _unitOfWork.AppoinmentRepository.GetAsync(a =>
+                var potentialConflicts = await unitOfWork.AppoinmentRepository.GetAsync(a =>
                     a.Id != model.Id &&
                     a.InstructorId == existing.InstructorId &&
                     (
@@ -365,8 +399,8 @@ namespace ELClass.Areas.Admin.Controllers
                 }
 
 
-                await _unitOfWork.AppoinmentRepository.EditAsync(existing);
-                await _unitOfWork.CommitAsync();
+                await unitOfWork.AppoinmentRepository.EditAsync(existing);
+                await unitOfWork.CommitAsync();
 
                 return Json(new { success = true, message = CultureHelper.IsArabic ? "تم تعديل الموعد بنجاح" : "Appointment updated successfully" });
             }
@@ -381,24 +415,24 @@ namespace ELClass.Areas.Admin.Controllers
             try
             {
 
-                var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id);
+                var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id);
                 if (appointment == null)
                 {
                     return Json(new { success = false, message = "Appointment not found" });
                 }
 
 
-                var studentAppointments = await _unitOfWork.StudentAppointmentRepository.GetAsync(filter: x => x.AppointmentId == id);
+                var studentAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(filter: x => x.AppointmentId == id);
                 foreach (var sa in studentAppointments)
                 {
-                    await _unitOfWork.StudentAppointmentRepository.DeleteAsync(sa);
+                    await unitOfWork.StudentAppointmentRepository.DeleteAsync(sa);
                 }
 
 
-                await _unitOfWork.AppoinmentRepository.DeleteAsync(appointment);
+                await unitOfWork.AppoinmentRepository.DeleteAsync(appointment);
 
 
-                await _unitOfWork.CommitAsync();
+                await unitOfWork.CommitAsync();
 
                 return Json(new { success = true, message = "Deleted Successfully" });
             }
