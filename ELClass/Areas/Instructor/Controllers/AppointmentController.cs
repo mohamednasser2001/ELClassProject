@@ -18,8 +18,50 @@ namespace ELClass.Areas.Instructor.Controllers
 
         public async Task<IActionResult> Index()
         {
+
             var userId = User.Claims.FirstOrDefault(c => c.Type.EndsWith("nameidentifier"))?.Value;
-            var appointments = await _unitOfWork.AppoinmentRepository.GetAsync(e => e.InstructorId == userId, include: e => e.Include(e => e.Course!).Include(e => e.StudentAppointments));
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(); 
+            }
+
+            
+            var appointments = (await _unitOfWork.AppoinmentRepository.GetAsync(
+                filter: e => e.InstructorId == userId,
+                include: e => e.Include(e => e.Course!)
+                              .Include(e => e.StudentAppointments)
+            )).ToList();
+
+            
+            var expiredApps = appointments
+                .Where(app => app.Type == ScheduleType.OneTime &&
+                              app.SpecificDate.HasValue &&
+                              app.SpecificDate.Value.Date < DateTime.Now.Date)
+                .ToList();
+
+            if (expiredApps.Any())
+            {
+                
+                var studentAppsToDelete = expiredApps
+                    .SelectMany(a => a.StudentAppointments)
+                    .ToList();
+
+                if (studentAppsToDelete.Any())
+                {
+                    await _unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppsToDelete);
+                }
+
+                
+                await _unitOfWork.AppoinmentRepository.DeleteAllAsync(expiredApps);
+
+                
+                await _unitOfWork.CommitAsync();
+
+               
+                appointments = appointments.Except(expiredApps).ToList();
+            }
+
             return View(appointments);
         }
 
@@ -155,11 +197,11 @@ namespace ELClass.Areas.Instructor.Controllers
 
         public async Task<IActionResult> SearchInstructors(string term, int courseId)
         {
-            var instructors = await unitOfWork.InstructorRepository.GetAsync(filter: e =>
+            var instructors = await _unitOfWork.InstructorRepository.GetAsync(filter: e =>
             (e.NameAr.Contains(term) || e.NameEn.Contains(term) || e.ApplicationUser.Email!.Contains(term)));
 
 
-            var insCourse = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.CourseId == courseId);
+            var insCourse = await _unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.CourseId == courseId);
             if (insCourse.Any())
             {
                 var assignedStudentIds = insCourse.Select(ic => ic.InstructorId).ToList();
