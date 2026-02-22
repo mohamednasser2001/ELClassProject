@@ -104,38 +104,51 @@ namespace ELClass.Areas.StudentArea.Controllers
             var enrolledCourseIds = courses.Select(x => x.CourseId).Distinct().ToList();
             var nowForLessons = DateTime.Now;
 
-            // published = LectureDate موجودة + مش مستقبل + عنده أي لينك من الثلاثة
-            var publishedLessons = await _unitOfWork.LessonRepository.GetAsync(
-                l => enrolledCourseIds.Contains(l.CourseId)
-                     && l.LectureDate != null
-                     && l.LectureDate <= nowForLessons
-                     && (
-                         !string.IsNullOrWhiteSpace(l.DriveLink)
-                         || !string.IsNullOrWhiteSpace(l.LecturePdfUrl)
-                         || !string.IsNullOrWhiteSpace(l.AssignmentPdfUrl)
-                     ),
-                tracked: false,
-                include: q => q.Include(l => l.Course),
-                orderBy: q => q.OrderByDescending(l => l.LectureDate)
-            );
+            // ✅ هات المدرس المعيّن للطالب (ممكن يكون null)
+            var insLink = await _unitOfWork.InstructorStudentRepository.GetOneAsync(x => x.StudentId == userId);
+            string? instructorId = insLink?.InstructorId;
 
-            model.LastLessons = publishedLessons
-                .Take(5)
-                .Select(l => new Models.ViewModels.LastLessonVM
-                {
-                    LessonId = l.Id,
-                    LessonTitle = string.IsNullOrWhiteSpace(l.Title) ? $"Lesson #{l.Id}" : l.Title,
-                    CourseId = l.CourseId,
-                    CourseTitle = l.Course != null
-                        ? (!string.IsNullOrWhiteSpace(l.Course.TitleEn) ? l.Course.TitleEn : l.Course.TitleAr)
-                        : "Course",
+            // ✅ لو مفيش مدرس متعيّن => LastLessons فاضية بدل ما نجيب من كل المدرسين
+            if (instructorId == null)
+            {
+                model.LastLessons = new List<Models.ViewModels.LastLessonVM>();
+            }
+            else
+            {
+                // published = LectureDate موجودة + مش مستقبل + عنده أي لينك من الثلاثة
+                var publishedLessons = await _unitOfWork.LessonRepository.GetAsync(
+                    l => enrolledCourseIds.Contains(l.CourseId)
+                         && l.InstructorId == instructorId
+                         && l.LectureDate != null
+                         && l.LectureDate <= nowForLessons
+                         && (
+                             !string.IsNullOrWhiteSpace(l.DriveLink)
+                             || !string.IsNullOrWhiteSpace(l.LecturePdfUrl)
+                             || !string.IsNullOrWhiteSpace(l.AssignmentPdfUrl)
+                         ),
+                    tracked: false,
+                    include: q => q.Include(l => l.Course),
+                    orderBy: q => q.OrderByDescending(l => l.LectureDate)
+                );
 
-                    DriveLink = l.DriveLink,
-                    LecturePdfUrl = l.LecturePdfUrl,
-                    AssignmentPdfUrl = l.AssignmentPdfUrl,
-                    LectureDate = l.LectureDate!,
-                })
-                .ToList();
+                model.LastLessons = publishedLessons
+                    .Take(5)
+                    .Select(l => new Models.ViewModels.LastLessonVM
+                    {
+                        LessonId = l.Id,
+                        LessonTitle = string.IsNullOrWhiteSpace(l.Title) ? $"Lesson #{l.Id}" : l.Title,
+                        CourseId = l.CourseId,
+                        CourseTitle = l.Course != null
+                            ? (!string.IsNullOrWhiteSpace(l.Course.TitleEn) ? l.Course.TitleEn : l.Course.TitleAr)
+                            : "Course",
+
+                        DriveLink = l.DriveLink,
+                        LecturePdfUrl = l.LecturePdfUrl,
+                        AssignmentPdfUrl = l.AssignmentPdfUrl,
+                        LectureDate = l.LectureDate!,
+                    })
+                    .ToList();
+            }
 
             // ============================================================
             // Upcoming lectures + Join Now (فلترة اللي انتهى)

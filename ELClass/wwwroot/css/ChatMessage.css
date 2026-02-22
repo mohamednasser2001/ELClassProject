@@ -708,5 +708,22 @@
     cursor: zoom-in;
 }
 
+/* ✅ Fix alignment in RTL pages: keep layout LTR but text RTL */
+.messages {
+    direction: ltr;
+}
+
+.msg-row {
+    justify-content: flex-start; /* رسائل الطرف التاني شمال */
+}
+
+    .msg-row.mine {
+        justify-content: flex-end; /* رسائلك يمين */
+    }
+
+.bubble {
+    direction: rtl; /* العربي جوه البابل */
+    text-align: right;
+}
 
 

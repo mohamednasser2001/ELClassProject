@@ -259,7 +259,7 @@
 
 <button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
     <span class="chat-fab-icon" aria-hidden="true">
-        <i class="fab fa-whatsapp"></i>
+        <i class="fa-regular fa-comment-dots"></i>
     </span>
     <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
 </button>
@@ -903,7 +903,8 @@
         const isRead = (m.isRead ?? m.IsRead) === true;
 
         // mine for instructor: if I'm sender -> receiver == current student
-        const isMine = String(receiverId) === String(state.currentStudentId);
+        const meId = String(currentUserId || '').trim();
+        const isMine = meId && String(senderId || '').trim() === meId;
 
         const att = readAttachmentFromMessage(m);
 
@@ -1146,8 +1147,19 @@
                 return;
             }
 
-            const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
-            if (realId && optimisticNode) optimisticNode.dataset.messageId = String(realId);
+            const realId =
+                data.id ??
+                data.Id ??
+                data.messageId ??
+                data.savedMessageId ??
+                data.data?.id ??
+                data.data?.Id ??
+                data.message?.id ??
+                data.message?.Id;
+
+            if (realId && optimisticNode) {
+                optimisticNode.dataset.messageId = String(realId);
+            }
 
             await sendRealtimeToStudent(state.currentStudentId, text);
 
