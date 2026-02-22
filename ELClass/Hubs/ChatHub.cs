@@ -52,7 +52,7 @@ public class ChatHub : Hub
             {
                 await Clients.All.SendAsync("PresenceChanged", userId, false);
             }
-
+            
             Console.WriteLine($"[Presence] {userId} disconnected");
         }
 

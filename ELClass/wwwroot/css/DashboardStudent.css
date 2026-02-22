@@ -6,8 +6,9 @@
     --card: #ffffff;
     --text: #1f2937;
     --muted: #6b7280;
-    --primary: #d05a00;
-    --primary-soft: #f4e1d2;
+    /* ✅ primary -> blue */
+    --primary: #2F5F9E;
+    --primary-soft: rgba(47,95,158,.14);
     --mint: #dceee6;
     --danger: #dc2626;
     --border: #e5e7eb;
@@ -153,8 +154,9 @@
     color: var(--primary);
     padding: 8px 12px;
     border-radius: 999px;
-    border: 1px solid #f1d2bf;
-    background: #fff7f0;
+    /* ✅ orange -> blue soft */
+    border: 1px solid rgba(47,95,158,.28);
+    background: rgba(47,95,158,.10);
     white-space: nowrap;
 }
 
@@ -527,8 +529,9 @@
     align-items: center;
 }
 
+/* ✅ unify join button color with primary */
 .sd-up-zoom-btn {
-    background: #2563eb;
+    background: var(--primary);
     color: #fff;
     border: none;
     font-size: 13px;
@@ -634,23 +637,31 @@
     }
 
 /* Badge on bell (if you have .pill-badge) */
+/* ✅ Notification badge – cleaner */
 .pill-badge {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    min-width: 18px;
-    height: 18px;
+    top: -3px;
+    right: -3px;
+    min-width: 16px;
+    height: 16px;
     padding: 0 5px;
     border-radius: 999px;
     background: #ef4444;
     color: #fff;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 900;
-    line-height: 18px;
-    text-align: center;
-    box-shadow: 0 10px 18px rgba(239, 68, 68, .35);
-    border: 2px solid #ffffff;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 6px 14px rgba(239,68,68,.28);
 }
+
+    /* لو الرقم رقم واحد بس: خليها دائرة */
+    .pill-badge:empty {
+        display: none;
+    }
 
 /* Notifications dropdown menu */
 
@@ -897,7 +908,7 @@
                 display: block;
                 font-size: 18px;
                 margin-bottom: 2px;
-                color: #d05a00;
+                color: #2F5F9E; /* ✅ orange -> blue */
             }
 
     .navbar-toggler {
@@ -957,7 +968,7 @@
     /* ✅ أيقونة الترس جوه الكابسولة */
     .user-capsule i.fa-gear,
     .user-capsule i.fa-cog {
-        color: #d05a00;
+        color: #2F5F9E; /* ✅ orange -> blue */
         font-size: 18px;
     }
 
@@ -1038,352 +1049,488 @@
         transform: none !important; /* هنا بس عشان Fixed */
         z-index: 9999 !important;
     }
-
-    /* =========================================================
+}
+/* =========================================================
    cssAllCoursesPage
    ========================================================= */
-    .ac-wrap {
-        padding: 22px;
-        background: var(--bg, #f5f7fb);
-        min-height: calc(100vh - 70px);
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        color: #1f2937;
+.ac-wrap {
+    padding: 22px;
+    background: var(--bg, #f5f7fb);
+    min-height: calc(100vh - 70px);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #1f2937;
+}
+
+.ac-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.ac-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+    .ac-title i {
+        color: var(--primary, #2F5F9E);
     }
 
-    .ac-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        margin-bottom: 16px;
+.ac-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 10px 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    min-width: 320px;
+}
+
+    .ac-search i {
+        color: #9ca3af;
     }
 
-    .ac-title {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
+    .ac-search input {
+        border: 0;
+        outline: 0;
+        width: 100%;
+        font-size: 14px;
+        color: #111827;
+        background: transparent;
+    }
+
+.ac-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.ac-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+    .ac-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+        /* ✅ orange border -> blue border */
+        border-color: #D7E6FF;
+    }
+
+.ac-card-top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.ac-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    /* ✅ orange soft -> blue soft */
+    background: #EEF4FF;
+    border: 1px solid #D7E6FF;
+    flex: 0 0 auto;
+}
+
+    .ac-icon i {
+        color: var(--primary, #2F5F9E);
         font-size: 18px;
-        font-weight: 800;
     }
 
-        .ac-title i {
-            color: var(--primary, #d05a00);
-        }
+.ac-info {
+    min-width: 0;
+}
+
+.ac-name {
+    font-weight: 900;
+    font-size: 15px;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ac-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.ac-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ac-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--primary, #2F5F9E);
+    padding: 10px 14px;
+    border-radius: 999px;
+    /* ✅ orange pill -> blue pill */
+    border: 1px solid rgba(47,95,158,.28);
+    background: rgba(47,95,158,.10);
+    transition: filter 0.15s ease;
+    white-space: nowrap;
+}
+
+    .ac-btn:hover {
+        filter: brightness(0.98);
+    }
+
+.ac-empty {
+    margin-top: 18px;
+    background: #fff;
+    border: 1px dashed #e5e7eb;
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    color: #6b7280;
+}
+
+    .ac-empty i {
+        font-size: 18px;
+        margin-top: 2px;
+        color: #9ca3af;
+    }
+
+.ac-empty-title {
+    font-weight: 900;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.ac-empty-sub {
+    font-size: 13px;
+}
+
+@media (max-width: 1200px) {
+    .ac-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
     .ac-search {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 999px;
-        padding: 10px 14px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        min-width: 320px;
+        min-width: 260px;
+    }
+}
+
+@media (max-width: 768px) {
+    .ac-head {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-        .ac-search i {
-            color: #9ca3af;
-        }
-
-        .ac-search input {
-            border: 0;
-            outline: 0;
-            width: 100%;
-            font-size: 14px;
-            color: #111827;
-            background: transparent;
-        }
+    .ac-search {
+        min-width: 0;
+    }
 
     .ac-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
+        grid-template-columns: 1fr;
     }
-
-    .ac-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 14px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    }
-
-        .ac-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
-            border-color: #f1d2bf;
-        }
-
-    .ac-card-top {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-    .ac-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        display: grid;
-        place-items: center;
-        background: #fff7f0;
-        border: 1px solid #f1d2bf;
-        flex: 0 0 auto;
-    }
-
-        .ac-icon i {
-            color: var(--primary, #d05a00);
-            font-size: 18px;
-        }
-
-    .ac-info {
-        min-width: 0;
-    }
-
-    .ac-name {
-        font-weight: 900;
-        font-size: 15px;
-        color: #111827;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .ac-sub {
-        margin-top: 2px;
-        font-size: 12px;
-        color: #6b7280;
-    }
-
-    .ac-actions {
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .ac-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        font-weight: 800;
-        font-size: 13px;
-        color: var(--primary, #d05a00);
-        padding: 10px 14px;
-        border-radius: 999px;
-        border: 1px solid #f1d2bf;
-        background: #fff7f0;
-        transition: filter 0.15s ease;
-        white-space: nowrap;
-    }
-
-        .ac-btn:hover {
-            filter: brightness(0.98);
-        }
-
-    .ac-empty {
-        margin-top: 18px;
-        background: #fff;
-        border: 1px dashed #e5e7eb;
-        border-radius: 14px;
-        padding: 22px;
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        color: #6b7280;
-    }
-
-        .ac-empty i {
-            font-size: 18px;
-            margin-top: 2px;
-            color: #9ca3af;
-        }
-
-    .ac-empty-title {
-        font-weight: 900;
-        color: #111827;
-        margin-bottom: 2px;
-    }
-
-    .ac-empty-sub {
-        font-size: 13px;
-    }
-
-    @media (max-width: 1200px) {
-        .ac-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .ac-search {
-            min-width: 260px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .ac-head {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .ac-search {
-            min-width: 0;
-        }
-
-        .ac-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    /* =========================================================
+}
+/* =========================================================
    cssCourseDetailsPage
    ========================================================= */
-    .course-details-page {
-        padding: 20px;
+.course-details-page {
+    padding: 20px;
+}
+
+.header-section {
+    margin-bottom: 18px;
+}
+
+.course-title {
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 6px;
+}
+
+.course-subtitle {
+    color: #6b7280;
+    margin: 0;
+    font-size: 14px;
+}
+
+.lectures-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lecture-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.lecture-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    background: #fff;
+}
+
+.lecture-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.lecture-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    /* ✅ orange -> blue soft */
+    background: #EEF4FF;
+    border: 1px solid #D7E6FF;
+    color: var(--primary);
+    display: grid;
+    place-items: center;
+    font-weight: 900;
+    flex: 0 0 auto;
+}
+
+.lecture-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.arrow-icon {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+    color: #6b7280;
+}
+
+.lecture-item.active .arrow-icon {
+    transform: rotate(180deg);
+}
+
+.lecture-content {
+    border-top: 1px solid #eef2f7;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.25s ease;
+}
+
+.content-links {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.content-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 13px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #111827;
+    transition: all 0.15s ease;
+}
+
+    .content-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
     }
 
-    .header-section {
-        margin-bottom: 18px;
+    .content-link.video {
+        border-color: #dbeafe;
+        background: #eff6ff;
+        color: #1d4ed8;
     }
 
-    .course-title {
-        font-weight: 800;
-        color: #111827;
-        margin: 0 0 6px;
+    .content-link.pdf {
+        border-color: #fee2e2;
+        background: #fef2f2;
+        color: #b91c1c;
     }
 
-    .course-subtitle {
-        color: #6b7280;
-        margin: 0;
-        font-size: 14px;
+    .content-link.assignment {
+        border-color: #dcfce7;
+        background: #f0fdf4;
+        color: #15803d;
     }
 
-    .lectures-container {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .lecture-item {
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        overflow: hidden;
-        background: #ffffff;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    }
-
+@media (max-width: 768px) {
     .lecture-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 16px;
-        cursor: pointer;
-        user-select: none;
-        background: #fff;
-    }
-
-    .lecture-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-    }
-
-    .lecture-number {
-        width: 30px;
-        height: 30px;
-        border-radius: 10px;
-        background: #fff7f0;
-        border: 1px solid #f1d2bf;
-        color: #d05a00;
-        display: grid;
-        place-items: center;
-        font-weight: 900;
-        flex: 0 0 auto;
-    }
-
-    .lecture-name {
-        margin: 0;
-        font-size: 15px;
-        font-weight: 800;
-        color: #111827;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .arrow-icon {
-        font-size: 16px;
-        transition: transform 0.2s ease;
-        color: #6b7280;
-    }
-
-    .lecture-item.active .arrow-icon {
-        transform: rotate(180deg);
-    }
-
-    .lecture-content {
-        border-top: 1px solid #eef2f7;
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.25s ease;
+        padding: 12px 14px;
     }
 
     .content-links {
-        padding: 14px 16px 16px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
+        padding: 12px 14px 14px;
     }
 
-    .content-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 13px;
-        border: 1px solid #e5e7eb;
-        background: #f9fafb;
-        color: #111827;
-        transition: all 0.15s ease;
+    .lecture-name {
+        font-size: 14px;
+    }
+}
+/* ✅ Zoom cell alignment */
+.sd-up-zoom {
+    justify-content: center;
+    align-items: center;
+}
+
+/* ✅ Keep Join compact without affecting Not started */
+.sd-up-zoom-btn {
+    width: auto !important;
+    height: auto !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: 12px;
+    line-height: 1;
+    background: var(--primary); /* ✅ keep unified */
+}
+
+    /* لو الأيقونة والـ text كانوا تحت بعض في الـ HTML */
+    .sd-up-zoom-btn i,
+    .sd-up-zoom-btn svg {
+        font-size: 14px;
     }
 
-        .content-link:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-        }
+/* ✅ prevent the big square look */
+.sd-up-zoom-btn {
+    width: auto !important;
+    height: auto !important;
+}
 
-        .content-link.video {
-            border-color: #dbeafe;
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
+/* ================================
+   ✅ Page Back Button (Clean)
+   ================================ */
 
-        .content-link.pdf {
-            border-color: #fee2e2;
-            background: #fef2f2;
-            color: #b91c1c;
-        }
+.page-back-wrap {
+    position: sticky;
+    top: 10px;
+    z-index: 999;
+    display: flex;
+    justify-content: flex-start; /* دايمًا شمال */
+    direction: ltr; /* يمنع RTL يقلب مكانه */
+    padding: 12px 22px 0;
+}
 
-        .content-link.assignment {
-            border-color: #dcfce7;
-            background: #f0fdf4;
-            color: #15803d;
-        }
+.page-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #0f172a;
+    font-weight: 900;
+    font-size: 13px;
+    box-shadow: 0 10px 22px rgba(15,23,42,.10);
+    cursor: pointer;
+    margin: 0;
+    /* ✅ السهم يفضل على الشمال في العربي والإنجليزي */
+    direction: ltr !important;
+}
 
-    @media (max-width: 768px) {
-        .lecture-header {
-            padding: 12px 14px;
-        }
-
-        .content-links {
-            padding: 12px 14px 14px;
-        }
-
-        .lecture-name {
-            font-size: 14px;
-        }
+    .page-back:hover {
+        background: #eef2ff;
+        border-color: #94a3b8;
+        transform: translateY(-1px);
     }
+
+/* ✅ النص العربي يفضل RTL بدون ما يقلب ترتيب الأيقونة */
+[dir="rtl"] .page-back span {
+    direction: rtl;
+    unicode-bidi: plaintext;
+}
+
+/* ✅ Mobile: خلي الـ sticky تحت الـ navbar + امنع تغطية النص */
+@media (max-width: 991px) {
+    .page-back-wrap {
+        top: 72px; /* تحت navbar */
+        padding: 8px 12px 0;
+        z-index: 2300; /* أعلى من المحتوى، أقل من dropdowns لو عايز */
+    }
+
+    /* ✅ نزّل محتوى الصفحة شوية عشان الزر ما يغطي subtitle */
+    .course-details-page .header-section {
+        padding-top: 38px; /* لو لسه بيغطي زوّدها لـ 46 */
+    }
+}
+
+.sd-upcoming-footer a,
+.sd-upcoming-footer .sd-link {
+    color: var(--primary) !important;
+}
+.sd-upcoming-footer a i,
+.sd-upcoming-footer .sd-link i {
+    color: var(--primary) !important;
+}
+
+/* ✅ Empty state in Course Details (no lectures) */
+.course-details-page .lectures-container > p.text-muted {
+    margin: 14px 0 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    /* Blue soft background */
+    background: rgba(47, 95, 158, .08);
+    border: 1px dashed rgba(47, 95, 158, .28);
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 13px;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+    /* Add an icon automatically before the message */
+    .course-details-page .lectures-container > p.text-muted::before {
+        content: "ℹ️";
+        font-size: 16px;
+        line-height: 1;
+        margin-top: 2px;
+    }
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+    .course-details-page .lectures-container > p.text-muted {
+        padding: 12px 14px;
+        font-size: 12.5px;
+    }
+}

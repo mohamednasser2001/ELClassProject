@@ -10,10 +10,23 @@
     var isArabic = currentLang == "ar";
 }
 
+<!-- ✅ Back button (always left) -->
+
+
 <div class="content-wrapper course-details-page">
     <div class="header-section">
+        <div class="page-back-wrap">
+            <button type="button"
+                    class="page-back"
+                    onclick="history.back()"
+                    aria-label="@(isArabic ? "رجوع" : "Back")">
+                <i class="fa-solid @(isArabic ? "fa-arrow-right" : "fa-arrow-left")"></i>
+                <span>@(isArabic ? "رجوع" : "Back")</span>
+            </button>
+        </div>
         <h2 class="course-title">@(!string.IsNullOrWhiteSpace(Model.TitleEn) ? Model.TitleEn : Model.TitleAr)</h2>
         <p class="course-subtitle">@(isArabic ? "محاضرات ومواد تعلم الكورس" : "Lectures and course learning materials")</p>
+
     </div>
 
     <div class="lectures-container">

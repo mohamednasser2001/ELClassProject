@@ -1277,7 +1277,7 @@
                     return;
                 }
 
-                // ✅ Text only
+             
                 const res = await fetch(API.save, {
                     method: 'POST',
                     headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
@@ -1290,7 +1290,18 @@
                     return;
                 }
 
-                const realId = data.id ?? data.messageId ?? data.savedMessageId ?? data.data?.id;
+                console.log("[SaveMessage response]", data);
+
+                const realId =
+                    data.id ??
+                    data.Id ??
+                    data.messageId ??
+                    data.savedMessageId ??
+                    data.data?.id ??
+                    data.data?.Id ??
+                    data.message?.id ??     
+                    data.message?.Id;       
+
                 if (realId && optimisticNode) {
                     optimisticNode.dataset.messageId = String(realId);
                 }
@@ -1319,7 +1330,10 @@
         // SignalR (Student)
         // =========================
         const studentConnection = new signalR.HubConnectionBuilder()
-            .withUrl("/chatHub")
+            .withUrl("/chatHub", {
+                transport: signalR.HttpTransportType.LongPolling,
+                skipNegotiation: false
+            })
             .withAutomaticReconnect()
             .build();
 
@@ -1471,11 +1485,15 @@
         });
 
         studentConnection.on("MessagesRead", function (payload) {
-            console.log("وصلت إشارة القراءة بنجاح!", payload);
+            console.log("[MessagesRead] payload:", payload, {
+                isOpen: state.isOpen,
+                conversationId: state.conversationId,
+                currentInstructorId: state.currentInstructorId
+            });
+
             if (!payload) return;
             if (!state.isOpen) return;
             if (!state.conversationId) return;
-
             if (String(payload.conversationId) !== String(state.conversationId)) return;
 
             markMessagesReadInUI(payload.messageIds);

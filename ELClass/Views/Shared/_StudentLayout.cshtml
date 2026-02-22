@@ -235,9 +235,8 @@
             </div>
 
             <div class="student-actions d-flex align-items-center gap-2 gap-md-3 order-3">
-
+              
                 @await Component.InvokeAsync("StudentNotifications", new { isArabic = isArabic })
-
 
                 <div class="dropdown position-relative">
                     <div class="user-capsule shadow-sm" data-bs-toggle="dropdown" data-bs-display="static" role="button" aria-expanded="false">
@@ -306,5 +305,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     @RenderSection("Scripts", required: false)
+  
 </body>
 </html>

@@ -58,30 +58,51 @@ namespace ELClass.Areas.StudentArea.Controllers
             return View(coursesVM);
         }
 
-
         [Authorize]
         public async Task<IActionResult> Details(int id, int? openLessonId = null)
         {
             var userId = _userManager.GetUserId(User);
 
-            bool isEnrolled = await _unitOfWork.StudentCourseRepository.GetOneAsync(
+            // 1) تأكد إن الطالب enrolled في الكورس
+            var isEnrolled = await _unitOfWork.StudentCourseRepository.GetOneAsync(
                 sc => sc.StudentId == userId && sc.CourseId == id
-            ) != null;
+            );
+            if (isEnrolled == null) return Forbid();
 
-            if (!isEnrolled)
-                return Forbid();
-
-            var course = await _unitOfWork.CourseRepository.GetOneAsync(
-                e => e.Id == id,
-                q => q.Include(c => c.Lessons)
+            // 2) هات المدرس بتاع الطالب (اللي مربوط بيه) - ممكن يكون null
+            var insLink = await _unitOfWork.InstructorStudentRepository.GetOneAsync(
+                x => x.StudentId == userId
             );
 
-            if (course == null)
-                return NotFound();
+            string? instructorId = insLink?.InstructorId;
 
-            // ✅ ابعته للـ View عشان نفتح الـ lesson تلقائي
+            // Flags للـ View
+            ViewBag.HasInstructor = (instructorId != null);
+            ViewBag.AssignedInstructorId = instructorId;
+
+            // 3) هات الكورس بدون Lessons
+            var course = await _unitOfWork.CourseRepository.GetOneAsync(
+                c => c.Id == id
+            );
+            if (course == null) return NotFound();
+
+            // 4) هات Lessons للكورس بتاعة المدرس ده فقط (ولو مفيش مدرس => فاضي)
+            var lessons = new List<Lesson>();
+
+            if (instructorId != null)
+            {
+                var result = await _unitOfWork.LessonRepository.GetAsync(
+                    l => l.CourseId == id && l.InstructorId == instructorId,
+                    tracked: false,
+                    orderBy: q => q.OrderBy(l => l.LectureDate)
+                );
+
+                lessons = result?.ToList() ?? new List<Lesson>();
+            }
+
+            course.Lessons = lessons;
+
             ViewBag.OpenLessonId = openLessonId;
-
             return View(course);
         }
 
