@@ -44,10 +44,11 @@
     grid-template-columns: 430px 500px 430px;
     gap: 28px;
     align-items: start;
-    min-width: 1180px;
-    /* ✅ الجديد */
-    width: max-content; /* يخلي عرض الجريد على قد الأعمدة */
-    margin: 0 auto; /* يوسّط الجريد */
+    /* ✅ FIX: امنع overflow اللي بيبوّظ الموبايل */
+    min-width: 0;
+    width: 100%;
+    max-width: 1360px; /* اختياري: يحافظ على شكل الديسكتوب */
+    margin: 0 auto;
 }
 
 
@@ -694,14 +695,24 @@
 /* =========================================================
    cssNavbarAccountMenu
    ========================================================= */
+/* =========================
+   Account menu (Desktop/Laptop fix)
+   ========================= */
 .student-account-menu {
     border-radius: 12px !important;
     margin-top: 12px !important;
     min-width: 220px;
     z-index: 1050;
-    left: 0 !important;
-    right: auto !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    /* ✅ fix: anchor to the right in LTR */
+    left: auto !important;
+    right: 0 !important;
+}
+
+/* ✅ RTL: anchor to the left */
+[dir="rtl"] .student-account-menu {
+    right: auto !important;
+    left: 0 !important;
 }
 
     .student-account-menu .dropdown-item {
@@ -1441,12 +1452,14 @@
 
 .page-back-wrap {
     position: sticky;
-    top: 10px;
+    top: 6px;
     z-index: 999;
     display: flex;
     justify-content: flex-start; /* دايمًا شمال */
     direction: ltr; /* يمنع RTL يقلب مكانه */
-    padding: 12px 22px 0;
+    padding: 6px 8px 0;
+    /* ✅ NEW: يبعد عن العنوان اللي تحته */
+    margin-bottom: 12px;
 }
 
 .page-back {
@@ -1463,8 +1476,7 @@
     box-shadow: 0 10px 22px rgba(15,23,42,.10);
     cursor: pointer;
     margin: 0;
-    /* ✅ السهم يفضل على الشمال في العربي والإنجليزي */
-    direction: ltr !important;
+    direction: ltr !important; /* ✅ السهم يفضل على الشمال */
 }
 
     .page-back:hover {
@@ -1479,17 +1491,34 @@
     unicode-bidi: plaintext;
 }
 
-/* ✅ Mobile: خلي الـ sticky تحت الـ navbar + امنع تغطية النص */
+/* ✅ Mobile: خلي الزر Fixed + تحت الـ navbar + تحت dropdown */
 @media (max-width: 991px) {
+
     .page-back-wrap {
-        top: 72px; /* تحت navbar */
-        padding: 8px 12px 0;
-        z-index: 2300; /* أعلى من المحتوى، أقل من dropdowns لو عايز */
+        position: fixed !important;
+        top: 78px !important;
+        left: 12px !important;
+        right: auto !important;
+        padding: 0 !important;
+        margin: 0 !important; /* سيبها 0 عشان هو fixed */
+        display: flex !important;
+        z-index: 1500 !important;
+        direction: ltr !important;
     }
 
-    /* ✅ نزّل محتوى الصفحة شوية عشان الزر ما يغطي subtitle */
+    /* ✅ عشان الزر fixed: نزود مساحة فوق العنوان */
     .course-details-page .header-section {
-        padding-top: 38px; /* لو لسه بيغطي زوّدها لـ 46 */
+        padding-top: 58px !important;
+        margin-top: 0 !important;
+    }
+
+    /* ✅ NEW: مسافة بين الزر والعنوان على الموبايل */
+    .course-details-page .course-title {
+        margin-top: 12px !important;
+    }
+
+    .course-details-page .course-subtitle {
+        margin-top: 6px !important;
     }
 }
 
@@ -1497,17 +1526,17 @@
 .sd-upcoming-footer .sd-link {
     color: var(--primary) !important;
 }
-.sd-upcoming-footer a i,
-.sd-upcoming-footer .sd-link i {
-    color: var(--primary) !important;
-}
+
+    .sd-upcoming-footer a i,
+    .sd-upcoming-footer .sd-link i {
+        color: var(--primary) !important;
+    }
 
 /* ✅ Empty state in Course Details (no lectures) */
 .course-details-page .lectures-container > p.text-muted {
     margin: 14px 0 0;
     padding: 14px 16px;
     border-radius: 14px;
-    /* Blue soft background */
     background: rgba(47, 95, 158, .08);
     border: 1px dashed rgba(47, 95, 158, .28);
     color: #0f172a;
@@ -1519,7 +1548,6 @@
     gap: 10px;
 }
 
-    /* Add an icon automatically before the message */
     .course-details-page .lectures-container > p.text-muted::before {
         content: "ℹ️";
         font-size: 16px;
@@ -1527,10 +1555,535 @@
         margin-top: 2px;
     }
 
-/* Mobile tweaks */
 @media (max-width: 768px) {
     .course-details-page .lectures-container > p.text-muted {
         padding: 12px 14px;
         font-size: 12.5px;
+    }
+}
+
+/* ✅ Desktop: hide */
+.page-back-wrap {
+    display: none !important;
+}
+
+/* ✅ Mobile + Tablet: show */
+@media (max-width: 991px) {
+    .page-back-wrap {
+        display: flex !important;
+    }
+}
+
+    /* =========================
+     ✅ Upcoming table behavior
+     ========================= */
+    .sd-up-table {
+        overflow-x: auto !important; /* ✅ السكرول هنا فقط */
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sd-up-table .sd-up-row {
+            min-width: 520px !important; /* ✅ بدل 560 عشان الموبايل */
+        }
+
+    /* خفّف الخطوط */
+    .sd-up-head {
+        font-size: 12px !important;
+    }
+
+    .sd-up-time-main,
+    .sd-up-course-main,
+    .sd-up-inst-main {
+        font-size: 12.5px !important;
+    }
+
+    /* ✅ زر الشات ميغطيش المحتوى */
+    .chat-fab {
+        right: 14px !important;
+        bottom: 14px !important;
+    }
+}
+
+/* ✅ Extra small phones */
+@media (max-width: 420px) {
+    .sd-wrap {
+        padding: 10px !important;
+    }
+
+    .sd-up-table .sd-up-row {
+        min-width: 480px !important; /* أصغر شوية */
+    }
+
+    .sd-btn {
+        padding: 9px 12px !important;
+        font-size: 13px !important;
+    }
+}
+
+
+
+/* =========================================================
+   ✅ HARD MOBILE FIX (Dashboard becomes 1-column FLEX)
+   Put at the VERY END of DashboardStudent.css
+   ========================================================= */
+@media (max-width: 991px) {
+
+    /* امنع أي قص أفقي */
+    html, body {
+        width: 100%;
+        overflow-x: hidden !important;
+    }
+
+    /* navbar fixed فوق، فالمحتوى لازم ينزل تحته */
+    main {
+        padding-top: 70px; /* لو nav أعلى/أقل عدّلها */
+    }
+
+    /* wrapper */
+    .sd-wrap {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 12px !important;
+        overflow-x: hidden !important;
+    }
+
+    /* بدل Grid -> Flex Column (حل جذري) */
+    .sd-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* الأعمدة تبقى full width */
+    .sd-left, .sd-center, .sd-right {
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 14px !important;
+    }
+
+    /* كل كارت يلتزم بالعرض */
+    .sd-card {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Upcoming: خلي الجدول scroll جوه فقط */
+    .sd-up-table {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sd-up-table .sd-up-row {
+            min-width: 520px !important;
+        }
+
+    /* Chat button */
+    .chat-fab {
+        right: 12px !important;
+        bottom: 12px !important;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 420px) {
+    .sd-up-table .sd-up-row {
+        min-width: 480px !important;
+    }
+}
+
+/* =========================================================
+   ✅ Mobile Navbar / Badge / Dropdown Fixes
+   Put at the VERY END of DashboardStudent.css
+   ========================================================= */
+@media (max-width: 991px) {
+
+    /* 3) شيل الفراغ الكبير فوق كارت Upcoming */
+    .sd-upcoming {
+        margin-top: 0 !important;
+    }
+
+    /* 1) Badge متتقصش */
+    .student-navbar,
+    .student-actions,
+    .btn-bell-only {
+        overflow: visible !important;
+    }
+
+    /* 1) ضبط مكان البادج بدل top/right بالسالب */
+    .pill-badge {
+        top: 0 !important;
+        right: 0 !important;
+        transform: translate(35%, -35%) !important;
+    }
+
+    /* 2) منيو الحساب: خليه Fixed عشان يظهر على الموبايل */
+    .student-account-menu {
+        position: fixed !important;
+        top: 64px !important; /* تحت الـ navbar */
+        right: 12px !important;
+        left: auto !important;
+        width: min(320px, 92vw) !important;
+        max-width: 92vw !important;
+        z-index: 99999 !important;
+        transform: none !important;
+    }
+
+    /* RTL: في العربي خليه يفتح من الشمال (بس يفضل داخل الشاشة) */
+    [dir="rtl"] .student-account-menu {
+        left: 12px !important;
+        right: auto !important;
+    }
+
+    /* 2) منيو الإشعارات (لو عندك dropdown للإشعارات) خليها فوق الكل */
+    .student-navbar .dropdown-menu.student-notify-menu {
+        z-index: 99999 !important;
+    }
+}
+
+
+
+/* ✅ Notification badge: prevent clipping on top (mobile) */
+@media (max-width: 991px) {
+    .student-navbar,
+    .student-actions,
+    .btn-bell-only {
+        overflow: visible !important;
+    }
+
+    .pill-badge {
+        top: 2px !important; /* بدل 0 أو السالب */
+        right: 2px !important;
+        transform: translate(25%, -10%) !important; /* يقلل طلوعها لفوق */
+    }
+}
+
+/* =========================================================
+   ✅ HARD MOBILE FIX (Dashboard becomes 1-column FLEX)
+   Put at the VERY END of DashboardStudent.css
+   ========================================================= */
+@media (max-width: 991px) {
+
+    html, body {
+        width: 100%;
+        overflow-x: hidden !important;
+    }
+
+    /* navbar fixed فوق */
+    main {
+        padding-top: 70px; /* لو nav أعلى/أقل عدّلها */
+    }
+
+    .sd-wrap {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 12px !important;
+        overflow-x: hidden !important;
+    }
+
+    .sd-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .sd-left, .sd-center, .sd-right {
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 14px !important;
+    }
+
+    .sd-card {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Upcoming: scroll inside only */
+    .sd-up-table {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sd-up-table .sd-up-row {
+            min-width: 520px !important;
+        }
+
+    /* شيل الفراغ الكبير فوق Upcoming */
+    .sd-upcoming {
+        margin-top: 0 !important;
+    }
+
+    /* Chat */
+    .chat-fab {
+        right: 12px !important;
+        bottom: 12px !important;
+    }
+
+    /* ✅ Badge متتقصش */
+    .student-navbar,
+    .student-actions,
+    .btn-bell-only {
+        overflow: visible !important;
+    }
+
+    /* ✅ ضبط مكان البادج */
+    .pill-badge {
+        top: 2px !important;
+        right: 2px !important;
+        transform: translate(25%, -10%) !important;
+    }
+
+    /* ✅ Account menu يظهر على الموبايل */
+    .student-account-menu {
+        position: fixed !important;
+        top: 64px !important;
+        right: 12px !important;
+        left: auto !important;
+        width: min(320px, 92vw) !important;
+        max-width: 92vw !important;
+        z-index: 99999 !important;
+        transform: none !important;
+    }
+
+    [dir="rtl"] .student-account-menu {
+        left: 12px !important;
+        right: auto !important;
+    }
+
+    /* ✅ Notifications menu فوق الكل */
+    .student-navbar .dropdown-menu.student-notify-menu {
+        z-index: 99999 !important;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 420px) {
+    .sd-up-table .sd-up-row {
+        min-width: 480px !important;
+    }
+}
+
+/* =========================================================
+   ✅ FINAL: Course Details Back Button (Mobile only)
+   Put at VERY END of file
+   ========================================================= */
+@media (max-width: 991px) {
+
+    .page-back-wrap {
+        position: fixed !important;
+        top: 78px !important; /* ✅ ده ينزل الزر تحت الـ navbar */
+        left: 12px !important;
+        right: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        z-index: 1500 !important; /* ✅ تحت dropdowns */
+        direction: ltr !important;
+    }
+
+    .course-details-page,
+    .course-details-page .header-section {
+        overflow: visible !important;
+    }
+
+        /* مساحة فوق العنوان عشان الزر fixed */
+        .course-details-page .header-section {
+            padding-top: 58px !important;
+            margin-top: 0 !important;
+        }
+
+    /* قلل أي padding زيادة فوق */
+    .course-details-page {
+        padding-top: 8px !important;
+    }
+}
+
+/* ✅ Center dashboard grid perfectly (Desktop) */
+.sd-wrap {
+    width: 100%;
+    padding-left: 22px;
+    padding-right: 22px;
+    box-sizing: border-box;
+}
+
+.sd-grid {
+    max-width: 1416px; /* 430+500+430 + (28*2) */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ✅ RTL safe centering */
+[dir="rtl"] .sd-grid {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* ✅ Center course title + subtitle in Course Details header */
+.course-details-page .header-section {
+    text-align: center;
+}
+
+.course-details-page .course-title {
+    margin: 12px 0 6px !important; /* ✅ يبعد عن زر الـ back */
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: .2px;
+}
+
+.course-details-page .course-subtitle {
+    margin: 0 !important;
+    font-size: 14px;
+    opacity: .85;
+}
+/* ✅ Optional: soft pill behind title */
+.course-details-page .course-title {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 14px;
+    background: rgba(47,95,158,.08);
+    border: 1px solid rgba(47,95,158,.18);
+}
+
+/* ================================
+   ✅ Navbar Logo (Sharper + Clean)
+   Put at END of DashboardStudent.css
+   ================================ */
+
+/* الـ link نفسه */
+.student-navbar .navbar-brand.student-brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important; /* بدل gap-2 */
+    padding: 6px 0 !important;
+    line-height: 1 !important;
+}
+
+    /* صورة اللوجو */
+    .student-navbar .navbar-brand.student-brand img {
+        height: 40px !important; /* جرّب 32/34/36 */
+        width: auto !important;
+        display: block !important;
+        object-fit: contain !important;
+        /* تحسين وضوح الصورة */
+        image-rendering: -webkit-optimize-contrast;
+        transform: translateZ(0); /* يقلل blur مع scaling */
+        filter: drop-shadow(0 1px 0 rgba(255,255,255,.18));
+    }
+
+/* موبايل: صغّرها شوية */
+@media (max-width: 991px) {
+    .student-navbar .navbar-brand.student-brand img {
+        height: 30px !important;
+    }
+}
+/* ================================
+   ✅ Notifications Dropdown - Pretty
+   Put at END of DashboardStudent.css
+   ================================ */
+
+/* القايمة نفسها */
+.student-notify-menu {
+    border: 1px solid rgba(15, 23, 42, .08) !important;
+    border-radius: 16px !important;
+    padding: 10px !important;
+    box-shadow: 0 22px 55px rgba(0,0,0,.18) !important;
+    overflow: visible !important; /* مهم عشان سهم القايمة */
+    background: #fff !important;
+}
+
+/* خلى القايمة "تطلع من الجرس" بدون فراغ */
+.student-navbar .dropdown-menu.student-notify-menu {
+    margin-top: 6px !important; /* كان 10px */
+}
+
+    /* سهم صغير فوق القايمة كأنه طالع من الجرس */
+    .student-navbar .dropdown-menu.student-notify-menu::before {
+        content: "";
+        position: absolute;
+        top: -8px;
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border-left: 1px solid rgba(15, 23, 42, .08);
+        border-top: 1px solid rgba(15, 23, 42, .08);
+        transform: rotate(45deg);
+    }
+
+    /* مكان السهم في LTR/RTL */
+    .student-navbar .dropdown-menu.student-notify-menu::before {
+        right: 16px; /* جنب الجرس */
+        left: auto;
+    }
+
+[dir="rtl"] .student-navbar .dropdown-menu.student-notify-menu::before {
+    left: 16px;
+    right: auto;
+}
+
+/* عنوان القايمة لو عندك header جوه */
+.student-notify-menu .notify-title,
+.student-notify-menu .dropdown-header {
+    font-weight: 900;
+    font-size: 14px;
+    color: #0f172a;
+    margin: 4px 6px 8px;
+}
+
+/* العناصر جوه القايمة (لو عندك dropdown-item) */
+.student-notify-menu .dropdown-item {
+    border-radius: 12px !important;
+    padding: 10px 12px !important;
+    margin: 6px 2px !important;
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, .06);
+    transition: transform .15s ease, filter .15s ease, background .15s ease;
+    white-space: normal !important; /* عشان النص مايبقاش ناشف */
+}
+
+    .student-notify-menu .dropdown-item:hover {
+        background: #eef4ff; /* أزرق هادي */
+        transform: translateY(-1px);
+        filter: brightness(0.99);
+    }
+
+/* لو في وقت/تاريخ */
+.student-notify-menu .notify-time,
+.student-notify-menu small,
+.student-notify-menu .text-muted {
+    color: #64748b !important;
+    font-weight: 700;
+}
+
+/* خط فاصل أنعم */
+.student-notify-menu .dropdown-divider {
+    margin: 10px 6px !important;
+    opacity: .35;
+}
+
+/* Animation خفيف */
+.student-notify-menu {
+    animation: notifyDrop .16s ease both;
+    transform-origin: top right;
+}
+
+[dir="rtl"] .student-notify-menu {
+    transform-origin: top left;
+}
+
+@keyframes notifyDrop {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
