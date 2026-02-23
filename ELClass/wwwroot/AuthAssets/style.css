@@ -1,7 +1,5 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
 
-
-
 :root {
     --primary-bg: #1a222d;
     --card-bg: #242e3d;
@@ -10,8 +8,6 @@
     --text-muted: #a0aec0;
     --input-bg: #2d3748;
 }
-
-
 
 body {
     font-family: 'Cairo', sans-serif;
@@ -23,21 +19,21 @@ body {
     align-items: center;
     justify-content: flex-start;
     margin: 0;
-    padding-top: 40px;
+    /* ✅ better mobile safe padding */
+    padding: 40px 12px 24px;
     color: var(--text-main);
 }
 
-
+/* ✅ prevents weird mobile scaling due to large fixed widths */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 .auth-container {
     width: 100%;
     max-width: 500px;
     padding: 20px;
 }
-
-
-
-
 
 .auth-top-nav {
     display: flex;
@@ -48,8 +44,6 @@ body {
     width: 100%;
 }
 
-
-
 .auth-logo-img {
     height: 60px;
     width: auto;
@@ -57,13 +51,9 @@ body {
     transition: transform 0.3s ease;
 }
 
-
-
     .auth-logo-img:hover {
         transform: scale(1.05);
     }
-
-
 
 .btn-change-lang {
     background: rgba(255, 255, 255, 0.05);
@@ -76,14 +66,10 @@ body {
     transition: 0.3s;
 }
 
-
-
     .btn-change-lang:hover {
         background: var(--accent-orange);
         color: white;
     }
-
-
 
 .auth-card {
     max-width: 100%;
@@ -94,14 +80,10 @@ body {
     border: 1px solid rgba(255,255,255,0.05);
 }
 
-
-
 .auth-header {
     text-align: center;
     margin-bottom: 30px;
 }
-
-
 
     .auth-header h2 {
         color: var(--text-main);
@@ -109,22 +91,15 @@ body {
         margin-bottom: 10px;
     }
 
-
-
     .auth-header p {
         color: var(--text-muted);
         font-size: 14px;
     }
 
-
-
 /* --- المدخلات (Inputs) --- */
-
 .form-group {
     margin-bottom: 20px;
 }
-
-
 
 .form-label {
     font-weight: 600;
@@ -134,8 +109,6 @@ body {
     font-size: 14px;
 }
 
-
-
 .form-control {
     width: 100%;
     padding: 12px 15px;
@@ -143,11 +116,10 @@ body {
     background-color: var(--input-bg);
     border-radius: 10px;
     transition: all 0.3s ease;
-    box-sizing: border-box;
     color: white;
+    /* ✅ avoids iOS zoom feeling when fonts are too small */
+    font-size: 16px;
 }
-
-
 
     .form-control:focus {
         border-color: var(--accent-orange);
@@ -156,10 +128,7 @@ body {
         outline: none;
     }
 
-
-
 /* --- الأزرار --- */
-
 .btn-auth {
     width: 100%;
     padding: 14px;
@@ -173,27 +142,22 @@ body {
     transition: 0.3s;
 }
 
-
-
     .btn-auth:hover {
         background: #e07b00;
         transform: translateY(-2px);
     }
 
-
-
 /*  التعديلات الجديدة الخاصة بـ Forget Password */
-
 .input-group-forget {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-
 .text-danger {
     color: #dc3545;
 }
+
 .bg-orange {
     background-color: #fd7e14 !important;
 }
@@ -202,34 +166,21 @@ body {
     background-color: #fd7e14;
     border: none;
 }
-/*//chat*/
 
-
-
-
-
-
-
-    .input-group-forget i {
-        position: absolute;
-        margin: 0 15px;
-        color: var(--text-muted);
-        z-index: 5;
-    }
-
-
+.input-group-forget i {
+    position: absolute;
+    margin: 0 15px;
+    color: var(--text-muted);
+    z-index: 5;
+}
 
 [dir="ltr"] .input-group-forget .form-control {
     padding-left: 45px !important;
 }
 
-
-
 [dir="rtl"] .input-group-forget .form-control {
     padding-right: 45px !important;
 }
-
-
 
 .back-to-login {
     display: flex;
@@ -240,8 +191,6 @@ body {
     font-size: 14px;
 }
 
-
-
 .auth-link, .forgot-link, .resend-container a {
     color: var(--accent-orange) !important;
     text-decoration: none;
@@ -249,23 +198,15 @@ body {
     transition: 0.3s;
 }
 
-
-
     .auth-link:hover, .forgot-link:hover, .resend-container a:hover {
         text-decoration: underline;
     }
-
-
-
-
 
 .social-separator {
     text-align: center;
     margin: 25px 0;
     position: relative;
 }
-
-
 
     .social-separator::before {
         content: "";
@@ -278,8 +219,6 @@ body {
         z-index: 1;
     }
 
-
-
     .social-separator span {
         background: var(--card-bg);
         padding: 0 15px;
@@ -288,8 +227,6 @@ body {
         position: relative;
         z-index: 2;
     }
-
-
 
 .btn-google-login {
     display: flex !important;
@@ -307,15 +244,11 @@ body {
     border: none !important;
 }
 
-
-
     .btn-google-login:hover {
         background: #f1f1f1 !important;
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
-
-
 
 .resend-container {
     width: 100% !important;
@@ -324,26 +257,103 @@ body {
     padding: 20px !important;
 }
 
-
-
+/* ✅ Responsive fixes (Mobile) */
 @media (max-width: 800px) {
-
     body {
-        padding-top: 20px;
+        padding: 18px 12px 18px;
     }
 
+    .auth-container {
+        padding: 12px;
+        max-width: 520px;
+    }
 
+    .auth-top-nav {
+        margin-bottom: 16px;
+        padding: 0;
+    }
 
+    .auth-logo-img {
+        height: 46px;
+    }
+
+    .btn-change-lang {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    /* ✅ IMPORTANT: was 50px -> causes huge zoom feeling */
     .auth-card {
         width: 100% !important;
-        padding: 50px !important;
+        padding: 22px !important;
+        border-radius: 14px;
+    }
+
+    .auth-header {
+        margin-bottom: 18px;
+    }
+
+        .auth-header h2 {
+            font-size: 22px;
+        }
+
+        .auth-header p {
+            font-size: 13px;
+        }
+
+    .form-label {
+        font-size: 13px;
+    }
+
+    .btn-auth {
+        padding: 13px;
+        font-size: 15px;
     }
 }
-
-
 
 .reset-password-card {
     max-width: 800px !important;
     width: 100% !important;
 }
 
+/* ✅ Reduce "zoom" feeling on mobile/tablet */
+@media (max-width: 991px) {
+    .auth-container {
+        max-width: 440px; /* كان 500 */
+        padding: 10px;
+    }
+
+    .auth-card {
+        padding: 18px !important; /* كان 22 */
+    }
+
+    .auth-logo-img {
+        height: 42px;
+    }
+
+    .auth-header h2 {
+        font-size: 20px;
+    }
+
+    .auth-header p {
+        font-size: 12.5px;
+    }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .form-control {
+        padding: 10px 12px;
+    }
+
+    .btn-auth {
+        padding: 12px;
+        font-size: 15px;
+    }
+}
+@media (max-width: 991px) {
+    body {
+        padding-top: 18px;
+    }
+}
