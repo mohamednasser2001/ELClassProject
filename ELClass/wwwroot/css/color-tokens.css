@@ -1,123 +1,150 @@
-/* ========================================
-   ELClass Color Token System
-   Master color definitions - Single source of truth
-   ======================================== */
+/* ============================================================
+   ELClass Design System — Color & Token Definitions
+   Font: Cairo (Arabic + Latin)
+   Palette: Modern Educational Blue
+   ============================================================ */
 
 :root {
-  /* === PRIMARY COLOR SYSTEM (Deep Blue) === */
-  --color-primary: #0053B3;
-  --color-primary-rgb: 0, 83, 179;
-  --color-primary-hover: #003d85;
-  --color-primary-light: #e6f0f9;
-  --color-primary-dark: #002952;
+  /* ─── Brand ─────────────────────────────────────── */
+  --el-primary:        #2563EB;
+  --el-primary-hover:  #1D4ED8;
+  --el-primary-light:  #EFF6FF;
+  --el-primary-dark:   #1E3A8A;
+  --el-primary-rgb:    37, 99, 235;
 
-  /* === SECONDARY COLOR SYSTEM (Light Blue) === */
-  --color-secondary: #82DAFF;
-  --color-secondary-rgb: 130, 218, 255;
-  --color-secondary-hover: #5fcbff;
-  --color-secondary-light: #f0f9ff;
-  --color-secondary-dark: #0097d6;
+  /* ─── Role Accents ───────────────────────────────── */
+  --el-admin:           #2563EB;
+  --el-admin-light:     #EFF6FF;
+  --el-instructor:      #7C3AED;
+  --el-instructor-light:#F5F3FF;
+  --el-student:         #0EA5E9;
+  --el-student-light:   #F0F9FF;
 
-  /* === ACCENT COLOR SYSTEM (Coral) === */
-  --color-accent: #FF716B;
-  --color-accent-rgb: 255, 113, 107;
-  --color-accent-hover: #ff4b43;
-  --color-accent-light: #fff5f5;
-  --color-accent-dark: #d94b46;
+  /* Role color (overridden per layout via inline style) */
+  --el-role-color:  var(--el-admin);
+  --el-role-light:  var(--el-admin-light);
 
-  /* === WARNING/HIGHLIGHT COLOR SYSTEM (Yellow) === */
-  --color-warning: #FCC247;
-  --color-warning-rgb: 252, 194, 71;
-  --color-warning-hover: #f5b322;
-  --color-warning-light: #fffbf0;
-  --color-warning-dark: #d49a1a;
+  /* ─── Sidebar (unified dark) ─────────────────────── */
+  --el-sidebar:          #0F172A;
+  --el-sidebar-surface:  #1E293B;
+  --el-sidebar-hover:    rgba(255,255,255,0.07);
+  --el-sidebar-active:   rgba(37,99,235,0.18);
+  --el-sidebar-text:     #94A3B8;
+  --el-sidebar-text-hover: #E2E8F0;
+  --el-sidebar-text-active: #93C5FD;
+  --el-sidebar-border:   rgba(255,255,255,0.06);
 
-  /* === SEMANTIC COLORS === */
-  --color-success: #00c853;
-  --color-success-rgb: 0, 200, 83;
-  --color-success-light: #e8f5e9;
-  --color-success-dark: #00a043;
+  /* ─── Surfaces ───────────────────────────────────── */
+  --el-body:    #F1F5F9;
+  --el-card:    #FFFFFF;
+  --el-header:  #FFFFFF;
 
-  --color-danger: #f44336;
-  --color-danger-rgb: 244, 67, 54;
-  --color-danger-light: #ffebee;
-  --color-danger-dark: #d32f2f;
+  /* ─── Typography ─────────────────────────────────── */
+  --el-font:          'Cairo', system-ui, -apple-system, sans-serif;
+  --el-text:          #0F172A;
+  --el-text-secondary:#334155;
+  --el-text-muted:    #64748B;
+  --el-text-light:    #94A3B8;
 
-  --color-info: #0053B3;
-  --color-info-rgb: 0, 83, 179;
-  --color-info-light: #e6f0f9;
+  /* ─── Borders ────────────────────────────────────── */
+  --el-border:        #E2E8F0;
+  --el-border-light:  #F1F5F9;
 
-  /* === NEUTRAL COLORS === */
-  --color-text-primary: #1a202c;
-  --color-text-secondary: #4a5568;
-  --color-text-muted: #718096;
-  --color-text-light: #a0aec0;
+  /* ─── Semantic ───────────────────────────────────── */
+  --el-success:       #10B981;
+  --el-success-light: #ECFDF5;
+  --el-success-dark:  #047857;
+  --el-warning:       #F59E0B;
+  --el-warning-light: #FFFBEB;
+  --el-warning-dark:  #92400E;
+  --el-danger:        #EF4444;
+  --el-danger-light:  #FEF2F2;
+  --el-danger-dark:   #B91C1C;
+  --el-info:          #06B6D4;
+  --el-info-light:    #ECFEFF;
 
-  --color-border: #e2e8f0;
-  --color-border-light: #f1f5f9;
+  /* ─── Shadows ────────────────────────────────────── */
+  --el-shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --el-shadow-md: 0 4px 16px rgba(15,23,42,0.08);
+  --el-shadow-lg: 0 10px 32px rgba(15,23,42,0.12);
+  --el-shadow-xl: 0 20px 48px rgba(15,23,42,0.16);
 
-  --color-bg-light: #f7fafc;
-  --color-bg-gray: #f8f9fa;
-  --color-bg-white: #ffffff;
+  /* ─── Radius ─────────────────────────────────────── */
+  --el-radius-sm:  8px;
+  --el-radius:     12px;
+  --el-radius-lg:  16px;
+  --el-radius-xl:  24px;
 
-  /* === SHADOW DEFINITIONS === */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.12);
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+  /* ─── Transitions ────────────────────────────────── */
+  --el-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* === LEGACY MAPPINGS (for gradual migration) === */
-  /* These map old color names to new system */
-  --primary-orange: var(--color-primary);
-  --hover-orange: var(--color-primary-hover);
-  --soft-orange: var(--color-primary-light);
-  --primary-color: var(--color-primary);
-  --secondary-color: var(--color-primary-hover);
+  /* ══════════════════════════════════════════════════
+     Legacy mappings — keeps existing views working
+     ══════════════════════════════════════════════════ */
+  --color-primary:         var(--el-primary);
+  --color-primary-rgb:     37, 99, 235;
+  --color-primary-hover:   var(--el-primary-hover);
+  --color-primary-light:   var(--el-primary-light);
+  --color-primary-dark:    var(--el-primary-dark);
 
-  /* === ACCESSIBILITY COMPLIANT TEXT COLORS === */
-  /* Use these for text to ensure WCAG AA compliance */
-  --color-secondary-text: #0097d6;  /* 4.5:1 contrast on white */
-  --color-accent-text: #d94b46;     /* 4.5:1 contrast on white */
-  --color-warning-text: #d49a1a;    /* 4.5:1 contrast on white */
+  --color-secondary:       #38BDF8;
+  --color-secondary-rgb:   56, 189, 248;
+  --color-secondary-hover: #0EA5E9;
+  --color-secondary-light: #F0F9FF;
+  --color-secondary-dark:  #0284C7;
+
+  --color-accent:          #F97316;
+  --color-accent-rgb:      249, 115, 22;
+  --color-accent-hover:    #EA580C;
+  --color-accent-light:    #FFF7ED;
+  --color-accent-dark:     #C2410C;
+
+  --color-warning:         var(--el-warning);
+  --color-warning-rgb:     245, 158, 11;
+  --color-warning-hover:   #D97706;
+  --color-warning-light:   var(--el-warning-light);
+  --color-warning-dark:    #B45309;
+
+  --color-success:         var(--el-success);
+  --color-success-rgb:     16, 185, 129;
+  --color-success-light:   var(--el-success-light);
+  --color-success-dark:    var(--el-success-dark);
+
+  --color-danger:          var(--el-danger);
+  --color-danger-rgb:      239, 68, 68;
+  --color-danger-light:    var(--el-danger-light);
+  --color-danger-dark:     var(--el-danger-dark);
+
+  --color-info:            var(--el-info);
+  --color-info-rgb:        6, 182, 212;
+  --color-info-light:      var(--el-info-light);
+
+  --color-text-primary:    var(--el-text);
+  --color-text-secondary:  var(--el-text-secondary);
+  --color-text-muted:      var(--el-text-muted);
+  --color-text-light:      var(--el-text-light);
+
+  --color-border:          var(--el-border);
+  --color-border-light:    var(--el-border-light);
+
+  --color-bg-light:        var(--el-body);
+  --color-bg-gray:         #F8FAFC;
+  --color-bg-white:        var(--el-card);
+
+  --shadow-sm:             var(--el-shadow-sm);
+  --shadow-md:             var(--el-shadow-md);
+  --shadow-lg:             var(--el-shadow-lg);
+  --shadow-xl:             var(--el-shadow-xl);
+  --shadow-card:           var(--el-shadow-md);
+
+  /* Legacy orange aliases */
+  --primary-orange:        var(--el-primary);
+  --hover-orange:          var(--el-primary-hover);
+  --soft-orange:           var(--el-primary-light);
+  --primary-color:         var(--el-primary);
+  --secondary-color:       var(--el-primary-hover);
+
+  --color-secondary-text:  #0284C7;
+  --color-accent-text:     #EA580C;
+  --color-warning-text:    #B45309;
 }
-
-/* === USAGE GUIDELINES ===
-
-PRIMARY COLOR (#0053B3 - Deep Blue):
-- Navbar background
-- Primary buttons
-- Active navigation links
-- Important headings
-- Focus states
-- Links
-
-SECONDARY COLOR (#82DAFF - Light Blue):
-- Background sections (light variant)
-- Card backgrounds
-- Hover states
-- Secondary UI elements
-- Subtle highlights
-NOTE: Do not use for text (low contrast), use --color-secondary-dark for text
-
-ACCENT COLOR (#FF716B - Coral):
-- Call-to-action buttons
-- Icons and badges
-- Alert emphasis
-- Important highlights (use sparingly)
-NOTE: Only for large text (18px+) or icons, use --color-accent-dark for small text
-
-WARNING COLOR (#FCC247 - Yellow):
-- Warning messages
-- Notifications
-- Badges
-- Subtle highlights
-NOTE: Always use with dark text overlay (--color-text-primary)
-
-CONTRAST RATIOS (WCAG 2.1):
-- Primary on white: 8.59:1 (AAA) ✅
-- Secondary on white: 2.3:1 (Background only) ⚠️
-- Accent on white: 3.2:1 (Large text only) ⚠️
-- Warning on white: 1.7:1 (Requires dark text) ❌
-
-============================= */

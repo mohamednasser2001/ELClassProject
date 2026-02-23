@@ -1,236 +1,216 @@
-﻿@{
+@{
     var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
     var isAr = currentLang == "ar";
-    var direction = isAr ? "rtl" : "ltr";
     ViewData["Title"] = isAr ? "لوحة التحكم" : "Admin Dashboard";
 }
 
-<div class="container-fluid" style="direction: @direction; text-align: @(isAr ? "right" : "left");">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card custom-card" style="border-top: 4px solid var(--color-primary); background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-white) 100%);">
-                <div class="card-body py-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h3 class="mb-2" style="color: var(--color-primary);">
-                                <i class="ti ti-dashboard me-2"></i>
-                                @(isAr ? "مرحباً بك في لوحة تحكم ELClass" : "Welcome to ELClass Admin Dashboard")
-                            </h3>
-                            <p class="mb-0 text-muted">
-                                @(isAr ? "قم بإدارة منصتك التعليمية بكل سهولة. تتبع تقدم الطلاب، نظم الدروس، وادعم مجتمعك التعليمي." : "Manage your educational platform with ease. Track student progress, organize lessons, and support your teaching community.")
+<!-- ─── Welcome Card ───────────────────────────────────────── -->
+<div class="el-welcome-card mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
+    <div style="position:relative;z-index:1">
+        <h2 class="wc-title">
+            @(isAr ? "مرحباً بك في لوحة تحكم ELClass" : "Welcome to ELClass Admin")
+        </h2>
+        <p class="wc-desc">
+            @(isAr
+                ? "قم بإدارة منصتك التعليمية بكل سهولة. تابع تقدم الطلاب، نظّم الدروس، وادعم مجتمعك التعليمي."
+                : "Manage your educational platform with ease. Track student progress, organize lessons, and support your teaching community.")
+        </p>
+    </div>
+    <i class="ti ti-shield-check wc-icon"></i>
+</div>
+
+<!-- ─── Stat Cards ────────────────────────────────────────── -->
+<div class="row g-4 mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-blue">
+            <div class="stat-icon"><i class="ti ti-users"></i></div>
+            <div class="stat-number">@ViewBag.TotalStudents</div>
+            <div class="stat-label">@(isAr ? "إجمالي الطلاب" : "Total Students")</div>
+            <div class="stat-trend up">
+                <i class="ti ti-trending-up"></i>
+                +@ViewBag.StudentsGrowth @(isAr ? "هذا الشهر" : "this month")
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-sky">
+            <div class="stat-icon"><i class="ti ti-user-plus"></i></div>
+            <div class="stat-number">@ViewBag.newStudents</div>
+            <div class="stat-label">@(isAr ? "الطلاب الجدد" : "New Students")</div>
+            <div class="stat-trend up">
+                <i class="ti ti-trending-up"></i>
+                @ViewBag.NewLessonsThisWeek @(isAr ? "جديد هذا الأسبوع" : "new this week")
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-green">
+            <div class="stat-icon"><i class="ti ti-school"></i></div>
+            <div class="stat-number">@ViewBag.TotalSubjects</div>
+            <div class="stat-label">@(isAr ? "إجمالي المواد" : "Total Subjects")</div>
+            <div class="stat-trend neutral">
+                <i class="ti ti-book"></i>
+                @(isAr ? "عبر جميع المراحل" : "Across all grades")
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-amber">
+            <div class="stat-icon"><i class="fa-regular fa-user"></i></div>
+            <div class="stat-number">@ViewBag.ActiveInstructors</div>
+            <div class="stat-label">@(isAr ? "المدرسون النشطون" : "Active Instructors")</div>
+            <div class="stat-trend up">
+                <i class="ti ti-user-check"></i>
+                @ViewBag.NewInstructors @(isAr ? "انضموا حديثاً" : "joined recently")
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ─── Quick Actions ─────────────────────────────────────── -->
+<div class="card mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
+    <div class="card-body">
+        <div class="el-card-header">
+            <div class="ch-icon" style="background:var(--el-primary-light);color:var(--el-primary)">
+                <i class="ti ti-bolt"></i>
+            </div>
+            <span class="ch-title">@(isAr ? "إجراءات سريعة" : "Quick Actions")</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-xl-3 col-md-6">
+                <a href="/Admin/Student" class="el-quick-action">
+                    <div class="qa-icon qa-blue"><i class="ti ti-users"></i></div>
+                    <div class="qa-label">@(isAr ? "إدارة الطلاب" : "Manage Students")</div>
+                    <div class="qa-sublabel">@(isAr ? "عرض وتعديل ملفات الطلاب" : "View and edit student profiles")</div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="/Admin/Course" class="el-quick-action">
+                    <div class="qa-icon qa-sky"><i class="ti ti-book"></i></div>
+                    <div class="qa-label">@(isAr ? "إدارة الدروس" : "Manage Lessons")</div>
+                    <div class="qa-sublabel">@(isAr ? "إنشاء وتنظيم المحتوى" : "Create and organize content")</div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="#" class="el-quick-action">
+                    <div class="qa-icon qa-green"><i class="ti ti-school"></i></div>
+                    <div class="qa-label">@(isAr ? "إدارة المواد" : "Manage Subjects")</div>
+                    <div class="qa-sublabel">@(isAr ? "تنظيم أقسام المواد" : "Organize subject categories")</div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="/Admin/Instructor" class="el-quick-action">
+                    <div class="qa-icon qa-amber"><i class="fa-regular fa-user"></i></div>
+                    <div class="qa-label">@(isAr ? "إدارة المدرسين" : "Manage Instructors")</div>
+                    <div class="qa-sublabel">@(isAr ? "إدارة طاقم التدريس" : "Manage teaching staff")</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Activity + Top Subjects ──────────────────────────── -->
+<div class="row g-4 mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
+
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="el-card-header">
+                    <div class="ch-icon" style="background:var(--el-primary-light);color:var(--el-primary)">
+                        <i class="ti ti-activity"></i>
+                    </div>
+                    <span class="ch-title">@(isAr ? "نظرة عامة على نشاط المنصة" : "Platform Activity Overview")</span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <small style="color:var(--el-text-muted)">@(isAr ? "نمو تسجيل الطلاب" : "Student Enrollment Growth")</small>
+                        <h4 class="mb-0 mt-1" style="color:var(--el-primary);font-weight:800">+@ViewBag.StudentsGrowth @(isAr ? "طالب" : "Students")</h4>
+                    </div>
+                    <select class="form-select" style="width:auto;font-size:13px;">
+                        <option>@(isAr ? "هذا الأسبوع" : "This Week")</option>
+                        <option selected>@(isAr ? "هذا الشهر" : "This Month")</option>
+                        <option>@(isAr ? "هذه السنة" : "This Year")</option>
+                    </select>
+                </div>
+
+                <div style="background:var(--el-primary-light);border-left:3px solid var(--el-primary);padding:14px 16px;border-radius:var(--el-radius-sm);margin-bottom:16px;">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="ti ti-chart-line" style="font-size:24px;color:var(--el-primary)"></i>
+                        <div>
+                            <div style="font-weight:700;color:var(--el-primary);font-size:14px">@(isAr ? "تقدم رائع!" : "Great Progress!")</div>
+                            <p class="mb-0" style="font-size:13px;color:var(--el-text-muted)">
+                                @(isAr
+                                    ? "شهدت منصتك زيادة بنسبة 23% في الطلاب النشطين هذا الشهر."
+                                    : "Your platform has seen a 23% increase in active students this month. Keep up the excellent work!")
                             </p>
                         </div>
-                        <div class="col-md-4 text-end d-none d-md-block">
-                            <i class="ti ti-book" style="font-size: 80px; opacity: 0.15; color: var(--color-primary);"></i>
-                        </div>
                     </div>
+                </div>
+
+                <div style="background:var(--el-body);border-radius:var(--el-radius);min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+                    <i class="ti ti-chart-bar" style="font-size:2.5rem;opacity:0.2;color:var(--el-primary)"></i>
+                    <p style="color:var(--el-text-muted);font-size:13px;margin:0">@(isAr ? "سيظهر الرسم البياني للتسجيل هنا" : "Enrollment chart visualization will appear here")</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card custom-card overflow-hidden h-100">
-                <span class="round small" style="background: var(--color-primary);"></span>
-                <span class="round big" style="background: var(--color-primary);"></span>
-                <div class="card-body">
-                    <div class="avtar avtar-lg mb-3" style="background-color: var(--color-primary-light);">
-                        <i class="ti ti-users" style="color: var(--color-primary);"></i>
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="el-card-header">
+                    <div class="ch-icon" style="background:var(--el-success-light);color:var(--el-success)">
+                        <i class="ti ti-trending-up"></i>
                     </div>
-                    <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-primary);">
-                        @ViewBag.TotalStudents <i class="ti ti-trending-up opacity-50"></i>
-                    </span>
-                    <p class="mb-0 text-muted">@(isAr ? "إجمالي الطلاب" : "Total Students")</p>
-                    <small class="text-success"><i class="ti ti-arrow-up"></i> @ViewBag.StudentsGrowth% @(isAr ? "هذا الشهر" : "this month")</small>
+                    <span class="ch-title">@(isAr ? "أعلى المواد أداءً" : "Top Performing Subjects")</span>
                 </div>
-            </div>
-        </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card custom-card overflow-hidden h-100">
-                <span class="round small" style="background: var(--color-accent);"></span>
-                <span class="round big" style="background: var(--color-accent);"></span>
-                <div class="card-body">
-                    <div class="avtar avtar-lg mb-3" style="background-color: var(--color-accent-light);">
-                        <i class="ti ti-book" style="color: var(--color-accent);"></i>
-                    </div>
-                    <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-accent);">
-                        @ViewBag.newStudents <i class="ti ti-book-2 opacity-50"></i>
-                    </span>
-                    <p class="mb-0 text-muted">@(isAr ? "الطلاب الجدد" : "New Students")</p>
-                    <small class="text-success"><i class="ti ti-arrow-up"></i> @ViewBag.NewLessonsThisWeek @(isAr ? "جديد هذا الأسبوع" : "new this week")</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card custom-card overflow-hidden h-100">
-                <span class="round small" style="background: var(--color-secondary-dark);"></span>
-                <span class="round big" style="background: var(--color-secondary-dark);"></span>
-                <div class="card-body">
-                    <div class="avtar avtar-lg mb-3" style="background-color: var(--color-secondary-light);">
-                        <i class="ti ti-school" style="color: var(--color-secondary-dark);"></i>
-                    </div>
-                    <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-secondary-dark);">
-                        @ViewBag.TotalSubjects <i class="ti ti-books opacity-50"></i>
-                    </span>
-                    <p class="mb-0 text-muted">@(isAr ? "إجمالي المواد" : "Total Subjects")</p>
-                    <small class="text-muted">@(isAr ? "عبر جميع المراحل" : "Across all grades")</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card custom-card overflow-hidden h-100">
-                <span class="round small" style="background: var(--color-warning);"></span>
-                <span class="round big" style="background: var(--color-warning);"></span>
-                <div class="card-body">
-                    <div class="avtar avtar-lg mb-3" style="background-color: var(--color-warning-light);">
-                        <i class="ti ti-user-check" style="color: var(--color-warning-dark);"></i>
-                    </div>
-                    <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-warning-dark);">
-                        @ViewBag.ActiveInstructors <i class="ti ti-chalkboard opacity-50"></i>
-                    </span>
-                    <p class="mb-0 text-muted">@(isAr ? "المدرسون النشطون" : "Active Instructors")</p>
-                    <small class="text-success"><i class="ti ti-arrow-up"></i> @ViewBag.NewInstructors @(isAr ? "انضموا حديثاً" : "joined recently")</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 mt-2 mb-4">
-            <div class="card custom-card">
-                <div class="card-header bg-white border-bottom-2">
-                    <h5 class="mb-0" style="color: var(--color-primary);">
-                        <i class="ti ti-bolt me-2"></i>@(isAr ? "إجراءات سريعة" : "Quick Actions")
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-xl-3 col-md-6">
-                            <a href="/Admin/Student" class="btn btn-primary-custom w-100 py-3 text-decoration-none">
-                                <i class="ti ti-users d-block mb-2 fs-2"></i>
-                                <span class="d-block fw-bold">@(isAr ? "إدارة الطلاب" : "Manage Students")</span>
-                                <small class="d-block mt-1 opacity-75">@(isAr ? "عرض وتعديل ملفات الطلاب" : "View and edit student profiles")</small>
-                            </a>
-                        </div>
-                        <div class="col-xl-3 col-md-6">
-                            <a href="/Admin/Course" class="btn w-100 py-3 text-white text-decoration-none" style="background-color: var(--color-accent);">
-                                <i class="ti ti-book d-block mb-2 fs-2"></i>
-                                <span class="d-block fw-bold">@(isAr ? "إدارة الدروس" : "Manage Lessons")</span>
-                                <small class="d-block mt-1 opacity-75">@(isAr ? "إنشاء وتنظيم المحتوى" : "Create and organize content")</small>
-                            </a>
-                        </div>
-                        <div class="col-xl-3 col-md-6">
-                            <a href="#" class="btn w-100 py-3 text-white text-decoration-none" style="background-color: var(--color-secondary-dark);">
-                                <i class="ti ti-school d-block mb-2 fs-2"></i>
-                                <span class="d-block fw-bold">@(isAr ? "إدارة المواد" : "Manage Subjects")</span>
-                                <small class="d-block mt-1 opacity-75">@(isAr ? "تنظيم أقسام المواد" : "Organize subject categories")</small>
-                            </a>
-                        </div>
-                        <div class="col-xl-3 col-md-6">
-                            <a href="/Admin/Instructor" class="btn w-100 py-3 text-white text-decoration-none" style="background-color: var(--color-warning-dark);">
-                                <i class="ti ti-user-check d-block mb-2 fs-2"></i>
-                                <span class="d-block fw-bold">@(isAr ? "إدارة المدرسين" : "Manage Instructors")</span>
-                                <small class="d-block mt-1 opacity-75">@(isAr ? "إدارة طاقم التدريس" : "Manage teaching staff")</small>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-8 mb-4">
-            <div class="card custom-card h-100">
-                <div class="card-header bg-white border-bottom-2">
-                    <h5 class="mb-0" style="color: var(--color-primary);">
-                        <i class="ti ti-activity me-2"></i>@(isAr ? "نظرة عامة على نشاط المنصة" : "Platform Activity Overview")
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3 align-items-center">
-                        <div class="col">
-                            <small class="text-muted">@(isAr ? "نمو تسجيل الطلاب" : "Student Enrollment Growth")</small>
-                            <h3 style="color: var(--color-primary);">+@ViewBag.StudentsGrowth @(isAr ? "طالب" : "Students")</h3>
-                        </div>
-                        <div class="col-auto">
-                            <select class="form-select border-primary">
-                                <option>@(isAr ? "هذا الأسبوع" : "This Week")</option>
-                                <option selected>@(isAr ? "هذا الشهر" : "This Month")</option>
-                                <option>@(isAr ? "هذه السنة" : "This Year")</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="alert mb-4" style="background-color: var(--color-primary-light); border-left: 4px solid var(--color-primary); color: var(--color-text-primary);">
-                        <div class="d-flex align-items-center">
-                            <i class="ti ti-chart-line me-3 fs-2 text-primary"></i>
+                @if (Model != null)
+                {
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                    @foreach (var sub in Model)
+                    {
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--el-border);border-radius:var(--el-radius-sm);">
                             <div>
-                                <h6 class="mb-1 text-primary fw-bold">@(isAr ? "تقدم رائع!" : "Great Progress!")</h6>
-                                <p class="mb-0 small">@(isAr ? "شهدت منصتك زيادة بنسبة 23% في الطلاب النشطين هذا الشهر. استمر في العمل الرائع!" : "Your platform has seen a 23% increase in active students this month. Keep up the excellent work!")</p>
+                                <div style="font-weight:700;font-size:14px;color:var(--el-text)">@sub.Count @(isAr ? "طالب" : "students")</div>
                             </div>
+                            <span style="background:var(--el-success-light);color:var(--el-success-dark);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px">
+                                @sub.Rate <i class="ti ti-arrow-up"></i>
+                            </span>
                         </div>
+                    }
                     </div>
-                    <div id="enrollment-chart" class="bg-light rounded-3 d-flex flex-column align-items-center justify-content-center p-5">
-                        <i class="ti ti-chart-bar fs-1 opacity-25"></i>
-                        <p class="mt-2 text-muted">@(isAr ? "سيظهر الرسم البياني للتسجيل هنا" : "Enrollment chart visualization will appear here")</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+                }
 
-        <div class="col-xl-4 mb-4">
-            <div class="card custom-card h-100">
-                <div class="card-header bg-white border-bottom-2">
-                    <h5 class="mb-0" style="color: var(--color-primary);">
-                        <i class="ti ti-trending-up me-2"></i>@(isAr ? "أعلى المواد أداءً" : "Top Performing Subjects")
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        @if (Model != null)
-                        {
-                            foreach (var sub in Model)
-                            {
-                                <li class="list-group-item px-0 border-0">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            @* <h6 class="mb-0"><i class="@sub.Icon me-1" style="color: @sub.Color;"></i>@(isAr? sub.TitleAr: sub.TitleEn)</h6> *@
-                                            <small class="text-success">@sub.Count @(isAr ? "طالب" : "students")</small>
-                                        </div>
-                                        <span class="badge bg-success">@sub.Rate <i class="ti ti-arrow-up ms-1"></i></span>
-                                    </div>
-                                </li>
-                            }
-                        }
-                    </ul>
-                    <div class="text-center mt-4">
-                        <a href="#" class="text-primary fw-bold text-decoration-none">
-                            @(isAr ? "عرض جميع المواد" : "View all subjects")
-                            <i class="ti ti-chevron-right ms-1"></i>
-                        </a>
-                    </div>
+                <div class="text-center mt-3">
+                    <a href="#" style="color:var(--el-primary);font-weight:700;text-decoration:none;font-size:13px">
+                        @(isAr ? "عرض جميع المواد" : "View all subjects")
+                        <i class="ti ti-arrow-@(isAr ? "left" : "right") ms-1"></i>
+                    </a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-12 mt-2">
-            <div class="card shadow-sm border-0" style="border-@(isAr ? "right" : "left"): 4px solid var(--color-accent) !important; background: linear-gradient(to @(isAr ? "left" : "right"), var(--color-accent-light) 0%, var(--color-bg-white) 100%);">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="avtar avtar-lg" style="background-color: var(--color-accent);">
-                                <i class="ti ti-bulb text-white fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <h5 class="mb-1 fw-bold" style="color: var(--color-accent);">@(isAr ? "نصيحة المنصة" : "Platform Tip")</h5>
-                            <p class="mb-0 text-muted">
-                                @(isAr ? "شجع المدرسين على تقديم ملاحظات دورية للطلاب. الدراسات تظهر أن التغذية الراجعة في الوقت المناسب تحسن نتائج التعلم بنسبة تصل إلى 40%!" : "Encourage instructors to provide regular feedback to students. Studies show that timely feedback improves learning outcomes by up to 40%!")
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+</div>
+
+<!-- ─── Tip Card ──────────────────────────────────────────── -->
+<div style="background:linear-gradient(to @(isAr ? "left" : "right"),var(--el-warning-light),var(--el-card));border-inline-start:4px solid var(--el-warning);border-radius:var(--el-radius);padding:20px 22px;display:flex;align-items:center;gap:16px;direction:@(isAr ? "rtl" : "ltr")">
+    <div style="width:46px;height:46px;border-radius:12px;background:var(--el-warning);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ti-bulb" style="color:#fff;font-size:20px"></i>
+    </div>
+    <div>
+        <div style="font-weight:700;color:#92400E;margin-bottom:4px;font-size:14px">@(isAr ? "نصيحة المنصة" : "Platform Tip")</div>
+        <p style="margin:0;color:var(--el-text-muted);font-size:13px">
+            @(isAr
+                ? "شجع المدرسين على تقديم ملاحظات دورية للطلاب. الدراسات تظهر أن التغذية الراجعة في الوقت المناسب تحسن نتائج التعلم بنسبة تصل إلى 40%!"
+                : "Encourage instructors to provide regular feedback to students. Studies show that timely feedback improves learning outcomes by up to 40%!")
+        </p>
     </div>
 </div>

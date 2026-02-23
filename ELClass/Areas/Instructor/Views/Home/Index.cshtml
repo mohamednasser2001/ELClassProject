@@ -1,261 +1,236 @@
-﻿@using Models
+@using Models
 @model Models.ViewModels.Instructor.InstructorIndexDashboardVM
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager
 @{
     ViewData["Title"] = "Instructor Dashboard";
     Layout = "_InstrcutorLayout";
+
+    var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+    var isAr = currentLang == "ar";
 }
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card custom-card" style="border-top: 4px solid var(--color-primary); background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-white) 100%);">
-            <div class="card-body py-4">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h3 class="mb-2" style="color: var(--color-primary);">
-                            <i class="ti ti-dashboard me-2"></i>Welcome to ELClass Instructor Dashboard
-                        </h3>
-                        <p class="mb-0 text-muted">
-                            Manage your educational platform with ease. Track student progress, organize lessons, and support your teaching community.
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-end d-none d-md-block">
-                        <i class="ti ti-book" style="font-size: 80px; opacity: 0.15; color: var(--color-primary);"></i>
-                    </div>
-                </div>
+<!-- ─── Welcome Card ───────────────────────────────────────── -->
+<div class="el-welcome-card mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
+    <div style="position:relative;z-index:1">
+        <h2 class="wc-title">
+            @(isAr ? "مرحباً بك في لوحة تحكم المحاضر" : "Welcome to Your Instructor Dashboard")
+        </h2>
+        <p class="wc-desc">
+            @(isAr
+                ? "تابع طلابك وكورساتك بكل سهولة. درّس، نظّم، وابنِ مجتمعاً تعليمياً متميزاً."
+                : "Track your students and courses with ease. Teach, organize, and build an outstanding learning community.")
+        </p>
+    </div>
+    <i class="fa-regular fa-user wc-icon"></i>
+</div>
+
+<!-- ─── Stat Cards ────────────────────────────────────────── -->
+<div class="row g-4 mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-violet">
+            <div class="stat-icon"><i class="ti ti-users"></i></div>
+            <div class="stat-number">@Model.TotalStudents.ToString("N0")</div>
+            <div class="stat-label">@(isAr ? "إجمالي طلابي" : "My Students")</div>
+            <div class="stat-trend up">
+                <i class="ti ti-trending-up"></i>
+                @(isAr ? "بيانات حية" : "Real-time data")
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-blue">
+            <div class="stat-icon"><i class="ti ti-book"></i></div>
+            <div class="stat-number">@Model.ActiveLessons.ToString("N0")</div>
+            <div class="stat-label">@(isAr ? "الدروس النشطة" : "Active Lessons")</div>
+            <div class="stat-trend neutral">
+                <i class="ti ti-circle-check"></i>
+                @(isAr ? "عبر جميع الكورسات" : "Across all courses")
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-green">
+            <div class="stat-icon"><i class="ti ti-books"></i></div>
+            <div class="stat-number">@Model.TotalCourses.ToString("N0")</div>
+            <div class="stat-label">@(isAr ? "كورساتي" : "My Courses")</div>
+            <div class="stat-trend neutral">
+                <i class="ti ti-school"></i>
+                @(isAr ? "مُسندة إليك" : "Assigned to you")
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="el-stat-card el-stat-amber">
+            <div class="stat-icon"><i class="fa-regular fa-user"></i></div>
+            <div class="stat-number">@Model.TotalInstructors.ToString("N0")</div>
+            <div class="stat-label">@(isAr ? "مدرسو المنصة" : "Platform Instructors")</div>
+            <div class="stat-trend neutral">
+                <i class="ti ti-users"></i>
+                @(isAr ? "المجتمع التعليمي" : "Teaching community")
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ─── Quick Actions ─────────────────────────────────────── -->
+<div class="card mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
+    <div class="card-body">
+        <div class="el-card-header">
+            <div class="ch-icon" style="background:var(--el-instructor-light);color:var(--el-instructor)">
+                <i class="ti ti-bolt"></i>
+            </div>
+            <span class="ch-title">@(isAr ? "إجراءات سريعة" : "Quick Actions")</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-xl-3 col-md-6">
+                <a href="/Instructor/Student" class="el-quick-action">
+                    <div class="qa-icon qa-violet"><i class="ti ti-users"></i></div>
+                    <div class="qa-label">@(isAr ? "طلابي" : "My Students")</div>
+                    <div class="qa-sublabel">@(isAr ? "عرض وتعديل ملفات الطلاب" : "View and edit student profiles")</div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="/Instructor/Course" class="el-quick-action">
+                    <div class="qa-icon qa-blue"><i class="ti ti-book"></i></div>
+                    <div class="qa-label">@(isAr ? "الكورسات" : "Courses")</div>
+                    <div class="qa-sublabel">@(isAr ? "إنشاء وتنظيم المحتوى" : "Create and organize content")</div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="/Instructor/appointment/create" class="el-quick-action">
+                    <div class="qa-icon qa-green"><i class="ti ti-calendar-plus"></i></div>
+                    <div class="qa-label">@(isAr ? "إضافة موعد" : "Add Appointment")</div>
+                    <div class="qa-sublabel">@(isAr ? "جدولة محاضرة جديدة" : "Schedule a new lecture")</div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="/Instructor/appointment/index" class="el-quick-action">
+                    <div class="qa-icon qa-amber"><i class="ti ti-calendar-event"></i></div>
+                    <div class="qa-label">@(isAr ? "كل المواعيد" : "All Appointments")</div>
+                    <div class="qa-sublabel">@(isAr ? "إدارة جدول المحاضرات" : "Manage lecture schedule")</div>
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-xl-3 col-md-6">
-        <div class="card custom-card overflow-hidden">
-            <span class="round small" style="background: var(--color-primary);"></span>
-            <span class="round big" style="background: var(--color-primary);"></span>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col">
-                        <div class="avtar avtar-lg" style="background-color: var(--color-primary-light);">
-                            <i class="ti ti-users" style="color: var(--color-primary);"></i>
-                        </div>
-                    </div>
-                </div>
-                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-primary);">
-                    @Model.TotalStudents.ToString("N0")
-                    <i class="ti ti-trending-up opacity-50"></i>
-                </span>
-                <p class="mb-0 text-muted">Total Students</p>
-                <small class="text-success"><i class="ti ti-arrow-up"></i> Real-time data</small>
-            </div>
-        </div>
-    </div>
+<!-- ─── Activity + Courses Status ────────────────────────── -->
+<div class="row g-4 mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
 
-    <div class="col-xl-3 col-md-6">
-        <div class="card custom-card overflow-hidden">
-            <span class="round small" style="background: var(--color-accent);"></span>
-            <span class="round big" style="background: var(--color-accent);"></span>
+    <div class="col-xl-8">
+        <div class="card h-100">
             <div class="card-body">
-                <div class="row">
-                    <div class="col">
-                        <div class="avtar avtar-lg" style="background-color: var(--color-accent-light);">
-                            <i class="ti ti-book" style="color: var(--color-accent);"></i>
-                        </div>
+                <div class="el-card-header">
+                    <div class="ch-icon" style="background:var(--el-instructor-light);color:var(--el-instructor)">
+                        <i class="ti ti-activity"></i>
                     </div>
+                    <span class="ch-title">@(isAr ? "نظرة عامة على أدائك" : "Your Performance Overview")</span>
                 </div>
-                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-accent);">
-                    @Model.ActiveLessons.ToString("N0")
-                    <i class="ti ti-book-2 opacity-50"></i>
-                </span>
-                <p class="mb-0 text-muted">Active Lessons</p>
-                <small class="text-success"><i class="ti ti-circle-check"></i> Across all courses</small>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-xl-3 col-md-6">
-        <div class="card custom-card overflow-hidden">
-            <span class="round small" style="background: var(--color-secondary-dark);"></span>
-            <span class="round big" style="background: var(--color-secondary-dark);"></span>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col">
-                        <div class="avtar avtar-lg" style="background-color: var(--color-secondary-light);">
-                            <i class="ti ti-school" style="color: var(--color-secondary-dark);"></i>
-                        </div>
-                    </div>
+                <div class="mb-3">
+                    <small style="color:var(--el-text-muted)">@(isAr ? "إجمالي الطلاب الملتحقين" : "Total enrolled students")</small>
+                    <h4 class="mb-0 mt-1" style="color:var(--el-instructor);font-weight:800">
+                        @Model.TotalStudents @(isAr ? "طالب" : "Students")
+                    </h4>
                 </div>
-                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-secondary-dark);">
-                    @Model.TotalCourses.ToString("N0")
-                    <i class="ti ti-books opacity-50"></i>
-                </span>
-                <p class="mb-0 text-muted">Total Courses</p>
-                <small class="text-muted">Assigned to you</small>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-xl-3 col-md-6">
-        <div class="card custom-card overflow-hidden">
-            <span class="round small" style="background: var(--color-warning);"></span>
-            <span class="round big" style="background: var(--color-warning);"></span>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col">
-                        <div class="avtar avtar-lg" style="background-color: var(--color-warning-light);">
-                            <i class="ti ti-user-check" style="color: var(--color-warning-dark);"></i>
-                        </div>
-                    </div>
-                </div>
-                <span class="d-block f-34 f-w-500 my-2" style="color: var(--color-warning-dark);">
-                    @Model.TotalInstructors.ToString("N0")
-                    <i class="ti ti-chalkboard opacity-50"></i>
-                </span>
-                <p class="mb-0 text-muted">Platform Instructors</p>
-                <small class="text-success"><i class="ti ti-users"></i> Teaching community</small>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 mt-3">
-        <div class="card custom-card">
-            <div class="card-header" style="background-color: var(--color-bg-white); border-bottom: 2px solid var(--color-primary-light);">
-                <h5 class="mb-0" style="color: var(--color-primary);">
-                    <i class="ti ti-bolt me-2"></i>Quick Actions
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-xl-3 col-md-6">
-                        <a href="/Instructor/Student" class="btn btn-primary-custom w-100 py-3" style="text-decoration: none;">
-                            <i class="ti ti-users d-block mb-2" style="font-size: 2rem;"></i>
-                            <span class="d-block">Manage Students</span>
-                            <small class="d-block mt-1 opacity-75">View and edit student profiles</small>
-                        </a>
-                    </div>
-                    <div class="col-xl-3 col-md-6">
-                        <a href="/Instructor/Course" class="btn w-100 py-3" style="background-color: var(--color-accent); color: white; text-decoration: none;">
-                            <i class="ti ti-book d-block mb-2" style="font-size: 2rem;"></i>
-                            <span class="d-block">Manage Lessons</span>
-                            <small class="d-block mt-1 opacity-75">Create and organize content</small>
-                        </a>
-                    </div>
-                    <div class="col-xl-3 col-md-6">
-                        <a href="#" class="btn w-100 py-3" style="background-color: var(--color-secondary-dark); color: white; text-decoration: none;">
-                            <i class="ti ti-school d-block mb-2" style="font-size: 2rem;"></i>
-                            <span class="d-block">Manage Subjects</span>
-                            <small class="d-block mt-1 opacity-75">Organize subject categories</small>
-                        </a>
-                    </div>
-                    <div class="col-xl-3 col-md-6">
-                        <a href="/Instructor/Instructor" class="btn w-100 py-3" style="background-color: var(--color-warning-dark); color: white; text-decoration: none;">
-                            <i class="ti ti-user-check d-block mb-2" style="font-size: 2rem;"></i>
-                            <span class="d-block">Manage Instructors</span>
-                            <small class="d-block mt-1 opacity-75">Manage teaching staff</small>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-8 col-md-12">
-        <div class="card custom-card">
-            <div class="card-header" style="background-color: var(--color-bg-white); border-bottom: 2px solid var(--color-primary-light);">
-                <h5 class="mb-0" style="color: var(--color-primary);">
-                    <i class="ti ti-activity me-2"></i>Platform Activity Overview
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row mb-3 align-items-center">
-                    <div class="col">
-                        <small class="text-muted">Current Performance</small>
-                        <h3 style="color: var(--color-primary);">+@Model.TotalStudents Students</h3>
-                    </div>
-                </div>
-                <div class="alert" style="background-color: var(--color-primary-light); border-left: 4px solid var(--color-primary); color: var(--color-text-primary);">
-                    <div class="d-flex align-items-center">
-                        <i class="ti ti-chart-line me-3" style="font-size: 2rem; color: var(--color-primary);"></i>
+                <div style="background:var(--el-instructor-light);border-inline-start:3px solid var(--el-instructor);padding:14px 16px;border-radius:var(--el-radius-sm);margin-bottom:16px;">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="ti ti-chart-line" style="font-size:24px;color:var(--el-instructor)"></i>
                         <div>
-                            <h6 class="mb-1" style="color: var(--color-primary);">Live Statistics</h6>
-                            <p class="mb-0 small">This data represents your current reach on the ELClass platform.</p>
+                            <div style="font-weight:700;color:var(--el-instructor);font-size:14px">@(isAr ? "إحصاءات حية" : "Live Statistics")</div>
+                            <p class="mb-0" style="font-size:13px;color:var(--el-text-muted)">
+                                @(isAr
+                                    ? $"هذه البيانات تعكس مدى انتشارك على منصة ELClass عبر {Model.TotalCourses} كورس."
+                                    : $"This data represents your current reach on the ELClass platform across {Model.TotalCourses} courses.")
+                            </p>
                         </div>
                     </div>
                 </div>
-                <div id="enrollment-chart" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background-color: var(--color-bg-light); border-radius: 8px;">
-                    <div class="text-center text-muted">
-                        <i class="ti ti-chart-bar" style="font-size: 3rem; opacity: 0.3;"></i>
-                        <p class="mt-2">Activity visualization based on your @Model.TotalCourses courses</p>
-                    </div>
+
+                <div style="background:var(--el-body);border-radius:var(--el-radius);min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+                    <i class="ti ti-chart-bar" style="font-size:2.5rem;opacity:0.2;color:var(--el-instructor)"></i>
+                    <p style="color:var(--el-text-muted);font-size:13px;margin:0">
+                        @(isAr ? "سيظهر الرسم البياني للنشاط هنا" : "Activity chart visualization will appear here")
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-xl-4 col-md-12">
-        <div class="card custom-card">
-            <div class="card-header" style="background-color: var(--color-bg-white); border-bottom: 2px solid var(--color-primary-light);">
-                <h5 class="mb-0" style="color: var(--color-primary);">
-                    <i class="ti ti-trending-up me-2"></i>Your Courses Status
-                </h5>
-            </div>
+    <div class="col-xl-4">
+        <div class="card h-100">
             <div class="card-body">
+                <div class="el-card-header">
+                    <div class="ch-icon" style="background:var(--el-success-light);color:var(--el-success)">
+                        <i class="ti ti-trending-up"></i>
+                    </div>
+                    <span class="ch-title">@(isAr ? "حالة الكورسات" : "Your Courses Status")</span>
+                </div>
+
                 @if (Model.TopPerformingCourses != null && Model.TopPerformingCourses.Any())
                 {
-                    foreach (var course in Model.TopPerformingCourses)
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                    @foreach (var course in Model.TopPerformingCourses)
                     {
-                        <div class="rounded overflow-hidden mb-3" style="background-color: var(--color-primary-light); padding: 1rem;">
-                            <div class="row mb-1 align-items-start">
-                                <div class="col">
-                                    <h6 class="mb-0" style="color: var(--color-primary);">
-                                        <i class="ti ti-book me-1"></i>@course.CourseName
-                                    </h6>
-                                    <small class="text-muted">@course.EnrolledStudents enrolled students</small>
+                        <div style="border:1px solid var(--el-border);border-radius:var(--el-radius-sm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                            <div style="min-width:0">
+                                <div style="font-weight:700;font-size:14px;color:var(--el-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                    <i class="ti ti-book me-1" style="color:var(--el-instructor)"></i>@course.CourseName
                                 </div>
-                                <div class="col-auto">
-                                    <span class="badge" style="background-color: var(--color-success);">Active</span>
+                                <div style="font-size:12px;color:var(--el-text-muted);margin-top:2px">
+                                    @course.EnrolledStudents @(isAr ? "طالب ملتحق" : "enrolled students")
                                 </div>
                             </div>
+                            <span style="background:var(--el-success-light);color:var(--el-success-dark);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap">
+                                @(isAr ? "نشط" : "Active")
+                            </span>
                         </div>
                     }
+                    </div>
                 }
                 else
                 {
-                    <p class="text-center text-muted">No courses found yet.</p>
+                    <div style="text-align:center;color:var(--el-text-muted);padding:24px 0;font-size:13px">
+                        <i class="ti ti-books" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:8px"></i>
+                        @(isAr ? "لا توجد كورسات حتى الآن." : "No courses found yet.")
+                    </div>
                 }
 
                 <div class="text-center mt-3">
-                    <a href="/Instructor/Course" class="text-primary" style="text-decoration: none; font-weight: 500;">
-                        View all your courses
-                        <i class="ti ti-chevron-right"></i>
+                    <a href="/Instructor/Course" style="color:var(--el-instructor);font-weight:700;text-decoration:none;font-size:13px">
+                        @(isAr ? "عرض جميع كورساتي" : "View all your courses")
+                        <i class="ti ti-arrow-@(isAr ? "left" : "right") ms-1"></i>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 mt-3">
-        <div class="card" style="border-left: 4px solid var(--color-accent); background: linear-gradient(to right, var(--color-accent-light) 0%, var(--color-bg-white) 100%);">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <div class="avtar avtar-lg" style="background-color: var(--color-accent);">
-                            <i class="ti ti-bulb text-white"></i>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <h5 class="mb-1" style="color: var(--color-accent);">Platform Tip</h5>
-                        <p class="mb-0 text-muted">
-                            Encourage instructors to provide regular feedback to students. Studies show that timely feedback improves learning outcomes by up to 40%!
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+</div>
+
+<!-- ─── Tip Card ──────────────────────────────────────────── -->
+<div style="background:linear-gradient(to @(isAr ? "left" : "right"),var(--el-instructor-light),var(--el-card));border-inline-start:4px solid var(--el-instructor);border-radius:var(--el-radius);padding:20px 22px;display:flex;align-items:center;gap:16px;direction:@(isAr ? "rtl" : "ltr")">
+    <div style="width:46px;height:46px;border-radius:12px;background:var(--el-instructor);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ti-bulb" style="color:#fff;font-size:20px"></i>
+    </div>
+    <div>
+        <div style="font-weight:700;color:#5B21B6;margin-bottom:4px;font-size:14px">@(isAr ? "نصيحة للمحاضر" : "Instructor Tip")</div>
+        <p style="margin:0;color:var(--el-text-muted);font-size:13px">
+            @(isAr
+                ? "قدم ملاحظات دورية لطلابك. الدراسات تظهر أن التغذية الراجعة في الوقت المناسب تحسن نتائج التعلم بنسبة تصل إلى 40%!"
+                : "Provide regular feedback to your students. Studies show that timely feedback improves learning outcomes by up to 40%!")
+        </p>
     </div>
 </div>
 
-@* Instructor Chat Widget *@
+
+@* ─── Instructor Chat Widget ──────────────────────────────── *@
 
 <button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
     <span class="chat-fab-icon" aria-hidden="true">
@@ -269,52 +244,38 @@
     <div class="chat-header">
         <div class="header-left">
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
-
             <div class="header-titles">
-                <!-- ✅ نفس الـid موجود عشان ما نكسرش JS قديم -->
                 <div class="title" id="chatHeaderTitle">Chats</div>
-
-                <!-- ✅ هنستخدمه كـ Online/Offline تحت الاسم -->
                 <div class="subtitle hidden" id="chatHeaderSubTitle"></div>
             </div>
         </div>
-
         <div class="actions">
             <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">✕</button>
         </div>
     </div>
 
-    @* Screen 1: Students list *@
     <div class="chat-screen" id="screenList">
         <div class="chat-search">
             <input id="chatSearch" type="text" placeholder="Search students..." autocomplete="off" />
         </div>
-
         <div class="chat-items" id="chatItems" role="list"></div>
     </div>
 
-    @* Screen 2: Thread *@
-
     <div class="chat-screen hidden" id="screenThread">
         <div class="messages" id="messagesBox" role="log" aria-live="polite"></div>
-
         <div class="composer">
             <div id="attachChip" class="attach-chip hidden">
                 <span id="attachName"></span>
                 <button type="button" id="attachClearBtn" class="attach-clear" aria-label="Remove file">×</button>
             </div>
-
             <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
             <input type="file" id="chatFile" hidden />
-
             <button type="button" id="attachBtn" class="chat-attach-btn" title="Attach file">
                 <i class="fa-solid fa-paperclip"></i>
             </button>
-
             <button id="sendBtn" type="button" aria-label="Send">➤</button>
         </div>
     </div>
-
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -865,7 +826,7 @@
     });
 
     // =========================
-    // ✅ NEW: MarkAsRead via SignalR (debounced)
+    // MarkAsRead via SignalR (debounced)
     // =========================
     let readDebounceTimer = null;
 
@@ -883,7 +844,7 @@
     }
 
     // =========================
-    // ✓✓ Read ticks UI
+    // Read ticks UI
     // =========================
     function ticksHtml(isMine, isRead) {
         if (!isMine) return '';
@@ -892,7 +853,7 @@
     }
 
     // =========================
-    // ✅ Render (supports attachmentUrl + download fallback + previewUrl)
+    // Render message
     // =========================
     function messageNode(m) {
         const id = (m.id ?? m.Id ?? '');
@@ -902,7 +863,6 @@
         const sentAt = (m.sentAt ?? m.SentAt);
         const isRead = (m.isRead ?? m.IsRead) === true;
 
-        // mine for instructor: if I'm sender -> receiver == current student
         const meId = String(currentUserId || '').trim();
         const isMine = meId && String(senderId || '').trim() === meId;
 
@@ -986,7 +946,6 @@
         return node;
     }
 
-    // click image => preview
     messagesBox.addEventListener('click', (e) => {
         const img = e.target.closest('img.js-preview-img');
         if (!img) return;
@@ -1010,7 +969,7 @@
     }
 
     // =========================
-    // Mark read (HTTP) - keep as is
+    // Mark read (HTTP)
     // =========================
     async function markAsRead(studentId) {
         try {
@@ -1025,7 +984,7 @@
     }
 
     // =========================
-    // ✅ optimistic patch (update id + replace previewUrl to attachmentUrl)
+    // Optimistic patch
     // =========================
     function patchOptimisticToReal(optimisticRowEl, payload) {
         if (!optimisticRowEl || !payload) return;
@@ -1054,7 +1013,7 @@
     }
 
     // =========================
-    // Send message (Text OR File)
+    // Send message
     // =========================
     async function sendMessage() {
         const text = (chatInput.value || '').trim();
@@ -1091,7 +1050,6 @@
         chatInput.value = '';
         clearAttachmentUI();
 
-        // update preview in list
         const item = findItem(state.currentStudentId);
         if (item) {
             const prev = item.querySelector('.preview');
@@ -1099,7 +1057,6 @@
         }
 
         try {
-            // 1) file -> FormData (NO realtime text after upload)
             if (file) {
                 const fd = new FormData();
                 fd.append("ReceiverId", state.currentStudentId);
@@ -1119,15 +1076,11 @@
                 }
 
                 const payload = await res.json();
-
                 patchOptimisticToReal(optimisticNode, payload);
-
                 if (previewUrl) URL.revokeObjectURL(previewUrl);
-
                 return;
             }
 
-            // 2) text only (legacy realtime)
             const res = await fetch(API.save, {
                 method: 'POST',
                 headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
@@ -1148,14 +1101,8 @@
             }
 
             const realId =
-                data.id ??
-                data.Id ??
-                data.messageId ??
-                data.savedMessageId ??
-                data.data?.id ??
-                data.data?.Id ??
-                data.message?.id ??
-                data.message?.Id;
+                data.id ?? data.Id ?? data.messageId ?? data.savedMessageId ??
+                data.data?.id ?? data.data?.Id ?? data.message?.id ?? data.message?.Id;
 
             if (realId && optimisticNode) {
                 optimisticNode.dataset.messageId = String(realId);
@@ -1173,15 +1120,12 @@
         if (e.key === 'Enter') sendMessage();
     });
 
-    // =========================
-    // Open/Close/Back
-    // =========================
     chatFab.addEventListener('click', showWidget);
     chatCloseBtn.addEventListener('click', hideWidget);
     chatBackBtn.addEventListener('click', showListScreen);
 
     // =========================
-    // SignalR (Instructor)
+    // SignalR
     // =========================
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chatHub")
@@ -1205,12 +1149,7 @@
         if (Array.isArray(ids) && ids.length > 0) markMessagesReadUI(ids);
     });
 
-    // ✅ ReceiveMessage supports BOTH:
-    // 1) payload object (attachments)
-    // 2) old signature (senderId, message, timestamp)
     connection.on("ReceiveMessage", async function (arg1, arg2, arg3) {
-
-        // NEW payload object
         if (arg1 && typeof arg1 === 'object') {
             const p = arg1;
 
@@ -1222,8 +1161,8 @@
                 state.isOpen
                 && state.currentStudentId
                 && (
-                    senderId === String(state.currentStudentId) // from student
-                    || receiverId === String(state.currentStudentId) // echo/instructor message
+                    senderId === String(state.currentStudentId)
+                    || receiverId === String(state.currentStudentId)
                 );
 
             if (sameOpenChat) {
@@ -1247,7 +1186,7 @@
                 return;
             }
 
-            const otherId = senderId; // incoming from student
+            const otherId = senderId;
             const item = findItem(otherId);
             if (item) {
                 const prev = item.querySelector('.preview');
@@ -1265,7 +1204,6 @@
             return;
         }
 
-        // OLD signature
         const senderId = arg1;
         const message = arg2;
         const timestamp = arg3;
@@ -1324,15 +1262,8 @@
         }
     }
     </script>
-
- 
 }
-
-
-
 
 @section Styles {
     <link rel="stylesheet" href="~/css/ChatMessage.css" asp-append-version="true" />
 }
-
-

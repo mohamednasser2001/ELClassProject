@@ -1,11 +1,10 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using Models
 @using DataAccess.Repositories.IRepositories
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUnitOfWork UnitOfWork
-@inject UserManager<ApplicationUser> UserManager
 
 @{
     var user = await UserManager.GetUserAsync(User);
@@ -30,24 +29,15 @@
 
 @{
     Layout = null;
-    var title = ViewData["Title"] ?? "Student";
-
-    // =========================
-    // Language (Session-based)
-    // =========================
+    var title       = ViewData["Title"] ?? "Student";
     var currentLang = Context.Session.GetString("Language") ?? "en";
-    var isArabic = currentLang == "ar";
-    var htmlLang = isArabic ? "ar" : "en";
+    var isArabic    = currentLang == "ar";
+    var htmlLang    = isArabic ? "ar" : "en";
+    var dir         = isArabic ? "rtl" : "ltr";
 
-    // ===== Flag icon paths (change if needed) =====
-    var flagSA = Url.Content("~/images/flags/sa.png");
-    var flagGB = Url.Content("~/images/flags/gb.png");
-
-    // =========================
-    // Notifications (Server-side)
-    // =========================
-    var userId = UserManager.GetUserId(User);
-    var now = DateTime.Now;
+    // Notifications
+    var userId  = UserManager.GetUserId(User);
+    var now     = DateTime.Now;
 
     DateTime? GetStartDateTime(Appointment appt)
     {
@@ -56,13 +46,9 @@
             if (!appt.SpecificDate.HasValue) return null;
             return appt.SpecificDate.Value.Date + appt.StartTime;
         }
-
         var daysAhead = ((int)appt.Day - (int)now.DayOfWeek + 7) % 7;
         var candidate = now.Date.AddDays(daysAhead) + appt.StartTime;
-
-        if (daysAhead == 0 && candidate <= now)
-            candidate = candidate.AddDays(7);
-
+        if (daysAhead == 0 && candidate <= now) candidate = candidate.AddDays(7);
         return candidate;
     }
 
@@ -81,229 +67,585 @@
         );
 
         var computed = sas
-            .Select(sa =>
-            {
-                var appt = sa.Appointment!;
+            .Select(sa => {
+                var appt  = sa.Appointment!;
                 var start = GetStartDateTime(appt);
-                DateTime? end = null;
+                DateTime? end = start.HasValue ? start.Value.AddHours(appt.DurationInHours) : (DateTime?)null;
 
-                if (start.HasValue)
-                    end = start.Value.AddHours(appt.DurationInHours);
+                var courseTitle     = appt.Course != null
+                    ? (!string.IsNullOrWhiteSpace(appt.Course.TitleEn) ? appt.Course.TitleEn : appt.Course.TitleAr)
+                    : (isArabic ? "محاضرة" : "Lecture");
 
-                var courseTitle =
-                    appt.Course != null
-                        ? (!string.IsNullOrWhiteSpace(appt.Course.TitleEn) ? appt.Course.TitleEn : appt.Course.TitleAr)
-                        : (isArabic ? "محاضرة" : "Lecture");
-
-                var instructorName =
-                    appt.Instructor != null
-                        ? (!string.IsNullOrWhiteSpace(appt.Instructor.NameEn) ? appt.Instructor.NameEn : appt.Instructor.NameAr)
-                        : (isArabic ? "المُدرس" : "Instructor");
+                var instructorName  = appt.Instructor != null
+                    ? (!string.IsNullOrWhiteSpace(appt.Instructor.NameEn) ? appt.Instructor.NameEn : appt.Instructor.NameAr)
+                    : (isArabic ? "المُدرس" : "Instructor");
 
                 return new { saId = sa.Id, start, end, courseTitle, instructorName };
             })
-            .Where(x => x.start.HasValue && x.end.HasValue)
-            .Where(x => x.end!.Value > now)
-            .Where(x => x.start!.Value >= now && x.start!.Value <= now.AddMinutes(30))
+            .Where(x => x.start.HasValue && x.end.HasValue && x.end!.Value > now
+                        && x.start!.Value >= now && x.start!.Value <= now.AddMinutes(30))
             .OrderBy(x => x.start)
             .ToList();
-    
-        notifyCount = computed.Count;
 
-        notifyItems = computed
-            .Take(3)
+        notifyCount = computed.Count;
+        notifyItems = computed.Take(3)
             .Select(x => (x.start!.Value, x.courseTitle, x.instructorName, x.saId))
             .ToList();
     }
 }
 
 <!DOCTYPE html>
-<html html lang="@htmlLang" dir="@(isArabic ? "rtl" : "ltr")">
+<html lang="@htmlLang" dir="@dir" style="--el-role-color:#0EA5E9;--el-role-light:#F0F9FF;--el-primary-rgb:14,165,233;">
 <head>
     <meta charset="utf-8" />
-    <title>@title - ELClass</title>
-
+    <title>@title — ELClass</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Cairo font -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
     <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
 
-    <!-- Core Overrides -->
-    <link href="~/css/bootstrap-overrides.css" rel="stylesheet" />
-    <link href="~/css/color-tokens.css" rel="stylesheet" />
+    <!-- Design system -->
+    <link href="~/css/color-tokens.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/bootstrap-overrides.css" rel="stylesheet" asp-append-version="true" />
 
-    <!-- Student Dashboard CSS -->
+    <!-- Student styles -->
     <link rel="stylesheet" href="~/css/DashboardStudent.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
 
     <style>
-        /* 3 columns layout */
-        .student-nav-wrap {
-            width: 100%;
+        /* ── Global font ─────────────────────── */
+        /* Set Cairo via root — never force on * which breaks icon fonts */
+        html, body { font-family: 'Cairo', system-ui, sans-serif !important; }
+        input, button, select, textarea,
+        .btn, .form-control, .form-select,
+        .card, .dropdown-item, .nav-link,
+        p, h1, h2, h3, h4, h5, h6, label, span, a, li, td, th {
+            font-family: 'Cairo', system-ui, sans-serif !important;
+        }
+
+        /* ── Student Navbar ──────────────────── */
+        .el-student-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 66px;
+            background: #0F172A;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+            padding: 0 20px;
+            z-index: 1100;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.25);
+            gap: 16px;
         }
 
-        /* Brand on LEFT even with RTL */
-        .student-brand-left {
-            margin-left: auto;
+        .el-student-nav .nav-brand img {
+            height: 36px;
+            width: auto;
+            object-fit: contain;
         }
 
-        /* Center menu */
-        .student-center {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-        }
-
-        /* Actions on RIGHT */
-        .student-actions {
+        .el-student-nav .nav-links {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 4px;
+            margin: 0 auto;
         }
 
-        /* Flag button as image */
-        .lang-flag-btn {
-            width: 40px;
-            height: 34px;
+        .el-student-nav .nav-links a {
+            color: #8BA3C7;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .el-student-nav .nav-links a:hover,
+        .el-student-nav .nav-links a.active {
+            background: rgba(255,255,255,0.08);
+            color: #E2E8F0;
+        }
+
+        .el-student-nav .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .el-student-nav .nav-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.07);
+            color: #8BA3C7;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,.14);
-            background: rgba(255,255,255,.06);
-            transition: .15s ease;
-            padding: 0;
-            overflow: hidden;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
         }
 
-            .lang-flag-btn:hover {
-                background: rgba(255,255,255,.12);
-                transform: translateY(-1px);
+        .el-student-nav .nav-icon-btn:hover {
+            background: rgba(255,255,255,0.13);
+            color: #E2E8F0;
+        }
+
+        .el-student-nav .nav-icon-btn .notif-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            min-width: 16px;
+            height: 16px;
+            background: #EF4444;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            border-radius: 999px;
+            border: 2px solid #0F172A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0 3px;
+        }
+
+        /* User capsule */
+        .el-user-capsule {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 5px 10px 5px 6px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .el-user-capsule:hover {
+            background: rgba(255,255,255,0.13);
+        }
+
+        .el-user-capsule .cap-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #0EA5E9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .el-user-capsule .cap-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .el-user-capsule .cap-name {
+            color: #C5D8F5;
+            font-size: 13px;
+            font-weight: 600;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Account dropdown */
+        .el-account-dropdown {
+            min-width: 230px;
+            background: #fff;
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            padding: 8px;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            z-index: 9999;
+        }
+
+        [dir="rtl"] .el-account-dropdown { right: auto; left: 0; }
+
+        .el-account-dropdown .acc-header {
+            padding: 12px;
+            background: #F8FAFC;
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+
+        .el-account-dropdown .acc-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: #0F172A;
+        }
+
+        .el-account-dropdown .acc-role {
+            font-size: 12px;
+            color: #64748B;
+            margin-top: 1px;
+        }
+
+        .el-account-dropdown a,
+        .el-account-dropdown button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            text-decoration: none;
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .el-account-dropdown a:hover,
+        .el-account-dropdown button:hover {
+            background: #F1F5F9;
+        }
+
+        .el-account-dropdown a i,
+        .el-account-dropdown button i {
+            width: 18px;
+            text-align: center;
+            color: #64748B;
+        }
+
+        .el-account-dropdown .acc-divider {
+            height: 1px;
+            background: #F1F5F9;
+            margin: 4px 0;
+        }
+
+        /* Notification dropdown */
+        .el-notify-dropdown {
+            min-width: 340px;
+            background: #fff;
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            z-index: 9999;
+        }
+
+        [dir="rtl"] .el-notify-dropdown { right: auto; left: 0; }
+
+        .el-notify-dropdown .notify-head {
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #0EA5E9, #0284C7);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .el-notify-dropdown .notify-title {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .el-notify-dropdown .notify-count {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .el-notify-dropdown .notify-body {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .el-notify-dropdown .notify-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #F1F5F9;
+            text-decoration: none;
+            color: #334155;
+            transition: background 0.15s ease;
+        }
+
+        .el-notify-dropdown .notify-item:hover { background: #F8FAFC; }
+
+        .el-notify-dropdown .notify-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #F0F9FF;
+            color: #0EA5E9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .el-notify-dropdown .notify-empty {
+            padding: 32px 16px;
+            text-align: center;
+            color: #94A3B8;
+        }
+
+        /* Mobile hamburger */
+        .el-student-nav .nav-toggler {
+            display: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.07);
+            color: #8BA3C7;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Content offset */
+        .el-student-main {
+            padding-top: 66px;
+            min-height: 100vh;
+            background: var(--el-body, #F1F5F9);
+        }
+
+        /* Mobile nav */
+        @@media (max-width: 768px) {
+            .el-student-nav .nav-links {
+                display: none;
+                position: fixed;
+                top: 66px; left: 0; right: 0;
+                background: #0F172A;
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px 16px 16px;
+                gap: 4px;
+                z-index: 1099;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             }
 
-        .lang-flag-img {
-            width: 26px;
-            height: 18px;
-            object-fit: cover;
-            border-radius: 4px;
-            display: block;
+            .el-student-nav .nav-links.open {
+                display: flex;
+            }
+
+            .el-student-nav .nav-links a {
+                padding: 10px 14px;
+                font-size: 15px;
+            }
+
+            .el-student-nav .nav-toggler {
+                display: inline-flex;
+            }
+
+            .el-user-capsule .cap-name {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
+    <!-- ─── Student Navbar ─────────────────────────────── -->
+    <nav class="el-student-nav">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 px-lg-4 student-navbar">
-        <div class="container-fluid student-nav-wrap">
+        <!-- Brand -->
+        <a class="nav-brand" asp-area="StudentArea" asp-controller="Home" asp-action="Index">
+            <img src="~/Images/Logos/logos-02.png" alt="ELClass" />
+        </a>
 
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2 student-brand order-1"
-               asp-area="StudentArea" asp-controller="Home" asp-action="Index">
-                <img src="~/Images/Logos/logos-02.png" alt="ELClass" height="30" />
+        <!-- Center links -->
+        <div class="nav-links" id="elNavLinks">
+            <a asp-area="StudentArea" asp-controller="Home" asp-action="Index">
+                <i class="fa-solid fa-house"></i>
+                @(isArabic ? "الرئيسية" : "Home")
             </a>
+            <a asp-area="StudentArea" asp-controller="Course" asp-action="Index">
+                <i class="fa-solid fa-book-open"></i>
+                @(isArabic ? "الكورسات" : "Courses")
+            </a>
+            <a asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
+                <i class="fa-solid fa-video"></i>
+                @(isArabic ? "المحاضرات" : "Lectures")
+            </a>
+        </div>
 
-            <button class="navbar-toggler student-toggler order-2" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#studentNav"
-                    aria-controls="studentNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+        <!-- Right actions -->
+        <div class="nav-actions">
 
-            <div class="collapse navbar-collapse student-center order-last order-lg-2 justify-content-center" id="studentNav">
-                <ul class="navbar-nav gap-lg-4">
-                    <li class="nav-item">
-                        <a class="nav-link text-center" asp-area="StudentArea" asp-controller="Home" asp-action="Index">
-                            <i class="fa-solid fa-house me-1"></i> @(isArabic ? "الرئيسية" : "Home")
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-center" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                            <i class="fa-solid fa-book me-1"></i> @(isArabic ? "الكورسات" : "Courses")
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-center" asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
-                            <i class="fa-solid fa-video me-1"></i> @(isArabic ? "المحاضرات" : "Lectures")
-                        </a>
-                    </li>
-                </ul>
+            <!-- Notifications -->
+            <div class="position-relative">
+                <button class="nav-icon-btn" id="elNotifyBtn" type="button" aria-label="Notifications">
+                    <i class="fa-solid fa-bell"></i>
+                    @if (notifyCount > 0)
+                    {
+                        <span class="notif-badge">@notifyCount</span>
+                    }
+                </button>
+
+                <div class="el-notify-dropdown d-none" id="elNotifyMenu">
+                    <div class="notify-head">
+                        <span class="notify-title">@(isArabic ? "الإشعارات" : "Notifications")</span>
+                        @if (notifyCount > 0)
+                        {
+                            <span class="notify-count">@notifyCount</span>
+                        }
+                    </div>
+                    <div class="notify-body">
+                        @if (notifyItems.Any())
+                        {
+                            foreach (var n in notifyItems)
+                            {
+                                <a href="/StudentArea/Lectures/Join?studentAppointmentId=@n.studentAppointmentId" class="notify-item">
+                                    <div class="notify-icon"><i class="fa-solid fa-video"></i></div>
+                                    <div>
+                                        <p class="mb-0 fw-bold" style="font-size:13px;">@n.course</p>
+                                        <small class="text-muted">@n.instructor · @n.start.ToString("hh:mm tt")</small>
+                                    </div>
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <div class="notify-empty">
+                                <i class="fa-solid fa-bell-slash d-block mb-2" style="font-size:28px;"></i>
+                                <span class="small">@(isArabic ? "لا توجد إشعارات" : "No notifications")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
 
-            <div class="student-actions d-flex align-items-center gap-2 gap-md-3 order-3">
+            <!-- User capsule -->
+            <div class="position-relative">
+                <button class="el-user-capsule" id="elUserBtn" type="button">
+                    <div class="cap-avatar">
+                        @if (!string.IsNullOrEmpty(profileImage))
+                        {
+                            <img src="@profileImage" alt="Profile" />
+                        }
+                        else
+                        {
+                            <span>@initials</span>
+                        }
+                    </div>
+                    <span class="cap-name">@fullName</span>
+                    <i class="fa-solid fa-chevron-down" style="color:#64748B; font-size:10px;"></i>
+                </button>
 
-                @await Component.InvokeAsync("StudentNotifications", new { isArabic = isArabic })
-
-                <div class="dropdown position-relative">
-                    <div class="user-capsule shadow-sm" data-bs-toggle="dropdown" data-bs-display="static" role="button" aria-expanded="false">
-                        <i class="fa-solid fa-gear capsule-gear"></i>
-                        <div class="capsule-avatar">
-                            @if (!string.IsNullOrEmpty(profileImage))
-                            {<img src="@profileImage" alt="Profile" /> }
-                            else
-                            { <span>@initials</span>}
-                        </div>
+                <div class="el-account-dropdown d-none" id="elUserMenu">
+                    <div class="acc-header">
+                        <div class="acc-name">@fullName</div>
+                        <div class="acc-role">@(isArabic ? "لوحة تحكم الطالب" : "Student Dashboard")</div>
                     </div>
 
-                    <ul class="dropdown-menu dropdown-menu-end shadow student-account-menu border-0">
-                        <li class="px-3 py-2 text-end">
-                            <div class="fw-bold">@User.Identity?.Name @(isArabic ? "،مرحباً" : ", Welcome")</div>
-                            <div class="text-muted small">@(isArabic ? "لوحة تحكم الطالب" : "Student Dashboard")</div>
-                        </li>
+                    <a asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>@(isArabic ? "إعدادات الحساب" : "Account Settings")</span>
+                    </a>
 
-                        <li><hr class="dropdown-divider"></li>
+                    <div class="acc-divider"></div>
 
-                        <li>
-                            <a class="dropdown-item text-end d-flex align-items-center justify-content-end gap-2"
-                               asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
-                                <span>@(isArabic ? "إعدادات الحساب" : "Account Settings")</span> <i class="fa-solid fa-gear"></i>
-                            </a>
-                        </li>
+                    <form asp-area="StudentArea" asp-controller="Home" asp-action="ChangeLanguage" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="lang" value="@(isArabic ? "en" : "ar")" />
+                        <button type="submit">
+                            <i class="fa-solid fa-language"></i>
+                            <span>@(isArabic ? "English" : "العربية")</span>
+                        </button>
+                    </form>
 
-                        <!-- ✅ Language Switch -->
-                        <li>
-                            <form asp-area="StudentArea" asp-controller="Home" asp-action="ChangeLanguage" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="lang" value="@(isArabic ? "en" : "ar")" />
+                    <div class="acc-divider"></div>
 
-                                <button type="submit"
-                                        class="dropdown-item text-end d-flex align-items-center justify-content-end gap-2 student-lang-item border-0 bg-transparent w-100">
-                                    <span>@(isArabic ? "English" : "العربية")</span>
-                                    <i class="fa-solid fa-language"></i>
-                                </button>
-                            </form>
-                        </li>
-
-                        <li><hr class="dropdown-divider"></li>
-
-                        <li>
-                            <form asp-area="Identity" asp-controller="Account" asp-action="Logout" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="dropdown-item text-end d-flex align-items-center justify-content-end gap-2 text-danger border-0 bg-transparent w-100">
-                                    <span>@(isArabic ? "تسجيل الخروج" : "Logout")</span> <i class="fa-solid fa-right-from-bracket"></i>
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+                    <form asp-area="Identity" asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" style="color:#EF4444;">
+                            <i class="fa-solid fa-right-from-bracket" style="color:#EF4444;"></i>
+                            <span>@(isArabic ? "تسجيل الخروج" : "Logout")</span>
+                        </button>
+                    </form>
                 </div>
-
             </div>
+
+            <!-- Mobile toggler -->
+            <button class="nav-toggler" id="elNavToggler" type="button" aria-label="Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </nav>
 
-
-
-
-    <main>
+    <!-- ─── Main Content ─────────────────────────────────── -->
+    <main class="el-student-main">
         @RenderBody()
     </main>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    @RenderSection("Scripts", required: false)
+    <script>
+        // Dropdown toggle helper
+        function toggleMenu(menuId, btnId) {
+            const menu = document.getElementById(menuId);
+            const btn  = document.getElementById(btnId);
+            if (!menu || !btn) return;
 
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const others = document.querySelectorAll('.el-notify-dropdown, .el-account-dropdown');
+                others.forEach(el => { if (el !== menu) el.classList.add('d-none'); });
+                menu.classList.toggle('d-none');
+            });
+        }
+
+        toggleMenu('elNotifyMenu', 'elNotifyBtn');
+        toggleMenu('elUserMenu',   'elUserBtn');
+
+        // Close on outside click
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.el-notify-dropdown, .el-account-dropdown')
+                    .forEach(el => el.classList.add('d-none'));
+        });
+
+        // Mobile nav toggle
+        const toggler  = document.getElementById('elNavToggler');
+        const navLinks = document.getElementById('elNavLinks');
+        if (toggler && navLinks) {
+            toggler.addEventListener('click', () => {
+                navLinks.classList.toggle('open');
+            });
+        }
+    </script>
+
+    @await Component.InvokeAsync("StudentNotifications", new { isArabic = isArabic })
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -1,2089 +1,1044 @@
-﻿/* =========================================================
-   Student Dashboard – Core Variables
-   ========================================================= */
+/* ============================================================
+   Student Dashboard — ELClass Design System
+   Font: Cairo | Role color: #0EA5E9 (sky blue)
+   All --el-* tokens come from color-tokens.css
+   ============================================================ */
+
+/* ─── Local shorthand tokens ────────────────────────────── */
 :root {
-    --bg: #f5f7fb;
-    --card: #ffffff;
-    --text: #1f2937;
-    --muted: #6b7280;
-    /* ✅ primary -> blue */
-    --primary: #2F5F9E;
-    --primary-soft: rgba(47,95,158,.14);
-    --mint: #dceee6;
-    --danger: #dc2626;
-    --border: #e5e7eb;
-    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.10);
-    --radius: 14px;
-    --radius-sm: 10px;
+    --sd-primary:       var(--el-student,   #0EA5E9);
+    --sd-primary-soft:  var(--el-student-light, #F0F9FF);
+    --sd-primary-rgb:   14, 165, 233;
+    --sd-bg:            var(--el-body,      #F1F5F9);
+    --sd-card:          var(--el-card,      #FFFFFF);
+    --sd-text:          var(--el-text,      #0F172A);
+    --sd-muted:         var(--el-text-muted,#64748B);
+    --sd-border:        var(--el-border,    #E2E8F0);
+    --sd-radius:        var(--el-radius,    12px);
+    --sd-radius-sm:     var(--el-radius-sm, 8px);
+    --sd-shadow-sm:     var(--el-shadow-sm);
+    --sd-shadow-md:     var(--el-shadow-md);
+    --sd-font:          var(--el-font, 'Cairo', system-ui, sans-serif);
 }
 
 
-/* =========================================================
-   cssDashboardWrapper
-   ========================================================= */
+/* ============================================================
+   Dashboard wrapper
+   ============================================================ */
 .sd-wrap {
-    background: var(--bg);
-    padding: 22px;
-    min-height: calc(100vh - 70px);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    color: var(--text);
-    /* ✅ Mobile requirement: keep same laptop layout (3 columns)
-       So we allow horizontal scrolling instead of stacking */
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    background:  var(--sd-bg);
+    padding:     24px;
+    min-height:  calc(100vh - 66px);
+    font-family: var(--sd-font);
+    color:       var(--sd-text);
+    width:       100%;
+    box-sizing:  border-box;
+    overflow-x:  hidden;
 }
 
 
-/* =========================================================
-   cssDashboardGridLayout
-   ✅ UPDATED: Upcoming (Right) wider
-   ========================================================= */
+/* ============================================================
+   3-column grid
+   ============================================================ */
 .sd-grid {
-    display: grid;
-    grid-template-columns: 430px 500px 430px;
-    gap: 28px;
-    align-items: start;
-    /* ✅ FIX: امنع overflow اللي بيبوّظ الموبايل */
-    min-width: 0;
-    width: 100%;
-    max-width: 1360px; /* اختياري: يحافظ على شكل الديسكتوب */
-    margin: 0 auto;
+    display:               grid;
+    grid-template-columns: 420px 490px 420px;
+    gap:                   24px;
+    align-items:           start;
+    max-width:             1390px;
+    margin:                0 auto;
 }
 
-
-/* Columns stack spacing */
 .sd-left,
 .sd-center,
 .sd-right {
-    display: flex;
+    display:        flex;
     flex-direction: column;
-    gap: 18px;
+    gap:            18px;
 }
 
 
-/* =========================================================
-   cssCardsBase
-   ========================================================= */
+/* ============================================================
+   Cards
+   ============================================================ */
 .sd-card {
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    margin: 0;
+    background:    var(--sd-card);
+    border-radius: var(--sd-radius);
+    box-shadow:    var(--sd-shadow-sm);
+    border:        1px solid var(--sd-border);
+    overflow:      hidden;
+    animation:     fadeUp 0.3s ease both;
 }
 
 .sd-card-head {
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
+    padding:       14px 18px;
+    border-bottom: 1px solid var(--sd-border);
 }
 
-.sd-head-orange {
-    background: var(--primary);
-    color: #fff;
+.sd-head-blue {
+    background: linear-gradient(135deg, var(--sd-primary) 0%, #0284C7 100%);
+    color:      #fff;
+    border:     none;
 }
+
+/* backward compat alias */
+.sd-head-orange { background: var(--sd-primary); color: #fff; border: none; }
 
 .sd-head-title {
-    display: flex;
+    display:     flex;
     align-items: center;
-    gap: 10px;
-    font-weight: 800;
+    gap:         10px;
+    font-weight: 700;
+    font-size:   15px;
 }
 
-.sd-card-body {
-    padding: 16px 18px;
-}
+.sd-card-body { padding: 16px 18px; }
 
-.sd-ic-fa {
-    font-size: 16px;
-    opacity: 0.9;
-}
+.sd-ic-fa { font-size: 16px; opacity: 0.9; }
 
 
-/* =========================================================
-   cssMyCourses (Right Column - Courses Card)
-   ========================================================= */
-.sd-course-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.sd-course-list-simple {
-    gap: 12px;
-}
+/* ============================================================
+   My Courses list
+   ============================================================ */
+.sd-course-list        { display: flex; flex-direction: column; gap: 10px; }
+.sd-course-list-simple { gap: 12px; }
 
 .sd-course-card {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px;
-    background: #fff;
-    transition: all 0.2s ease;
+    border:        1px solid var(--sd-border);
+    border-radius: var(--sd-radius);
+    padding:       12px;
+    background:    var(--sd-card);
+    transition:    var(--el-transition, all 0.2s ease);
 }
 
-    .sd-course-card:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
-    }
+.sd-course-card:hover {
+    box-shadow: var(--sd-shadow-md);
+    transform:  translateY(-2px);
+    border-color: rgba(var(--sd-primary-rgb), 0.3);
+}
 
 .sd-course-row {
-    display: flex;
-    align-items: center;
+    display:         flex;
+    align-items:     center;
     justify-content: space-between;
-    gap: 12px;
+    gap:             12px;
 }
 
-.sd-course-left {
-    min-width: 0;
-}
+.sd-course-left  { min-width: 0; }
 
-.sd-course-name {
-    font-weight: 900;
-    color: #0f172a;
-}
+.sd-course-name  { font-weight: 700; color: var(--sd-text); font-size: 14px; }
 
-.sd-course-hint {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-}
+.sd-course-hint  { font-size: 12px; color: var(--sd-muted); margin-top: 2px; }
 
 .sd-course-action {
     text-decoration: none;
-    font-weight: 900;
-    font-size: 13px;
-    color: var(--primary);
-    padding: 8px 12px;
-    border-radius: 999px;
-    /* ✅ orange -> blue soft */
-    border: 1px solid rgba(47,95,158,.28);
-    background: rgba(47,95,158,.10);
-    white-space: nowrap;
+    font-weight:     700;
+    font-size:       13px;
+    color:           var(--sd-primary);
+    padding:         8px 14px;
+    border-radius:   999px;
+    border:          1px solid rgba(var(--sd-primary-rgb), 0.28);
+    background:      rgba(var(--sd-primary-rgb), 0.08);
+    white-space:     nowrap;
+    transition:      var(--el-transition, all 0.2s ease);
 }
 
-    .sd-course-action:hover {
-        filter: brightness(0.98);
-    }
-
-.sd-courses-footer {
-    margin-top: 12px;
-    text-align: right;
+.sd-course-action:hover {
+    background:   rgba(var(--sd-primary-rgb), 0.15);
+    border-color: rgba(var(--sd-primary-rgb), 0.45);
 }
 
+.sd-courses-footer { margin-top: 12px; text-align: end; }
 
-/* =========================================================
-   cssSearch (Optional - If you use it somewhere)
-   ========================================================= */
+
+/* ============================================================
+   Search bar
+   ============================================================ */
 .sd-search {
-    display: flex;
-    gap: 8px;
+    display:    flex;
+    gap:        8px;
     margin-top: 14px;
 }
 
 .sd-search-input {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    outline: none;
+    flex:          1;
+    padding:       10px 14px;
+    border-radius: var(--sd-radius-sm);
+    border:        1px solid var(--sd-border);
+    outline:       none;
+    font-family:   var(--sd-font);
+    color:         var(--sd-text);
+    background:    var(--sd-card);
+    transition:    border-color 0.2s;
 }
 
-    .sd-search-input:focus {
-        border-color: var(--primary);
-    }
+.sd-search-input:focus { border-color: var(--sd-primary); }
 
 .sd-search-btn {
-    border: none;
-    background: var(--primary);
-    color: #fff;
-    padding: 0 14px;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
+    border:        none;
+    background:    var(--sd-primary);
+    color:         #fff;
+    padding:       0 16px;
+    border-radius: var(--sd-radius-sm);
+    cursor:        pointer;
 }
 
 
-/* =========================================================
-   cssHelpBox
-   ========================================================= */
+/* ============================================================
+   Help / tip box
+   ============================================================ */
 .sd-help {
-    margin-top: 4px;
-    padding: 14px;
-    background: #eef2ff;
-    border-radius: var(--radius);
-    font-size: 14px;
+    margin-top:    4px;
+    padding:       14px 16px;
+    background:    var(--sd-primary-soft);
+    border:        1px solid rgba(var(--sd-primary-rgb), 0.18);
+    border-radius: var(--sd-radius);
+    font-size:     14px;
+    color:         var(--sd-text);
 }
 
-.sd-help-title {
-    font-weight: 900;
-    margin-bottom: 4px;
-}
+.sd-help-title { font-weight: 700; margin-bottom: 4px; }
 
 
-/* =========================================================
-   cssQuickActions
-   ========================================================= */
+/* ============================================================
+   Quick actions grid
+   ============================================================ */
 .sd-quick-grid {
-    display: grid;
+    display:               grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap:                   12px;
 }
 
 .sd-quick-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    display:         flex;
+    align-items:     center;
+    gap:             10px;
+    padding:         12px 14px;
+    border:          1px solid var(--sd-border);
+    border-radius:   var(--sd-radius);
     text-decoration: none;
-    color: var(--text);
-    background: #fff;
-    transition: all 0.2s ease;
+    color:           var(--sd-text);
+    background:      var(--sd-card);
+    font-weight:     600;
+    font-size:       14px;
+    transition:      var(--el-transition, all 0.2s ease);
 }
 
-    .sd-quick-item i {
-        color: var(--primary);
-    }
+.sd-quick-item i { color: var(--sd-primary); font-size: 18px; }
 
-    .sd-quick-item:hover {
-        background: #f9fafb;
-        box-shadow: var(--shadow-sm);
-    }
+.sd-quick-item:hover {
+    background:   var(--sd-primary-soft);
+    border-color: rgba(var(--sd-primary-rgb), 0.3);
+    transform:    translateY(-1px);
+    box-shadow:   var(--sd-shadow-sm);
+}
 
 
-/* =========================================================
-   cssJoinLecture (Center - Join Card)
-   ========================================================= */
+/* ============================================================
+   Join lecture card
+   ============================================================ */
 .sd-join {
-    background: var(--mint);
-    border-radius: var(--radius);
-    padding: 20px;
-    text-align: center;
-    box-shadow: var(--shadow-md);
+    background:    var(--sd-primary-soft);
+    border:        1px solid rgba(var(--sd-primary-rgb), 0.2);
+    border-radius: var(--sd-radius);
+    padding:       24px;
+    text-align:    center;
+    box-shadow:    var(--sd-shadow-md);
+    animation:     fadeUp 0.3s ease both;
 }
 
-.sd-join-icon {
-    margin-bottom: 8px;
-}
-
-.sd-join-ic {
-    font-size: 32px;
-    opacity: 0.9;
-}
+.sd-join-icon  { margin-bottom: 8px; }
+.sd-join-ic    { font-size: 36px; color: var(--sd-primary); opacity: 0.85; }
 
 .sd-join-title {
-    font-size: 20px;
+    font-size:   22px;
     margin-bottom: 6px;
-    font-weight: 900;
+    font-weight:  700;
+    color:        var(--sd-text);
 }
 
 .sd-join-desc {
-    color: #374151;
-    font-size: 13.5px;
-    margin-bottom: 16px;
+    color:         var(--sd-muted);
+    font-size:     13.5px;
+    margin-bottom: 18px;
 }
 
 .sd-join-actions {
-    display: flex;
+    display:         flex;
     justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap:             12px;
+    flex-wrap:       wrap;
 }
 
-
-/* Buttons */
-.sd-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-radius: 999px;
-    font-size: 14px;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.sd-btn-primary {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-}
-
-    .sd-btn-primary:hover {
-        filter: brightness(0.95);
-    }
-
-.sd-btn-ghost {
-    background: #fff;
-    border: 1px solid var(--border);
-    color: var(--text);
-}
-
-    .sd-btn-ghost:hover {
-        background: #f9fafb;
-    }
-
-
-/* Status */
 .sd-status {
-    margin-top: 12px;
-    display: flex;
+    margin-top:      14px;
+    display:         flex;
     justify-content: center;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
+    align-items:     center;
+    gap:             8px;
+    font-size:       13px;
+    color:           var(--sd-muted);
 }
 
 .sd-dot {
-    width: 10px;
-    height: 10px;
+    width:         10px;
+    height:        10px;
     border-radius: 50%;
-    background: #22c55e;
+    background:    #22C55E;
+    box-shadow:    0 0 0 3px rgba(34,197,94,.15);
 }
 
 
-/* =========================================================
-   cssLastLessons (Center - Last Lessons + Accordion)
-   ========================================================= */
-.sd-last-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+/* ============================================================
+   Buttons
+   ============================================================ */
+.sd-btn {
+    display:         inline-flex;
+    align-items:     center;
+    gap:             8px;
+    padding:         10px 18px;
+    border-radius:   999px;
+    font-size:       14px;
+    font-weight:     600;
+    font-family:     var(--sd-font);
+    text-decoration: none;
+    cursor:          pointer;
+    transition:      var(--el-transition, all 0.2s ease);
+    border:          none;
 }
+
+.sd-btn-primary {
+    background: var(--sd-primary);
+    color:      #fff;
+}
+
+.sd-btn-primary:hover {
+    background: #0284C7;
+    color:      #fff;
+}
+
+.sd-btn-ghost {
+    background: var(--sd-card);
+    border:     1px solid var(--sd-border);
+    color:      var(--sd-text);
+}
+
+.sd-btn-ghost:hover { background: var(--el-body, #F1F5F9); }
+
+
+/* ============================================================
+   Last lessons list (accordion)
+   ============================================================ */
+.sd-last-list  { display: flex; flex-direction: column; gap: 10px; }
 
 .sd-last-title {
-    font-weight: 900;
-    color: #0f172a;
-    white-space: nowrap;
-    overflow: hidden;
+    font-weight:   700;
+    color:         var(--sd-text);
+    white-space:   nowrap;
+    overflow:      hidden;
     text-overflow: ellipsis;
 }
 
 .sd-last-sub {
-    color: var(--muted);
-    font-size: 13px;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
+    color:         var(--sd-muted);
+    font-size:     13px;
+    margin-top:    2px;
+    white-space:   nowrap;
+    overflow:      hidden;
     text-overflow: ellipsis;
 }
 
-.sd-last-footer {
-    margin-top: 12px;
-    text-align: right;
-}
+.sd-last-footer { margin-top: 12px; text-align: end; }
 
-/* Accordion Row */
 .sd-last-row {
-    position: relative;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: #fff;
-    padding: 12px;
-    display: flex;
-    align-items: center;
+    position:        relative;
+    border:          1px solid var(--sd-border);
+    border-radius:   var(--sd-radius);
+    background:      var(--sd-card);
+    padding:         12px 14px;
+    display:         flex;
+    align-items:     center;
     justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap:             12px;
+    flex-wrap:       wrap;
+    transition:      border-color 0.2s;
 }
 
-.sd-last-main {
-    min-width: 0;
-}
+.sd-last-row:hover { border-color: rgba(var(--sd-primary-rgb), 0.3); }
+
+.sd-last-main { min-width: 0; }
 
 .sd-last-toggle {
-    border: 0;
-    background: transparent;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    color: #6b7280;
-    transition: all 0.15s ease;
-    flex: 0 0 auto;
+    border:        0;
+    background:    transparent;
+    width:         34px;
+    height:        34px;
+    border-radius: var(--sd-radius-sm);
+    display:       grid;
+    place-items:   center;
+    cursor:        pointer;
+    color:         var(--sd-muted);
+    flex:          0 0 auto;
+    transition:    all 0.15s ease;
 }
 
-    .sd-last-toggle:hover {
-        background: #f9fafb;
-        color: var(--primary);
-    }
-
-    .sd-last-toggle i {
-        transition: transform 0.2s ease;
-    }
-
-.sd-last-row.active .sd-last-toggle i {
-    transform: rotate(180deg);
+.sd-last-toggle:hover {
+    background: var(--sd-primary-soft);
+    color:      var(--sd-primary);
 }
+
+.sd-last-toggle i { transition: transform 0.2s ease; }
+
+.sd-last-row.active .sd-last-toggle i { transform: rotate(180deg); }
 
 .sd-last-details {
-    width: 100%;
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.25s ease;
-    border-top: 1px solid #eef2f7;
-    margin-top: 10px;
+    width:       100%;
+    overflow:    hidden;
+    max-height:  0;
+    transition:  max-height 0.25s ease;
+    border-top:  1px solid var(--sd-border);
+    margin-top:  10px;
 }
 
-    .sd-last-details .content-links {
-        padding: 12px 0 0;
-    }
+.sd-last-details .content-links { padding: 12px 0 0; }
 
 
-/* =========================================================
-   cssLinks
-   ========================================================= */
+/* ============================================================
+   Links
+   ============================================================ */
 .sd-link {
-    color: var(--primary);
+    color:           var(--sd-primary);
     text-decoration: none;
-    font-weight: 800;
+    font-weight:     700;
 }
 
-.sd-link-danger {
-    color: var(--danger);
-}
+.sd-link-danger { color: var(--el-danger, #EF4444); }
 
-.sd-upcoming-footer {
-    margin-top: 12px;
-    text-align: right;
-}
+.sd-upcoming-footer         { margin-top: 12px; text-align: end; }
+.sd-upcoming-footer a,
+.sd-upcoming-footer .sd-link { color: var(--sd-primary) !important; }
+.sd-upcoming-footer a i,
+.sd-upcoming-footer .sd-link i { color: var(--sd-primary) !important; }
 
 
-/* =========================================================
-   cssUpcomingLectures (Right - Table)
-   ✅ FIXED: يمنع خروج العناصر خارج الكارت + هيدر واضح
-   ========================================================= */
+/* ============================================================
+   Upcoming lectures table
+   ============================================================ */
 .sd-upcoming,
-.sd-upcoming .sd-card-body {
-    overflow: hidden; /* ✅ بدل visible عشان مفيش حاجة تهرب برا الكارت */
-}
+.sd-upcoming .sd-card-body { overflow: hidden; }
 
 .sd-up-table {
-    display: flex;
+    display:        flex;
     flex-direction: column;
-    width: 100%;
+    width:          100%;
+    overflow-x:     auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .sd-up-row {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr 1.2fr 1fr; /* توزيع متوازن */
-    column-gap: 20px;
-    align-items: center;
-    padding: 14px 12px;
-    border-bottom: 1px solid #eef2f7;
+    display:               grid;
+    grid-template-columns: 1fr 1.2fr 1.2fr 1fr;
+    column-gap:            16px;
+    align-items:           center;
+    padding:               12px 14px;
+    border-bottom:         1px solid var(--el-border-light, #F1F5F9);
+    min-width:             500px;
 }
 
+.sd-up-row > div { min-width: 0; }
 
-    .sd-up-row > div {
-        min-width: 0;
-    }
-
-    .sd-up-row:last-child {
-        border-bottom: 0;
-    }
+.sd-up-row:last-child { border-bottom: 0; }
 
 .sd-up-head {
-    background: #f9fafb;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 900;
-    color: #374151;
+    background:     var(--el-body, #F1F5F9);
+    border-radius:  var(--sd-radius-sm);
+    font-size:      12px;
+    font-weight:    700;
+    color:          var(--sd-muted);
     text-transform: uppercase;
-}
-
-
-    .sd-up-head > div {
-        white-space: nowrap;
-    }
-
-        .sd-up-head > div:last-child {
-            text-align: center;
-        }
-
-.sd-up-time-main {
-    font-weight: 900;
-    color: #0f172a;
-    font-size: 13px;
-}
-
-.sd-up-time-sub {
-    font-size: 12px;
-    color: #6b7280;
-}
-
-.sd-up-course-main,
-.sd-up-inst-main {
-    font-weight: 800;
-    color: #0f172a;
-    font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.sd-up-zoom {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* ✅ unify join button color with primary */
-.sd-up-zoom-btn {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    font-size: 13px;
-    font-weight: 800;
-    padding: 10px 14px;
-    border-radius: 8px;
-    transition: background 0.2s ease;
-}
-
-.sd-up-zoom-muted {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 135px;
-    padding: 8px 10px;
-    border-radius: 12px;
-    border: 1px solid #eef2f7;
-    background: #f8fafc;
-    color: #64748b;
-    font-weight: 900;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   cssTips (Right - Tips Card)
-   ========================================================= */
-.sd-tips-item {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    padding: 8px 0;
-    color: var(--text);
-}
-
-    .sd-tips-item i {
-        margin-top: 2px;
-        color: #16a34a;
-    }
-
-
-/* =========================================================
-   cssAnimations
-   ========================================================= */
-.sd-card,
-.sd-join {
-    animation: fadeUp 0.35s ease both;
-}
-
-@keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-/* =========================================================
-   cssNavbar (Student Navbar)
-   ========================================================= */
-
-/* Navbar alignment fix */
-.student-navbar .navbar-collapse {
-    align-items: center;
-}
-
-/* ✅ FIX: خلى الـ dropdowns Overlay وماتبوّظش الـ layout */
-.student-navbar .dropdown,
-.student-navbar .btn-group {
-    position: relative;
-}
-
-/* =========================================================
-   cssNavbarNotifications (✅ NEW: Beautiful Notifications)
-   ========================================================= */
-
-/* Bell button */
-.btn-bell-only {
-    background: #e8e6f7 !important;
-    border: none;
-    border-radius: 12px;
-    width: 42px;
-    height: 42px;
-    color: #6c5ce7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.15rem;
-    position: relative;
-    transition: transform .15s ease, filter .15s ease;
-}
-
-    .btn-bell-only:hover {
-        filter: brightness(.98);
-        transform: translateY(-1px);
-    }
-
-/* Badge on bell (if you have .pill-badge) */
-/* ✅ Notification badge – cleaner */
-.pill-badge {
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 5px;
-    border-radius: 999px;
-    background: #ef4444;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 900;
-    line-height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #fff;
-    box-shadow: 0 6px 14px rgba(239,68,68,.28);
-}
-
-    /* لو الرقم رقم واحد بس: خليها دائرة */
-    .pill-badge:empty {
-        display: none;
-    }
-
-/* Notifications dropdown menu */
-
-.student-notify-menu {
-    min-width: 360px;
-    border-radius: 14px;
-    padding: 8px;
-    margin-top: 10px;
-    box-shadow: 0 18px 45px rgba(0,0,0,.18) !important;
-    overflow: hidden;
-}
-
-/* ✅ Desktop: اربطها بالجرس صح (سيب Popper يشتغل) */
-.student-navbar .dropdown-menu.student-notify-menu {
-    z-index: 2000 !important;
-}
-
-    /* LTR */
-    .student-navbar .dropdown-menu.student-notify-menu[data-bs-popper] {
-        right: 0 !important;
-        left: auto !important;
-    }
-
-/* RTL */
-[dir="rtl"] .student-navbar .dropdown-menu.student-notify-menu[data-bs-popper] {
-    left: 0 !important;
-    right: auto !important;
-}
-
-/* =========================================================
-   cssNavbarAccountMenu
-   ========================================================= */
-/* =========================
-   Account menu (Desktop/Laptop fix)
-   ========================= */
-.student-account-menu {
-    border-radius: 12px !important;
-    margin-top: 12px !important;
-    min-width: 220px;
-    z-index: 1050;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
-    /* ✅ fix: anchor to the right in LTR */
-    left: auto !important;
-    right: 0 !important;
-}
-
-/* ✅ RTL: anchor to the left */
-[dir="rtl"] .student-account-menu {
-    right: auto !important;
-    left: 0 !important;
-}
-
-    .student-account-menu .dropdown-item {
-        text-align: right;
-        padding: 10px 15px;
-    }
-
-/* User capsule */
-.user-capsule {
-    background: #e1f1ff !important;
-    border-radius: 50px;
-    padding: 4px 5px 4px 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: 0.3s ease;
-}
-
-.capsule-avatar {
-    width: 35px;
-    height: 35px;
-    background: #ffffff;
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    .capsule-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-/* Avatar (OLD - if you use .student-avatar somewhere) */
-.student-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 999px;
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #16a34a;
-    color: #fff;
-    flex: 0 0 auto;
-}
-
-.student-avatar-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-}
-
-.student-avatar-text {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 13px;
     letter-spacing: 0.5px;
 }
 
+.sd-up-head > div          { white-space: nowrap; }
+.sd-up-head > div:last-child { text-align: center; }
 
-/* =========================================================
-   cssNavbarControls Wrapper
-   ========================================================= */
-.student-nav-wrap {
-    display: flex !important;
-    flex-direction: row;
-    align-items: center;
-    gap: 15px;
+.sd-up-time-main  { font-weight: 700; color: var(--sd-text); font-size: 13px; }
+.sd-up-time-sub   { font-size: 12px; color: var(--sd-muted); }
+
+.sd-up-course-main,
+.sd-up-inst-main  {
+    font-weight:   700;
+    color:         var(--sd-text);
+    font-size:     13px;
+    white-space:   nowrap;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+}
+
+.sd-up-zoom { display: flex; justify-content: center; align-items: center; }
+
+.sd-up-zoom-btn {
+    background:    var(--sd-primary);
+    color:         #fff;
+    border:        none;
+    font-size:     12px;
+    font-weight:   700;
+    padding:       8px 14px;
+    border-radius: 999px;
+    display:       inline-flex;
+    align-items:   center;
+    gap:           6px;
+    white-space:   nowrap;
+    transition:    background 0.2s;
+    line-height:   1;
+}
+
+.sd-up-zoom-btn:hover { background: #0284C7; }
+
+.sd-up-zoom-muted {
+    display:        inline-flex;
+    align-items:    center;
+    justify-content: center;
+    gap:            6px;
+    padding:        8px 12px;
+    border-radius:  999px;
+    border:         1px solid var(--sd-border);
+    background:     var(--el-body, #F1F5F9);
+    color:          var(--sd-muted);
+    font-weight:    700;
+    font-size:      12px;
+    white-space:    nowrap;
 }
 
 
-/* ===================== cssNavbarLanguageItem ===================== */
-.student-lang-item {
-    font-weight: 800;
-    color: #111827;
-    padding: 10px 15px;
-    border-radius: 10px;
-    transition: background .15s ease, transform .15s ease;
+/* ============================================================
+   Tips list
+   ============================================================ */
+.sd-tips-item {
+    display:     flex;
+    gap:         10px;
+    align-items: flex-start;
+    padding:     8px 0;
+    color:       var(--sd-text);
+    font-size:   14px;
 }
 
-    .student-lang-item i {
-        color: #6c5ce7;
-        font-size: 16px;
-    }
-
-    .student-lang-item:hover {
-        background: #f4f6ff;
-        transform: translateY(-1px);
-    }
-
-
-/* =========================================================
-   cssMobileSameAsLaptop (✅ UPDATED)
-   ✅ المطلوب دلوقتي: على الموبايل الكروت تبقى تحت بعضها
-   + Upcoming lectures تبقى عمودية ومفيش Overflow
-   ========================================================= */
-@media (max-width: 768px) {
-
-    /* ✅ الصفحة تبقى ستاك (عمود واحد) */
-    .sd-wrap {
-        padding: 12px;
-        overflow-x: hidden; /* ✅ ممنوع سكرول أفقي للصفحة */
-    }
-
-    .sd-grid {
-        grid-template-columns: 1fr; /* ✅ كله تحت بعض */
-        gap: 16px;
-        min-width: 0;
-        /* ✅ IMPORTANT: امنع مشاكل max-content / auto-centering اللي بتبوظ الموبايل */
-        width: 100% !important;
-        margin: 0 !important;
-    }
-
-    /* ✅ Upcoming lectures: خليها زي اللابتوب (Table/Grid) */
-    .sd-up-row {
-        display: grid !important;
-        grid-template-columns: 1fr 1.2fr 1.2fr 1fr !important;
-        column-gap: 20px;
-        align-items: center;
-        padding: 14px 12px;
-        border-bottom: 1px solid #eef2f7;
-        border-radius: 0;
-        margin-bottom: 0;
-        background: transparent;
-    }
-
-        /* ✅ الهيدر يرجع يظهر زي اللابتوب */
-        .sd-up-row.sd-up-head {
-            display: grid !important;
-        }
-
-    /* ✅ السكرول الأفقي جوه جدول Upcoming فقط */
-    .sd-up-table {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-        /* ✅ خلي عرض الجدول أكبر شوية عشان يبان نفس توزيع اللابتوب */
-        .sd-up-table .sd-up-row {
-            min-width: 560px; /* ممكن تغيّرها 520 / 600 حسب ما تحب */
-        }
-
-    /* ✅ عشان النصوص ما توسّعش الجدول */
-    .sd-up-row > div {
-        min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* ✅ نفس أحجام الخط بتاعة اللابتوب */
-    .sd-up-time-sub {
-        font-size: 12px;
-        color: #6b7280;
-    }
+.sd-tips-item i {
+    margin-top: 2px;
+    color:      var(--el-success, #10B981);
 }
 
 
-/* =========================================================
-   cssNavbarResponsiveFix
-   (Mobile navbar ordering) - keep as you had
-   ========================================================= */
-@media (max-width: 991px) {
-
-    /* ✅ خلي الـ navbar يبقى TOP */
-    .student-navbar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: auto;
-        background: #fff;
-        border-bottom: 1px solid #e5e7eb;
-        border-top: 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 16px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        z-index: 2200;
-    }
-
-        /* ✅ عناصر الـ navbar */
-        .student-navbar a {
-            flex: initial;
-            text-align: center;
-            font-size: 12px;
-            color: #374151;
-            text-decoration: none;
-        }
-
-            .student-navbar a i {
-                display: block;
-                font-size: 18px;
-                margin-bottom: 2px;
-                color: #2F5F9E; /* ✅ orange -> blue */
-            }
-
-    .navbar-toggler {
-        display: none !important;
-    }
-
-    /* ✅ اللوجو */
-    .navbar-brand {
-        margin: 0;
-        font-weight: 900;
-        font-size: 16px;
-    }
-
-    /* ✅ الجرس + كابسولة الأفاتار + الترس */
-    .student-nav-wrap {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-    }
-
-    /* ✅ الكابسولة الجديدة */
-    .user-capsule {
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: #f3f4f6; /* خلفية فاتحة */
-        border: 1px solid #e5e7eb; /* حدود ناعمة */
-        border-radius: 20px; /* شكل بيضاوي */
-        padding: 6px 10px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        transition: background 0.2s ease;
-    }
-
-        .user-capsule:hover {
-            background: #e5e7eb;
-        }
-
-        .user-capsule span {
-            display: none;
-        }
-
-    .capsule-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 2px solid #fff;
-    }
-
-        .capsule-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-    /* ✅ أيقونة الترس جوه الكابسولة */
-    .user-capsule i.fa-gear,
-    .user-capsule i.fa-cog {
-        color: #2F5F9E; /* ✅ orange -> blue */
-        font-size: 18px;
-    }
-
-    /* ✅ منيو الحساب */
-    .student-nav-wrap,
-    .user-capsule {
-        position: relative;
-    }
-
-    .student-account-menu {
-        position: absolute !important;
-        top: calc(100% + 10px) !important;
-        right: 0 !important;
-        left: auto !important;
-        transform: none !important;
-        width: min(320px, 92vw) !important;
-        max-width: 92vw !important;
-        z-index: 2300;
-        overflow: hidden;
-    }
-
-    [dir="rtl"] .student-account-menu {
-        left: 0 !important;
-        right: auto !important;
-    }
-
-    /* ✅ منيو الإشعارات */
-    .student-navbar .dropdown-menu.student-notify-menu {
-        border-radius: 14px;
-        padding: 8px;
-        margin-top: 10px;
-        min-width: 360px;
-        box-shadow: 0 18px 45px rgba(0,0,0,.18) !important;
-        overflow: hidden;
-        z-index: 2000 !important;
-    }
-
-    [dir="rtl"] .student-navbar .dropdown-menu.student-notify-menu {
-        left: 8px !important;
-        right: auto !important;
-    }
-
-    /* ✅ نزّل المحتوى تحت الـ navbar */
-    .sd-upcoming {
-        margin-top: 80px;
-    }
-
-        .sd-upcoming .sd-head-title span {
-            font-size: 15px;
-            font-weight: 800;
-            text-align: center;
-            display: block;
-            margin-top: 8px;
-        }
-
-    /* ✅ نزّل عنوان الصفحة تحت الـ fixed navbar */
-    .page-header {
-        margin-top: 90px !important; /* عدّل الرقم لو محتاج سنة */
-        padding-top: 10px;
-    }
-
-        /* لو لسه في تزاحم بسيط */
-        .page-header h2 {
-            font-size: 22px; /* تصغير بسيط يخليها مظبوطة */
-            line-height: 1.3;
-            word-break: break-word;
-        }
-
-    .student-navbar .dropdown-menu.student-notify-menu {
-        position: fixed !important;
-        top: 70px !important; /* تحت الـ navbar */
-        right: 12px !important;
-        left: auto !important;
-        width: min(360px, 92vw) !important;
-        max-width: 92vw !important;
-        max-height: 70vh !important;
-        overflow-y: auto !important;
-        transform: none !important; /* هنا بس عشان Fixed */
-        z-index: 9999 !important;
-    }
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
-/* =========================================================
-   cssAllCoursesPage
-   ========================================================= */
+
+
+/* ============================================================
+   All Courses page  (.ac-*)
+   ============================================================ */
 .ac-wrap {
-    padding: 22px;
-    background: var(--bg, #f5f7fb);
-    min-height: calc(100vh - 70px);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    color: #1f2937;
+    padding:     24px;
+    background:  var(--sd-bg);
+    min-height:  calc(100vh - 66px);
+    font-family: var(--sd-font);
+    color:       var(--sd-text);
 }
 
 .ac-head {
-    display: flex;
-    align-items: center;
+    display:         flex;
+    align-items:     center;
     justify-content: space-between;
-    gap: 14px;
-    margin-bottom: 16px;
+    gap:             14px;
+    margin-bottom:   18px;
+    flex-wrap:       wrap;
 }
 
 .ac-title {
-    display: inline-flex;
+    display:     inline-flex;
     align-items: center;
-    gap: 10px;
-    font-size: 18px;
-    font-weight: 800;
+    gap:         10px;
+    font-size:   18px;
+    font-weight: 700;
 }
 
-    .ac-title i {
-        color: var(--primary, #2F5F9E);
-    }
+.ac-title i { color: var(--sd-primary); }
 
 .ac-search {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    display:       flex;
+    align-items:   center;
+    gap:           10px;
+    background:    var(--sd-card);
+    border:        1px solid var(--sd-border);
     border-radius: 999px;
-    padding: 10px 14px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    min-width: 320px;
+    padding:       10px 16px;
+    box-shadow:    var(--sd-shadow-sm);
+    min-width:     300px;
+    transition:    border-color 0.2s, box-shadow 0.2s;
 }
 
-    .ac-search i {
-        color: #9ca3af;
-    }
+.ac-search:focus-within {
+    border-color: var(--sd-primary);
+    box-shadow:   0 0 0 3px rgba(var(--sd-primary-rgb), 0.12);
+}
 
-    .ac-search input {
-        border: 0;
-        outline: 0;
-        width: 100%;
-        font-size: 14px;
-        color: #111827;
-        background: transparent;
-    }
+.ac-search i     { color: var(--sd-muted); }
+
+.ac-search input {
+    border:     0;
+    outline:    0;
+    width:      100%;
+    font-size:  14px;
+    color:      var(--sd-text);
+    background: transparent;
+    font-family: var(--sd-font);
+}
 
 .ac-grid {
-    display: grid;
+    display:               grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    gap:                   16px;
 }
 
 .ac-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 14px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    background:    var(--sd-card);
+    border:        1px solid var(--sd-border);
+    border-radius: var(--sd-radius);
+    padding:       14px 16px;
+    box-shadow:    var(--sd-shadow-sm);
+    transition:    transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-    .ac-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
-        /* ✅ orange border -> blue border */
-        border-color: #D7E6FF;
-    }
+.ac-card:hover {
+    transform:    translateY(-2px);
+    box-shadow:   var(--sd-shadow-md);
+    border-color: rgba(var(--sd-primary-rgb), 0.3);
+}
 
 .ac-card-top {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+    display:       flex;
+    gap:           12px;
+    align-items:   center;
     margin-bottom: 12px;
 }
 
 .ac-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    /* ✅ orange soft -> blue soft */
-    background: #EEF4FF;
-    border: 1px solid #D7E6FF;
-    flex: 0 0 auto;
+    width:         46px;
+    height:        46px;
+    border-radius: var(--sd-radius-sm);
+    display:       grid;
+    place-items:   center;
+    background:    var(--sd-primary-soft);
+    border:        1px solid rgba(var(--sd-primary-rgb), 0.2);
+    flex:          0 0 auto;
 }
 
-    .ac-icon i {
-        color: var(--primary, #2F5F9E);
-        font-size: 18px;
-    }
+.ac-icon i { color: var(--sd-primary); font-size: 18px; }
 
-.ac-info {
-    min-width: 0;
-}
+.ac-info  { min-width: 0; }
 
 .ac-name {
-    font-weight: 900;
-    font-size: 15px;
-    color: #111827;
-    white-space: nowrap;
-    overflow: hidden;
+    font-weight:   700;
+    font-size:     15px;
+    color:         var(--sd-text);
+    white-space:   nowrap;
+    overflow:      hidden;
     text-overflow: ellipsis;
 }
 
-.ac-sub {
-    margin-top: 2px;
-    font-size: 12px;
-    color: #6b7280;
-}
+.ac-sub { margin-top: 2px; font-size: 12px; color: var(--sd-muted); }
 
-.ac-actions {
-    display: flex;
-    justify-content: flex-end;
-}
+.ac-actions { display: flex; justify-content: flex-end; }
 
 .ac-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    display:         inline-flex;
+    align-items:     center;
+    gap:             8px;
     text-decoration: none;
-    font-weight: 800;
-    font-size: 13px;
-    color: var(--primary, #2F5F9E);
-    padding: 10px 14px;
-    border-radius: 999px;
-    /* ✅ orange pill -> blue pill */
-    border: 1px solid rgba(47,95,158,.28);
-    background: rgba(47,95,158,.10);
-    transition: filter 0.15s ease;
-    white-space: nowrap;
+    font-weight:     700;
+    font-size:       13px;
+    color:           var(--sd-primary);
+    padding:         10px 14px;
+    border-radius:   999px;
+    border:          1px solid rgba(var(--sd-primary-rgb), 0.28);
+    background:      rgba(var(--sd-primary-rgb), 0.08);
+    transition:      all 0.15s ease;
+    white-space:     nowrap;
 }
 
-    .ac-btn:hover {
-        filter: brightness(0.98);
-    }
+.ac-btn:hover {
+    background:   rgba(var(--sd-primary-rgb), 0.15);
+    border-color: rgba(var(--sd-primary-rgb), 0.4);
+    color:        var(--sd-primary);
+}
 
 .ac-empty {
-    margin-top: 18px;
-    background: #fff;
-    border: 1px dashed #e5e7eb;
-    border-radius: 14px;
-    padding: 22px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    color: #6b7280;
+    margin-top:    18px;
+    background:    var(--sd-card);
+    border:        1px dashed var(--sd-border);
+    border-radius: var(--sd-radius);
+    padding:       24px;
+    display:       flex;
+    gap:           12px;
+    align-items:   flex-start;
+    color:         var(--sd-muted);
 }
 
-    .ac-empty i {
-        font-size: 18px;
-        margin-top: 2px;
-        color: #9ca3af;
-    }
+.ac-empty i { font-size: 18px; margin-top: 2px; color: var(--sd-muted); }
 
-.ac-empty-title {
-    font-weight: 900;
-    color: #111827;
-    margin-bottom: 2px;
-}
+.ac-empty-title { font-weight: 700; color: var(--sd-text); margin-bottom: 2px; }
+.ac-empty-sub   { font-size: 13px; }
 
-.ac-empty-sub {
-    font-size: 13px;
-}
 
-@media (max-width: 1200px) {
-    .ac-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+/* ============================================================
+   Course Details page
+   ============================================================ */
+.course-details-page { padding: 20px; }
 
-    .ac-search {
-        min-width: 260px;
-    }
-}
-
-@media (max-width: 768px) {
-    .ac-head {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .ac-search {
-        min-width: 0;
-    }
-
-    .ac-grid {
-        grid-template-columns: 1fr;
-    }
-}
-/* =========================================================
-   cssCourseDetailsPage
-   ========================================================= */
-.course-details-page {
-    padding: 20px;
-}
-
-.header-section {
-    margin-bottom: 18px;
-}
+.header-section { margin-bottom: 20px; text-align: center; }
 
 .course-title {
-    font-weight: 800;
-    color: #111827;
-    margin: 0 0 6px;
+    font-weight:   700;
+    color:         var(--sd-text);
+    font-size:     32px;
+    margin:        12px 0 6px;
+    display:       inline-block;
+    padding:       10px 20px;
+    border-radius: var(--sd-radius);
+    background:    rgba(var(--sd-primary-rgb), 0.07);
+    border:        1px solid rgba(var(--sd-primary-rgb), 0.15);
 }
 
-.course-subtitle {
-    color: #6b7280;
-    margin: 0;
-    font-size: 14px;
-}
+.course-subtitle { color: var(--sd-muted); margin: 0; font-size: 14px; }
 
-.lectures-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+.lectures-container { display: flex; flex-direction: column; gap: 12px; }
 
 .lecture-item {
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    overflow: hidden;
-    background: #ffffff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border:        1px solid var(--sd-border);
+    border-radius: var(--sd-radius);
+    overflow:      hidden;
+    background:    var(--sd-card);
+    box-shadow:    var(--sd-shadow-sm);
+    transition:    border-color 0.2s;
 }
 
+.lecture-item:hover { border-color: rgba(var(--sd-primary-rgb), 0.3); }
+
 .lecture-header {
-    display: flex;
-    align-items: center;
+    display:         flex;
+    align-items:     center;
     justify-content: space-between;
-    padding: 14px 16px;
-    cursor: pointer;
-    user-select: none;
-    background: #fff;
+    padding:         14px 16px;
+    cursor:          pointer;
+    user-select:     none;
+    background:      var(--sd-card);
 }
 
 .lecture-title {
-    display: flex;
+    display:     flex;
     align-items: center;
-    gap: 10px;
-    min-width: 0;
+    gap:         10px;
+    min-width:   0;
 }
 
 .lecture-number {
-    width: 30px;
-    height: 30px;
-    border-radius: 10px;
-    /* ✅ orange -> blue soft */
-    background: #EEF4FF;
-    border: 1px solid #D7E6FF;
-    color: var(--primary);
-    display: grid;
-    place-items: center;
-    font-weight: 900;
-    flex: 0 0 auto;
+    width:         30px;
+    height:        30px;
+    border-radius: var(--sd-radius-sm);
+    background:    var(--sd-primary-soft);
+    border:        1px solid rgba(var(--sd-primary-rgb), 0.2);
+    color:         var(--sd-primary);
+    display:       grid;
+    place-items:   center;
+    font-weight:   700;
+    flex:          0 0 auto;
+    font-size:     13px;
 }
 
 .lecture-name {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    color: #111827;
-    white-space: nowrap;
-    overflow: hidden;
+    margin:        0;
+    font-size:     15px;
+    font-weight:   700;
+    color:         var(--sd-text);
+    white-space:   nowrap;
+    overflow:      hidden;
     text-overflow: ellipsis;
 }
 
 .arrow-icon {
-    font-size: 16px;
+    font-size:  16px;
+    color:      var(--sd-muted);
     transition: transform 0.2s ease;
-    color: #6b7280;
+    flex:       0 0 auto;
 }
 
-.lecture-item.active .arrow-icon {
-    transform: rotate(180deg);
-}
+.lecture-item.active .arrow-icon { transform: rotate(180deg); }
 
 .lecture-content {
-    border-top: 1px solid #eef2f7;
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.25s ease;
+    border-top:  1px solid var(--sd-border);
+    overflow:    hidden;
+    max-height:  0;
+    transition:  max-height 0.25s ease;
 }
 
 .content-links {
-    padding: 14px 16px 16px;
-    display: flex;
+    padding:   14px 16px 16px;
+    display:   flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap:       10px;
 }
 
 .content-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    border-radius: 12px;
+    display:         inline-flex;
+    align-items:     center;
+    gap:             8px;
+    padding:         10px 14px;
+    border-radius:   var(--sd-radius-sm);
     text-decoration: none;
-    font-weight: 700;
-    font-size: 13px;
-    border: 1px solid #e5e7eb;
-    background: #f9fafb;
-    color: #111827;
-    transition: all 0.15s ease;
+    font-weight:     700;
+    font-size:       13px;
+    border:          1px solid var(--sd-border);
+    background:      var(--el-body, #F1F5F9);
+    color:           var(--sd-text);
+    transition:      all 0.15s ease;
 }
 
-    .content-link:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    }
+.content-link:hover { transform: translateY(-1px); box-shadow: var(--sd-shadow-sm); }
 
-    .content-link.video {
-        border-color: #dbeafe;
-        background: #eff6ff;
-        color: #1d4ed8;
-    }
+.content-link.video      { border-color: #BFDBFE; background: #EFF6FF; color: #1D4ED8; }
+.content-link.pdf        { border-color: #FECACA; background: #FEF2F2; color: #B91C1C; }
+.content-link.assignment { border-color: #BBF7D0; background: #F0FDF4; color: #15803D; }
 
-    .content-link.pdf {
-        border-color: #fee2e2;
-        background: #fef2f2;
-        color: #b91c1c;
-    }
-
-    .content-link.assignment {
-        border-color: #dcfce7;
-        background: #f0fdf4;
-        color: #15803d;
-    }
-
-@media (max-width: 768px) {
-    .lecture-header {
-        padding: 12px 14px;
-    }
-
-    .content-links {
-        padding: 12px 14px 14px;
-    }
-
-    .lecture-name {
-        font-size: 14px;
-    }
-}
-/* ✅ Zoom cell alignment */
-.sd-up-zoom {
-    justify-content: center;
-    align-items: center;
+/* Empty state */
+.course-details-page .lectures-container > p.text-muted {
+    margin:      14px 0 0;
+    padding:     14px 16px;
+    border-radius: var(--sd-radius);
+    background:  rgba(var(--sd-primary-rgb), 0.06);
+    border:      1px dashed rgba(var(--sd-primary-rgb), 0.25);
+    color:       var(--sd-text);
+    font-weight: 600;
+    font-size:   13px;
+    line-height: 1.5;
+    display:     flex;
+    align-items: flex-start;
+    gap:         10px;
 }
 
-/* ✅ Keep Join compact without affecting Not started */
-.sd-up-zoom-btn {
-    width: auto !important;
-    height: auto !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    font-weight: 900;
-    font-size: 12px;
+.course-details-page .lectures-container > p.text-muted::before {
+    content:     "ℹ️";
+    font-size:   16px;
     line-height: 1;
-    background: var(--primary); /* ✅ keep unified */
+    margin-top:  2px;
 }
 
-    /* لو الأيقونة والـ text كانوا تحت بعض في الـ HTML */
-    .sd-up-zoom-btn i,
-    .sd-up-zoom-btn svg {
-        font-size: 14px;
-    }
 
-/* ✅ prevent the big square look */
-.sd-up-zoom-btn {
-    width: auto !important;
-    height: auto !important;
-}
-
-/* ================================
-   ✅ Page Back Button (Clean)
-   ================================ */
-
+/* ============================================================
+   Back button
+   ============================================================ */
 .page-back-wrap {
-    position: sticky;
-    top: 6px;
-    z-index: 999;
-    display: flex;
-    justify-content: flex-start; /* دايمًا شمال */
-    direction: ltr; /* يمنع RTL يقلب مكانه */
-    padding: 6px 8px 0;
-    /* ✅ NEW: يبعد عن العنوان اللي تحته */
-    margin-bottom: 12px;
+    display: none; /* hidden on desktop */
 }
 
 .page-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
+    display:      inline-flex;
+    align-items:  center;
+    gap:          8px;
+    padding:      10px 16px;
     border-radius: 999px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
-    color: #0f172a;
-    font-weight: 900;
-    font-size: 13px;
-    box-shadow: 0 10px 22px rgba(15,23,42,.10);
-    cursor: pointer;
-    margin: 0;
-    direction: ltr !important; /* ✅ السهم يفضل على الشمال */
+    border:       1px solid var(--sd-border);
+    background:   var(--sd-card);
+    color:        var(--sd-text);
+    font-weight:  700;
+    font-size:    13px;
+    box-shadow:   var(--sd-shadow-sm);
+    cursor:       pointer;
+    direction:    ltr !important;
+    text-decoration: none;
 }
 
-    .page-back:hover {
-        background: #eef2ff;
-        border-color: #94a3b8;
-        transform: translateY(-1px);
-    }
-
-/* ✅ النص العربي يفضل RTL بدون ما يقلب ترتيب الأيقونة */
-[dir="rtl"] .page-back span {
-    direction: rtl;
-    unicode-bidi: plaintext;
+.page-back:hover {
+    background:   var(--sd-primary-soft);
+    border-color: rgba(var(--sd-primary-rgb), 0.4);
+    transform:    translateY(-1px);
+    color:        var(--sd-primary);
 }
 
-/* ✅ Mobile: خلي الزر Fixed + تحت الـ navbar + تحت dropdown */
-@media (max-width: 991px) {
+[dir="rtl"] .page-back span { direction: rtl; unicode-bidi: plaintext; }
 
-    .page-back-wrap {
-        position: fixed !important;
-        top: 78px !important;
-        left: 12px !important;
-        right: auto !important;
-        padding: 0 !important;
-        margin: 0 !important; /* سيبها 0 عشان هو fixed */
-        display: flex !important;
-        z-index: 1500 !important;
-        direction: ltr !important;
-    }
 
-    /* ✅ عشان الزر fixed: نزود مساحة فوق العنوان */
-    .course-details-page .header-section {
-        padding-top: 58px !important;
-        margin-top: 0 !important;
-    }
-
-    /* ✅ NEW: مسافة بين الزر والعنوان على الموبايل */
-    .course-details-page .course-title {
-        margin-top: 12px !important;
-    }
-
-    .course-details-page .course-subtitle {
-        margin-top: 6px !important;
-    }
+/* ============================================================
+   Notification bell + badge (legacy support for old layout)
+   ============================================================ */
+.btn-bell-only {
+    background:    rgba(var(--sd-primary-rgb), 0.1) !important;
+    border:        none;
+    border-radius: var(--sd-radius-sm);
+    width:         42px;
+    height:        42px;
+    color:         var(--sd-primary);
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+    font-size:     1.15rem;
+    position:      relative;
+    transition:    transform .15s ease, filter .15s ease;
+    overflow:      visible !important;
 }
 
-.sd-upcoming-footer a,
-.sd-upcoming-footer .sd-link {
-    color: var(--primary) !important;
+.btn-bell-only:hover { filter: brightness(.95); transform: translateY(-1px); }
+
+.pill-badge {
+    position:      absolute;
+    top:           -4px;
+    right:         -4px;
+    min-width:     16px;
+    height:        16px;
+    padding:       0 4px;
+    border-radius: 999px;
+    background:    var(--el-danger, #EF4444);
+    color:         #fff;
+    font-size:     10px;
+    font-weight:   700;
+    line-height:   16px;
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+    border:        2px solid var(--sd-card);
 }
 
-    .sd-upcoming-footer a i,
-    .sd-upcoming-footer .sd-link i {
-        color: var(--primary) !important;
+.pill-badge:empty { display: none; }
+
+
+/* ============================================================
+   Responsive — Tablet (≤1200px)
+   ============================================================ */
+@media (max-width: 1200px) {
+    .sd-grid {
+        grid-template-columns: 1fr 1fr;
     }
 
-/* ✅ Empty state in Course Details (no lectures) */
-.course-details-page .lectures-container > p.text-muted {
-    margin: 14px 0 0;
-    padding: 14px 16px;
-    border-radius: 14px;
-    background: rgba(47, 95, 158, .08);
-    border: 1px dashed rgba(47, 95, 158, .28);
-    color: #0f172a;
-    font-weight: 800;
-    font-size: 13px;
-    line-height: 1.5;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    .sd-right {
+        grid-column: 1 / -1;
+    }
+
+    .ac-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ac-search { min-width: 240px; }
 }
 
-    .course-details-page .lectures-container > p.text-muted::before {
-        content: "ℹ️";
-        font-size: 16px;
-        line-height: 1;
-        margin-top: 2px;
-    }
 
+/* ============================================================
+   Responsive — Mobile (≤768px)
+   ============================================================ */
 @media (max-width: 768px) {
+    .sd-wrap  { padding: 14px; }
+    .ac-head  { flex-direction: column; align-items: stretch; }
+    .ac-search { min-width: 0; }
+    .ac-grid  { grid-template-columns: 1fr; }
+
+    .lecture-header { padding: 12px 14px; }
+    .content-links  { padding: 12px 14px 14px; }
+    .lecture-name   { font-size: 14px; }
+
+    .course-title   { font-size: 24px; padding: 8px 14px; }
+
     .course-details-page .lectures-container > p.text-muted {
-        padding: 12px 14px;
+        padding:  12px 14px;
         font-size: 12.5px;
     }
 }
 
-/* ✅ Desktop: hide */
-.page-back-wrap {
-    display: none !important;
-}
 
-/* ✅ Mobile + Tablet: show */
+/* ============================================================
+   Responsive — Mobile/Tablet (≤991px)
+   Full-column stacked layout
+   ============================================================ */
 @media (max-width: 991px) {
-    .page-back-wrap {
-        display: flex !important;
-    }
-}
+    /* Prevent horizontal scroll */
+    html, body { width: 100%; overflow-x: hidden !important; }
 
-    /* =========================
-     ✅ Upcoming table behavior
-     ========================= */
-    .sd-up-table {
-        overflow-x: auto !important; /* ✅ السكرول هنا فقط */
-        -webkit-overflow-scrolling: touch;
-    }
+    /* Push content below fixed navbar */
+    .el-student-main { padding-top: 66px; }
 
-        .sd-up-table .sd-up-row {
-            min-width: 520px !important; /* ✅ بدل 560 عشان الموبايل */
-        }
-
-    /* خفّف الخطوط */
-    .sd-up-head {
-        font-size: 12px !important;
-    }
-
-    .sd-up-time-main,
-    .sd-up-course-main,
-    .sd-up-inst-main {
-        font-size: 12.5px !important;
-    }
-
-    /* ✅ زر الشات ميغطيش المحتوى */
-    .chat-fab {
-        right: 14px !important;
-        bottom: 14px !important;
-    }
-}
-
-/* ✅ Extra small phones */
-@media (max-width: 420px) {
     .sd-wrap {
-        padding: 10px !important;
-    }
-
-    .sd-up-table .sd-up-row {
-        min-width: 480px !important; /* أصغر شوية */
-    }
-
-    .sd-btn {
-        padding: 9px 12px !important;
-        font-size: 13px !important;
-    }
-}
-
-
-
-/* =========================================================
-   ✅ HARD MOBILE FIX (Dashboard becomes 1-column FLEX)
-   Put at the VERY END of DashboardStudent.css
-   ========================================================= */
-@media (max-width: 991px) {
-
-    /* امنع أي قص أفقي */
-    html, body {
-        width: 100%;
+        width:      100% !important;
+        max-width:  100% !important;
+        padding:    14px !important;
         overflow-x: hidden !important;
     }
 
-    /* navbar fixed فوق، فالمحتوى لازم ينزل تحته */
-    main {
-        padding-top: 70px; /* لو nav أعلى/أقل عدّلها */
-    }
-
-    /* wrapper */
-    .sd-wrap {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 12px !important;
-        overflow-x: hidden !important;
-    }
-
-    /* بدل Grid -> Flex Column (حل جذري) */
+    /* Stack grid as single column */
     .sd-grid {
-        display: flex !important;
+        display:        flex !important;
         flex-direction: column !important;
-        gap: 14px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-    }
-
-    /* الأعمدة تبقى full width */
-    .sd-left, .sd-center, .sd-right {
-        width: 100% !important;
-        max-width: 100% !important;
-        gap: 14px !important;
-    }
-
-    /* كل كارت يلتزم بالعرض */
-    .sd-card {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-
-    /* Upcoming: خلي الجدول scroll جوه فقط */
-    .sd-up-table {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-
-        .sd-up-table .sd-up-row {
-            min-width: 520px !important;
-        }
-
-    /* Chat button */
-    .chat-fab {
-        right: 12px !important;
-        bottom: 12px !important;
-    }
-}
-
-/* Extra small phones */
-@media (max-width: 420px) {
-    .sd-up-table .sd-up-row {
-        min-width: 480px !important;
-    }
-}
-
-/* =========================================================
-   ✅ Mobile Navbar / Badge / Dropdown Fixes
-   Put at the VERY END of DashboardStudent.css
-   ========================================================= */
-@media (max-width: 991px) {
-
-    /* 3) شيل الفراغ الكبير فوق كارت Upcoming */
-    .sd-upcoming {
-        margin-top: 0 !important;
-    }
-
-    /* 1) Badge متتقصش */
-    .student-navbar,
-    .student-actions,
-    .btn-bell-only {
-        overflow: visible !important;
-    }
-
-    /* 1) ضبط مكان البادج بدل top/right بالسالب */
-    .pill-badge {
-        top: 0 !important;
-        right: 0 !important;
-        transform: translate(35%, -35%) !important;
-    }
-
-    /* 2) منيو الحساب: خليه Fixed عشان يظهر على الموبايل */
-    .student-account-menu {
-        position: fixed !important;
-        top: 64px !important; /* تحت الـ navbar */
-        right: 12px !important;
-        left: auto !important;
-        width: min(320px, 92vw) !important;
-        max-width: 92vw !important;
-        z-index: 99999 !important;
-        transform: none !important;
-    }
-
-    /* RTL: في العربي خليه يفتح من الشمال (بس يفضل داخل الشاشة) */
-    [dir="rtl"] .student-account-menu {
-        left: 12px !important;
-        right: auto !important;
-    }
-
-    /* 2) منيو الإشعارات (لو عندك dropdown للإشعارات) خليها فوق الكل */
-    .student-navbar .dropdown-menu.student-notify-menu {
-        z-index: 99999 !important;
-    }
-}
-
-
-
-/* ✅ Notification badge: prevent clipping on top (mobile) */
-@media (max-width: 991px) {
-    .student-navbar,
-    .student-actions,
-    .btn-bell-only {
-        overflow: visible !important;
-    }
-
-    .pill-badge {
-        top: 2px !important; /* بدل 0 أو السالب */
-        right: 2px !important;
-        transform: translate(25%, -10%) !important; /* يقلل طلوعها لفوق */
-    }
-}
-
-/* =========================================================
-   ✅ HARD MOBILE FIX (Dashboard becomes 1-column FLEX)
-   Put at the VERY END of DashboardStudent.css
-   ========================================================= */
-@media (max-width: 991px) {
-
-    html, body {
-        width: 100%;
-        overflow-x: hidden !important;
-    }
-
-    /* navbar fixed فوق */
-    main {
-        padding-top: 70px; /* لو nav أعلى/أقل عدّلها */
-    }
-
-    .sd-wrap {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 12px !important;
-        overflow-x: hidden !important;
-    }
-
-    .sd-grid {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 14px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        max-width: 100% !important;
+        gap:            14px !important;
+        width:          100% !important;
+        min-width:      0 !important;
+        margin:         0 !important;
+        max-width:      100% !important;
     }
 
     .sd-left, .sd-center, .sd-right {
-        width: 100% !important;
+        width:     100% !important;
         max-width: 100% !important;
-        gap: 14px !important;
+        gap:       14px !important;
     }
 
-    .sd-card {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
+    .sd-card { width: 100% !important; max-width: 100% !important; }
 
-    /* Upcoming: scroll inside only */
-    .sd-up-table {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
+    /* Upcoming table: scroll inside only */
+    .sd-up-table { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+    .sd-up-table .sd-up-row { min-width: 520px !important; }
 
-        .sd-up-table .sd-up-row {
-            min-width: 520px !important;
-        }
+    .sd-upcoming { margin-top: 0 !important; }
 
-    /* شيل الفراغ الكبير فوق Upcoming */
-    .sd-upcoming {
-        margin-top: 0 !important;
-    }
+    /* Badge overflow fix */
+    .btn-bell-only { overflow: visible !important; }
 
-    /* Chat */
-    .chat-fab {
-        right: 12px !important;
-        bottom: 12px !important;
-    }
-
-    /* ✅ Badge متتقصش */
-    .student-navbar,
-    .student-actions,
-    .btn-bell-only {
-        overflow: visible !important;
-    }
-
-    /* ✅ ضبط مكان البادج */
     .pill-badge {
-        top: 2px !important;
-        right: 2px !important;
+        top:       2px !important;
+        right:     2px !important;
         transform: translate(25%, -10%) !important;
     }
 
-    /* ✅ Account menu يظهر على الموبايل */
-    .student-account-menu {
-        position: fixed !important;
-        top: 64px !important;
-        right: 12px !important;
-        left: auto !important;
-        width: min(320px, 92vw) !important;
-        max-width: 92vw !important;
-        z-index: 99999 !important;
-        transform: none !important;
-    }
-
-    [dir="rtl"] .student-account-menu {
-        left: 12px !important;
-        right: auto !important;
-    }
-
-    /* ✅ Notifications menu فوق الكل */
-    .student-navbar .dropdown-menu.student-notify-menu {
-        z-index: 99999 !important;
-    }
-}
-
-/* Extra small phones */
-@media (max-width: 420px) {
-    .sd-up-table .sd-up-row {
-        min-width: 480px !important;
-    }
-}
-
-/* =========================================================
-   ✅ FINAL: Course Details Back Button (Mobile only)
-   Put at VERY END of file
-   ========================================================= */
-@media (max-width: 991px) {
-
+    /* Back button: fixed below navbar */
     .page-back-wrap {
-        position: fixed !important;
-        top: 78px !important; /* ✅ ده ينزل الزر تحت الـ navbar */
-        left: 12px !important;
-        right: auto !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        display: flex !important;
-        z-index: 1500 !important; /* ✅ تحت dropdowns */
-        direction: ltr !important;
+        display:    flex !important;
+        position:   fixed !important;
+        top:        78px !important;
+        left:       12px !important;
+        right:      auto !important;
+        padding:    0 !important;
+        margin:     0 !important;
+        z-index:    1500 !important;
+        direction:  ltr !important;
     }
 
-    .course-details-page,
+    [dir="rtl"] .page-back-wrap {
+        left:  auto !important;
+        right: 12px !important;
+    }
+
     .course-details-page .header-section {
-        overflow: visible !important;
+        padding-top: 56px !important;
+        margin-top:  0 !important;
     }
 
-        /* مساحة فوق العنوان عشان الزر fixed */
-        .course-details-page .header-section {
-            padding-top: 58px !important;
-            margin-top: 0 !important;
-        }
+    .course-details-page { padding-top: 8px !important; }
 
-    /* قلل أي padding زيادة فوق */
-    .course-details-page {
-        padding-top: 8px !important;
-    }
+    .course-title { font-size: 22px !important; }
 }
 
-/* ✅ Center dashboard grid perfectly (Desktop) */
-.sd-wrap {
-    width: 100%;
-    padding-left: 22px;
-    padding-right: 22px;
-    box-sizing: border-box;
-}
 
-.sd-grid {
-    max-width: 1416px; /* 430+500+430 + (28*2) */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* ✅ RTL safe centering */
-[dir="rtl"] .sd-grid {
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-/* ✅ Center course title + subtitle in Course Details header */
-.course-details-page .header-section {
-    text-align: center;
-}
-
-.course-details-page .course-title {
-    margin: 12px 0 6px !important; /* ✅ يبعد عن زر الـ back */
-    font-size: 34px;
-    font-weight: 900;
-    letter-spacing: .2px;
-}
-
-.course-details-page .course-subtitle {
-    margin: 0 !important;
-    font-size: 14px;
-    opacity: .85;
-}
-/* ✅ Optional: soft pill behind title */
-.course-details-page .course-title {
-    display: inline-block;
-    padding: 10px 18px;
-    border-radius: 14px;
-    background: rgba(47,95,158,.08);
-    border: 1px solid rgba(47,95,158,.18);
-}
-
-/* ================================
-   ✅ Navbar Logo (Sharper + Clean)
-   Put at END of DashboardStudent.css
-   ================================ */
-
-/* الـ link نفسه */
-.student-navbar .navbar-brand.student-brand {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 10px !important; /* بدل gap-2 */
-    padding: 6px 0 !important;
-    line-height: 1 !important;
-}
-
-    /* صورة اللوجو */
-    .student-navbar .navbar-brand.student-brand img {
-        height: 40px !important; /* جرّب 32/34/36 */
-        width: auto !important;
-        display: block !important;
-        object-fit: contain !important;
-        /* تحسين وضوح الصورة */
-        image-rendering: -webkit-optimize-contrast;
-        transform: translateZ(0); /* يقلل blur مع scaling */
-        filter: drop-shadow(0 1px 0 rgba(255,255,255,.18));
-    }
-
-/* موبايل: صغّرها شوية */
-@media (max-width: 991px) {
-    .student-navbar .navbar-brand.student-brand img {
-        height: 30px !important;
-    }
-}
-/* ================================
-   ✅ Notifications Dropdown - Pretty
-   Put at END of DashboardStudent.css
-   ================================ */
-
-/* القايمة نفسها */
-.student-notify-menu {
-    border: 1px solid rgba(15, 23, 42, .08) !important;
-    border-radius: 16px !important;
-    padding: 10px !important;
-    box-shadow: 0 22px 55px rgba(0,0,0,.18) !important;
-    overflow: visible !important; /* مهم عشان سهم القايمة */
-    background: #fff !important;
-}
-
-/* خلى القايمة "تطلع من الجرس" بدون فراغ */
-.student-navbar .dropdown-menu.student-notify-menu {
-    margin-top: 6px !important; /* كان 10px */
-}
-
-    /* سهم صغير فوق القايمة كأنه طالع من الجرس */
-    .student-navbar .dropdown-menu.student-notify-menu::before {
-        content: "";
-        position: absolute;
-        top: -8px;
-        width: 14px;
-        height: 14px;
-        background: #fff;
-        border-left: 1px solid rgba(15, 23, 42, .08);
-        border-top: 1px solid rgba(15, 23, 42, .08);
-        transform: rotate(45deg);
-    }
-
-    /* مكان السهم في LTR/RTL */
-    .student-navbar .dropdown-menu.student-notify-menu::before {
-        right: 16px; /* جنب الجرس */
-        left: auto;
-    }
-
-[dir="rtl"] .student-navbar .dropdown-menu.student-notify-menu::before {
-    left: 16px;
-    right: auto;
-}
-
-/* عنوان القايمة لو عندك header جوه */
-.student-notify-menu .notify-title,
-.student-notify-menu .dropdown-header {
-    font-weight: 900;
-    font-size: 14px;
-    color: #0f172a;
-    margin: 4px 6px 8px;
-}
-
-/* العناصر جوه القايمة (لو عندك dropdown-item) */
-.student-notify-menu .dropdown-item {
-    border-radius: 12px !important;
-    padding: 10px 12px !important;
-    margin: 6px 2px !important;
-    background: #f8fafc;
-    border: 1px solid rgba(15, 23, 42, .06);
-    transition: transform .15s ease, filter .15s ease, background .15s ease;
-    white-space: normal !important; /* عشان النص مايبقاش ناشف */
-}
-
-    .student-notify-menu .dropdown-item:hover {
-        background: #eef4ff; /* أزرق هادي */
-        transform: translateY(-1px);
-        filter: brightness(0.99);
-    }
-
-/* لو في وقت/تاريخ */
-.student-notify-menu .notify-time,
-.student-notify-menu small,
-.student-notify-menu .text-muted {
-    color: #64748b !important;
-    font-weight: 700;
-}
-
-/* خط فاصل أنعم */
-.student-notify-menu .dropdown-divider {
-    margin: 10px 6px !important;
-    opacity: .35;
-}
-
-/* Animation خفيف */
-.student-notify-menu {
-    animation: notifyDrop .16s ease both;
-    transform-origin: top right;
-}
-
-[dir="rtl"] .student-notify-menu {
-    transform-origin: top left;
-}
-
-@keyframes notifyDrop {
-    from {
-        opacity: 0;
-        transform: translateY(-6px) scale(.98);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+/* ============================================================
+   Extra small phones (≤420px)
+   ============================================================ */
+@media (max-width: 420px) {
+    .sd-wrap { padding: 10px !important; }
+    .sd-up-table .sd-up-row { min-width: 460px !important; }
+    .sd-btn { padding: 9px 12px !important; font-size: 13px !important; }
 }

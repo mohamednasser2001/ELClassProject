@@ -97,7 +97,7 @@ var app = builder.Build();
 // =======================
 // 3️⃣ Middleware
 // =======================
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.MapScalarApiReference();
 }
