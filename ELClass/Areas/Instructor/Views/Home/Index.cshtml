@@ -153,11 +153,8 @@
                     </div>
                 </div>
 
-                <div style="background:var(--el-body);border-radius:var(--el-radius);min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
-                    <i class="ti ti-chart-bar" style="font-size:2.5rem;opacity:0.2;color:var(--el-instructor)"></i>
-                    <p style="color:var(--el-text-muted);font-size:13px;margin:0">
-                        @(isAr ? "سيظهر الرسم البياني للنشاط هنا" : "Activity chart visualization will appear here")
-                    </p>
+                <div style="background:var(--el-body);border-radius:var(--el-radius);min-height:250px; padding: 15px;">
+                    <canvas id="instructorActivityChart"></canvas>
                 </div>
             </div>
         </div>
@@ -215,7 +212,7 @@
 </div>
 
 <!-- ─── Tip Card ──────────────────────────────────────────── -->
-<div style="background:linear-gradient(to @(isAr ? "left" : "right"),var(--el-instructor-light),var(--el-card));border-inline-start:4px solid var(--el-instructor);border-radius:var(--el-radius);padding:20px 22px;display:flex;align-items:center;gap:16px;direction:@(isAr ? "rtl" : "ltr")">
+@* <div style="background:linear-gradient(to @(isAr ? "left" : "right"),var(--el-instructor-light),var(--el-card));border-inline-start:4px solid var(--el-instructor);border-radius:var(--el-radius);padding:20px 22px;display:flex;align-items:center;gap:16px;direction:@(isAr ? "rtl" : "ltr")">
     <div style="width:46px;height:46px;border-radius:12px;background:var(--el-instructor);display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <i class="ti ti-bulb" style="color:#fff;font-size:20px"></i>
     </div>
@@ -227,7 +224,7 @@
                 : "Provide regular feedback to your students. Studies show that timely feedback improves learning outcomes by up to 40%!")
         </p>
     </div>
-</div>
+</div> *@
 
 
 @* ─── Instructor Chat Widget ──────────────────────────────── *@
@@ -281,6 +278,55 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 @section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('instructorActivityChart').getContext('2d');
+
+            // سحب البيانات من السيرفر
+            const labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartLabels));
+            const dataPoints = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartData));
+
+            // تصميم الرسم البياني
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '@(isAr ? "الطلاب المنضمين" : "Joined Students")',
+                        data: dataPoints,
+                        borderColor: '#5e35b1', // لون المدرسين البنفسجي
+                        backgroundColor: 'rgba(94, 53, 177, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#5e35b1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 
     <script>
@@ -1262,6 +1308,8 @@
         }
     }
     </script>
+
+
 }
 
 @section Styles {

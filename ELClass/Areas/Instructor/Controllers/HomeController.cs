@@ -1,7 +1,5 @@
-﻿using System.Security.Claims;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using DataAccess.Repositories.IRepositories;
+﻿using DataAccess.Repositories.IRepositories;
+using ELClass.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.ViewModels;
 using Models.ViewModels.Instructor;
+using System.Security.Claims;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ELClass.Areas.Instructor.Controllers
 {
@@ -32,45 +33,67 @@ namespace ELClass.Areas.Instructor.Controllers
 
         public async Task<IActionResult> Index()
         {
-
+            var isArabic = CultureHelper.IsArabic;
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+            // 1. حساب الإحصائيات مع التأكد من الربط الصحيح
             var viewModel = new InstructorIndexDashboardVM
             {
-                // 1. عدد الطلاب المرتبطين بهذا المدرس
-                TotalStudents = (await _unitOfWork.InstructorStudentRepository
-                                .CountAsync(isd => isd.InstructorId == userId)),
+                // إجمالي الطلاب المرتبطين بالمدرس من جدول InstructorStudent
+                TotalStudents = await _unitOfWork.InstructorStudentRepository
+                                     .CountAsync(isd => isd.InstructorId == userId),
 
-                // 2. عدد الدروس (Lessons) في الكورسات التي يدرسها
-                ActiveLessons = (await _unitOfWork.LessonRepository
-                                .CountAsync(l => l.Course.InstructorCourses.Any(ic => ic.InstructorId == userId))),
+                // عدد الدروس في الكورسات اللي المدرس موجود فيها في جدول InstructorCourse
+                ActiveLessons = await _unitOfWork.LessonRepository
+                                     .CountAsync(l => l.Course.InstructorCourses.Any(ic => ic.InstructorId == userId)),
 
-                // 3. عدد الكورسات التي يشارك فيها المدرس
-                TotalCourses = (await _unitOfWork.InstructorCourseRepository
-                               .CountAsync(ic => ic.InstructorId == userId)),
+                // عدد الكورسات اللي المدرس بيدرسها فعلياً
+                TotalCourses = await _unitOfWork.InstructorCourseRepository
+                                    .CountAsync(ic => ic.InstructorId == userId),
 
-                // 4. إجمالي المدرسين في النظام (اختياري)
-                TotalInstructors = (await _unitOfWork.InstructorRepository.CountAsync()),
+                TotalInstructors = await _unitOfWork.InstructorRepository.CountAsync(),
 
-                // 5. بيانات للكورسات الأعلى أداءً (أول 5 كورسات مثلاً)
+                // 2. جلب الكورسات مع الطلاب المسجلين فيها (عشان تظهر في الـ Your Courses Status)
                 TopPerformingCourses = (await _unitOfWork.CourseRepository.GetAsync(
-                    c => c.CreatedById == userId,
-                    take: 5)).Select(c => new CourseProgressVM
+                    filter: c => c.InstructorCourses.Any(ic => ic.InstructorId == userId), // الفلتر بالانستراكتور
+                    include: q => q.Include(c => c.StudentCourses), // مهم جداً عشان نعد الطلاب
+                    take: 5))
+                    .Select(c => new CourseProgressVM
                     {
-                        CourseName = c.TitleEn,
-                        EnrolledStudents = 0, // يمكنك ربطها بجدول StudentCourses لاحقاً
-                        SuccessRate = 90 // قيمة افتراضية
-                    }).ToList()
-
+                        CourseName = isArabic ? (string.IsNullOrEmpty(c.TitleAr) ? c.TitleEn : c.TitleAr) : c.TitleEn,
+                        EnrolledStudents = c.StudentCourses?.Count() ?? 0, // العد الحقيقي للطلاب في الكورس
+                        SuccessRate = 100
+                    }).OrderByDescending(c => c.EnrolledStudents).ToList()
             };
 
-         
+            // 3. تجهيز بيانات الرسم البياني (آخر 6 أشهر)
+            var last6Months = Enumerable.Range(0, 6)
+                .Select(i => DateTime.Now.Date.AddMonths(-i))
+                .Reverse()
+                .ToList();
+
+            var chartLabels = last6Months.Select(m => m.ToString("MMM yyyy")).ToList();
+            var chartData = new List<int>();
+
+            foreach (var month in last6Months)
+            {
+                // بنعد الطلاب اللي سجلوا حساباتهم في الشهر ده ومرتبطين بالمدرس ده
+                var count = await _unitOfWork.InstructorStudentRepository.CountAsync(isd =>
+                    isd.InstructorId == userId &&
+                    isd.Student.CreatedDate.Month == month.Month &&
+                    isd.Student.CreatedDate.Year == month.Year);
+
+                chartData.Add(count);
+            }
+
+            ViewBag.ChartLabels = chartLabels;
+            ViewBag.ChartData = chartData;
+
+            // جلب قائمة الطلاب لعرضها في الجدول إذا لزم الأمر
             viewModel.Students = (await _unitOfWork.InstructorStudentRepository.GetAsync(
-                       e => e.InstructorId == userId, e => e.Include(x => x.Student).ThenInclude(s => s.ApplicationUser)
-                       )).Select(e => e.Student).ToList();
-
-
-
+                        e => e.InstructorId == userId,
+                        e => e.Include(x => x.Student).ThenInclude(s => s.ApplicationUser)
+                        )).Select(e => e.Student).ToList();
 
             return View(viewModel);
         }
