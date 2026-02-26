@@ -702,3 +702,67 @@ table.dataTable thead th::after {
     border-color: var(--primary-orange);
     box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.1);
 }
+
+
+
+/* 1. بنوسع المساحة في الـ li عشان النص ميوصلش للخط */
+.custom-menu-fix {
+    position: relative !important;
+    padding-left: 35px !important; /* دي اللي بتبعد النص عن الخط */
+    display: block !important;
+}
+
+    /* 2. بنصفر أي padding أو margin في اللينك ممكن يزق النقطة */
+    .custom-menu-fix .pc-link {
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+        display: inline-block !important;
+    }
+
+        /* 3. تثبيت الخط والنقطة في أقصى اليسار بالنسبة للـ li */
+        .custom-menu-fix::before,
+        .custom-menu-fix::after,
+        .custom-menu-fix .pc-link::before,
+        .custom-menu-fix .pc-link::after {
+            position: absolute !important;
+            left: 0px !important; /* الرقم ده هو اللي بيحدد مكان النقطة من حرف الشاشة */
+            right: auto !important;
+            margin: 0 !important;
+        }
+
+        /* 4. ضبط النقطة تحديداً (غالباً بتكون after) */
+        .custom-menu-fix::after,
+        .custom-menu-fix .pc-link::after {
+            content: "" !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            /* لو النقطة لسه حاسة إنها تايهة، جرب تغير الـ left لـ 12px */
+        }
+
+/* 5. لو الموقع قلب عربي (RTL) وعايزهم يفضلوا شمال بردو */
+[dir="rtl"] .custom-menu-fix {
+    padding-right: 0 !important;
+    padding-left: 35px !important;
+    text-align: right;
+}
+
+    [dir="rtl"] .custom-menu-fix::before,
+    [dir="rtl"] .custom-menu-fix::after {
+        left: 0px !important;
+        right: auto !important;
+    }
+
+.material-icons {
+    font-family: 'Material Icons' !important;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px; /* أو الحجم اللي تحبه */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+}

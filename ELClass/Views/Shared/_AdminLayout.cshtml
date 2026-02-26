@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="~/assets/fonts/feather.css" />
     <link rel="stylesheet" href="~/assets/fonts/material.css" />
     <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Design system -->
     <link rel="stylesheet" href="~/css/color-tokens.css" asp-append-version="true" />
@@ -117,10 +118,10 @@
                             <span class="pc-arrow"><i class="ti ti-chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
-                            <li class="pc-item">
+                            <li class="pc-item custom-menu-fix">
                                 <a class="pc-link" href="/Admin/appointment/index">@(isArabic ? "كل المواعيد" : "All Appointments")</a>
                             </li>
-                            <li class="pc-item">
+                            <li class="pc-item custom-menu-fix">
                                 <a class="pc-link" href="/Admin/appointment/AddNewAppointment">@(isArabic ? "إضافة موعد" : "Add Appointment")</a>
                             </li>
                         </ul>
@@ -255,7 +256,7 @@
                             <img src="@(!string.IsNullOrEmpty(userImage) ? Url.Content("~/images/users/" + userImage) : $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(displayName ?? "A")}&background=2563EB&color=ffffff&size=128")"
                                  alt="avatar"
                                  class="user-avtar"
-                                 style="width:36px; height:36px; border-radius:50%; object-fit:cover;" />
+                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; min-width:40px" />
                         </a>
 
                         <div class="dropdown-menu dropdown-menu-end pc-h-dropdown" style="min-width:220px;">
