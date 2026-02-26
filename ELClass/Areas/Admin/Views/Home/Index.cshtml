@@ -21,15 +21,14 @@
 
 <!-- ─── Stat Cards ────────────────────────────────────────── -->
 <div class="row g-4 mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
-
     <div class="col-xl-3 col-md-6">
         <div class="el-stat-card el-stat-blue">
             <div class="stat-icon"><i class="ti ti-users"></i></div>
             <div class="stat-number">@ViewBag.TotalStudents</div>
             <div class="stat-label">@(isAr ? "إجمالي الطلاب" : "Total Students")</div>
-            <div class="stat-trend up">
-                <i class="ti ti-trending-up"></i>
-                +@ViewBag.StudentsGrowth @(isAr ? "هذا الشهر" : "this month")
+            <div class="stat-trend @(ViewBag.StudentsGrowth >= 0 ? "up" : "down")">
+                <i class="ti ti-trending-@(ViewBag.StudentsGrowth >= 0 ? "up" : "down")"></i>
+                @ViewBag.StudentsGrowth% @(isAr ? "نمو" : "growth")
             </div>
         </div>
     </div>
@@ -38,10 +37,10 @@
         <div class="el-stat-card el-stat-sky">
             <div class="stat-icon"><i class="ti ti-user-plus"></i></div>
             <div class="stat-number">@ViewBag.newStudents</div>
-            <div class="stat-label">@(isAr ? "الطلاب الجدد" : "New Students")</div>
+            <div class="stat-label">@(isAr ? "الطلاب الجدد (آخر 30 يوم)" : "New Students (Last 30d)")</div>
             <div class="stat-trend up">
-                <i class="ti ti-trending-up"></i>
-                @ViewBag.NewLessonsThisWeek @(isAr ? "جديد هذا الأسبوع" : "new this week")
+                <i class="ti ti-calendar"></i>
+                @ViewBag.NewLessonsThisWeek @(isAr ? "محاضرة جديدة هذا الأسبوع" : "new lessons this week")
             </div>
         </div>
     </div>
@@ -60,12 +59,16 @@
 
     <div class="col-xl-3 col-md-6">
         <div class="el-stat-card el-stat-amber">
-            <div class="stat-icon"><i class="fa-regular fa-user"></i></div>
+            <div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+
             <div class="stat-number">@ViewBag.ActiveInstructors</div>
+
             <div class="stat-label">@(isAr ? "المدرسون النشطون" : "Active Instructors")</div>
+
             <div class="stat-trend up">
-                <i class="ti ti-user-check"></i>
-                @ViewBag.NewInstructors @(isAr ? "انضموا حديثاً" : "joined recently")
+                <i class="ti ti-user-plus"></i>
+                <span class="fw-bold">@ViewBag.NewInstructors</span>
+                @(isAr ? "انضموا حديثاً" : "joined recently")
             </div>
         </div>
     </div>
@@ -129,33 +132,15 @@
 
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div>
-                        <small style="color:var(--el-text-muted)">@(isAr ? "نمو تسجيل الطلاب" : "Student Enrollment Growth")</small>
-                        <h4 class="mb-0 mt-1" style="color:var(--el-primary);font-weight:800">+@ViewBag.StudentsGrowth @(isAr ? "طالب" : "Students")</h4>
+                        <small style="color:var(--el-text-muted)">@(isAr ? "الطلاب الجدد هذا الشهر" : "New Students This Month")</small>
+                        <h4 class="mb-0 mt-1" style="color:var(--el-primary);font-weight:800">+@ViewBag.newStudents @(isAr ? "طالب" : "Students")</h4>
                     </div>
-                    <select class="form-select" style="width:auto;font-size:13px;">
-                        <option>@(isAr ? "هذا الأسبوع" : "This Week")</option>
-                        <option selected>@(isAr ? "هذا الشهر" : "This Month")</option>
-                        <option>@(isAr ? "هذه السنة" : "This Year")</option>
-                    </select>
                 </div>
 
                 <div style="background:var(--el-primary-light);border-left:3px solid var(--el-primary);padding:14px 16px;border-radius:var(--el-radius-sm);margin-bottom:16px;">
-                    <div class="d-flex align-items-center gap-3">
-                        <i class="ti ti-chart-line" style="font-size:24px;color:var(--el-primary)"></i>
-                        <div>
-                            <div style="font-weight:700;color:var(--el-primary);font-size:14px">@(isAr ? "تقدم رائع!" : "Great Progress!")</div>
-                            <p class="mb-0" style="font-size:13px;color:var(--el-text-muted)">
-                                @(isAr
-                                    ? "شهدت منصتك زيادة بنسبة 23% في الطلاب النشطين هذا الشهر."
-                                    : "Your platform has seen a 23% increase in active students this month. Keep up the excellent work!")
-                            </p>
-                        </div>
+                    <div style="background:var(--el-body); border-radius:var(--el-radius); padding:15px; min-height:200px;">
+                        <canvas id="enrollmentChart"></canvas>
                     </div>
-                </div>
-
-                <div style="background:var(--el-body);border-radius:var(--el-radius);min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
-                    <i class="ti ti-chart-bar" style="font-size:2.5rem;opacity:0.2;color:var(--el-primary)"></i>
-                    <p style="color:var(--el-text-muted);font-size:13px;margin:0">@(isAr ? "سيظهر الرسم البياني للتسجيل هنا" : "Enrollment chart visualization will appear here")</p>
                 </div>
             </div>
         </div>
@@ -174,26 +159,20 @@
                 @if (Model != null)
                 {
                     <div style="display:flex;flex-direction:column;gap:10px;">
-                    @foreach (var sub in Model)
-                    {
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--el-border);border-radius:var(--el-radius-sm);">
-                            <div>
-                                <div style="font-weight:700;font-size:14px;color:var(--el-text)">@sub.Count @(isAr ? "طالب" : "students")</div>
+                        @foreach (var sub in Model)
+                        {
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--el-border);border-radius:var(--el-radius-sm);">
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;color:var(--el-text)">@sub.Title</div>
+                                    <small class="text-muted">@sub.Count @(isAr ? "طالب" : "students")</small>
+                                </div>
+                                <span style="background:var(--el-success-light);color:var(--el-success-dark);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px">
+                                    @sub.Rate <i class="ti ti-arrow-up"></i>
+                                </span>
                             </div>
-                            <span style="background:var(--el-success-light);color:var(--el-success-dark);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px">
-                                @sub.Rate <i class="ti ti-arrow-up"></i>
-                            </span>
-                        </div>
-                    }
+                        }
                     </div>
                 }
-
-                <div class="text-center mt-3">
-                    <a href="#" style="color:var(--el-primary);font-weight:700;text-decoration:none;font-size:13px">
-                        @(isAr ? "عرض جميع المواد" : "View all subjects")
-                        <i class="ti ti-arrow-@(isAr ? "left" : "right") ms-1"></i>
-                    </a>
-                </div>
             </div>
         </div>
     </div>
@@ -201,7 +180,7 @@
 </div>
 
 <!-- ─── Tip Card ──────────────────────────────────────────── -->
-<div style="background:linear-gradient(to @(isAr ? "left" : "right"),var(--el-warning-light),var(--el-card));border-inline-start:4px solid var(--el-warning);border-radius:var(--el-radius);padding:20px 22px;display:flex;align-items:center;gap:16px;direction:@(isAr ? "rtl" : "ltr")">
+@* <div style="background:linear-gradient(to @(isAr ? "left" : "right"),var(--el-warning-light),var(--el-card));border-inline-start:4px solid var(--el-warning);border-radius:var(--el-radius);padding:20px 22px;display:flex;align-items:center;gap:16px;direction:@(isAr ? "rtl" : "ltr")">
     <div style="width:46px;height:46px;border-radius:12px;background:var(--el-warning);display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <i class="ti ti-bulb" style="color:#fff;font-size:20px"></i>
     </div>
@@ -213,4 +192,49 @@
                 : "Encourage instructors to provide regular feedback to students. Studies show that timely feedback improves learning outcomes by up to 40%!")
         </p>
     </div>
-</div>
+</div> *@
+@section Scripts{
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const ctx = document.getElementById('enrollmentChart').getContext('2d');
+
+        // جلب البيانات من السيرفر
+        const labels = @Html.Raw(Json.Serialize(ViewBag.ChartLabels));
+        const dataPoints = @Html.Raw(Json.Serialize(ViewBag.ChartData));
+
+        new Chart(ctx, {
+            type: 'line', // نوع الرسم (خطي)
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '@(isAr ? "الطلاب المسجلين" : "Enrolled Students")',
+                    data: dataPoints,
+                    borderColor: '#5e35b1', // لون الخط (بنفسجي زي التمبلت)
+                    backgroundColor: 'rgba(94, 53, 177, 0.1)', // لون التظليل تحت الخط
+                    fill: true,
+                    tension: 0.4, // لجعل الخط منحني وانسيابي
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#5e35b1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false } // إخفاء دليل الرسم لتوفير مساحة
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    },
+                    x: {
+                        grid: { display: false } // إخفاء الخطوط الرأسية لشكل أنظف
+                    }
+                }
+            }
+        });
+    </script>
+}
