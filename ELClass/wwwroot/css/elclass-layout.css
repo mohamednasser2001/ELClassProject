@@ -152,10 +152,20 @@ body {
 /* ── Submenu ─────────────────────────────────────────────── */
 .pc-sidebar .pc-submenu {
   background: transparent !important;
-  border-left: 1px solid rgba(255,255,255,0.06) !important;
+  border-left: none !important;
   margin: 4px 10px 4px 22px !important;
   padding: 4px 0 !important;
   border-radius: 0 !important;
+}
+
+/* Hide Berry's submenu dot indicators */
+.pc-sidebar .pc-navbar > .pc-item .pc-submenu .pc-item > .pc-link::after,
+.pc-sidebar .pc-navbar > .pc-item .pc-submenu .pc-item > .pc-link:after {
+  display: none !important;
+}
+.pc-sidebar .pc-submenu .pc-item > .pc-link::before,
+.pc-sidebar .pc-submenu .pc-item > .pc-link:before {
+  display: none !important;
 }
 
 .pc-sidebar .pc-submenu .pc-link {
@@ -186,7 +196,7 @@ body {
 /* ── RTL sidebar adjustments ─────────────────────────────── */
 [dir="rtl"] .pc-sidebar .pc-submenu {
   border-left: none !important;
-  border-right: 1px solid rgba(255,255,255,0.06) !important;
+  border-right: none !important;
   margin: 4px 22px 4px 10px !important;
 }
 
