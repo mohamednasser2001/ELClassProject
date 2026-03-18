@@ -20,6 +20,7 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<ContactUs> ContactUsRepository { get; }
         IRepository<Appointment> AppoinmentRepository { get; }
         public IRepository<StudentAppointment> StudentAppointmentRepository { get; }
+        IRepository<HomePageContent> HomePageContentRepository { get; }
         Task<IDbContextTransaction> BeginTransactionAsync();
         Task<bool> CommitAsync();
         void Dispose();

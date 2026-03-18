@@ -17,12 +17,55 @@ namespace ELClass.Controllers
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IHubContext<RealTimeHub> _realHub = realHub;
 
+        private static readonly string[] ValidCountryCodes = { "SA", "AE", "KW", "BH", "OM", "EG", "QA" };
+
         public async Task<IActionResult> Index()
         {
+            var isArabic = CultureHelper.IsArabic;
+            string? selectedCountry = null;
+            HomePageContent? content;
+
+            if (isArabic)
+            {
+                selectedCountry = Request.Cookies["el-country"];
+                if (string.IsNullOrEmpty(selectedCountry) || !ValidCountryCodes.Contains(selectedCountry))
+                    selectedCountry = "SA";
+                content = (await _unitOfWork.HomePageContentRepository.GetAsync(
+                    filter: x => x.Language == "ar" && x.CountryCode == selectedCountry,
+                    tracked: false)).FirstOrDefault();
+            }
+            else
+            {
+                content = (await _unitOfWork.HomePageContentRepository.GetAsync(
+                    filter: x => x.Language == "en",
+                    tracked: false)).FirstOrDefault();
+            }
+
             var instructors = await _unitOfWork.InstructorRepository.GetAsync(include: e => e.Include(e => e.ApplicationUser));
-            HomePageIndexVM model = new HomePageIndexVM() { Instructors = instructors.ToList() };
+            HomePageIndexVM model = new HomePageIndexVM()
+            {
+                Instructors = instructors.ToList(),
+                Content = content,
+                SelectedCountry = selectedCountry
+            };
             return View(model);
-            //return RedirectToAction("Login", "Account", new { area = "Identity" });
+        }
+
+        [HttpPost]
+        public IActionResult SetCountry(string country, string returnUrl)
+        {
+            if (!ValidCountryCodes.Contains(country))
+                country = "SA";
+
+            Response.Cookies.Append(
+                "el-country",
+                country,
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) }
+            );
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return LocalRedirect(returnUrl);
+            return Redirect("/");
         }
 
         [HttpGet]

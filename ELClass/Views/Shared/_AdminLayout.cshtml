@@ -140,6 +140,13 @@
                         </li>
                     }
 
+                    <li class="pc-item">
+                        <a href="/Admin/HomePageContent" class="pc-link">
+                            <span class="pc-micon"><i class="fa-solid fa-house"></i></span>
+                            <span class="pc-mtext">@(isArabic ? "محتوى الصفحة الرئيسية" : "Homepage Content")</span>
+                        </a>
+                    </li>
+
                     <li class="pc-item pc-caption">
                         <label>@(isArabic ? "التواصل" : "Communication")</label>
                     </li>
@@ -211,7 +218,7 @@
                             }
                         </a>
 
-                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown p-0"
+                        <div class="dropdown-menu @(isArabic ? "dropdown-menu-start" : "dropdown-menu-end") pc-h-dropdown p-0"
                              style="min-width:320px; border-radius:14px; overflow:hidden;">
                             <!-- Header -->
                             <div class="d-flex align-items-center justify-content-between p-3"
@@ -259,7 +266,7 @@
                                  style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; min-width:40px" />
                         </a>
 
-                        <div class="dropdown-menu dropdown-menu-end pc-h-dropdown" style="min-width:220px;">
+                        <div class="dropdown-menu @(isArabic ? "dropdown-menu-start" : "dropdown-menu-end") pc-h-dropdown" style="min-width:220px;">
                             <div class="px-3 py-3" style="background:var(--el-body); border-radius:10px; margin-bottom:6px;">
                                 <p class="fw-bold mb-0" style="font-size:14px; color:var(--el-text);">@displayName</p>
                                 <p class="mb-0" style="font-size:12px; color:var(--el-text-muted);">

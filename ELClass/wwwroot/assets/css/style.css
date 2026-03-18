@@ -16265,15 +16265,6 @@ pre[class*=language-] > code {
 .pc-sidebar .pc-navbar > .pc-item .pc-submenu {
   position: relative;
 }
-.pc-sidebar .pc-navbar > .pc-item .pc-submenu:after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 30px;
-  height: 100%;
-  width: 1px;
-  background: var(--pc-sidebar-submenu-border-color);
-}
 .pc-sidebar .pc-navbar > .pc-item .pc-submenu .pc-item > .pc-link:after {
   content: "";
   position: absolute;

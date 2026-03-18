@@ -195,6 +195,31 @@ body {
   margin-right: auto !important;
 }
 
+/* ── RTL: flip sidebar to right, push header & content left ─ */
+[dir="rtl"] .pc-sidebar {
+  left: auto !important;
+  right: 0 !important;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+[dir="rtl"] .pc-header {
+  left: 0 !important;
+  right: 260px !important;
+}
+
+[dir="rtl"] .pc-container {
+  margin-left: 20px !important;
+  margin-right: 260px !important;
+}
+
+/* Collapsed sidebar state (RTL) */
+[dir="rtl"] .pc-sidebar.pc-sidebar-hide ~ .pc-header {
+  right: 0 !important;
+}
+[dir="rtl"] .pc-sidebar.pc-sidebar-hide ~ .pc-container {
+  margin-right: 0 !important;
+}
+
 /* ══════════════════════════════════════════════════════════
    HEADER
    ══════════════════════════════════════════════════════════ */

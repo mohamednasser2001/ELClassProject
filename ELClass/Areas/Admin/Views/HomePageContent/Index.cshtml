@@ -1,0 +1,410 @@
+@model List<Models.HomePageContent>
+@using ELClass.Areas.Admin.Controllers
+
+@{
+    var isAr = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar");
+    ViewData["Title"] = isAr ? "محتوى الصفحة الرئيسية" : "Homepage Content";
+
+    var activeTab = ViewContext.HttpContext.Request.Query["activeTab"].ToString();
+    if (string.IsNullOrEmpty(activeTab)) activeTab = "en";
+
+    var tabs = new List<(string Id, string Label, Models.HomePageContent? Record)>
+    {
+        ("en", "English", Model.FirstOrDefault(x => x.Language == "en")),
+    };
+    foreach (var (code, nameAr, nameEn) in HomePageContentController.Countries)
+    {
+        tabs.Add((code, isAr ? nameAr : nameEn, Model.FirstOrDefault(x => x.Language == "ar" && x.CountryCode == code)));
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" style="direction:@(isAr?"rtl":"ltr")">
+    <h4 class="mb-0">
+        <i class="ti ti-home me-2"></i>
+        @(isAr ? "إدارة محتوى الصفحة الرئيسية" : "Homepage Content Management")
+    </h4>
+    <a href="/" target="_blank" class="btn btn-outline-primary btn-sm">
+        <i class="ti ti-eye me-1"></i> @(isAr ? "معاينة الموقع" : "Preview Site")
+    </a>
+</div>
+
+<!-- Language Tabs -->
+<ul class="nav nav-tabs mb-0" id="contentTabs" role="tablist" style="direction:ltr; flex-wrap:wrap; gap:4px;">
+    @foreach (var tab in tabs)
+    {
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == tab.Id ? "active" : "")"
+                    id="btn-tab-@tab.Id"
+                    data-bs-toggle="tab"
+                    data-bs-target="#tab-@tab.Id"
+                    type="button" role="tab">
+                @if (tab.Id == "en")
+                {
+                    <i class="fi fi-gb me-1"></i>
+                }
+                else
+                {
+                    <i class="fi fi-@tab.Id.ToLower() me-1"></i>
+                }
+                @tab.Label
+            </button>
+        </li>
+    }
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom p-4 bg-white shadow-sm" id="contentTabsContent">
+    @foreach (var tab in tabs)
+    {
+        var c = tab.Record ?? new Models.HomePageContent { Language = tab.Id == "en" ? "en" : "ar", CountryCode = tab.Id == "en" ? null : tab.Id };
+        var dir = tab.Id == "en" ? "ltr" : "rtl";
+        <div class="tab-pane fade @(activeTab == tab.Id ? "show active" : "")"
+             id="tab-@tab.Id" role="tabpanel">
+            <form asp-action="Save" method="post" style="direction:@dir">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@c.Id" />
+                <input type="hidden" name="Language" value="@c.Language" />
+                <input type="hidden" name="CountryCode" value="@c.CountryCode" />
+                <input type="hidden" name="tabId" value="@tab.Id" />
+
+                <div class="accordion" id="accordion-@tab.Id">
+
+                    <!-- ── Top Bar ────────────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-topbar-@tab.Id">
+                                <i class="ti ti-layout-navbar me-2"></i>
+                                @(isAr ? "الشريط العلوي" : "Top Bar")
+                            </button>
+                        </h2>
+                        <div id="sec-topbar-@tab.Id" class="accordion-collapse collapse show">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "نص الترحيب" : "Welcome Text")</label>
+                                        <input type="text" class="form-control" name="WelcomeText" value="@c.WelcomeText" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "رقم الهاتف" : "Phone Number")</label>
+                                        <input type="text" class="form-control" name="PhoneNumber" value="@c.PhoneNumber" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Hero / Banner ─────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-hero-@tab.Id">
+                                <i class="ti ti-speakerphone me-2"></i>
+                                @(isAr ? "قسم الهيرو / البانر" : "Hero / Banner Section")
+                            </button>
+                        </h2>
+                        <div id="sec-hero-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "عنوان البانر" : "Hero Title")</label>
+                                        <input type="text" class="form-control" name="HeroTitle" value="@c.HeroTitle" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "الكلمة المميزة" : "Highlighted Word")</label>
+                                        <input type="text" class="form-control" name="HeroTitleHighlight" value="@c.HeroTitleHighlight" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "نهاية العنوان" : "Title Suffix")</label>
+                                        <input type="text" class="form-control" name="HeroTitleSuffix" value="@c.HeroTitleSuffix" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "النص الفرعي" : "Hero Subtitle")</label>
+                                        <textarea class="form-control" name="HeroSubtitle" rows="2">@c.HeroSubtitle</textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "نص زر البدء" : "Start Button Text")</label>
+                                        <input type="text" class="form-control" name="HeroStartBtnText" value="@c.HeroStartBtnText" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "رابط الفيديو" : "Video URL")</label>
+                                        <input type="text" class="form-control" name="VideoUrl" value="@c.VideoUrl" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "نص تشغيل الفيديو" : "Play Video Text")</label>
+                                        <input type="text" class="form-control" name="PlayVideoText" value="@c.PlayVideoText" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Counters ───────────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-counter-@tab.Id">
+                                <i class="ti ti-chart-bar me-2"></i>
+                                @(isAr ? "الأرقام والإحصائيات" : "Counter / Stats")
+                            </button>
+                        </h2>
+                        <div id="sec-counter-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    @for (int i = 1; i <= 4; i++)
+                                    {
+                                        var numProp = $"Counter{i}Num";
+                                        var lblProp = $"Counter{i}Label";
+                                        var numVal = i == 1 ? c.Counter1Num : i == 2 ? c.Counter2Num : i == 3 ? c.Counter3Num : c.Counter4Num;
+                                        var lblVal = i == 1 ? c.Counter1Label : i == 2 ? c.Counter2Label : i == 3 ? c.Counter3Label : c.Counter4Label;
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">@(isAr ? $"العداد {i}" : $"Counter {i}")</label>
+                                            <input type="number" class="form-control mb-1" name="@numProp" value="@numVal"
+                                                   placeholder="@(isAr ? "الرقم" : "Number")" />
+                                            <input type="text" class="form-control" name="@lblProp" value="@lblVal"
+                                                   placeholder="@(isAr ? "التسمية" : "Label")" />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── About ─────────────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-about-@tab.Id">
+                                <i class="ti ti-info-circle me-2"></i>
+                                @(isAr ? "قسم من نحن" : "About Section")
+                            </button>
+                        </h2>
+                        <div id="sec-about-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="AboutTopHeading" value="@c.AboutTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="AboutMainHeading" value="@c.AboutMainHeading" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
+                                        <textarea class="form-control" name="AboutParagraph" rows="3">@c.AboutParagraph</textarea>
+                                    </div>
+                                    @for (int i = 1; i <= 4; i++)
+                                    {
+                                        var bProp = $"AboutBullet{i}";
+                                        var bVal = i == 1 ? c.AboutBullet1 : i == 2 ? c.AboutBullet2 : i == 3 ? c.AboutBullet3 : c.AboutBullet4;
+                                        <div class="col-md-6">
+                                            <label class="form-label">@(isAr ? $"النقطة {i}" : $"Bullet {i}")</label>
+                                            <input type="text" class="form-control" name="@bProp" value="@bVal" />
+                                        </div>
+                                    }
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "نص زر اقرأ المزيد" : "Read More Button")</label>
+                                        <input type="text" class="form-control" name="AboutReadMoreBtn" value="@c.AboutReadMoreBtn" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Courses ────────────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-courses-@tab.Id">
+                                <i class="ti ti-book me-2"></i>
+                                @(isAr ? "قسم الدورات" : "Courses Section")
+                            </button>
+                        </h2>
+                        <div id="sec-courses-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="CoursesTopHeading" value="@c.CoursesTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="CoursesMainHeading" value="@c.CoursesMainHeading" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
+                                        <textarea class="form-control" name="CoursesParagraph" rows="2">@c.CoursesParagraph</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Team ──────────────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-team-@tab.Id">
+                                <i class="ti ti-users me-2"></i>
+                                @(isAr ? "قسم الفريق / المدرسون" : "Team / Instructors Section")
+                            </button>
+                        </h2>
+                        <div id="sec-team-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="TeamTopHeading" value="@c.TeamTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="TeamMainHeading" value="@c.TeamMainHeading" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
+                                        <textarea class="form-control" name="TeamParagraph" rows="2">@c.TeamParagraph</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Enroll / Contact ───────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-enroll-@tab.Id">
+                                <i class="ti ti-mail me-2"></i>
+                                @(isAr ? "قسم التسجيل / التواصل" : "Enroll / Contact Section")
+                            </button>
+                        </h2>
+                        <div id="sec-enroll-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="EnrollTopHeading" value="@c.EnrollTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="EnrollMainHeading" value="@c.EnrollMainHeading" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة الأولى" : "Paragraph 1")</label>
+                                        <textarea class="form-control" name="EnrollParagraph1" rows="2">@c.EnrollParagraph1</textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة الثانية" : "Paragraph 2")</label>
+                                        <textarea class="form-control" name="EnrollParagraph2" rows="2">@c.EnrollParagraph2</textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "نص زر التسجيل" : "Enroll Button Text")</label>
+                                        <input type="text" class="form-control" name="EnrollBtnText" value="@c.EnrollBtnText" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "عنوان النموذج" : "Form Title")</label>
+                                        <input type="text" class="form-control" name="EnrollFormTitle" value="@c.EnrollFormTitle" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">@(isAr ? "عنوان فرعي للنموذج" : "Form Subtitle")</label>
+                                        <input type="text" class="form-control" name="EnrollFormSubtitle" value="@c.EnrollFormSubtitle" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── How It Works ───────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-work-@tab.Id">
+                                <i class="ti ti-list-check me-2"></i>
+                                @(isAr ? "كيف يعمل؟ (الخطوات)" : "How It Works (Steps)")
+                            </button>
+                        </h2>
+                        <div id="sec-work-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="WorkTopHeading" value="@c.WorkTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="WorkMainHeading" value="@c.WorkMainHeading" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
+                                        <textarea class="form-control" name="WorkParagraph" rows="2">@c.WorkParagraph</textarea>
+                                    </div>
+                                </div>
+                                <hr />
+                                <div class="row g-3">
+                                    @{
+                                        var steps = new[]
+                                        {
+                                            (1, c.Step1Title, c.Step1Desc),
+                                            (2, c.Step2Title, c.Step2Desc),
+                                            (3, c.Step3Title, c.Step3Desc),
+                                            (4, c.Step4Title, c.Step4Desc),
+                                        };
+                                    }
+                                    @foreach (var (num, title, desc) in steps)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="card border p-3">
+                                                <h6 class="mb-2">@(isAr ? $"الخطوة {num}" : $"Step {num}")</h6>
+                                                <label class="form-label small">@(isAr ? "العنوان" : "Title")</label>
+                                                <input type="text" class="form-control mb-2" name="Step@(num)Title" value="@title" />
+                                                <label class="form-label small">@(isAr ? "الوصف" : "Description")</label>
+                                                <textarea class="form-control" name="Step@(num)Desc" rows="2">@desc</textarea>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Testimonials ───────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-test-@tab.Id">
+                                <i class="ti ti-message-circle me-2"></i>
+                                @(isAr ? "قسم الشهادات / آراء العملاء" : "Testimonials Section")
+                            </button>
+                        </h2>
+                        <div id="sec-test-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="TestimonialsTopHeading" value="@c.TestimonialsTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="TestimonialsMainHeading" value="@c.TestimonialsMainHeading" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
+                                        <textarea class="form-control" name="TestimonialsParagraph" rows="2">@c.TestimonialsParagraph</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- end accordion -->
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="ti ti-device-floppy me-1"></i>
+                        @(isAr ? "حفظ التغييرات" : "Save Changes")
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
+</div>

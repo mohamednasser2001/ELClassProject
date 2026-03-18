@@ -1,10 +1,25 @@
 ﻿@using ELClass.services
 @using Models.ViewModels
+@using Models
 @{
     Layout = "_HomePageLayout";
     var isArabic = CultureHelper.IsArabic;
 }
 @model HomePageIndexVM
+@{
+    var c = Model.Content;
+    // Country data for selector (Arabic only)
+    var countries = new[]
+    {
+        ("SA", "السعودية"),
+        ("AE", "الإمارات"),
+        ("KW", "الكويت"),
+        ("BH", "البحرين"),
+        ("OM", "عُمان"),
+        ("EG", "مصر"),
+        ("QA", "قطر"),
+    };
+}
 
 <!DOCTYPE html>
 <html lang="@(isArabic ? "ar" : "en")" dir="@(isArabic ? "rtl" : "ltr")">
@@ -16,7 +31,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css">
@@ -31,12 +46,36 @@
         <div class="container">
             <div class="el-top-bar-flex">
                 <div class="el-top-header-left">
-                    <p>@(isArabic ? "مرحباً بك في الكلاس " : "Welcome To ElClass")</p>
+                    <p>@(c?.WelcomeText ?? (isArabic ? "مرحباً بك في الكلاس" : "Welcome To ElClass"))</p>
                 </div>
+                @if (isArabic)
+                {
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <form action="/Home/SetCountry" method="post" style="display:inline-flex;align-items:center;gap:4px;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                            <select name="country" onchange="this.form.submit()"
+                                    style="border:1px solid rgba(255,255,255,0.4);background:#001a33;color:#fff;border-radius:6px;padding:2px 8px;font-size:13px;cursor:pointer;outline:none;">
+                                @foreach (var (code, name) in countries)
+                                {
+                                    if (Model.SelectedCountry == code)
+                                    {
+                                        <option value="@code" selected style="background:#001a33;color:#fff;">@name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@code" style="background:#001a33;color:#fff;">@name</option>
+                                    }
+                                }
+                            </select>
+                        </form>
+                    </div>
+                }
                 <div class="el-top-header-right">
                     <p>
                         <img src="~/HomePageAssets/assets/img/phone-icon.svg" alt="phone icon" width="16" height="16">
-                        @(isArabic ? "للاستفسار اتصل بنا على" : "For any question call us at") <span>+(321) 321654897</span>
+                        @(isArabic ? "للاستفسار اتصل بنا على" : "For any question call us at")
+                        <span>@(c?.PhoneNumber ?? "+(321) 321654897")</span>
                     </p>
                     <div class="el-social-icons">
                         <ul>
@@ -88,27 +127,27 @@
                 <div class="el-banner-flex">
                     <div class="el-banner-left">
                         <h1>
-                            @(isArabic ? "ابحث عن المدرس المثالي لطفلك" : "Get Started With")
-                            <span>@(isArabic ? "الكلاس" : "ElCalss")</span>
-                            @(isArabic ? "" : " Online | Offline Courses")
+                            @(c?.HeroTitle ?? (isArabic ? "ابحث عن المدرس المثالي لطفلك" : "Get Started With"))
+                            <span>@(c?.HeroTitleHighlight ?? (isArabic ? "الكلاس" : "ElClass"))</span>
+                            @(c?.HeroTitleSuffix ?? (isArabic ? "" : " Online | Offline Courses"))
                         </h1>
                         <p class="el-para">
-                            @(isArabic
-                                                        ? "نساعد الطلاب على تحقيق أهدافهم التعليمية بشكل أسرع وأكثر كفاءة. تعلم عبر الإنترنت في أي مكان وأي وقت."
-                                                        : "We help students reach their life goals faster and more efficiently. Growing online learning. From this side you read and buy online courses anywhere, any time.")
+                            @(c?.HeroSubtitle ?? (isArabic
+                                ? "نساعد الطلاب على تحقيق أهدافهم التعليمية بشكل أسرع وأكثر كفاءة. تعلم عبر الإنترنت في أي مكان وأي وقت."
+                                : "We help students reach their life goals faster and more efficiently. Growing online learning. From this side you read and buy online courses anywhere, any time."))
                         </p>
                         <div class="el-banner-btns">
                             <a href="/identity/account/login" class="el-btn">
-                                @(isArabic ? "ابدأ الآن" : "get started")
+                                @(c?.HeroStartBtnText ?? (isArabic ? "ابدأ الآن" : "get started"))
                             </a>
                             <div class="el-banner-play-icon">
-                                <a class="video-popup" href="https://youtu.be/D0UnqGm_miA?si=M-FnoMWqNdepVQqz">
+                                <a class="video-popup" href="@(c?.VideoUrl ?? "https://youtu.be/D0UnqGm_miA?si=M-FnoMWqNdepVQqz")">
                                     <span>
                                         <svg width="16" height="19" viewBox="0 0 16 19">
                                             <path d="M15.5467 8.67162L1.32444 0.121637C1.18929 0.040615 1.03668 -0.00130209 0.881723 3.08244e-05C0.726761 0.00136374 0.574808 0.0459005 0.440889 0.129237C0.306634 0.212869 0.195261 0.332685 0.117894 0.476718C0.0405275 0.62075 -0.000123954 0.783957 2.83917e-07 0.950036V18.05C-0.000123954 18.2161 0.0405275 18.3793 0.117894 18.5233C0.195261 18.6674 0.306634 18.7872 0.440889 18.8708C0.577033 18.9551 0.731537 18.9997 0.888889 19C1.03822 19 1.18933 18.9601 1.32444 18.8784L15.5467 10.3284C15.8258 10.1593 16 9.84392 16 9.50002C16 9.15612 15.8258 8.84072 15.5467 8.67162Z" />
                                         </svg>
                                     </span>
-                                    @(isArabic ? "شاهد الفيديو" : "play video")
+                                    @(c?.PlayVideoText ?? (isArabic ? "شاهد الفيديو" : "play video"))
                                 </a>
                             </div>
                         </div>
@@ -205,27 +244,27 @@
             <div class="el-counter-parent">
                 <img src="~/HomePageAssets/assets/img/stdss.png" alt="students">
                 <div class="el-count">
-                    <div class="el-counting" data-to="22000">0</div>
+                    <div class="el-counting" data-to="@(c?.Counter1Num ?? 22000)">0</div>
                     <div class="el-count-heading">
-                        <h5>@(isArabic ? "قصص نجاح" : "Success Stories")</h5>
+                        <h5>@(c?.Counter1Label ?? (isArabic ? "قصص نجاح" : "Success Stories"))</h5>
                     </div>
                 </div>
                 <div class="el-count">
-                    <div class="el-counting" data-to="6500">0</div>
+                    <div class="el-counting" data-to="@(c?.Counter2Num ?? 6500)">0</div>
                     <div class="el-count-heading">
-                        <h5>@(isArabic ? "مدرس خبير" : "Expert Instructor")</h5>
+                        <h5>@(c?.Counter2Label ?? (isArabic ? "مدرس خبير" : "Expert Instructor"))</h5>
                     </div>
                 </div>
                 <div class="el-count">
-                    <div class="el-counting" data-to="5000">0</div>
+                    <div class="el-counting" data-to="@(c?.Counter3Num ?? 5000)">0</div>
                     <div class="el-count-heading">
-                        <h5>@(isArabic ? "طالب نشط" : "Active Student")</h5>
+                        <h5>@(c?.Counter3Label ?? (isArabic ? "طالب نشط" : "Active Student"))</h5>
                     </div>
                 </div>
                 <div class="el-count">
-                    <div class="el-counting" data-to="2000">0</div>
+                    <div class="el-counting" data-to="@(c?.Counter4Num ?? 2000)">0</div>
                     <div class="el-count-heading">
-                        <h5>@(isArabic ? "ساعة فيديو" : "Hours Video Classes")</h5>
+                        <h5>@(c?.Counter4Label ?? (isArabic ? "ساعة فيديو" : "Hours Video Classes"))</h5>
                     </div>
                 </div>
             </div>
@@ -269,40 +308,36 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="el-about-content">
-                        <h4 class="el-top-heading">@(isArabic ? "من نحن" : "about us")</h4>
+                        <h4 class="el-top-heading">@(c?.AboutTopHeading ?? (isArabic ? "من نحن" : "about us"))</h4>
                         <h2 class="el-main-heading">
-                            @(isArabic
-                                                        ? "أنواع مختلفة من الدورات ستمنحك الحل المثالي"
-                                                        : "Various Types Of Courses Will Give You The Perfect Solution")
+                            @(c?.AboutMainHeading ?? (isArabic
+                                ? "أنواع مختلفة من الدورات ستمنحك الحل المثالي"
+                                : "Various Types Of Courses Will Give You The Perfect Solution"))
                         </h2>
                         <p class="el-para">
-                            @(isArabic
-                                                        ? "نوفر لك أحدث الدورات التعليمية. نحن نقدم مجموعة واسعة من المواد الدراسية مع مدرسين ذوي خبرة عالية لضمان حصول طفلك على أفضل تجربة تعليمية ممكنة."
-                                                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore magnased doeiusmod tempor incididunt ut labore et dolore magna aliqua.")
+                            @(c?.AboutParagraph ?? (isArabic
+                                ? "نوفر لك أحدث الدورات التعليمية. نحن نقدم مجموعة واسعة من المواد الدراسية مع مدرسين ذوي خبرة عالية لضمان حصول طفلك على أفضل تجربة تعليمية ممكنة."
+                                : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore magnased doeiusmod tempor incididunt ut labore et dolore magna aliqua."))
                         </p>
                         <ul>
                             <li class="el-para">
                                 <img src="~/HomePageAssets/assets/img/checked.png" alt="Checked Icon">
-                                @(isArabic ? "دروس خصوصية فردية (واحد لواحد)" : "1-on-1 private tutoring")
+                                @(c?.AboutBullet1 ?? (isArabic ? "دروس خصوصية فردية (واحد لواحد)" : "1-on-1 private tutoring"))
                             </li>
                             <li class="el-para">
                                 <img src="~/HomePageAssets/assets/img/checked.png" alt="Checked Icon">
-                                @(isArabic ? "حصص أونلاين أو في المنزل" : "Online or at-home sessions")
+                                @(c?.AboutBullet2 ?? (isArabic ? "حصص أونلاين أو في المنزل" : "Online or at-home sessions"))
                             </li>
                             <li class="el-para">
                                 <img src="~/HomePageAssets/assets/img/checked.png" alt="Checked Icon">
-                                @(isArabic ? "تتبع تقدم طفلك الدراسي" : "Track your child's progress")
+                                @(c?.AboutBullet3 ?? (isArabic ? "تتبع تقدم طفلك الدراسي" : "Track your child's progress"))
                             </li>
                             <li class="el-para">
                                 <img src="~/HomePageAssets/assets/img/checked.png" alt="Checked Icon">
-                                @(isArabic ? "مدرسون في جميع المواد" : "Tutors in all subjects")
-                            </li>
-                            <li class="el-para">
-                                <img src="~/HomePageAssets/assets/img/checked.png" alt="Checked Icon">
-                                @(isArabic ? "دعم فني متميز" : "Awesome Support")
+                                @(c?.AboutBullet4 ?? (isArabic ? "مدرسون في جميع المواد" : "Tutors in all subjects"))
                             </li>
                         </ul>
-                        <a href="javascript:;" class="el-btn">@(isArabic ? "اقرأ المزيد" : "read more")</a>
+                        <a href="javascript:;" class="el-btn">@(c?.AboutReadMoreBtn ?? (isArabic ? "اقرأ المزيد" : "read more"))</a>
                     </div>
                 </div>
             </div>
@@ -313,12 +348,12 @@
     <div class="el-course-wrapper">
         <div class="container">
             <div class="el-course-heading text-center">
-                <h4 class="el-top-heading-center">@(isArabic ? "فئات الدورات" : "COURSES Categories")</h4>
-                <h2 class="el-main-heading">@(isArabic ? "احصل على دعم تعليمي في جميع المواد" : "We Bring The Good Education To Life")</h2>
+                <h4 class="el-top-heading-center">@(c?.CoursesTopHeading ?? (isArabic ? "فئات الدورات" : "COURSES Categories"))</h4>
+                <h2 class="el-main-heading">@(c?.CoursesMainHeading ?? (isArabic ? "احصل على دعم تعليمي في جميع المواد" : "We Bring The Good Education To Life"))</h2>
                 <p class="gray-p">
-                    @(isArabic
-                                        ? "مجموعة متنوعة من المواد الدراسية من الروضة حتى الجامعة"
-                                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
+                    @(c?.CoursesParagraph ?? (isArabic
+                        ? "مجموعة متنوعة من المواد الدراسية من الروضة حتى الجامعة"
+                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore."))
                 </p>
             </div>
 
@@ -538,12 +573,12 @@
     <div class="el-team-wrapper p-4">
         <div class="container">
             <div class="el-team-heading text-center">
-                <h4 class="el-top-heading-center">@(isArabic ? "مدرسونا" : "Our instructors")</h4>
-                <h2 class="el-main-heading">@(isArabic ? "تعرف على مدرسينا المتميزين" : "Classes Taught By Real Creators")</h2>
+                <h4 class="el-top-heading-center">@(c?.TeamTopHeading ?? (isArabic ? "مدرسونا" : "Our instructors"))</h4>
+                <h2 class="el-main-heading">@(c?.TeamMainHeading ?? (isArabic ? "تعرف على مدرسينا المتميزين" : "Classes Taught By Real Creators"))</h2>
                 <p class="gray-p">
-                    @(isArabic
-                                        ? "فريق من المدرسين المؤهلين وذوي الخبرة في جميع المواد الدراسية"
-                                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
+                    @(c?.TeamParagraph ?? (isArabic
+                        ? "فريق من المدرسين المؤهلين وذوي الخبرة في جميع المواد الدراسية"
+                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore."))
                 </p>
             </div>
             <div class="el-team-parent swiper">
@@ -622,8 +657,8 @@
                         <div class="el-contact-form-box">
                             <form action="/home/ContactUs" method="post">
                                 <div class="el-contact-form-head">
-                                    <h4>@(isArabic ? "سجل الآن" : "enroll now")</h4>
-                                    <p class="el-para">@(isArabic ? "احصل على التفاصيل في بريدك الإلكتروني الآن" : "Get details in your inbox right now")</p>
+                                    <h4>@(c?.EnrollFormTitle ?? (isArabic ? "سجل الآن" : "enroll now"))</h4>
+                                    <p class="el-para">@(c?.EnrollFormSubtitle ?? (isArabic ? "احصل على التفاصيل في بريدك الإلكتروني الآن" : "Get details in your inbox right now"))</p>
                                 </div>
                                 <div class="el-input-field">
                                     <input type="text" name="name" placeholder="@(isArabic ? "الاسم الكامل" : "Full Name")">
@@ -649,29 +684,32 @@
                 </div>
                 <div class="el-contact-right">
                     <div class="el-about-content">
-                        <h4 class="el-top-heading">@(isArabic ? "سجل الآن" : "Enroll Now")</h4>
+                        <h4 class="el-top-heading">@(c?.EnrollTopHeading ?? (isArabic ? "سجل الآن" : "Enroll Now"))</h4>
                         <h2 class="el-main-heading">
-                            @if (isArabic)
+                            @if (!string.IsNullOrEmpty(c?.EnrollMainHeading))
+                            {
+                                @Html.Raw(c.EnrollMainHeading)
+                            }
+                            else if (isArabic)
                             {
                                 <text>سجل الآن! احجز <br> مقعدك!</text>
                             }
                             else
                             {
-
                                 <text>Register Now! Secure <br> Your Seat!</text>
                             }
                         </h2>
                         <p class="gray-p">
-                            @(isArabic
-                                                        ? "انضم إلى آلاف الطلاب الذين حققوا نجاحاً باهراً مع منصتنا التعليمية. نوفر لك أفضل المدرسين والمناهج التعليمية المتطورة."
-                                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo eiusmod tempor incididunt ut laboreet dolore magnased doeiusmod tempor in cididunt utlaboreet dolore magna aliqua.")
+                            @(c?.EnrollParagraph1 ?? (isArabic
+                                ? "انضم إلى آلاف الطلاب الذين حققوا نجاحاً باهراً مع منصتنا التعليمية. نوفر لك أفضل المدرسين والمناهج التعليمية المتطورة."
+                                : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo eiusmod tempor incididunt ut laboreet dolore magnased doeiusmod tempor in cididunt utlaboreet dolore magna aliqua."))
                         </p>
                         <p class="gray-p">
-                            @(isArabic
-                                                        ? "ابدأ رحلتك التعليمية اليوم واحصل على أفضل الدورات التعليمية المصممة خصيصاً لاحتياجاتك."
-                                                        : "Get latest news in your inbox. Consectetur adipisce enng elitadipiscing elitseddo eiusmod tempor incid dunt ut labore et dolore.")
+                            @(c?.EnrollParagraph2 ?? (isArabic
+                                ? "ابدأ رحلتك التعليمية اليوم واحصل على أفضل الدورات التعليمية المصممة خصيصاً لاحتياجاتك."
+                                : "Get latest news in your inbox. Consectetur adipisce enng elitadipiscing elitseddo eiusmod tempor incid dunt ut labore et dolore."))
                         </p>
-                        <a href="javascript:;" class="el-btn el-orange-btn">@(isArabic ? "سجل الآن" : "enroll now")</a>
+                        <a href="javascript:;" class="el-btn el-orange-btn">@(c?.EnrollBtnText ?? (isArabic ? "سجل الآن" : "enroll now"))</a>
                     </div>
                 </div>
             </div>
@@ -682,12 +720,12 @@
     <div class="el-work-wrapper">
         <div class="container">
             <div class="el-work-heading text-center">
-                <h4 class="el-top-heading-center">@(isArabic ? "انضم إلينا" : "JOIN US")</h4>
-                <h2 class="el-main-heading">@(isArabic ? "كيف يعمل؟ احصل على شهادتك الآن" : "How It Work? Get Your Certificate Now")</h2>
+                <h4 class="el-top-heading-center">@(c?.WorkTopHeading ?? (isArabic ? "انضم إلينا" : "JOIN US"))</h4>
+                <h2 class="el-main-heading">@(c?.WorkMainHeading ?? (isArabic ? "كيف يعمل؟ احصل على شهادتك الآن" : "How It Work? Get Your Certificate Now"))</h2>
                 <p class="gray-p">
-                    @(isArabic
-                                        ? "خطوات بسيطة للبدء في رحلتك التعليمية وتحقيق أهدافك الأكاديمية"
-                                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
+                    @(c?.WorkParagraph ?? (isArabic
+                        ? "خطوات بسيطة للبدء في رحلتك التعليمية وتحقيق أهدافك الأكاديمية"
+                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore."))
                 </p>
             </div>
             <div class="row gy-4">
@@ -701,11 +739,11 @@
                                 <img src="~/HomePageAssets/assets/img/w1.png" alt="work icon">
                             </div>
                             <div class="el-work-content">
-                                <h4>@(isArabic ? "حدد خطتك" : "Set Your Plan")</h4>
+                                <h4>@(c?.Step1Title ?? (isArabic ? "حدد خطتك" : "Set Your Plan"))</h4>
                                 <p class="el-para">
-                                    @(isArabic
-                                                                        ? "اختر المرحلة الدراسية والمادة المناسبة لك"
-                                                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo.")
+                                    @(c?.Step1Desc ?? (isArabic
+                                        ? "اختر المرحلة الدراسية والمادة المناسبة لك"
+                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo."))
                                 </p>
                             </div>
                         </div>
@@ -721,11 +759,11 @@
                                 <img src="~/HomePageAssets/assets/img/w2.png" alt="work icon">
                             </div>
                             <div class="el-work-content">
-                                <h4>@(isArabic ? "ابحث عن المدرس" : "Find Your Course")</h4>
+                                <h4>@(c?.Step2Title ?? (isArabic ? "ابحث عن المدرس" : "Find Your Course"))</h4>
                                 <p class="el-para">
-                                    @(isArabic
-                                                                        ? "اختر المدرس المثالي من بين فريقنا المتميز"
-                                                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo.")
+                                    @(c?.Step2Desc ?? (isArabic
+                                        ? "اختر المدرس المثالي من بين فريقنا المتميز"
+                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo."))
                                 </p>
                             </div>
                         </div>
@@ -741,11 +779,11 @@
                                 <img src="~/HomePageAssets/assets/img/w3.png" alt="work icon">
                             </div>
                             <div class="el-work-content">
-                                <h4>@(isArabic ? "احجز مقعدك" : "Book Your Seat")</h4>
+                                <h4>@(c?.Step3Title ?? (isArabic ? "احجز مقعدك" : "Book Your Seat"))</h4>
                                 <p class="el-para">
-                                    @(isArabic
-                                                                        ? "سجل واحجز موعد الحصة الأولى"
-                                                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo.")
+                                    @(c?.Step3Desc ?? (isArabic
+                                        ? "سجل واحجز موعد الحصة الأولى"
+                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo."))
                                 </p>
                             </div>
                         </div>
@@ -761,11 +799,11 @@
                                 <img src="~/HomePageAssets/assets/img/w4.png" alt="work icon">
                             </div>
                             <div class="el-work-content">
-                                <h4>@(isArabic ? "احصل على الشهادة" : "Get Certificate")</h4>
+                                <h4>@(c?.Step4Title ?? (isArabic ? "احصل على الشهادة" : "Get Certificate"))</h4>
                                 <p class="el-para">
-                                    @(isArabic
-                                                                        ? "احصل على شهادة معتمدة بعد إتمام الدورة"
-                                                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo.")
+                                    @(c?.Step4Desc ?? (isArabic
+                                        ? "احصل على شهادة معتمدة بعد إتمام الدورة"
+                                        : "Get latest news in your inbox. Consectet adipiscing elitadipiscing elitseddo."))
                                 </p>
                             </div>
                         </div>
@@ -779,12 +817,12 @@
     <div class="el-testmnl-wrapper">
         <div class="container">
             <div class="el-team-heading text-center">
-                <h4 class="el-top-heading-center">@(isArabic ? "آراء العملاء" : "Testimonials")</h4>
-                <h2 class="el-main-heading">@(isArabic ? "ماذا يقول طلابنا عنا" : "What Our Students Say About Us")</h2>
+                <h4 class="el-top-heading-center">@(c?.TestimonialsTopHeading ?? (isArabic ? "آراء العملاء" : "Testimonials"))</h4>
+                <h2 class="el-main-heading">@(c?.TestimonialsMainHeading ?? (isArabic ? "ماذا يقول طلابنا عنا" : "What Our Students Say About Us"))</h2>
                 <p class="gray-p">
-                    @(isArabic
-                                        ? "اقرأ تجارب طلابنا وأولياء الأمور مع منصتنا التعليمية"
-                                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
+                    @(c?.TestimonialsParagraph ?? (isArabic
+                        ? "اقرأ تجارب طلابنا وأولياء الأمور مع منصتنا التعليمية"
+                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore."))
                 </p>
             </div>
             <div class="row align-items-center">
