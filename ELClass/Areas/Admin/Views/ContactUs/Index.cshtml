@@ -31,9 +31,9 @@
                         <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600">
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">No.</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "المرسل" : "Sender")</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "الموضوع" : "Topic")</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "العمر" : "Age")</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "التواصل" : "Contact Info")</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الرسالة" : "Message")</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الدورة" : "Course")</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
                         </tr>
                     </thead>
@@ -48,8 +48,8 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 text-sm">
-                                    <span class="text-slate-600 dark:text-slate-300 font-medium">@item.Topic</span>
-                                    <p class="text-xs text-slate-400 truncate max-w-[200px]">@item.Message</p>
+                                    <span class="text-slate-600 dark:text-slate-300 font-medium">@item.Age</span>
+                                    
                                 </td>
                                 <td class="px-4 py-4 text-sm">
                                     <div class="flex flex-col gap-1 text-xs">
@@ -58,7 +58,7 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 text-center">
-                                    <p>@item.Message</p>
+                                    <p>@item.Course</p>
                                 </td>
                                 <td class="px-4 py-4 text-center">
                                     <div class="flex justify-center gap-2">
