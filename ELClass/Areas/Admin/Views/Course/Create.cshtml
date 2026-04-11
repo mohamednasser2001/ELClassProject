@@ -1,55 +1,108 @@
 ﻿@model Models.Course
 
 @{
-    ViewData["Title"] = "Create Course";
+    var currentLang = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en";
+    var isAr = currentLang == "ar";
+    var direction = isAr ? "rtl" : "ltr";
+    ViewData["Title"] = isAr ? "إنشاء كورس" : "Create Course";
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h3 class="card-title mb-3">Create Course</h3>
-            <hr />
-
-            <form asp-action="Create">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
-                <div class="row">
-                    <div class="form-group col-sm-12 col-md-6 mb-3">
-                        <label asp-for="TitleAr" class="form-label">العنوان</label>
-                        <input asp-for="TitleAr" class="form-control" placeholder="العنوان" />
-                        <span asp-validation-for="TitleAr" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group col-sm-12 col-md-6 mb-3">
-                        <label asp-for="TitleEn" class="form-label">Title</label>
-                        <input asp-for="TitleEn" class="form-control" placeholder="Title" />
-                        <span asp-validation-for="TitleEn" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="DescriptionAr" class="form-label">الوصف</label>
-                    <textarea asp-for="DescriptionAr" class="form-control" rows="3"></textarea>
-                    <span asp-validation-for="DescriptionAr" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-4">
-                    <label asp-for="DescriptionEn" class="form-label">Description</label>
-                    <textarea asp-for="DescriptionEn" class="form-control" rows="3"></textarea>
-                    <span asp-validation-for="DescriptionEn" class="text-danger"></span>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <input type="submit" value="Create" class="btn btn-primary px-4" />
-                    <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
-                </div>
-            </form>
+<div class="container-fluid py-2" style="direction: @direction; text-align: @(isAr ? "right" : "left");">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 fs-3">
+                <i class="fas fa-book-open text-orange me-2"></i>
+                @(isAr ? "إدارة الكورسات" : "Course Management")
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="/Admin/Course" class="text-muted text-decoration-none">
+                            @(isAr ? "الكورسات" : "Courses")
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active text-orange" aria-current="page">
+                        @(isAr ? "إضافة جديد" : "Create New")
+                    </li>
+                </ol>
+            </nav>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "العنوان (بالإنجليزي)" : "Title (English)")</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-book text-orange"></i>
+                            </span>
+                            <input class="form-control bg-light border-start-0" asp-for="TitleEn" type="text"
+                                   placeholder="@(isAr ? "أدخل العنوان بالإنجليزي" : "Enter English Title")">
+                            </div>
+                            <span asp-validation-for="TitleEn" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small mb-2 fw-bold text-muted">@(isAr ? "العنوان (بالعربي)" : "Title (Arabic)")</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white @(isAr ? "border-start-0" : "border-end-0")">
+                                    <i class="fas fa-book text-orange"></i>
+                                </span>
+                                <input class="form-control bg-light @(isAr ? "border-end-0 text-end" : "border-start-0")"
+                                       asp-for="TitleAr" type="text"
+                                       placeholder="@(isAr ? "أدخل العنوان بالعربي" : "Enter Arabic Title")">
+                                </div>
+                                <span asp-validation-for="TitleAr" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="small mb-2 fw-bold text-muted">@(isAr ? "الوصف (بالإنجليزي)" : "Description (English)")</label>
+                                <div class="input-group align-items-start">
+                                    <span class="input-group-text bg-white border-end-0 pt-2">
+                                        <i class="fas fa-align-left text-orange"></i>
+                                    </span>
+                                    <textarea class="form-control bg-light border-start-0" asp-for="DescriptionEn" rows="3"
+                                              placeholder="@(isAr ? "أدخل الوصف بالإنجليزي" : "Enter English Description")"></textarea>
+                                </div>
+                                <span asp-validation-for="DescriptionEn" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="small mb-2 fw-bold text-muted">@(isAr ? "الوصف (بالعربي)" : "Description (Arabic)")</label>
+                                <div class="input-group align-items-start">
+                                    <span class="input-group-text bg-white @(isAr ? "border-start-0" : "border-end-0") pt-2">
+                                        <i class="fas fa-align-right text-orange"></i>
+                                    </span>
+                                    <textarea class="form-control bg-light @(isAr ? "border-end-0 text-end" : "border-start-0")"
+                                              asp-for="DescriptionAr" rows="3"
+                                              placeholder="@(isAr ? "أدخل الوصف بالعربي" : "Enter Arabic Description")"></textarea>
+                                </div>
+                                <span asp-validation-for="DescriptionAr" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-2 border-top">
+                            <button class="btn btn-orange-custom btn-lg px-4 shadow-sm" type="submit">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                @(isAr ? "إنشاء الكورس" : "Create Course")
+                            </button>
+                            <a href="/Admin/Course" class="btn btn-light btn px-3 ms-2">
+                                @(isAr ? "إلغاء" : "Cancel")
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @section Scripts {
+            @{
+                await Html.RenderPartialAsync("_ValidationScriptsPartial");
+            }
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        }

@@ -123,6 +123,7 @@ namespace ELClass.Areas.Admin.Controllers
                     filter: s => string.IsNullOrEmpty(searchValue) ||
                                  s.NameEn.Contains(searchValue) ||
                                  s.NameAr.Contains(searchValue),
+                    include: s => s.Include(u => u.ApplicationUser),
                     skip: start,
                     take: length,
                     orderBy: q => q.OrderBy(s => s.NameEn)
@@ -134,6 +135,7 @@ namespace ELClass.Areas.Admin.Controllers
                 {
                     id = c.Id,
                     name = lang == "en" ? c.NameEn : c.NameAr,
+                    phoneNumber = c.ApplicationUser.PhoneNumber
                 }).ToList();
 
 

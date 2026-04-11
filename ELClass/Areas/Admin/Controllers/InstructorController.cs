@@ -10,6 +10,7 @@ using Models;
 using Models.ViewModels;
 using Models.ViewModels.Instructor;
 using System.Globalization;
+using System.IO.Compression;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -280,8 +281,7 @@ namespace ELClass.Areas.Admin.Controllers
                    (CultureInfo.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en");
 
                 Expression<Func<Models.Instructor, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
-                    (c.NameEn.Contains(searchValue) || c.NameAr.Contains(searchValue) ||
-                     c.BioEn.Contains(searchValue) || c.BioAr.Contains(searchValue));
+                    (c.NameEn.Contains(searchValue) || c.NameAr.Contains(searchValue) );
 
                 var instructors = await unitOfWork.InstructorRepository.GetAsync(
                     filter: filter,
@@ -297,7 +297,7 @@ namespace ELClass.Areas.Admin.Controllers
                 {
                     id = c.Id,
                     name = lang == "en" ? c.NameEn : c.NameAr,
-                    bio = lang == "en" ? c.BioEn : c.BioAr
+                    specialization = lang == "en" ? c.SpecializationEn : c.SpecializationAr
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalRecords, recordsFiltered = filteredRecords, data = result });
@@ -393,37 +393,52 @@ namespace ELClass.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateInstructorAccount(
-    Models.Instructor ins,
-    string Password,
-    string ConfirmPassword)
+        public async Task<IActionResult> CreateInstructorAccount(Models.Instructor ins,string Password,
+            string ConfirmPassword,IFormFile? BioFile)  
         {
-            
             bool isArabic = CultureHelper.IsArabic;
 
             ModelState.Remove("ApplicationUser.Student");
             ModelState.Remove("ApplicationUser.Instructor");
             ModelState.Remove("ApplicationUser.NameAR");
             ModelState.Remove("ApplicationUser.NameEn");
+            ModelState.Remove("Bio"); 
 
             if (!ModelState.IsValid)
             {
-                string errorMsg = isArabic
-                    ? "عفواً، هناك خطأ في البيانات المدخلة"
-                    : "Sorry, there is an error in the input data";
-                ModelState.AddModelError("", errorMsg);
+                ModelState.AddModelError("", isArabic ? "عفواً، هناك خطأ في البيانات المدخلة" : "Sorry, there is an error in the input data");
                 return View(ins);
             }
 
             if (Password != ConfirmPassword)
             {
-                string passMsg = isArabic
-                    ? "كلمة المرور غير متطابقة"
-                    : "Passwords do not match";
-                ModelState.AddModelError("", passMsg);
+                ModelState.AddModelError("", isArabic ? "كلمة المرور غير متطابقة" : "Passwords do not match");
                 return View(ins);
             }
 
+            
+            string uniqueFileName = "";
+            if (BioFile != null && BioFile.Length > 0)
+            {
+                var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx" };
+                var ext = Path.GetExtension(BioFile.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(ext))
+                {
+                    ModelState.AddModelError("", isArabic ? "يسمح فقط بـ PDF أو Word أو TXT" : "Only PDF, Word, TXT files allowed");
+                    return View(ins);
+                }
+
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios");
+                Directory.CreateDirectory(uploadsFolder);
+                uniqueFileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                    await BioFile.CopyToAsync(stream);
+            }
+
+           
             var email = ins.ApplicationUser.Email;
             var userName = email!.Split('@')[0] + new Random().Next(10, 99);
 
@@ -446,15 +461,22 @@ namespace ELClass.Areas.Admin.Controllers
                 foreach (var error in result.Errors)
                     ModelState.AddModelError("", error.Description);
 
-                TempData["Error"] = isArabic
-                    ? "فشل إنشاء حساب المستخدم"
-                    : "Failed to create user account";
+             
+                if (!string.IsNullOrEmpty(uniqueFileName))
+                {
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios", uniqueFileName);
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+                }
+
+                TempData["Error"] = isArabic ? "فشل إنشاء حساب المستخدم" : "Failed to create user account";
                 return View(ins);
             }
 
             await userManager.AddToRoleAsync(user, "Instructor");
 
             ins.Id = user.Id;
+            ins.Bio = uniqueFileName; 
             ins.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ins.CreatedAt = DateTime.Now;
             ins.ApplicationUser = user;
@@ -462,10 +484,7 @@ namespace ELClass.Areas.Admin.Controllers
             await unitOfWork.InstructorRepository.CreateAsync(ins);
             await unitOfWork.CommitAsync();
 
-            TempData["Success"] = isArabic
-                ? "تم إنشاء حساب المحاضر بنجاح"
-                : "Instructor account has been created successfully";
-
+            TempData["Success"] = isArabic ? "تم إنشاء حساب المحاضر بنجاح" : "Instructor account has been created successfully";
             return RedirectToAction("Index");
         }
 
@@ -476,18 +495,41 @@ namespace ELClass.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Models.Instructor ins)
+        public async Task<IActionResult> Create(Models.Instructor ins, IFormFile? BioFile)
         {
             var lang = HttpContext.Session.GetString("Language") ?? "en";
 
             ModelState.Remove("ApplicationUser");
             ModelState.Remove("InstructorStudents");
             ModelState.Remove("InstructorCourses");
+            ModelState.Remove("Bio");
+            if (BioFile == null || BioFile.Length == 0)
+            {
+                ModelState.AddModelError("BioFile", lang == "en" ? "CV file is required" : "ملف السيرة الذاتية مطلوب");
+            }
+    else
+            {
+                var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx" };
+                var ext = Path.GetExtension(BioFile.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(ext))
+                {
+                    ModelState.AddModelError("BioFile", lang == "en" ? "Only PDF, Word, TXT allowed" : "يسمح فقط بـ PDF أو Word أو TXT");
+                }
+            }
 
             if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", lang == "en" ? "Please correct the errors in the form" : "يرجى تصحيح الأخطاء في النموذج");
                 return View(ins);
+
+            // رفع الملف
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(BioFile!.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await BioFile.CopyToAsync(stream);
             }
 
             var user = await userManager.FindByIdAsync(ins.Id);
@@ -520,8 +562,7 @@ namespace ELClass.Areas.Admin.Controllers
                 Id = ins.Id,
                 NameAr = ins.NameAr,
                 NameEn = ins.NameEn,
-                BioAr = ins.BioAr,
-                BioEn = ins.BioEn,
+                Bio = uniqueFileName,
                 SpecializationEn = ins.SpecializationEn,
                 SpecializationAr = ins.SpecializationAr,  
                 CreatedById= User.FindFirstValue(ClaimTypes.NameIdentifier),
@@ -555,7 +596,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditInstructorDetails(InstructorDetailsVM model)
+        public async Task<IActionResult> EditInstructorDetails(InstructorDetailsVM model, IFormFile? BioFile)
         {
             var lang = HttpContext.Session.GetString("Language") ?? "en";
             var ins = model.Instructor;
@@ -565,6 +606,7 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("InstructorStudents");
             ModelState.Remove("Instructor.ApplicationUser.Student");
             ModelState.Remove("Instructor.ApplicationUser.Instructor");
+            ModelState.Remove("Instructor.Bio");
 
             if (ModelState.IsValid)
             {
@@ -579,10 +621,41 @@ namespace ELClass.Areas.Admin.Controllers
 
                     instructorInDb.NameEn = ins.NameEn;
                     instructorInDb.NameAr = ins.NameAr;
-                    instructorInDb.BioEn = ins.BioEn;
-                    instructorInDb.BioAr = ins.BioAr;
                     instructorInDb.SpecializationEn = ins.SpecializationEn;
                     instructorInDb.SpecializationAr = ins.SpecializationAr;
+
+          
+                    if (BioFile != null && BioFile.Length > 0)
+                    {
+                        var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx" };
+                        var ext = Path.GetExtension(BioFile.FileName).ToLowerInvariant();
+
+                        if (!allowedExtensions.Contains(ext))
+                        {
+                            TempData["error"] = lang == "en" ? "Only PDF, Word, TXT files allowed" : "يسمح فقط بـ PDF أو Word أو TXT";
+                            return RedirectToAction("Details", new { id = ins.Id });
+                        }
+
+                       
+                        if (!string.IsNullOrEmpty(instructorInDb.Bio))
+                        {
+                            var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios", instructorInDb.Bio);
+                            if (System.IO.File.Exists(oldPath))
+                                System.IO.File.Delete(oldPath);
+                        }
+
+                   
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios");
+                        Directory.CreateDirectory(uploadsFolder);
+                        var uniqueFileName = $"{Guid.NewGuid()}{ext}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                            await BioFile.CopyToAsync(stream);
+
+                        instructorInDb.Bio = uniqueFileName;
+                    }
+            
 
                     if (instructorInDb.ApplicationUser != null && ins.ApplicationUser != null)
                     {
@@ -591,7 +664,6 @@ namespace ELClass.Areas.Admin.Controllers
                         user.PhoneNumber = ins.ApplicationUser.PhoneNumber;
                         user.AddressEN = ins.ApplicationUser.AddressEN;
                         user.AddressAR = ins.ApplicationUser.AddressAR;
-
                         await userManager.UpdateNormalizedEmailAsync(user);
                     }
 

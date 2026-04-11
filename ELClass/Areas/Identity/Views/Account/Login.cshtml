@@ -120,6 +120,18 @@
             }
             window.location.href = "/Identity/Account/ResendConfirmationEmail?email=" + email;
         }
+
+
+        @if (TempData["success-notifications"] != null)
+        {
+            <script>toastr.success('@TempData["success-notifications"]')</script>
+        }
+        @if (TempData["error-notifications"] != null)
+        {
+            <script>toastr.error('@TempData["error-notifications"]')</script>
+        }
+
+
     </script>
 </body>
 </html>

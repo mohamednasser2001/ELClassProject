@@ -319,7 +319,8 @@ namespace ELClass.Areas.Identity.Controllers
                             return RedirectToAction("index", "home", new { area = "admin" });
 
 
-                        }else if (roles.Contains("Instructor"))
+                        }
+                        else if (roles.Contains("Instructor"))
                         {
                             return RedirectToAction("index", "Home", new { area = "Instructor" });
                         }
@@ -327,27 +328,27 @@ namespace ELClass.Areas.Identity.Controllers
                         {
                             return RedirectToAction("index", "Home", new { area = "StudentArea" });
                         }
-                          
+
                     }
 
-                    
+
                     var lang = HttpContext.Session.GetString("Language") ?? "en";
 
-                    
+
                     if (result.IsNotAllowed)
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
                             ? "يجب تأكيد البريد الإلكتروني أولاً لتتمكن من الدخول."
                             : "You must confirm your email to log in.");
                     }
-                    
+
                     else if (result.IsLockedOut)
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
                             ? "هذا الحساب مغلق مؤقتاً بسبب محاولات دخول خاطئة كثيرة."
                             : "This account is locked out due to too many failed attempts.");
                     }
-                   
+
                     else
                     {
                         ModelState.AddModelError(string.Empty, lang == "ar"
@@ -360,7 +361,7 @@ namespace ELClass.Areas.Identity.Controllers
             }
             catch (Exception ex)
             {
-               
+
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return View(loginVM);
             }
@@ -368,6 +369,166 @@ namespace ELClass.Areas.Identity.Controllers
 
 
         }
+
+
+        [HttpGet]
+        public IActionResult InstructorRegister()
+        {
+            return View();
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> InstructorRegister(RegisterToInstructorVM vm, string? returnUrl = null)
+        {
+            returnUrl ??= Url.Content("~/");
+            if (!Url.IsLocalUrl(returnUrl))
+                returnUrl = Url.Content("~/");
+
+            var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+            try
+            {
+                // ── 1) Language-specific name validation ──────────────────────────
+                if ((lang == "en" && string.IsNullOrWhiteSpace(vm.NameEN)) ||
+                    (lang == "ar" && string.IsNullOrWhiteSpace(vm.NameAR)))
+                {
+                    ModelState.AddModelError(
+                        lang == "en" ? nameof(vm.NameEN) : nameof(vm.NameAR),
+                        lang == "en" ? "Name is required" : "الاسم مطلوب"
+                    );
+                }
+
+                // Fill missing name so DB never gets NULL
+                if (string.IsNullOrWhiteSpace(vm.NameEN) && !string.IsNullOrWhiteSpace(vm.NameAR))
+                    vm.NameEN = vm.NameAR;
+                if (string.IsNullOrWhiteSpace(vm.NameAR) && !string.IsNullOrWhiteSpace(vm.NameEN))
+                    vm.NameAR = vm.NameEN;
+
+                // ── 2) Email safety ───────────────────────────────────────────────
+                if (string.IsNullOrWhiteSpace(vm.Email))
+                    ModelState.AddModelError(nameof(vm.Email),
+                        lang == "ar" ? "البريد مطلوب" : "Email is required");
+
+                // ── 3) Bio file validation ────────────────────────────────────────
+                if (vm.Bio == null || vm.Bio.Length == 0)
+                {
+                    ModelState.AddModelError(nameof(vm.Bio),
+                        lang == "ar" ? "ملف السيرة الذاتية مطلوب" : "CV file is required");
+                }
+                else
+                {
+                    var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx" };
+                    var ext = Path.GetExtension(vm.Bio.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(ext))
+                    {
+                        ModelState.AddModelError(nameof(vm.Bio),
+                            lang == "ar"
+                                ? "يسمح فقط بملفات TXT، PDF أو Word"
+                                : "Only TXT, PDF or Word files are allowed");
+                    }
+                }
+
+                if (!ModelState.IsValid)
+                    return View(vm);
+
+                // ── 4) Save Bio file to wwwroot/uploads/instructor-bios/ ──────────
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(),"wwwroot", "uploads", "instructor-bios");
+                Directory.CreateDirectory(uploadsFolder); // creates folder if not exists
+
+                var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(vm.Bio!.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await vm.Bio.CopyToAsync(stream);
+                }
+
+                // ── 5) Create ApplicationUser ─────────────────────────────────────
+                var email = vm.Email!.Trim();
+                var userName = await GenerateUniqueUsernameAsync(email); // same helper you already have
+
+                var applicationUser = new ApplicationUser
+                {
+                    NameEN = vm.NameEN,
+                    NameAR = vm.NameAR,
+                    Email = email,
+                    UserName = userName
+                };
+
+                var result = await _userManager.CreateAsync(applicationUser, vm.Password!);
+
+                if (!result.Succeeded)
+                {
+                    foreach (var error in result.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
+
+                    TempData["error-notifications"] = lang == "ar"
+                        ? "فشل إنشاء الحساب. راجع الأخطاء."
+                        : "Registration failed. Please check the errors.";
+
+                    // Clean up uploaded file if user creation failed
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+
+                    return View(vm);
+                }
+
+                // ── 6) Assign Instructor role ─────────────────────────────────────
+                await _userManager.AddToRoleAsync(applicationUser, "Instructor");
+
+                // ── 7) Create Instructor record ───────────────────────────────────
+                var instructor = new Models.Instructor
+                {
+                    Id = applicationUser.Id,
+                    NameAr = applicationUser.NameAR ?? "",
+                    NameEn = applicationUser.NameEN ?? "",
+                    Bio = uniqueFileName,   // store file name in DB
+                    SpecializationAr = vm.SpecializationAr,
+                    SpecializationEn = vm.SpecializationEn,
+                };
+
+                await unitOfWork.InstructorRepository.CreateAsync(instructor);
+                await unitOfWork.CommitAsync();
+
+                // ── 8) Send confirmation email ────────────────────────────────────
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser);
+                var confirmationLink = Url.Action(
+                    "ConfirmEmail", "Account",
+                    new { userId = applicationUser.Id, token },
+                    Request.Scheme
+                );
+
+                await _emailSender.SendEmailAsync(
+                    applicationUser.Email!,
+                    lang == "ar" ? "تأكيد الحساب" : "Confirm Your Email",
+                    lang == "ar"
+                        ? $"برجاء تأكيد حسابك من خلال <a href='{confirmationLink}'>الضغط هنا</a>"
+                        : $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>."
+                );
+
+                TempData["success-notifications"] = lang == "ar"
+                    ? "تم إنشاء حساب المدرب! برجاء مراجعة بريدك الإلكتروني لتفعيله."
+                    : "Instructor account created! Please check your email to confirm.";
+
+                return RedirectToAction(nameof(Login));
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty,
+                    lang == "ar"
+                        ? "حدث خطأ غير متوقع. حاول مرة أخرى."
+                        : "An unexpected error occurred. Please try again.");
+
+                return View(vm);
+            }
+        }
+
+
+
+
 
         [HttpGet]
         public IActionResult ForgotPassword()

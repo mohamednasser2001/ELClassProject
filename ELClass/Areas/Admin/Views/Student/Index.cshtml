@@ -24,11 +24,12 @@
 
                 <div class="card-body p-2 p-md-4">
                     <div class="table-responsive">
-                        <table id="StudentsTable" class="table">
+                        <table id="StudentsTable" class="table w-100">
                             <thead>
                                 <tr>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "الاسم" : "Name")</th>
+                                    <th style="text-align: @(currentLang == "ar" ? "right" : "left")"> @(currentLang == "ar" ? "رقم الموبايل" : "Phone Number") </th>
                                     <th style="text-align: center">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
                                 </tr>
                             </thead>
@@ -90,6 +91,14 @@
                             return `<a href="/Admin/Student/Details/${row.id}" class="student-link">
                                     <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
                                     </a>`;
+                        }
+                    },
+                    {
+                        data: 'phoneNumber',
+                        render: function (data) {
+                            return data
+                                ? `<span><i class="fas fa-phone me-1" style="opacity:0.6"></i>${data}</span>`
+                                : `<span class="text-muted">—</span>`;
                         }
                     },
                     {

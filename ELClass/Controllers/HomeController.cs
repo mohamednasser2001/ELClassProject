@@ -1,6 +1,8 @@
 ﻿using DataAccess.Repositories.IRepositories;
 using ELClass.Hubs;
 using ELClass.services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -12,11 +14,14 @@ using System.Threading.Tasks;
 namespace ELClass.Controllers
 {
 
-    public class HomeController(IUnitOfWork unitOfWork , IHubContext<RealTimeHub> realHub) : Controller
+    public class HomeController(IUnitOfWork unitOfWork , IHubContext<RealTimeHub> realHub , UserManager<ApplicationUser> userManager ,
+        SignInManager<ApplicationUser> signInManager,IEmailSender emailSender) : Controller
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IHubContext<RealTimeHub> _realHub = realHub;
-
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
+        private readonly IEmailSender _emailSender = emailSender;
         private static readonly string[] ValidCountryCodes = { "SA", "AE", "KW", "BH", "OM", "EG", "QA" };
 
         public async Task<IActionResult> Index()
@@ -93,12 +98,81 @@ namespace ELClass.Controllers
             {
                 await _unitOfWork.ContactUsRepository.CreateAsync(contactUs);
                 await _unitOfWork.CommitAsync();
-                TempData["Success"] = isArabic ? "تم إرسال رسالتك بنجاح!" : "Your message has been sent successfully!";
-                await _realHub.Clients.All.SendAsync("ReceiveMessage", "New Contact Us Message", $"You have a new message from {contactUs.Name} - {contactUs.Email}");
-            }
-            //TempData["Error"] = isArabic ? "حدث خطأ أثناء إرسال رسالتك. الرجاء المحاولة مرة أخرى." : "An error occurred while sending your message. Please try again.";
-            return RedirectToAction("Index");
 
+
+                var existingUser = await _userManager.FindByEmailAsync(contactUs.Email);
+                if (existingUser == null)
+                {
+                    var userName = await GenerateUniqueUsernameAsync(contactUs.Email);
+
+                    var newUser = new ApplicationUser
+                    {
+                        Email = contactUs.Email,
+                        UserName = userName,
+                        NameEN = contactUs.Name,
+                        NameAR = contactUs.Name,
+                        PhoneNumber = contactUs.PhoneNumber,
+                    };
+
+                    var result = await _userManager.CreateAsync(newUser, "@Aa123456");
+
+                    if (result.Succeeded)
+                    {
+                        await _userManager.AddToRoleAsync(newUser, "Student");
+
+                        var student = new Student
+                        {
+                            Id = newUser.Id,
+                            NameEn = contactUs.Name,
+                            NameAr = contactUs.Name,
+                            CreatedDate = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.StudentRepository.CreateAsync(student);
+                        await _unitOfWork.CommitAsync();
+
+                        // إرسال الباسورد للطالب على الإيميل
+                        //await _emailSender.SendEmailAsync(
+                        //    contactUs.Email,
+                        //    isArabic ? "بيانات حسابك" : "Your Account Credentials",
+                        //    isArabic
+                        //        ? $"تم إنشاء حسابك بنجاح!<br/>البريد الإلكتروني: {contactUs.Email}<br/>كلمة المرور: @Aa123456"
+                        //        : $"Your account has been created!<br/>Email: {contactUs.Email}<br/>Password: @Aa123456"
+                        //);
+                    }
+                }
+                // ────────────────────────────────────────────────────────────
+
+                TempData["Success"] = isArabic ? "تم إرسال رسالتك بنجاح!" : "Your message has been sent successfully!";
+                await _realHub.Clients.All.SendAsync("ReceiveMessage", "New Contact Us Message",
+                    $"You have a new message from {contactUs.Name} - {contactUs.Email}");
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        private async Task<string> GenerateUniqueUsernameAsync(string email)
+        {
+            var baseName = email.Split('@')[0];
+
+            // sanitize
+            baseName = new string(baseName.Where(ch => char.IsLetterOrDigit(ch) || ch == '_' || ch == '.').ToArray());
+            if (string.IsNullOrWhiteSpace(baseName))
+                baseName = "user";
+
+            // try a few times
+            for (int i = 0; i < 5; i++)
+            {
+                var suffix = Guid.NewGuid().ToString("N").Substring(0, 6);
+                var candidate = $"{baseName}_{suffix}";
+
+                var exists = await _userManager.FindByNameAsync(candidate);
+                if (exists == null)
+                    return candidate;
+            }
+
+            // fallback
+            return $"{baseName}_{Guid.NewGuid():N}";
         }
 
     }
