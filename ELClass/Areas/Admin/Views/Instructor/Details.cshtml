@@ -94,7 +94,7 @@
                     </button>
                 </div>
                 <div class="card-body p-4">
-                    <form asp-action="EditInstructorDetails" id="instructorForm">
+                    <form asp-action="EditInstructorDetails" id="instructorForm" enctype="multipart/form-data">
                         <input type="hidden" asp-for="Instructor.Id" />
 
                         <div class="row g-3 mb-4">
@@ -141,14 +141,30 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="mb-4 col-md-6">
-                                <label class="form-label small fw-bold text-muted">About / Bio (EN)</label>
-                                <textarea class="form-control form-editable bg-light border-0" asp-for="Instructor.BioEn" rows="3" readonly></textarea>
-                            </div>
-                            <div class="mb-4 col-md-6 @(isArabic ? "text-start" : "text-end")">
-                                <label class="form-label small fw-bold text-muted">السيرة الذاتية (AR)</label>
-                                <textarea class="form-control form-editable bg-light border-0" asp-for="Instructor.BioAr" rows="3" style="text-align:right; direction:rtl;" readonly></textarea>
+                       <div class="mb-4 col-md-6">
+                            <label class="form-label small fw-bold text-muted">
+                                <i class="fas fa-file-alt text-orange me-1"></i>
+                                @(isArabic ? "السيرة الذاتية" : "Bio / CV")
+                            </label>
+
+                            
+                            @if (!string.IsNullOrEmpty(Model.Instructor.Bio))
+                            {
+                                <div class="mb-2">
+                                    <button type="button" class="btn btn-outline-orange btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#bioModal">
+                                        <i class="fas fa-file-pdf me-1"></i>
+                                        @(isArabic ? "عرض الملف الحالي" : "View Current File")
+                                    </button>
+                                </div>
+                            }
+
+                            
+                            <div class="bio-edit-section d-none">
+                                <input type="file" name="BioFile" class="form-control bg-light border-0" accept=".txt,.pdf,.doc,.docx">
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle text-muted"></i>
+                                    @(isArabic ? "اتركه فارغاً إذا لم تريد تغيير الملف" : "Leave empty to keep current file")
+                                </div>
                             </div>
                         </div>
 
@@ -213,7 +229,56 @@
         </div>
     </div>
 </div>
-
+<div class="modal fade" id="bioModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-alt text-orange me-2"></i>
+                    @(isArabic ? "السيرة الذاتية" : "CV / Bio File")
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 70vh;">
+                @{
+                    var bioExt = System.IO.Path.GetExtension(Model.Instructor.Bio ?? "").ToLower();
+                }
+                @if (bioExt == ".pdf")
+                {
+                    <iframe src="@Url.Content("~/uploads/instructor-bios/" + Model.Instructor.Bio)"
+                            width="100%" height="100%" style="border:none;"></iframe>
+                }
+                else if (bioExt == ".txt")
+                {
+                    <iframe src="@Url.Content("~/uploads/instructor-bios/" + Model.Instructor.Bio)"
+                            width="100%" height="100%" style="border:none;"></iframe>
+                }
+                else
+                {
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                        <i class="fas fa-file-word fa-4x mb-3 text-orange"></i>
+                        <p>@(isArabic ? "لا يمكن عرض هذا الملف مباشرة" : "Cannot preview this file type")</p>
+                        <a href="@Url.Content("~/uploads/instructor-bios/" + Model.Instructor.Bio)"
+                                class="btn btn-orange-custom" download>
+                            <i class="fas fa-download me-1"></i>
+                            @(isArabic ? "تحميل الملف" : "Download File")
+                        </a>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <a href="@Url.Content("~/uploads/instructor-bios/" + Model.Instructor.Bio)"
+                        class="btn btn-orange-custom btn-sm" download>
+                    <i class="fas fa-download me-1"></i>
+                    @(isArabic ? "تحميل" : "Download")
+                </a>
+                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">
+                    @(isArabic ? "إغلاق" : "Close")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -302,6 +367,7 @@
             $('#enableEditBtn').on('click', function() {
                 $('.form-editable').removeAttr('readonly').removeClass('bg-light');
                 $('#formActions').removeClass('d-none').addClass('d-flex');
+                                        $('.bio-edit-section').removeClass('d-none');
                 $(this).hide();
             });
             $('#cancelEditBtn').on('click', () => location.reload());

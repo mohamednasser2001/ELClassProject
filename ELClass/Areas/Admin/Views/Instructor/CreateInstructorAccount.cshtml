@@ -8,21 +8,34 @@
 }
 
 <div class="container-fluid py-3" style="direction: @direction; text-align: @(isAr ? "right" : "left");">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0 fs-3">
-            <i class="fas fa-user-plus text-orange me-2"></i>
-            @(isAr ? "إنشاء حساب محاضر" : "Create Instructor Account")
-        </h2>
-        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
-            <i class="fas @(isAr ? "fa-arrow-right" : "fa-arrow-left") me-1"></i>
-            @(isAr ? "العودة للقائمة" : "Back to List")
-        </a>
+        <div>
+            <h2 class="fw-bold mb-1 fs-3">
+                <i class="fas fa-user-plus text-orange me-2"></i>
+                @(isAr ? "إنشاء حساب محاضر" : "Create Instructor Account")
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index")" class="text-muted text-decoration-none">
+                            @(isAr ? "المحاضرين" : "Instructors")
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active text-orange" aria-current="page">
+                        @(isAr ? "إضافة محاضر جديد" : "Add New Instructor")
+                    </li>
+                </ol>
+            </nav>
+        </div>
     </div>
 
-    <form asp-action="CreateInstructorAccount" method="post">
+    <form asp-action="CreateInstructorAccount" method="post" enctype="multipart/form-data">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="row">
+
+
             <div class="col-lg-12 mb-1">
                 <div class="card border-orange-left shadow-sm mb-3">
                     <div class="card-body">
@@ -32,111 +45,210 @@
                         </h5>
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "البريد الإلكتروني" : "Email Address")</label>
-                                <input type="email" asp-for="ApplicationUser.Email" class="form-control" placeholder="example@mail.com" required>
-                                <span asp-validation-for="ApplicationUser.Email" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "كلمة المرور" : "Password")</label>
-                                <input type="password" name="Password" class="form-control" placeholder="********" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "تأكيد كلمة المرور" : "Confirm Password")</label>
-                                <input type="password" name="ConfirmPassword" class="form-control" placeholder="********" required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-12 mb-1">
-                <div class="card border-orange-left shadow-sm mb-3">
-                    <div class="card-body">
-                        <h5 class="form-section-title mb-4">
-                            <i class="fas fa-id-card text-orange"></i>
-                            @(isAr ? "المعلومات الشخصية" : "Personal Information")
-                        </h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="NameEn" class="small mb-1 fw-bold text-muted">@(isAr ? "الاسم بالكامل (إنجليزي)" : "Full Name (English)")</label>
-                                <input asp-for="NameEn" class="form-control" placeholder="Full Name">
-                                <span asp-validation-for="NameEn" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="NameAr" class="small mb-1 fw-bold text-muted">@(isAr ? "الاسم بالكامل (عربي)" : "Full Name (Arabic)")</label>
-                                <input asp-for="NameAr" class="form-control @(isAr ? "text-end" : "")" placeholder="الاسم ثلاثي">
-                                <span asp-validation-for="NameAr" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="SpecializationEn" class="small mb-1 fw-bold text-muted">@(isAr ? "التخصص (إنجليزي)" : "Specialization (English)")</label>
-                                <input asp-for="SpecializationEn" class="form-control" placeholder="e.g. Mathematics">
-                                <span asp-validation-for="SpecializationEn" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="SpecializationAr" class="small mb-1 fw-bold text-muted">@(isAr ? "التخصص (عربي)" : "Specialization (Arabic)")</label>
-                                <input asp-for="SpecializationAr" class="form-control @(isAr ? "text-end" : "")" placeholder="مثلاً: رياضيات">
-                                <span asp-validation-for="SpecializationAr" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="small mb-1 fw-bold text-muted">@(isAr ? "رقم الهاتف" : "Phone Number")</label>
-                                <input type="text" asp-for="ApplicationUser.PhoneNumber" class="form-control" placeholder="01xxxxxxxxx">
-                                <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="ApplicationUser.AddressEN" class="small mb-1 fw-bold text-muted">@(isAr ? "العنوان (إنجليزي)" : "Address (English)")</label>
-                                <input type="text" asp-for="ApplicationUser.AddressEN" class="form-control" placeholder="City, Country">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="ApplicationUser.AddressAR" class="small mb-1 fw-bold text-muted">@(isAr ? "العنوان (عربي)" : "Address (Arabic)")</label>
-                                <input type="text" asp-for="ApplicationUser.AddressAR" class="form-control @(isAr ? "text-end" : "")" placeholder="المدينة، الدولة">
+                                <label class="small mb-2 fw-bold text-muted">
+                                    @(isAr ? "البريد الإلكتروني" : "Email Address")
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fas fa-envelope text-orange"></i>
+                                    </span>
+                                    <input type="email" asp-for="ApplicationUser.Email"
+                                           class="form-control bg-light border-start-0"
+                                           placeholder="example@mail.com" required>
+                                    </div>
+                                    <span asp-validation-for="ApplicationUser.Email" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="small mb-2 fw-bold text-muted">
+                                        @(isAr ? "كلمة المرور" : "Password")
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="fas fa-lock text-orange"></i>
+                                        </span>
+                                        <input type="password" name="Password"
+                                               class="form-control bg-light border-start-0"
+                                               placeholder="********" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="small mb-2 fw-bold text-muted">
+                                        @(isAr ? "تأكيد كلمة المرور" : "Confirm Password")
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="fas fa-lock text-orange"></i>
+                                        </span>
+                                        <input type="password" name="ConfirmPassword"
+                                               class="form-control bg-light border-start-0"
+                                               placeholder="********" required>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-lg-12 mb-3">
-                <div class="card border-orange-left shadow-sm">
-                    <div class="card-body">
-                        <h5 class="form-section-title mb-4">
-                            <i class="fas fa-file-alt text-orange"></i>
-                            @(isAr ? "السيرة الذاتية المهنية" : "Professional Bio")
-                        </h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="BioEn" class="small mb-1 fw-bold text-muted">@(isAr ? "السيرة الذاتية (إنجليزي)" : "Bio (English)")</label>
-                                <textarea asp-for="BioEn" class="form-control" rows="4" placeholder="Description..."></textarea>
-                                <span asp-validation-for="BioEn" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="BioAr" class="small mb-1 fw-bold text-muted">@(isAr ? "السيرة الذاتية (عربي)" : "Bio (Arabic)")</label>
-                                <textarea asp-for="BioAr" class="form-control @(isAr ? "text-end" : "")" rows="4" dir="@(isAr ? "rtl" : "ltr")" placeholder="نبذة عنك..."></textarea>
-                                <span asp-validation-for="BioAr" class="text-danger small"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-orange-custom px-5 py-2 shadow-sm">
-                <i class="fas fa-check-circle me-1"></i>
-                @(isAr ? "إنشاء الحساب" : "Create Account")
-            </button>
-            <button type="reset" class="btn btn-light px-4 py-2 border">
-                @(isAr ? "مسح البيانات" : "Clear Form")
-            </button>
-        </div>
-    </form>
-</div>
+                <div class="col-lg-12 mb-1">
+                    <div class="card border-orange-left shadow-sm mb-3">
+                        <div class="card-body">
+                            <h5 class="form-section-title mb-4">
+                                <i class="fas fa-id-card text-orange"></i>
+                                @(isAr ? "المعلومات الشخصية" : "Personal Information")
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="small mb-2 fw-bold text-muted">
+                                        @(isAr ? "الاسم بالكامل (إنجليزي)" : "Full Name (English)")
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="fas fa-font text-orange"></i>
+                                        </span>
+                                        <input asp-for="NameEn"
+                                               class="form-control bg-light border-start-0"
+                                               placeholder="Full Name">
+                                        </div>
+                                        <span asp-validation-for="NameEn" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="small mb-2 fw-bold text-muted">
+                                            @(isAr ? "الاسم بالكامل (عربي)" : "Full Name (Arabic)")
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white @(isAr ? "border-start-0" : "border-end-0")">
+                                                <i class="fas fa-font text-orange"></i>
+                                            </span>
+                                            <input asp-for="NameAr"
+                                                   class="form-control bg-light @(isAr ? "border-end-0 text-end" : "border-start-0")"
+                                                   placeholder="الاسم ثلاثي">
+                                            </div>
+                                            <span asp-validation-for="NameAr" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="small mb-2 fw-bold text-muted">
+                                                @(isAr ? "التخصص (إنجليزي)" : "Specialization (English)")
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white border-end-0">
+                                                    <i class="fas fa-briefcase text-orange"></i>
+                                                </span>
+                                                <input asp-for="SpecializationEn"
+                                                       class="form-control bg-light border-start-0"
+                                                       placeholder="e.g. Mathematics">
+                                                </div>
+                                                <span asp-validation-for="SpecializationEn" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="small mb-2 fw-bold text-muted">
+                                                    @(isAr ? "التخصص (عربي)" : "Specialization (Arabic)")
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white @(isAr ? "border-start-0" : "border-end-0")">
+                                                        <i class="fas fa-briefcase text-orange"></i>
+                                                    </span>
+                                                    <input asp-for="SpecializationAr"
+                                                           class="form-control bg-light @(isAr ? "border-end-0 text-end" : "border-start-0")"
+                                                           placeholder="مثلاً: رياضيات">
+                                                    </div>
+                                                    <span asp-validation-for="SpecializationAr" class="text-danger small"></span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="small mb-2 fw-bold text-muted">
+                                                        @(isAr ? "رقم الهاتف" : "Phone Number")
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-white border-end-0">
+                                                            <i class="fas fa-phone text-orange"></i>
+                                                        </span>
+                                                        <input type="text" asp-for="ApplicationUser.PhoneNumber"
+                                                               class="form-control bg-light border-start-0"
+                                                               placeholder="01xxxxxxxxx">
+                                                        </div>
+                                                        <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger small"></span>
+                                                    </div>
+                                                    <div class="col-md-4 mb-3">
+                                                        <label class="small mb-2 fw-bold text-muted">
+                                                            @(isAr ? "العنوان (إنجليزي)" : "Address (English)")
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-white border-end-0">
+                                                                <i class="fas fa-map-marker-alt text-orange"></i>
+                                                            </span>
+                                                            <input type="text" asp-for="ApplicationUser.AddressEN"
+                                                                   class="form-control bg-light border-start-0"
+                                                                   placeholder="City, Country">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="small mb-2 fw-bold text-muted">
+                                                                @(isAr ? "العنوان (عربي)" : "Address (Arabic)")
+                                                            </label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text bg-white @(isAr ? "border-start-0" : "border-end-0")">
+                                                                    <i class="fas fa-map-marker-alt text-orange"></i>
+                                                                </span>
+                                                                <input type="text" asp-for="ApplicationUser.AddressAR"
+                                                                       class="form-control bg-light @(isAr ? "border-end-0 text-end" : "border-start-0")"
+                                                                       placeholder="المدينة، الدولة">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+                                   
+                                            <div class="col-lg-12 mb-3">
+                                                <div class="card border-orange-left shadow-sm">
+                                                    <div class="card-body">
+                                                        <h5 class="form-section-title mb-4">
+                                                            <i class="fas fa-file-alt text-orange"></i>
+                                                            @(isAr ? "السيرة الذاتية المهنية" : "Professional Bio")
+                                                        </h5>
+                                                        <div class="row">
+                                                            <div class="col-md-12 mb-3">
+                                                                <label class="small mb-2 fw-bold text-muted">
+                                                                    <i class="fas fa-file-upload text-orange me-1"></i>
+                                                                    @(isAr ? "السيرة الذاتية (ملف)" : "Bio (File)")
+                                                                </label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text bg-white border-end-0">
+                                                                        <i class="fas fa-paperclip text-orange"></i>
+                                                                    </span>
+                                                                    <input type="file" name="BioFile"
+                                                                           class="form-control bg-light border-start-0"
+                                                                           accept=".txt,.pdf,.doc,.docx">
+                                                                </div>
+                                                                <div class="form-text mt-1">
+                                                                    <i class="fas fa-info-circle text-muted"></i>
+                                                                    @(isAr ? "يسمح بـ PDF, Word, TXT فقط" : "Only PDF, Word, TXT files allowed")
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2 mt-3">
+                                            <button type="submit" class="btn btn-orange-custom px-5 py-2 shadow-sm">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                @(isAr ? "إنشاء الحساب" : "Create Account")
+                                            </button>
+                                            <button type="reset" class="btn btn-light px-4 py-2 border">
+                                                @(isAr ? "مسح البيانات" : "Clear Form")
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                @section Scripts {
+                                    <partial name="_ValidationScriptsPartial" />
+                                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+                                }

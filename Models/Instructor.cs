@@ -17,9 +17,7 @@ namespace Models
         public string NameEn { get; set; } = string.Empty;
         [Required(ErrorMessage = " السيرة الذاتية مطلوبة")]
 
-        public string BioAr { get; set; } = string.Empty;
-        [Required(ErrorMessage = "the bio is required")]
-        public string BioEn { get; set; } = string.Empty;
+        public string Bio { get; set; }
         public string SpecializationEn { get; set; } = string.Empty;
         public string SpecializationAr { get; set; } = string.Empty;
 

@@ -102,13 +102,13 @@
                                             <a class="page-scroll" href="#feature">@(isArabic ? "المميزات" : "Feature")</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="page-scroll" href="#about">@(isArabic ? "من نحن" : "About")</a>
+                                            <a class="page-scroll" href="#CoursesSection">@(isArabic ? "الدورات" : "Courses")</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="page-scroll" href="#ContactUsSection">@(isArabic ? "اتصل بنا" : "Contact")</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="page-scroll" href="#pricing">@(isArabic ? "الأسعار" : "Pricing")</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="page-scroll" href="#contact">@(isArabic ? "اتصل بنا" : "Contact")</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -214,5 +214,51 @@
             }
         });
     </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const sections = document.querySelectorAll("#home, #feature, #CoursesSection, #ContactUsSection, #pricing");
+        const navLinks = document.querySelectorAll(".page-scroll");
+
+        const options = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.5 // السكشن يعتبر "نشط" لما يظهر 50% منه في الشاشة
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // 1. شيل كلاس active من كل اللينكات
+                    navLinks.forEach(link => link.classList.remove("active"));
+
+                    // 2. هات الـ ID بتاع السكشن اللي ظاهر دلوقتي
+                    const id = entry.target.getAttribute("id");
+
+                    // 3. ضيف كلاس active للزرار اللي بيشاور على الـ ID ده
+                    const activeLink = document.querySelector(`.page-scroll[href="#${id}"]`);
+                    if (activeLink) {
+                        activeLink.classList.add("active");
+                    }
+                }
+            });
+        }, options);
+
+        // تشغيل المراقب على السكاشن
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+    });
+</script>
+
+    @if (TempData["success-notifications"] != null)
+    {
+        <script>toastr.success('@TempData["success-notifications"]')</script>
+    }
+    @if (TempData["error-notifications"] != null)
+    {
+        <script>toastr.error('@TempData["error-notifications"]')</script>
+    }
+
+
 </body>
 </html>

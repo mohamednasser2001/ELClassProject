@@ -11,7 +11,7 @@
             <div class="card custom-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">
-                        <i class="fas fa-chalkboard-instructor icon-primary"></i>
+                        <i class="fas fa-chalkboard-teacher icon-primary"></i>
                         @(isArabic ? "قائمة المدربين" : "Instructors List")
                     </h3>
 
@@ -25,12 +25,12 @@
 
                 <div class="card-body p-2 p-md-4">
                     <div class="table-responsive">
-                        <table id="InstructorsTable" class="table">
+                        <table id="InstructorsTable" class="table w-100">
                             <thead>
                                 <tr>
                                     <th style="text-align: @(isArabic ? "right" : "left")">#</th>
                                     <th style="text-align: @(isArabic ? "right" : "left")">@(isArabic ? "الاسم" : "Name")</th>
-                                    <th style="text-align: @(isArabic ? "right" : "left")" class="d-none d-md-table-cell">@(isArabic ? "السيرة الذاتية" : "Biography")</th>
+                                    <th style="text-align: @(isArabic ? "right" : "left")" class="d-none d-md-table-cell"> @(isArabic ? "التخصص" : "Specialization") </th>
                                     <th style="text-align: center">@(isArabic ? "التحكم" : "Actions")</th>
                                 </tr>
                             </thead>
@@ -91,16 +91,18 @@
                         data: 'name',
                         render: function (data, type, row) {
                             return `<a href="/Admin/Instructor/Details/${row.id}" class="instructor-link">
-                                    <i class="fas fa-chalkboard-instructor me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                                    <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i> ${data}
                                     </a>`;
                         }
                     },
                     {
-                        data: 'bio',
+                        data: 'specialization',
                         className: 'd-none d-md-table-cell',
                         render: function(data) {
                             if (!data) return '<span class="text-muted">-</span>';
-                            return `<span class="text-muted small">${data.length > 60 ? data.substring(0, 60) + '...' : data}</span>`;
+                            return `<span class="badge" style="background-color: var(--primary-light, #e8f0fe); color: var(--primary, #4a6cf7); padding: 5px 10px; border-radius: 20px;">
+                                        <i class="fas fa-award me-1"></i>${data}
+                                    </span>`;
                         }
                     },
                     {

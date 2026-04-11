@@ -30,7 +30,7 @@
 
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-4">
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="form-group mb-4 p-3 bg-light rounded-2 border-start border-4 border-orange">
@@ -86,16 +86,21 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "السيرة الذاتية (بالإنجليزي)" : "Bio (English)")</label>
-                        <textarea class="form-control bg-light" asp-for="BioEn" rows="4" placeholder="@(isAr ? "نبذة عن المحاضر..." : "Tell us about the instructor...")"></textarea>
-                        <span class="text-danger" asp-validation-for="BioEn"></span>
+                <div class="col-md-6 mb-3">
+                    <label class="small mb-2 fw-bold text-muted">
+                        <i class="fas fa-file-upload text-orange me-1"></i>
+                        @(isAr ? "السيرة الذاتية (ملف)" : "Bio (File)")
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-paperclip text-orange"></i>
+                        </span>
+                        <input type="file" class="form-control bg-light border-start-0" 
+                               name="BioFile" accept=".txt,.pdf,.doc,.docx">
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="small mb-2 fw-bold text-muted">@(isAr ? "السيرة الذاتية (بالعربي)" : "Bio (Arabic)")</label>
-                        <textarea class="form-control bg-light @(isAr ? "text-end" : "")" asp-for="BioAr" rows="4" dir="@(isAr ? "rtl" : "ltr")" placeholder="@(isAr ? "اكتب نبذة عن المحاضر..." : "Tell us about the instructor in Arabic...")"></textarea>
-                        <span class="text-danger" asp-validation-for="BioAr"></span>
+                    <div class="form-text mt-1">
+                        <i class="fas fa-info-circle text-muted"></i>
+                        @(isAr ? "يسمح بـ PDF, Word, TXT فقط" : "Only PDF, Word, TXT files allowed")
                     </div>
                 </div>
 

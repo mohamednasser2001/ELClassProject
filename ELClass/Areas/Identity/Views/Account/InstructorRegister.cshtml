@@ -1,0 +1,224 @@
+﻿@using Models.ViewModels
+@model RegisterToInstructorVM
+
+@{
+    Layout = null;
+    var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+    var isArabic = currentLang == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
+}
+
+<!DOCTYPE html>
+<html lang="@currentLang" dir="@direction">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(isArabic ? "تسجيل مدرب" : "Instructor Register") - ElClass</title>
+
+    <link rel="stylesheet" href="~/AuthAssets/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+
+    <style>
+        .file-upload-wrapper {
+            position: relative;
+            border: 1.5px dashed #f28b00;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .file-upload-wrapper:hover {
+            background: rgba(242, 139, 0, 0.05);
+        }
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        .file-upload-icon {
+            font-size: 28px;
+            color: #f28b00;
+            margin-bottom: 6px;
+        }
+        .file-upload-text {
+            font-size: 13px;
+            color: #888;
+        }
+        .file-name-display {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #f28b00;
+            font-weight: 500;
+            min-height: 18px;
+        }
+
+        .btn-auth:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-top-nav">
+            <div class="logo">
+                <span style="color:#f28b00; font-weight: bold; font-size: 24px;">EL</span><span style="color:#ffffff; font-weight: bold; font-size: 24px;">-CLASS</span>
+            </div>
+            <a href="/Home/SetLanguage?culture=@(isArabic ? "en-US" : "ar-EG")&returnUrl=@Context.Request.Path"
+               class="btn-change-lang" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-globe"></i> @(isArabic ? "English" : "العربية")
+            </a>
+        </div>
+
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>@(isArabic ? "تسجيل كمدرب" : "Instructor Registration")</h2>
+                <p>
+                    @(isArabic
+                        ? "انضم إلى فريق المدربين وشارك معرفتك مع الطلاب"
+                        : "Join our instructors and share your knowledge with students")
+                </p>
+            </div>
+
+            <form asp-area="Identity" asp-controller="Account" asp-action="InstructorRegister"
+                  method="post" enctype="multipart/form-data">
+
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-size: 13px;"></div>
+
+
+              
+                    <div class="form-group">
+                        <label class="form-label">الاسم بالعربي</label>
+                        <input class="form-control" asp-for="NameAR" placeholder="اكتب اسمك بالعربي" />
+                        <span class="text-danger fs--1" asp-validation-for="NameAR"></span>
+                    </div>
+                
+               
+                    <div class="form-group">
+                        <label class="form-label">Name (English)</label>
+                        <input class="form-control" asp-for="NameEN" placeholder="Enter your name in English" />
+                        <span class="text-danger fs--1" asp-validation-for="NameEN"></span>
+                    </div>
+                
+
+                <div class="form-group">
+                    <label class="form-label">@(isArabic ? "البريد الإلكتروني" : "Email Address")</label>
+                    <input class="form-control" type="email" asp-for="Email" placeholder="test@gmail.com" />
+                    <span class="text-danger fs--1" asp-validation-for="Email"></span>
+                </div>
+
+
+                <div class="form-group">
+
+                     <div class="form-group">
+                        <label class="form-label">التخصص</label>
+                        <input class="form-control" asp-for="SpecializationAr" placeholder="مثال: تطوير الويب، تصميم جرافيك..." />
+                        <span class="text-danger fs--1" asp-validation-for="SpecializationAr"></span>
+                    </div>
+                     <div class="form-group">
+                    <label class="form-label">Specialization</label>
+                    
+                        <input class="form-control" asp-for="SpecializationEn" placeholder="e.g. Web Development, Data Science..." />
+                        <span class="text-danger fs--1" asp-validation-for="SpecializationEn"></span>
+                       
+                     </div>
+                    
+                    
+                </div>
+
+                
+                <div class="form-group">
+                    <label class="form-label">@(isArabic ? "السيرة الذاتية (ملف PDF أو Word)" : "Bio / CV (PDF or Word file)")</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="bioFile" name="Bio" accept=".pdf,.doc,.docx" onchange="showFileName(this)" />
+                        <div class="file-upload-icon">
+                            <i class="fas fa-file-upload"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            @(isArabic ? "اضغط لرفع ملف السيرة الذاتية" : "Click to upload your CV file")
+                            <br />
+                            <small style="color:#aaa;">PDF, DOC, DOCX</small>
+                        </div>
+                    </div>
+                    <div class="file-name-display" id="fileNameDisplay"></div>
+                    <span class="text-danger fs--1" asp-validation-for="Bio"></span>
+                </div>
+
+           
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label class="form-label">@(isArabic ? "كلمة المرور" : "Password")</label>
+                        <input class="form-control" type="password" asp-for="Password" placeholder="********" />
+                        <span class="text-danger fs--1" asp-validation-for="Password"></span>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label class="form-label">@(isArabic ? "تأكيد كلمة المرور" : "Confirm Password")</label>
+                        <input class="form-control" type="password" asp-for="ConfirmPassword" placeholder="********" />
+                        <span class="text-danger fs--1" asp-validation-for="ConfirmPassword"></span>
+                    </div>
+                </div>
+
+         
+                <div class="form-check mb-3">
+                    <input class="form-check-input" asp-for="AcceptTerms" id="acceptTermsCheck" />
+                    <label class="check-label" asp-for="AcceptTerms">
+                        @(isArabic ? "أوافق على الشروط وسياسة الخصوصية" : "I accept the terms and privacy policy")
+                    </label>
+                    <span class="text-danger fs--1" asp-validation-for="AcceptTerms"></span>
+                </div>
+
+                <button class="btn-auth mt-2" type="submit" id="submitBtn" disabled>
+                    @(isArabic ? "تسجيل كمدرب" : "Register as Instructor")
+                </button>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="footer-text">
+                    @(isArabic ? "لديك حساب بالفعل؟" : "Already have an account?")
+                    <a href="/Identity/Account/Login" class="auth-link">
+                        @(isArabic ? "تسجيل الدخول" : "Log In")
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        document.getElementById('acceptTermsCheck').addEventListener('change', function () {
+        document.getElementById('submitBtn').disabled = !this.checked;
+            });
+
+        function showFileName(input) {
+            var display = document.getElementById('fileNameDisplay');
+            if (input.files && input.files[0]) {
+                display.textContent = input.files[0].name;
+            } else {
+                display.textContent = '';
+            }
+        }
+    </script>
+
+    @if (TempData["success-notifications"] != null)
+    {
+        <script>toastr.success('@TempData["success-notifications"]')</script>
+    }
+    @if (TempData["error-notifications"] != null)
+    {
+        <script>toastr.error('@TempData["error-notifications"]')</script>
+    }
+</body>
+</html>
