@@ -1,6 +1,7 @@
 ﻿using DataAccess.Repositories.IRepositories;
 using ELClass.services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
@@ -12,32 +13,28 @@ namespace ELClass.Areas.Instructor.Controllers
 {
     [Area("Instructor")]
     [Authorize(Roles = "Instructor")]
-    public class AppointmentController(IUnitOfWork unitOfWork) : Controller
+    public class AppointmentController(IUnitOfWork unitOfWork , UserManager<ApplicationUser> userManager) : Controller
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
 
         public async Task<IActionResult> Index()
         {
 
-            var userId = User.Claims.FirstOrDefault(c => c.Type.EndsWith("nameidentifier"))?.Value;
+            var userId = _userManager.GetUserId(User); 
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(); 
-            }
 
-            
             var appointments = (await _unitOfWork.AppoinmentRepository.GetAsync(
                 filter: e => e.InstructorId == userId,
                 include: e => e.Include(e => e.Course!)
                               .Include(e => e.StudentAppointments)
             )).ToList();
 
-            
+            var now = DateTime.Now;
+
             var expiredApps = appointments
-                .Where(app => app.Type == ScheduleType.OneTime &&
-                              app.SpecificDate.HasValue &&
-                              app.SpecificDate.Value.Date < DateTime.Now.Date)
+                .Where(app => app.EndDateTime < DateTime.Now.Date)
                 .ToList();
 
             if (expiredApps.Any())
@@ -61,86 +58,14 @@ namespace ELClass.Areas.Instructor.Controllers
                
                 appointments = appointments.Except(expiredApps).ToList();
             }
-
-            return View(appointments);
+            var orderedAppointments = appointments
+        .OrderBy(a => a.StartDateTime)
+        .ToList();
+            return View(orderedAppointments);
         }
 
-        public IActionResult Create(string StudentId)
-        {
-            ViewBag.StdId = StudentId;
+     
 
-            return View();
-        }
-
-
-
-
-        [HttpPost]
-        public async Task<IActionResult> Create(AppointmentVM vm)
-        {
-            try
-            {
-
-                if (vm.Type == (int)ScheduleType.OneTime)
-                {
-                    if (!vm.SpecificDate.HasValue)
-                    {
-                        return Json(new { success = false, message = CultureHelper.IsArabic ? "يجب تحديد التاريخ" : "Date is required" });
-                    }
-
-                    if (vm.SpecificDate.Value.Date < DateTime.Today)
-                    {
-                        return Json(new { success = false, message = CultureHelper.IsArabic ? "لا يمكن إضافة موعد بتاريخ قديم" : "Cannot create appointment with a past date" });
-                    }
-                }
-
-                var newStart = vm.StartTime;
-                var newEnd = vm.StartTime.Add(TimeSpan.FromHours(vm.DurationInHours));
-
-                var instructorDayAppointments = await _unitOfWork.AppoinmentRepository.GetAsync(a =>
-                    a.InstructorId == vm.InstructorId &&
-                    (vm.Type == (int)ScheduleType.Recurring ? a.Day == vm.Day : a.SpecificDate == vm.SpecificDate)
-                );
-
-       
-                var overlappingAppointment = instructorDayAppointments.FirstOrDefault(a =>
-                    newStart < a.StartTime.Add(TimeSpan.FromHours(a.DurationInHours)) &&
-                    newEnd > a.StartTime
-                );
-
-                if (overlappingAppointment != null)
-                {
-                    var displayTime = DateTime.Today.Add(overlappingAppointment.StartTime).ToString("hh:mm tt");
-                    var msg = CultureHelper.IsArabic
-                        ? $"يوجد تعارض مع موعد يبدأ الساعة {displayTime}"
-                        : $"Conflict with an appointment starting at {displayTime}";
-
-                    return Json(new { success = false, message = msg });
-                }
-
-         
-                var appointment = new Appointment
-                {
-                    InstructorId = vm.InstructorId,
-                    MeetingLink = vm.MeetingLink,
-                    Type = (ScheduleType)vm.Type,
-                    DurationInHours = vm.DurationInHours,
-                    StartTime = vm.StartTime,
-                    CourseId = vm.CourseId,
-                    Day = vm.Type == (int)ScheduleType.Recurring ? vm.Day : 0,
-                    SpecificDate = vm.Type == (int)ScheduleType.OneTime ? vm.SpecificDate : null
-                };
-
-                await _unitOfWork.AppoinmentRepository.CreateAsync(appointment);
-                await _unitOfWork.CommitAsync();
-
-                return Json(new { success = true, message = CultureHelper.IsArabic ? "تم إنشاء الموعد بنجاح" : "Appointment created successfully" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Error: " + ex.Message });
-            }
-        }
 
         [HttpGet]
         public async Task<IActionResult> SearchStudents(string term, int courseId)
@@ -257,108 +182,6 @@ namespace ELClass.Areas.Instructor.Controllers
             }
         }
 
-        public async Task<IActionResult> Edit(int id)
-        {
-            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id
-                , include: e => e.Include(e => e.Course!));
-            return View(appointment);
-        }
-
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Models.Appointment model)
-        {
-            try
-            {
-
-                var existing = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == model.Id);
-                if (existing == null)
-                {
-                    return Json(new { success = false, message = CultureHelper.IsArabic ? "الموعد غير موجود" : "Appointment not found" });
-                }
-
-
-                int targetDayInt = (int)model.Day;
-                var newStart = model.StartTime;
-                var newEnd = model.StartTime.Add(TimeSpan.FromHours(model.DurationInHours));
-
-
-                var potentialConflicts = await _unitOfWork.AppoinmentRepository.GetAsync(a =>
-                    a.Id != model.Id &&
-                    a.InstructorId == existing.InstructorId &&
-                    (
-                        (a.Type == ScheduleType.Recurring && (int)a.Day == targetDayInt) ||
-                        (a.Type == ScheduleType.OneTime)
-                    )
-                );
-
-
-                var overlapping = potentialConflicts.FirstOrDefault(a =>
-                {
-                    bool isSameDay = false;
-
-                    if (model.Type == ScheduleType.Recurring)
-                    {
-
-                        if (a.Type == ScheduleType.Recurring && a.Day == model.Day) isSameDay = true;
-                        else if (a.Type == ScheduleType.OneTime && a.SpecificDate.Value.DayOfWeek == (DayOfWeek)model.Day) isSameDay = true;
-                    }
-                    else
-                    {
-
-                        if (a.Type == ScheduleType.Recurring && a.Day == (DayOfWeek)model.SpecificDate.Value.DayOfWeek) isSameDay = true;
-                        else if (a.Type == ScheduleType.OneTime && a.SpecificDate.Value.Date == model.SpecificDate.Value.Date) isSameDay = true;
-                    }
-
-                    if (!isSameDay) return false;
-
-
-                    var existingStart = a.StartTime;
-                    var existingEnd = a.StartTime.Add(TimeSpan.FromHours(a.DurationInHours));
-
-                    return newStart < existingEnd && newEnd > existingStart;
-                });
-
-                if (overlapping != null)
-                {
-                    var displayTime = DateTime.Today.Add(overlapping.StartTime).ToString("hh:mm tt");
-                    var msg = CultureHelper.IsArabic
-                        ? $"يوجد تعارض مع موعد آخر يبدأ الساعة {displayTime}"
-                        : $"Conflict with another appointment starting at {displayTime}";
-
-                    return Json(new { success = false, message = msg });
-                }
-
-
-                existing.Type = model.Type;
-                existing.StartTime = model.StartTime;
-                existing.DurationInHours = model.DurationInHours;
-                existing.MeetingLink = model.MeetingLink;
-
-                if (model.Type == ScheduleType.Recurring)
-                {
-                    existing.Day = model.Day;
-                    existing.SpecificDate = null;
-                }
-                else
-                {
-                    existing.SpecificDate = model.SpecificDate;
-                    existing.Day = 0;
-                }
-
-
-                await _unitOfWork.AppoinmentRepository.EditAsync(existing);
-                await _unitOfWork.CommitAsync();
-
-                return Json(new { success = true, message = CultureHelper.IsArabic ? "تم تعديل الموعد بنجاح" : "Appointment updated successfully" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Error: " + ex.Message });
-            }
-        }
-
 
         public async Task<IActionResult> ManageStudents(int id)
         {
@@ -396,26 +219,23 @@ namespace ELClass.Areas.Instructor.Controllers
             {
                 return Json(new { success = false, message = "Appointment not found." });
             }
-            if (appointment.Type == ScheduleType.OneTime && appointment.SpecificDate.HasValue)
-            {
-                if (appointment.SpecificDate.Value.Date < DateTime.Now.Date)
+            
+                if (appointment.StartDateTime.Date < DateTime.Now.Date)
                 {
                     return Json(new { success = false, message = "لا يمكن إضافة طلاب لموعد قديم" });
                 }
-            }
+            
             DateTime? expiryDate = null;
 
-            if (appointment.Type == ScheduleType.Recurring)
-                expiryDate = DateTime.Now.AddDays(TimeCount * 7);
-            else
-                expiryDate = appointment.SpecificDate;
+           
+            
+                expiryDate = appointment.EndDateTime;
 
             var link = new StudentAppointment
             {
                 StudentId = StudentId,
                 AppointmentId = AppointmentId,
-                TimeCount = TimeCount,
-                StudentExpiryDate = expiryDate
+               
             };
 
             

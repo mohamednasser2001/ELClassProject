@@ -41,19 +41,19 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             DateTime GetStartDateTime(Appointment a)
             {
-                if (a.Type == ScheduleType.OneTime && a.SpecificDate.HasValue)
-                    return a.SpecificDate.Value.Date.Add(a.StartTime);
+                
+                    return a.StartDateTime.Date;
 
                 // Recurring: احسب أقرب occurrence جاية
-                var today = DateTime.Today;
-                var daysAhead = ((int)a.Day - (int)today.DayOfWeek + 7) % 7;
-                var start = today.AddDays(daysAhead).Add(a.StartTime);
+                //var today = DateTime.Today;
+                //var daysAhead = ((int)a.Day - (int)today.DayOfWeek + 7) % 7;
+                //var start = today.AddDays(daysAhead).Add(a.StartTime);
 
-                // لو نفس اليوم ووقت المحاضرة عدى، خليه للأسبوع الجاي
-                if (start <= now)
-                    start = start.AddDays(7);
+                //// لو نفس اليوم ووقت المحاضرة عدى، خليه للأسبوع الجاي
+                //if (start <= now)
+                //    start = start.AddDays(7);
 
-                return start;
+                //return start;
             }
 
             var list = studentAppointments
@@ -113,7 +113,7 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             if (sa?.Appointment == null) return NotFound();
 
-            if (!sa.IsAccessAllowed) return Forbid();
+            //if (!sa.IsAccessAllowed) return Forbid();
 
             var link = sa.Appointment.MeetingLink;
             if (string.IsNullOrWhiteSpace(link)) return BadRequest("Meeting link is missing.");

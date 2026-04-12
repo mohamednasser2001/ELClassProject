@@ -129,13 +129,13 @@ namespace ELClass.Areas.Admin.Controllers
              
                 var studentAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(
                     sa => appointmentIds.Contains(sa.AppointmentId));
-
+            
                 if (studentAppointments.Any())
                 {
                     await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointments);
                 }
 
-       
+           
                 await unitOfWork.AppoinmentRepository.DeleteAllAsync(appointmentsToDelete);
             }
 

@@ -155,32 +155,17 @@ namespace ELClass.Areas.StudentArea.Controllers
             // ============================================================
             var now = DateTime.Now;
 
-            DateTime? GetStartDateTime(Appointment appt)
-            {
-                if (appt.Type == ScheduleType.OneTime)
-                {
-                    if (!appt.SpecificDate.HasValue) return null;
-                    return appt.SpecificDate.Value.Date + appt.StartTime;
-                }
-
-                var daysAhead = ((int)appt.Day - (int)now.DayOfWeek + 7) % 7;
-                var candidate = now.Date.AddDays(daysAhead) + appt.StartTime;
-
-                if (daysAhead == 0 && candidate <= now)
-                    candidate = candidate.AddDays(7);
-
-                return candidate;
-            }
+           
 
             var lecturesComputed = allStudentAppointments
                 .Where(sa => sa.Appointment != null && !sa.IsAttended)
                 .Select(sa =>
                 {
-                    var start = GetStartDateTime(sa.Appointment!);
+                    var start = sa.Appointment.StartDateTime;
                     DateTime? end = null;
 
                     if (start != null)
-                        end = start.Value.AddHours(sa.Appointment!.DurationInHours);
+                        end = start.AddHours(sa.Appointment!.DurationInHours);
 
                     return new
                     {
@@ -198,7 +183,7 @@ namespace ELClass.Areas.StudentArea.Controllers
                 .Select(x => new UpcomingLectureVM
                 {
                     Id = x.SA.Id,
-                    Date = x.Start!.Value,
+                    Date = x.Start,
                     SubjectName = x.SA.Appointment!.Course != null
                         ? (!string.IsNullOrWhiteSpace(x.SA.Appointment.Course.TitleEn)
                             ? x.SA.Appointment.Course.TitleEn
@@ -214,8 +199,7 @@ namespace ELClass.Areas.StudentArea.Controllers
                 .ToList();
 
             var live = lecturesComputed
-                .Where(x => x.SA.IsAccessAllowed)
-                .FirstOrDefault(x => now >= x.Start!.Value && now <= x.End!.Value);
+                .FirstOrDefault(x => now >= x.Start && now <= x.End!.Value);
 
             model.NextStudentAppointmentId = live?.SA.Id;
             model.CanJoinNow = live != null;

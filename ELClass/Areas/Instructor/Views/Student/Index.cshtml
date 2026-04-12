@@ -1,4 +1,5 @@
 ﻿@using ELClass.services
+@using System.Security.Claims
 @{
     var isArabic = CultureHelper.IsArabic;
     var currentLang = isArabic ?"ar" :"en";
@@ -26,6 +27,8 @@
                                 <tr>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">#</th>
                                     <th style="text-align: @(currentLang == "ar" ? "right" : "left")">@(currentLang == "ar" ? "الاسم" : "Name")</th>
+                                    <th style="text-align: center">@(currentLang == "ar" ? "المواعيد المتاحة" : "Available Sessions")</th>
+                                    <th style="text-align: center">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
                                     
                                 </tr>
                             </thead>
@@ -37,6 +40,105 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="appointmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-plus text-orange me-2"></i>
+                    <span id="modalStudentName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+
+           
+                <div class="mb-4">
+                    <label class="small fw-bold text-muted mb-2">
+                        <i class="fas fa-book text-orange me-1"></i>
+                        @(isArabic ? "الكورس" : "Course")
+                    </label>
+                    <select id="modalCourseSelect" class="form-control">
+                        <option value="">@(isArabic ? "اختر الكورس..." : "Select course...")</option>
+                    </select>
+                </div>
+
+   
+                <div class="mb-4" id="extraStudentsSection" style="display:none">
+                    <label class="small fw-bold text-muted mb-2">
+                        <i class="fas fa-users text-orange me-1"></i>
+                        @(isArabic ? "إضافة طلاب آخرين (اختياري)" : "Add more students (optional)")
+                    </label>
+                    <select id="extraStudentsSelect" class="form-control" multiple></select>
+                    <div class="form-text">
+                        @(isArabic ? "الطلاب المسجلين في نفس الكورس مع نفس المدرس" : "Students enrolled in same course with this instructor")
+                    </div>
+               
+                    <div id="selectedStudentsTags" class="d-flex flex-wrap gap-2 mt-2"></div>
+                </div>
+
+
+                <div class="mb-4">
+                    <label class="small fw-bold text-muted mb-2">
+                        <i class="fas fa-link text-orange me-1"></i>
+                        @(isArabic ? "رابط الاجتماع" : "Meeting Link")
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-video text-orange"></i>
+                        </span>
+                        <input type="url" id="sharedMeetingLink" class="form-control bg-light border-start-0"
+                               placeholder="https://...">
+                    </div>
+                </div>
+
+                @* <div class="mb-4">
+                    <label class="small fw-bold text-muted mb-2">
+                        <i class="fas fa-hourglass-half text-orange me-1"></i>
+                        @(isArabic ? "المدة (بالساعات)" : "Duration (Hours)")
+                    </label>
+                    <input type="number" id="sharedDuration" class="form-control" value="1" min="1" style="width:120px">
+                </div> *@
+
+
+                <div class="d-flex align-items-center justify-content-between mb-4 p-3 bg-light rounded-3">
+                    <div>
+                        <span class="small fw-bold text-muted">
+                            @(isArabic ? "المرات المتبقية" : "Remaining Sessions")
+                        </span>
+                        <h3 class="mb-0 text-orange fw-bold" id="remainingCount">0</h3>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-light border px-3" id="removeSlotBtn">
+                            <i class="fas fa-minus text-danger"></i>
+                        </button>
+                        <span class="fw-bold" id="slotsCount">0</span>
+                        <span class="text-muted small">@(isArabic ? "مواعيد" : "slots")</span>
+                        <button type="button" class="btn btn-sm btn-light border px-3" id="addSlotBtn">
+                            <i class="fas fa-plus text-orange"></i>
+                        </button>
+                    </div>
+                </div>
+
+       
+                <div id="slotsContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">
+                    @(isArabic ? "إلغاء" : "Cancel")
+                </button>
+                <button type="button" class="btn btn-orange-custom px-4" id="saveAppointmentsBtn">
+                    <i class="fas fa-save me-1"></i>
+                    @(isArabic ? "حفظ المواعيد" : "Save Appointments")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <style>
     /* إجبار الجدول على أخذ العرض الكامل */
@@ -121,6 +223,28 @@
                                     `;
                         }
                     },
+                    {
+                        data: 'timesCount',
+                        width: "20%",
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            return `<span class="badge bg-soft-orange text-orange fw-bold" style="font-size: 0.9rem;">
+                                        <i class="fas fa-clock me-1"></i> ${data}
+                                    </span>`;
+                        }
+                    },
+                    {
+                        data: null,
+                        width: "20%",
+                        orderable: false,
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            return `<button class="btn btn-sm btn-orange-custom" onclick="openAppointmentModal('${row.id}', '${row.name}')">
+                                        <i class="fas fa-calendar-plus me-1"></i>
+                                        ${currentLang === 'ar' ? 'إضافة ميعاد' : 'Add Appointment'}
+                                    </button>`;
+                        }
+                    }
                 
                 ],
                 language: languageSettings[currentLang],
@@ -134,6 +258,232 @@
 
 
 
+
+
+
+
+        var maxSessions = 0;
+        var currentStudentId = '';
+        var selectedStudentIds = [];
+        var slots = [];
+
+        function openAppointmentModal(studentId, studentName) {
+            currentStudentId = studentId;
+            selectedStudentIds = [studentId]; // الطالب الأساسي دايماً موجود
+            slots = [];
+            $('#slotsContainer').empty();
+            $('#modalStudentName').text(studentName);
+            $('#sharedMeetingLink').val('');
+            $('#sharedDuration').val(1);
+            $('#extraStudentsSection').hide();
+            $('#selectedStudentsTags').empty();
+            $('#modalCourseSelect').empty().append('<option value="">' + (currentLang === 'ar' ? 'اختر الكورس...' : 'Select course...') + '</option>');
+
+            //  الـ TimesCount
+            $.get('@Url.Action("GetStudentTimesCount", "Student", new { area = "Instructor" })',
+                { studentId: studentId },
+                function(res) {
+                    maxSessions = res.timesCount;
+                    updateCounters();
+                }
+            );
+
+            //  الكورسات المشتركة
+            $.get('@Url.Action("GetSharedCourses", "Student", new { area = "Instructor" })',
+                { studentId: studentId },
+                function(courses) {
+                    courses.forEach(function(c) {
+                        $('#modalCourseSelect').append(`<option value="${c.id}">${c.text}</option>`);
+                    });
+                }
+            );
+
+            new bootstrap.Modal(document.getElementById('appointmentModal')).show();
+        }
+
         
+        $('#modalCourseSelect').on('change', function() {
+            var courseId = $(this).val();
+            if (!courseId) {
+                $('#extraStudentsSection').hide();
+                return;
+            }
+
+            $('#extraStudentsSection').show();
+
+        
+            $('#extraStudentsSelect').empty();
+            if ($('#extraStudentsSelect').hasClass('select2-hidden-accessible'))
+                $('#extraStudentsSelect').select2('destroy');
+
+            $('#extraStudentsSelect').select2({
+                placeholder: currentLang === 'ar' ? 'ابحث عن طالب...' : 'Search student...',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#appointmentModal'),
+                ajax: {
+                    url: '@Url.Action("SearchStudentsForAppointment", "Student", new { area = "Instructor" })',
+                    dataType: 'json',
+                    delay: 300,
+                    data: params => ({
+                        term: params.term,
+                        courseId: courseId,
+                        excludeStudentId: currentStudentId
+                    }),
+                    processResults: data => ({ results: data })
+                }
+            });
+
+            // لما يختار طالب يضيفه للـ tags
+            $('#extraStudentsSelect').on('select2:select', function(e) {
+                var studentId = e.params.data.id;
+                var studentName = e.params.data.text;
+
+                if (!selectedStudentIds.includes(studentId)) {
+                    selectedStudentIds.push(studentId);
+                    addStudentTag(studentId, studentName);
+                }
+            });
+        });
+
+        function addStudentTag(studentId, studentName) {
+            var tag = `<span class="badge bg-light border text-dark px-3 py-2" id="tag-${studentId}">
+                            <i class="fas fa-user text-orange me-1"></i>${studentName}
+                            <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:0.6rem"
+                                    onclick="removeStudentTag('${studentId}')"></button>
+                       </span>`;
+            $('#selectedStudentsTags').append(tag);
+        }
+
+        function removeStudentTag(studentId) {
+            selectedStudentIds = selectedStudentIds.filter(id => id !== studentId && id !== currentStudentId);
+            selectedStudentIds.unshift(currentStudentId); // الطالب الأساسي دايماً موجود
+            $(`#tag-${studentId}`).remove();
+        }
+
+        function updateCounters() {
+            var remaining = maxSessions - slots.length;
+            $('#remainingCount').text(remaining < 0 ? 0 : remaining);
+            $('#slotsCount').text(slots.length);
+        }
+
+        function addSlot() {
+            var slotIndex = slots.length;
+            slots.push({});
+
+            var slotHtml = `
+                <div class="slot-item border rounded-3 p-3 mb-3" id="slot-${slotIndex}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold small text-orange">
+                            <i class="fas fa-calendar me-1"></i>
+                            ${currentLang === 'ar' ? 'ميعاد' : 'Appointment'} #${slotIndex + 1}
+                        </span>
+                        <button type="button" class="btn btn-sm btn-light border text-danger"
+                                onclick="removeSlot(${slotIndex})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="small text-muted mb-1">${currentLang === 'ar' ? 'التاريخ' : 'Date'}</label>
+                            <input type="date" class="form-control slot-date" data-index="${slotIndex}"
+                                   min="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted mb-1">${currentLang === 'ar' ? 'الوقت' : 'Time'}</label>
+                            <input type="time" class="form-control slot-time" data-index="${slotIndex}">
+                        </div>
+                    </div>
+                </div>`;
+
+            $('#slotsContainer').append(slotHtml);
+            updateCounters();
+        }
+
+        function removeSlot(index) {
+            $(`#slot-${index}`).remove();
+            slots = [];
+            $('.slot-item').each(function(i) {
+                $(this).attr('id', `slot-${i}`);
+                $(this).find('.slot-date').attr('data-index', i);
+                $(this).find('.slot-time').attr('data-index', i);
+                $(this).find('button[onclick]').attr('onclick', `removeSlot(${i})`);
+                $(this).find('.fw-bold.small').html(
+                    `<i class="fas fa-calendar me-1"></i> ${currentLang === 'ar' ? 'ميعاد' : 'Appointment'} #${i + 1}`
+                );
+                slots.push({});
+            });
+            updateCounters();
+        }
+
+        $('#addSlotBtn').on('click', addSlot);
+        $('#removeSlotBtn').on('click', function() {
+            if (slots.length > 0) removeSlot(slots.length - 1);
+        });
+
+        $('#saveAppointmentsBtn').on('click', function() {
+            var meetingLink = $('#sharedMeetingLink').val();
+            var duration = parseInt($('#sharedDuration').val()) || 1;
+            var courseId = $('#modalCourseSelect').val();
+
+            if (!courseId) {
+                Swal.fire('', currentLang === 'ar' ? 'اختر الكورس' : 'Select a course', 'warning');
+                return;
+            }
+            if (!meetingLink) {
+                Swal.fire('', currentLang === 'ar' ? 'أدخل رابط الاجتماع' : 'Enter meeting link', 'warning');
+                return;
+            }
+            if (slots.length === 0) {
+                Swal.fire('', currentLang === 'ar' ? 'أضف ميعاد واحد على الأقل' : 'Add at least one appointment', 'warning');
+                return;
+            }
+
+            var appointments = [];
+            var valid = true;
+
+            $('.slot-item').each(function() {
+                var date = $(this).find('.slot-date').val();
+                var time = $(this).find('.slot-time').val();
+                if (!date || !time) { valid = false; return false; }
+                appointments.push({
+                    startDateTime: date + 'T' + time,
+                    durationInHours: duration,
+                    meetingLink: meetingLink
+                });
+            });
+
+            if (!valid) {
+                Swal.fire('', currentLang === 'ar' ? 'أكمل بيانات كل المواعيد' : 'Complete all appointment fields', 'warning');
+                return;
+            }
+
+            var btn = $(this);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: '/Instructor/Student/CreateBulk',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    studentIds: selectedStudentIds,
+                    courseId: parseInt(courseId),
+                    appointments: appointments
+                }),
+                success: function(res) {
+                    btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (currentLang === 'ar' ? 'حفظ المواعيد' : 'Save Appointments'));
+                    if (res.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('appointmentModal')).hide();
+                        Swal.fire({ icon: 'success', title: currentLang === 'ar' ? 'تم بنجاح' : 'Success', text: res.message, timer: 1500, showConfirmButton: false });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (currentLang === 'ar' ? 'حفظ المواعيد' : 'Save Appointments'));
+                    Swal.fire('Error', currentLang === 'ar' ? 'فشل الاتصال' : 'Connection failed', 'error');
+                }
+            });
+        });
     </script>
 }
