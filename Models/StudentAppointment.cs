@@ -15,24 +15,8 @@ namespace Models
         public int AppointmentId { get; set; }
         public Appointment? Appointment { get; set; }
 
-        
-        public DateTime? StudentExpiryDate { get; set; }
-
-        
-        public int TimeCount { get; set; } = 0;
-
         public bool IsAttended { get; set; }
         public DateTime? AttendedAt { get; set; }
-        public bool IsAccessAllowed
-        {
-            get
-            {
-                
-                var now = DateTime.Now;
-                return Appointment != null &&
-                       Appointment.IsActive &&
-                       (!StudentExpiryDate.HasValue || now.Date <= StudentExpiryDate.Value.Date);
-            }
-        }
+        
     }
 }

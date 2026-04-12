@@ -277,23 +277,6 @@ namespace ELClass.Areas.Admin.Controllers
             await unitOfWork.StudentCourseRepository.DeleteAsync(studentCourse);
 
             
-            var courseAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a => a.CourseId == courseId);
-            var appointmentIds = courseAppointments.Select(a => a.Id).ToList();
-
-            if (appointmentIds.Any())
-            {
-                
-                var studentAppointmentsToRemove = await unitOfWork.StudentAppointmentRepository.GetAsync(sa =>
-                    sa.StudentId == studentId && appointmentIds.Contains(sa.AppointmentId));
-
-                if (studentAppointmentsToRemove.Any())
-                {
-                    
-                    await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointmentsToRemove);
-                }
-            }
-
-            
             var success = await unitOfWork.CommitAsync();
 
             if (success)

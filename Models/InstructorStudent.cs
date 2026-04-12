@@ -13,5 +13,7 @@ namespace Models
 
         public string StudentId { get; set; } = string.Empty;
         public Student Student { get; set; } = null!;
+
+        public int TimesCount { get; set; } = 0;
     }
 }

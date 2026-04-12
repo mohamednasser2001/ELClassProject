@@ -40,35 +40,27 @@
                             <td class="px-6 py-4 text-center text-gray-400 font-medium">@(item.index + 1)</td>
 
                             <td class="px-6 py-4">
-                                <div class="font-bold text-gray-900">@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)</div>
-                                <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                                    @(item.value.Type == Models.ScheduleType.Recurring ? (isArabic ? "أسبوعي" : "Weekly") : (isArabic ? "مرة واحدة" : "One-Time"))
-                                </span>
+                                <div class="flex flex-col">
+                                    <span class="text-gray-900 font-bold">
+                                        @(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)
+                                    </span>
+                                    
+                                </div>
                             </td>
 
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">
-                                        @if (item.value.Type == Models.ScheduleType.Recurring)
-                                        {
-                                            // حل مباشر بدون الاعتماد على دالة خارجية لتجنب الـ Error
-                                            @(isArabic ?
-                                                                                (item.value.Day == DayOfWeek.Saturday ? "السبت" :
-                                                                                item.value.Day == DayOfWeek.Sunday ? "الأحد" :
-                                                                                item.value.Day == DayOfWeek.Monday ? "الاثنين" :
-                                                                                item.value.Day == DayOfWeek.Tuesday ? "الثلاثاء" :
-                                                                                item.value.Day == DayOfWeek.Wednesday ? "الأربعاء" :
-                                                                                item.value.Day == DayOfWeek.Thursday ? "الخميس" : "الجمعة")
-                                                                                : item.value.Day.ToString())
-                                        }
-                                        else
-                                        {
-                                            @item.value.SpecificDate?.ToString("yyyy-MM-dd")
-                                        }
+                                    <span class="text-gray-900 font-medium flex items-center gap-1">
+                                        <i class="far fa-calendar-alt text-xs text-gray-400"></i>
+                                        @item.value.StartDateTime.ToString("dd MMM yyyy")
                                     </span>
-                                    <span class="text-orange-600 text-xs">
-                                        <i class="far fa-clock"></i> @DateTime.Today.Add(item.value.StartTime).ToString("hh:mm tt")
-                                        (@item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs"))
+                                    <span class="text-orange-600 text-xs font-semibold mt-1">
+                                        <i class="far fa-clock"></i>
+                                        @item.value.StartDateTime.ToString("hh:mm tt")
+                                        <span class="text-gray-300 mx-1">|</span>
+                                        <span class="text-gray-500">
+                                            @item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs")
+                                        </span>
                                     </span>
                                 </div>
                             </td>
@@ -84,10 +76,21 @@
                             <td class="px-6 py-4">
                                 @if (item.value.IsActive)
                                 {
-                                    <span class="flex items-center gap-1.5 text-green-600 font-bold animate-pulse">
-                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                        @(isArabic ? "مباشر الآن" : "Live Now")
-                                    </span>
+                                    @if (!string.IsNullOrEmpty(item.value.MeetingLink))
+                                    {
+                                        <a href="@item.value.MeetingLink" target="_blank"
+                                               class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm"
+                                               title="@(isArabic ? "انضم الآن" : "Join Now")">
+                                            <i class="fas fa-video animate-pulse"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="p-2 text-amber-500 bg-amber-50 border border-amber-200 rounded-lg cursor-help"
+                                              title="@(isArabic ? "لا يوجد رابط للمكان" : "No link provided")">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </span>
+                                    }
                                 }
                                 else
                                 {

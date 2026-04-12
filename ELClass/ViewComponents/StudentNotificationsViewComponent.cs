@@ -39,19 +39,12 @@ public class StudentNotificationsViewComponent : ViewComponent
 
         DateTime? GetStartDateTime(Appointment appt)
         {
-            if (appt.Type == ScheduleType.OneTime)
-            {
-                if (!appt.SpecificDate.HasValue) return null;
-                return appt.SpecificDate.Value.Date + appt.StartTime;
-            }
 
-            var daysAhead = ((int)appt.Day - (int)now.DayOfWeek + 7) % 7;
-            var candidate = now.Date.AddDays(daysAhead) + appt.StartTime;
 
-            if (daysAhead == 0 && candidate <= now)
-                candidate = candidate.AddDays(7);
+            return appt.StartDateTime;
+            
 
-            return candidate;
+          
         }
 
         // ✅ نفس منطق upcoming + فلترة اللي انتهى

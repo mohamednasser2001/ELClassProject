@@ -4,6 +4,7 @@ using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260411213836_addTimesCountInInstructorStudent")]
+    partial class addTimesCountInInstructorStudent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -247,18 +250,28 @@ namespace DataAccess.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Day")
+                        .HasColumnType("int");
+
                     b.Property<int>("DurationInHours")
                         .HasColumnType("int");
 
                     b.Property<string>("InstructorId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("MeetingLink")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("StartDateTime")
+                    b.Property<DateTime?>("SpecificDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -820,9 +833,15 @@ namespace DataAccess.Migrations
                     b.Property<bool>("IsAttended")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("StudentExpiryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("StudentId")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("TimeCount")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -922,7 +941,8 @@ namespace DataAccess.Migrations
                     b.HasOne("Models.Instructor", "Instructor")
                         .WithMany("Appointments")
                         .HasForeignKey("InstructorId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Course");
 
