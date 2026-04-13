@@ -5,10 +5,20 @@
 @inject IUnitOfWork _unitOfWork
 @{
     var user        = await UserManager.GetUserAsync(User);
+    var userId = user.Id;
+    var isInstructor = User.IsInRole("Instructor");
     var userImage   = user?.Img;
     var displayName = user?.NameEN ?? user?.UserName;
     var isArabic    = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
     var dir         = isArabic ? "rtl" : "ltr";
+
+    int pendingStudentsCount = 0;
+    if (isInstructor && !string.IsNullOrEmpty(userId))
+    {
+        var instructorStudents = await _unitOfWork.InstructorStudentRepository
+            .GetAsync(x => x.InstructorId == userId && x.TimesCount > 0);
+        pendingStudentsCount = instructorStudents.Count();
+    }
 }
 
 <!doctype html>
@@ -57,6 +67,9 @@
             border-color: #7C3AED !important;
             background: #F5F3FF !important;
             color: #7C3AED !important;
+        }
+        .swal2-container {
+             z-index: 99999 !important;
         }
     </style>
 
@@ -121,10 +134,23 @@
                         <a href="/Instructor/Student/index" class="pc-link">
                             <span class="pc-micon"><i class="ti ti-users"></i></span>
                             <span class="pc-mtext">@(isArabic ? "طلابي" : "My Students")</span>
+                            @if (isInstructor && pendingStudentsCount > 0)
+                            {
+                                <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7rem;">
+                                    @pendingStudentsCount
+                                </span>
+                            }
                         </a>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li class="pc-item">
+                        <a class="pc-link" href="/Instructor/appointment/index">
+                             <span class="pc-micon"><i class="ti ti-calendar-event"></i></span>
+                            <span class="pc-mtext">@(isArabic ? "كل المواعيد" : "All Appointments")</span>
+                        </a>
+                    </li>
+
+                    @* <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i class="ti ti-calendar-event"></i></span>
                             <span class="pc-mtext">@(isArabic ? "المواعيد" : "Appointments")</span>
@@ -138,7 +164,7 @@
                                 <a class="pc-link" href="/Instructor/appointment/create">@(isArabic ? "إضافة موعد" : "Add Appointment")</a>
                             </li>
                         </ul>
-                    </li>
+                    </li> *@
 
                 </ul>
             </div>

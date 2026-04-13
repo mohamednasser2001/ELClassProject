@@ -219,6 +219,7 @@
                         <tr>
                             <th>#</th>
                             <th>@(currentLang == "ar" ? "اسم المدرب" : "Instructor")</th>
+                            <th class="text-center">@(currentLang == "ar" ? "المحاضرات المتاحة" : "Sessions")</th>
                             <th class="text-center">@(currentLang == "ar" ? "التحكم" : "Actions")</th>
                         </tr>
                     </thead>
@@ -245,7 +246,24 @@
         </div>
     </div>
 </div>
-
+<div class="modal fade" id="updateTimesModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(currentLang == "ar" ? "تعديل الرصيد" : "Edit Sessions")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editInstructorId">
+                <label class="form-label small fw-bold">@(currentLang == "ar" ? "عدد المحاضرات" : "Sessions Count")</label>
+                <input type="number" id="newTimesCount" class="form-control" min="0">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-orange-custom w-100" onclick="saveNewTimesCount()">@(currentLang == "ar" ? "حفظ" : "Save")</button>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -319,6 +337,14 @@
                     {
                         data: 'name',
                         render: (data, type, row) => `<i class="fas fa-chalkboard-teacher me-1 text-muted"></i> <a href="/Admin/Instructor/Details/${row.instructorId}" class="instructor-link">${data}</a>`
+                    },
+                    {
+                        data: 'timesCount',
+                        className: 'text-center',
+                        render: (data, t, row) => `
+                        <span class="badge bg-light text-dark border p-2" onclick="openEditTimesModal('${row.instructorId}', ${data})" style="cursor: pointer;">
+                        <i class="fas fa-edit text-orange me-1"></i> ${data}
+                        </span>`
                     },
                     {
                         data: 'instructorId',
@@ -443,5 +469,28 @@
                 $('#savePhotoBtn').removeClass('d-none');
             }
         });
+
+
+        function openEditTimesModal(insId, count) {
+            $('#editInstructorId').val(insId);
+            $('#newTimesCount').val(count);
+            $('#updateTimesModal').modal('show');
+        }
+
+        function saveNewTimesCount() {
+            const insId = $('#editInstructorId').val();
+            const count = $('#newTimesCount').val();
+            const stdId = $('#studentId').val();
+
+            $.post('/Admin/Student/UpdateTimesCount', { studentId: stdId, instructorId: insId, newCount: count }, function(res) {
+            if (res.success) {
+            $('#updateTimesModal').modal('hide');
+            Swal.fire({ icon: 'success', title: currentLang == 'ar' ? 'تم التحديث' : 'Updated', timer: 1000, showConfirmButton: false });
+            $('#StudentInstructorsTable').DataTable().ajax.reload(null, false);
+            } else {
+            Swal.fire('Error', 'Failed', 'error');
+            }
+            });
+        }
     </script>
 }

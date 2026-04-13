@@ -9,7 +9,7 @@ namespace Models
     {
         public int Id { get; set; }
 
-      
+
         public DateTime StartDateTime { get; set; }
         public int DurationInHours { get; set; } = 1;
 
@@ -26,10 +26,10 @@ namespace Models
 
         public ICollection<StudentAppointment> StudentAppointments { get; set; } = new List<StudentAppointment>();
 
-     
+
         public DateTime EndDateTime => StartDateTime.AddHours(DurationInHours);
 
-     
+
         public bool IsActive
         {
             get
@@ -38,5 +38,8 @@ namespace Models
                 return now >= StartDateTime && now <= EndDateTime;
             }
         }
+
+        public bool LessonCreated { get; set; } = false;
+
     }
 }

@@ -373,7 +373,8 @@ namespace ELClass.Areas.Admin.Controllers
                 var result = students.Select(s => new
                 {
                     studentId = s.StudentId,
-                    name = s.Student.NameEn
+                    name = s.Student.NameEn,
+                    timesCount = s.TimesCount
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalCount, recordsFiltered = filteredCount, data = result });
@@ -393,8 +394,8 @@ namespace ELClass.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateInstructorAccount(Models.Instructor ins,string Password,
-            string ConfirmPassword,IFormFile? BioFile)  
+        public async Task<IActionResult> CreateInstructorAccount(Models.Instructor ins, string Password,
+            string ConfirmPassword, IFormFile? BioFile)
         {
             bool isArabic = CultureHelper.IsArabic;
 
@@ -402,7 +403,7 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("ApplicationUser.Instructor");
             ModelState.Remove("ApplicationUser.NameAR");
             ModelState.Remove("ApplicationUser.NameEn");
-            ModelState.Remove("Bio"); 
+            ModelState.Remove("Bio");
 
             if (!ModelState.IsValid)
             {
@@ -416,7 +417,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return View(ins);
             }
 
-            
+
             string uniqueFileName = "";
             if (BioFile != null && BioFile.Length > 0)
             {
@@ -438,7 +439,7 @@ namespace ELClass.Areas.Admin.Controllers
                     await BioFile.CopyToAsync(stream);
             }
 
-           
+
             var email = ins.ApplicationUser.Email;
             var userName = email!.Split('@')[0] + new Random().Next(10, 99);
 
@@ -461,7 +462,7 @@ namespace ELClass.Areas.Admin.Controllers
                 foreach (var error in result.Errors)
                     ModelState.AddModelError("", error.Description);
 
-             
+
                 if (!string.IsNullOrEmpty(uniqueFileName))
                 {
                     var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios", uniqueFileName);
@@ -476,7 +477,7 @@ namespace ELClass.Areas.Admin.Controllers
             await userManager.AddToRoleAsync(user, "Instructor");
 
             ins.Id = user.Id;
-            ins.Bio = uniqueFileName; 
+            ins.Bio = uniqueFileName;
             ins.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ins.CreatedAt = DateTime.Now;
             ins.ApplicationUser = user;
@@ -486,6 +487,30 @@ namespace ELClass.Areas.Admin.Controllers
 
             TempData["Success"] = isArabic ? "تم إنشاء حساب المحاضر بنجاح" : "Instructor account has been created successfully";
             return RedirectToAction("Index");
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateStudentTimesCount(string studentId, string instructorId, int newCount)
+        {
+            try
+            {
+                if (newCount < 0) return Json(new { success = false, message = "الرقم لا يمكن أن يكون أقل من صفر" });
+
+                var relation = await unitOfWork.InstructorStudentRepository.GetOneAsync(
+                    x => x.StudentId == studentId && x.InstructorId == instructorId);
+
+                if (relation == null) return Json(new { success = false, message = "العلاقة غير موجودة" });
+
+                relation.TimesCount = newCount;
+                await unitOfWork.CommitAsync();
+
+                return Json(new { success = true, message = "تم تحديث عدد المحاضرات بنجاح" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         public IActionResult Create()
