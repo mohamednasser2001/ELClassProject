@@ -1,1 +1,200 @@
-﻿
+﻿@using ELClass.services
+@model Models.Appointment
+@{
+    var isArabic = CultureHelper.IsArabic;
+}
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="p-6 bg-gray-50 min-h-screen" dir="@(isArabic ? "rtl" : "ltr")">
+    
+    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">
+                @(isArabic ? "تحضير طلاب الموعد" : "Attendance Management")
+            </h1>
+            <p class="text-blue-600 font-medium flex items-center gap-2 mt-1">
+                <i class="far fa-calendar-check text-blue-400"></i>
+                @(isArabic? Model.Course?.TitleAr : Model.Course?.TitleEn)
+                <span class="text-gray-300">|</span>
+                <span class="bg-blue-100 px-2 py-0.5 rounded text-sm">
+                    @Model.StartDateTime.ToString("yyyy-MM-dd")
+                </span>
+                <span class="text-gray-300">|</span>
+                <span class="text-orange-600 font-bold">
+                    <i class="far fa-clock text-xs"></i>
+                    @Model.StartDateTime.ToString("hh:mm tt")
+                </span>
+            </p>
+        </div>
+        <button onclick="openAddStudentModal()" class="bg-blue-800 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center gap-2 font-bold">
+            <i class="fas fa-user-plus"></i>
+            @(isArabic ? "إضافة طالب للكشف" : "Add Student to List")
+        </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm @(isArabic ? "text-right" : "text-left")">
+            <thead class="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase text-xs font-bold">
+                <tr>
+                    <th class="px-6 py-4">@(isArabic ? "اسم الطالب" : "Student Name")</th>
+
+                    <th class="px-6 py-4 text-center">@(isArabic ? "إجراءات" : "Actions")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @foreach (var sa in Model.StudentAppointments)
+                {
+                    <tr class="hover:bg-blue-50/30 transition-colors group">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-gray-900">@(isArabic? sa.Student?.NameAr : sa.Student?.NameEn)</div>
+                            
+                        </td>
+                        
+                       
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center gap-3">
+                                
+                                <button onclick="removeStudent(@sa.Id)" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Remove">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.StudentAppointments.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-400 italic">
+                            @(isArabic ? "لا يوجد طلاب مضافين لهذا الموعد حتى الآن." : "No students added to this appointment yet.")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modalOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 opacity-0">
+    <div id="modalContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-xl font-black text-gray-800">@(isArabic ? "إضافة طالب جديد" : "Add Student")</h3>
+                <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-red-500 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="addStudentForm" class="space-y-6">
+                <input type="hidden" name="AppointmentId" value="@Model.Id" />
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-3">@(isArabic ? "اختر الطالب من القائمة" : "Select Student")</label>
+                    <div id="selectContainer" class="relative">
+                        <select id="studentSelect" name="StudentId" class="w-full" required></select>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 bg-gray-50 text-gray-500 rounded-2xl hover:bg-gray-100 transition font-bold text-sm">
+                        @(isArabic ? "إلغاء" : "Cancel")
+                    </button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-800 text-white rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition font-bold text-sm">
+                        @(isArabic ? "حفظ وإضافة" : "Save & Add")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Modal Logic
+        function openAddStudentModal() {
+        const $overlay = $('#modalOverlay');
+        const $content = $('#modalContent');
+        $overlay.removeClass('hidden');
+        setTimeout(() => {
+        $overlay.addClass('opacity-100');
+        $content.addClass('opacity-100 scale-100').removeClass('scale-95');
+        initStudentSelect(); // تهيئة Select2
+        }, 50);
+        }
+
+        function closeModal() {
+        const $overlay = $('#modalOverlay');
+        const $content = $('#modalContent');
+        $overlay.removeClass('opacity-100');
+        $content.removeClass('opacity-100 scale-100').addClass('scale-95');
+        setTimeout(() => $overlay.addClass('hidden'), 300);
+        }
+
+        // AJAX Form Submission
+        $('#addStudentForm').on('submit', function(e) {
+        e.preventDefault();
+        const btn = $(this).find('button[type="submit"]');
+        btn.prop('disabled', true).addClass('opacity-50');
+
+        $.post('/Admin/Appointment/AddStudentToAppointment', $(this).serialize(), function(res) {
+        if(res.success) {
+        location.reload();
+        } else {
+        Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+        btn.prop('disabled', false).removeClass('opacity-50');
+        }
+        });
+        });
+
+        // Initialize Select2 (Search)
+        function initStudentSelect() {
+        $('#studentSelect').select2({
+        ajax: {
+        url: '/Admin/Appointment/SearchStudents',
+        dataType: 'json',
+        delay: 250,
+        data: params => ({
+        term: params.term,
+        courseId: "@Model.CourseId",
+        appointmentId: "@Model.Id"
+        }),
+        processResults: data => ({ results: data })
+        },
+        placeholder: "@(isArabic ? "ابحث بالاسم..." : "Search students...")",
+        width: '100%',
+        dir: "@(isArabic ? "rtl" : "ltr")",
+        dropdownParent: $('#selectContainer')
+        });
+        }
+
+
+        function removeStudent(id) {
+        const isAr = "@isArabic".toLowerCase() === "true";
+        Swal.fire({
+        title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, delete',
+        cancelButtonText: isAr ? 'إلغاء' : 'Cancel'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        $.post('/Admin/Appointment/RemoveStudentFromAppointment',
+        { studentAppointmentId: id },
+        function(res) {
+        if (res.success) {
+        location.reload();
+        } else {
+        Swal.fire('Error', '', 'error');
+        }
+        }
+        );
+        }
+        });
+        }
+
+
+    </script>
+}

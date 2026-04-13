@@ -13,191 +13,152 @@ namespace ELClass.Areas.Admin.Controllers
     [Authorize(Roles = "Admin,SuperAdmin")]
     public class AppointmentController(IUnitOfWork _unitOfWork) : Controller
     {
-        //private readonly IUnitOfWork unitOfWork = _unitOfWork;
+        private readonly IUnitOfWork unitOfWork = _unitOfWork;
 
-        //public async Task<IActionResult> Index()
-        //{
+        public async Task<IActionResult> Index()
+        {
+         
+            var appointments = (await unitOfWork.AppoinmentRepository.GetAsync(
+                include: e => e.Include(e => e.Course!)
+                              .Include(e => e.StudentAppointments)
+                              .Include(e => e.Instructor!)
+            )).ToList();
 
-        //    var appointments = (await unitOfWork.AppoinmentRepository.GetAsync(
-        //        include: e => e.Include(e => e.Course!)
-        //                      .Include(e => e.StudentAppointments)
-        //                      .Include(e => e.Instructor!)
-        //    )).ToList();
+            var now = DateTime.Now;
 
+            
+           
 
-        //    var expiredApps = appointments
-        //        .Where(app => app.Type == ScheduleType.OneTime &&
-        //                      app.SpecificDate.HasValue &&
-        //                      app.SpecificDate.Value.Date < DateTime.Now.Date)
-        //        .ToList();
-
-        //    if (expiredApps.Any())
-        //    {
-
-        //        var studentAppsToDelete = expiredApps
-        //            .SelectMany(a => a.StudentAppointments)
-        //            .ToList();
-
-        //        if (studentAppsToDelete.Any())
-        //        {
-        //            await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppsToDelete);
-        //        }
+            return View(appointments);
+        }
 
 
-        //        await unitOfWork.AppoinmentRepository.DeleteAllAsync(expiredApps);
+        public async Task<IActionResult> ManageStudents(int id)
+        {
+            var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(
+                a => a.Id == id,
+                include: e => e.Include(e => e.Course)
+                               .Include(e => e.StudentAppointments)
+                               .ThenInclude(e => e.Student!));
 
-        //        await unitOfWork.CommitAsync();
+            if (appointment == null) return NotFound();
 
+            return View(appointment);
+        }
 
-        //        appointments = appointments.Except(expiredApps).ToList();
-        //    }
+        public async Task<IActionResult> SearchStudents(string term, int? courseId = null, int? appointmentId = null)
+        {
+            // 1. تحديد الـ InstructorId لو فيه موعد محدد
+            string? insId = null;
+            if (appointmentId.HasValue)
+            {
+                var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(a => a.Id == appointmentId);
+                insId = appointment?.InstructorId;
+            }
 
-        //    return View(appointments);
-        //}
+            // 2. الفلترة الأساسية (تتم داخل قاعدة البيانات لتحسين الأداء)
+            var studentCourses = await unitOfWork.StudentCourseRepository.GetAsync(
+                filter: sc =>
+                    // فلتر الكورس لو موجود
+                    (!courseId.HasValue || sc.CourseId == courseId) &&
+                    // فلتر المحاضر لو موجود
+                    (string.IsNullOrEmpty(insId) || sc.Student.InstructorStudents.Any(isc => isc.InstructorId == insId)) &&
+                    // فلتر نص البحث (الاسم أو الإيميل)
+                    (string.IsNullOrEmpty(term) ||
+                     sc.Student.NameEn.Contains(term) ||
+                     sc.Student.NameAr.Contains(term) ||
+                     sc.Student.ApplicationUser.Email!.Contains(term)),
+                include: q => q.Include(sc => sc.Student)
+                               .ThenInclude(s => s.ApplicationUser)
+                               .Include(sc => sc.Student)
+                               .ThenInclude(s => s.InstructorStudents)
+            );
 
+            // 3. تحويل النتائج للشكل المطلوب لـ Select2
+            var results = studentCourses.Select(sc => new
+            {
+                id = sc.StudentId,
+                text = CultureHelper.IsArabic
+                        ? $"{sc.Student.NameAr} - {sc.Student.NameEn}"
+                        : $"{sc.Student.NameEn} - {sc.Student.NameAr}"
+            }).DistinctBy(x => x.id).ToList(); // Distinct عشان الطالب ميتكررش لو مشترك في كذا كورس
 
-        //public async Task<IActionResult> ManageStudents(int id)
-        //{
+            return Json(results);
+        }
 
-        //    var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(
-        //        a => a.Id == id,
-        //        include: e => e.Include(e => e.Course).Include(e => e.StudentAppointments).ThenInclude(e => e.Student!));
+        [HttpPost]
+        public async Task<IActionResult> AddStudentToAppointment(string StudentId, int AppointmentId)
+        {
+            
+            var isExists = await unitOfWork.StudentAppointmentRepository
+                .GetOneAsync(e => e.StudentId == StudentId && e.AppointmentId == AppointmentId);
 
-        //    if (appointment == null) return NotFound();
+            if (isExists != null)
+                return Json(new { success = false, message = CultureHelper.IsArabic ? "هذا الطالب مضاف بالفعل." : "Student already added." });
 
-        //    return View(appointment);
-        //}
+            var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == AppointmentId);
+            if (appointment == null)
+                return Json(new { success = false, message = CultureHelper.IsArabic ? "الموعد غير موجود." : "Appointment not found." });
 
-        //public async Task<IActionResult> SearchStudents(string term, int? courseId = null, int? appointmentId = null)
-        //{
-        //    // 1. تحديد الـ InstructorId لو فيه موعد محدد
-        //    string? insId = null;
-        //    if (appointmentId.HasValue)
-        //    {
-        //        var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(a => a.Id == appointmentId);
-        //        insId = appointment?.InstructorId;
-        //    }
+            if (appointment.EndDateTime < DateTime.Now)
+                return Json(new { success = false, message = CultureHelper.IsArabic ? "لا يمكن إضافة طلاب لموعد منتهي." : "Cannot add students to a past appointment." });
 
-        //    // 2. الفلترة الأساسية (تتم داخل قاعدة البيانات لتحسين الأداء)
-        //    var studentCourses = await unitOfWork.StudentCourseRepository.GetAsync(
-        //        filter: sc =>
-        //            // فلتر الكورس لو موجود
-        //            (!courseId.HasValue || sc.CourseId == courseId) &&
-        //            // فلتر المحاضر لو موجود
-        //            (string.IsNullOrEmpty(insId) || sc.Student.InstructorStudents.Any(isc => isc.InstructorId == insId)) &&
-        //            // فلتر نص البحث (الاسم أو الإيميل)
-        //            (string.IsNullOrEmpty(term) ||
-        //             sc.Student.NameEn.Contains(term) ||
-        //             sc.Student.NameAr.Contains(term) ||
-        //             sc.Student.ApplicationUser.Email!.Contains(term)),
-        //        include: q => q.Include(sc => sc.Student)
-        //                       .ThenInclude(s => s.ApplicationUser)
-        //                       .Include(sc => sc.Student)
-        //                       .ThenInclude(s => s.InstructorStudents)
-        //    );
+         
+            var instructorStudent = await unitOfWork.InstructorStudentRepository
+                .GetOneAsync(x => x.InstructorId == appointment.InstructorId && x.StudentId == StudentId);
 
-        //    // 3. تحويل النتائج للشكل المطلوب لـ Select2
-        //    var results = studentCourses.Select(sc => new
-        //    {
-        //        id = sc.StudentId,
-        //        text = CultureHelper.IsArabic
-        //                ? $"{sc.Student.NameAr} - {sc.Student.NameEn}"
-        //                : $"{sc.Student.NameEn} - {sc.Student.NameAr}"
-        //    }).DistinctBy(x => x.id).ToList(); // Distinct عشان الطالب ميتكررش لو مشترك في كذا كورس
+            if (instructorStudent != null && instructorStudent.TimesCount > 0)
+                instructorStudent.TimesCount--;
 
-        //    return Json(results);
-        //}
+            await unitOfWork.StudentAppointmentRepository.CreateAsync(new StudentAppointment
+            {
+                StudentId = StudentId,
+                AppointmentId = AppointmentId
+            });
 
-        //[HttpPost]
-        //public async Task<IActionResult> AddStudentToAppointment(string StudentId, int AppointmentId, int TimeCount)
-        //{
+            await unitOfWork.CommitAsync();
 
-        //    var isExists = await unitOfWork.StudentAppointmentRepository
-        //        .GetOneAsync(e => e.StudentId == StudentId && e.AppointmentId == AppointmentId);
+            return Json(new { success = true, message = CultureHelper.IsArabic ? "تم إضافة الطالب بنجاح." : "Student added successfully." });
+        }
 
-        //    if (isExists != null)
-        //    {
+        [HttpPost]
+        public async Task<IActionResult> RemoveStudentFromAppointment(int studentAppointmentId)
+        {
+            var item = await unitOfWork.StudentAppointmentRepository.GetOneAsync(e => e.Id == studentAppointmentId);
+            if (item != null)
+            {
+                await unitOfWork.StudentAppointmentRepository.DeleteAsync(item);
+                await unitOfWork.CommitAsync();
 
-        //        var errorMsg = CultureHelper.IsArabic
-        //            ? "هذا الطالب مضاف بالفعل لهذا الموعد."
-        //            : "This student is already added to this appointment.";
+                return Json(new { success = true });
+            }
 
-        //        return Json(new { success = false, message = errorMsg });
-        //    }
-
-
-        //    var appointment = await unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == AppointmentId);
-        //    if (appointment == null)
-        //    {
-        //        return Json(new { success = false, message = "Appointment not found." });
-        //    }
-        //    if (appointment.Type == ScheduleType.OneTime && appointment.SpecificDate.HasValue)
-        //    {
-        //        if (appointment.SpecificDate.Value.Date < DateTime.Now.Date)
-        //        {
-        //            return Json(new { success = false, message = "لا يمكن إضافة طلاب لموعد قديم" });
-        //        }
-        //    }
-        //    DateTime? expiryDate = null;
-
-        //    if (appointment.Type == ScheduleType.Recurring)
-        //        expiryDate = DateTime.Now.AddDays(TimeCount * 7);
-        //    else
-        //        expiryDate = appointment.SpecificDate;
-
-        //    var link = new StudentAppointment
-        //    {
-        //        StudentId = StudentId,
-        //        AppointmentId = AppointmentId,
-        //        TimeCount = TimeCount,
-        //        StudentExpiryDate = expiryDate
-        //    };
+            return Json(new { success = false });
+        }
 
 
-        //    await unitOfWork.StudentAppointmentRepository.CreateAsync(link);
-        //    await unitOfWork.CommitAsync();
-        //    TempData["Success"] = CultureHelper.IsArabic ? "تم اضافة الطالب بنجاح " : " the student has been added successfully";
-        //    return Json(new { success = true });
-        //}
+        [HttpGet]
+        public async Task<IActionResult> SearchInstructors(string term)
+        {
 
-        //[HttpPost]
-        //public async Task<IActionResult> RemoveStudentFromAppointment(int studentAppointmentId)
-        //{
-        //    var item = await unitOfWork.StudentAppointmentRepository.GetOneAsync(e => e.Id == studentAppointmentId);
-        //    if (item != null)
-        //    {
-        //        await unitOfWork.StudentAppointmentRepository.DeleteAsync(item);
-        //        await unitOfWork.CommitAsync();
+            var instructors = await unitOfWork.InstructorRepository.GetAsync(
+                filter: i => string.IsNullOrEmpty(term) ||
+                             i.NameEn.Contains(term) ||
+                             i.NameAr.Contains(term) ||
+                             i.ApplicationUser.Email.Contains(term),
+                include: q => q.Include(i => i.ApplicationUser)
+            );
 
-        //        return Json(new { success = true });
-        //    }
+            var results = instructors.Select(i => new
+            {
+                id = i.Id,
+                text = CultureHelper.IsArabic
+                        ? $"{i.NameAr} ({i.ApplicationUser.Email})"
+                        : $"{i.NameEn} ({i.ApplicationUser.Email})"
+            }).ToList();
 
-        //    return Json(new { success = false });
-        //}
-
-
-        //[HttpGet]
-        //public async Task<IActionResult> SearchInstructors(string term)
-        //{
-
-        //    var instructors = await unitOfWork.InstructorRepository.GetAsync(
-        //        filter: i => string.IsNullOrEmpty(term) ||
-        //                     i.NameEn.Contains(term) ||
-        //                     i.NameAr.Contains(term) ||
-        //                     i.ApplicationUser.Email.Contains(term),
-        //        include: q => q.Include(i => i.ApplicationUser)
-        //    );
-
-        //    var results = instructors.Select(i => new
-        //    {
-        //        id = i.Id,
-        //        text = CultureHelper.IsArabic
-        //                ? $"{i.NameAr} ({i.ApplicationUser.Email})"
-        //                : $"{i.NameEn} ({i.ApplicationUser.Email})"
-        //    }).ToList();
-
-        //    return Json(results);
-        //}
+            return Json(results);
+        }
 
         //public IActionResult AddNewAppointment()
         //{
@@ -364,7 +325,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         //            if (!isSameDay) return false;
 
-                
+
         //            var existingStart = a.StartTime;
         //            var existingEnd = a.StartTime.Add(TimeSpan.FromHours(a.DurationInHours));
 

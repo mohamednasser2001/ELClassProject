@@ -243,7 +243,8 @@ namespace ELClass.Areas.Admin.Controllers
                 {
 
                     instructorId = i.InstructorId,
-                    name = i.Instructor.NameEn
+                    name = i.Instructor.NameEn,
+                    timesCount = i.TimesCount
                 }).ToList();
 
                 return Json(new
@@ -260,7 +261,23 @@ namespace ELClass.Areas.Admin.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> UpdateTimesCount(string studentId, string instructorId, int newCount)
+        {
+            try
+            {
+                var relation = await unitOfWork.InstructorStudentRepository.GetOneAsync(
+                    x => x.StudentId == studentId && x.InstructorId == instructorId);
 
+                if (relation == null) return Json(new { success = false });
+
+                relation.TimesCount = newCount;
+                await unitOfWork.CommitAsync();
+
+                return Json(new { success = true });
+            }
+            catch { return Json(new { success = false }); }
+        }
 
         public async Task<IActionResult> RemoveCourse(int courseId, string studentId)
         {

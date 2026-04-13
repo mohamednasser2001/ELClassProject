@@ -87,6 +87,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IDbIntializer, DbIntializer>();
 
+builder.Services.AddHostedService<AppointmentToLessonWorker>();
+
 builder.Services.AddSignalR();
 
 // =======================

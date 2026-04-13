@@ -191,7 +191,10 @@
             <div class="table-responsive mb-3">
                 <table id="InstructorCoursesTable" class="table admin-table w-100">
                     <thead>
-                        <tr><th>#</th><th>@(isArabic ? "اسم الكورس" : "Course Name")</th><th class="text-center">@(isArabic ? "التحكم" : "Actions")</th></tr>
+                        <tr>
+                            <th>#</th>
+                            <th>@(isArabic ? "اسم الكورس" : "Course Name")</th>
+                            <th class="text-center">@(isArabic ? "التحكم" : "Actions")</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -214,7 +217,10 @@
             <div class="table-responsive mb-3">
                 <table id="InstructorStudentsTable" class="table admin-table w-100">
                     <thead>
-                        <tr><th>#</th><th>@(isArabic ? "اسم الطالب" : "Student Name")</th><th class="text-center">@(isArabic ? "التحكم" : "Actions")</th></tr>
+                        <tr><th>#</th>
+                            <th>@(isArabic ? "اسم الطالب" : "Student Name")</th>
+                            <th class="text-center">@(isArabic ? "المحاضرات المتاحة" : "Available Sessions")</th>
+                            <th class="text-center">@(isArabic ? "التحكم" : "Actions")</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -279,6 +285,27 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="updateTimesModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(isArabic ? "تعديل المحاضرات" : "Edit Sessions")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editStudentId">
+                <label class="form-label small fw-bold">@(isArabic ? "عدد المحاضرات المتاحة" : "Available Sessions")</label>
+                <input type="number" id="newTimesCount" class="form-control" min="0">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-orange-custom w-100" onclick="saveNewTimesCount()">@(isArabic ? "حفظ التعديل" : "Save Changes")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -318,6 +345,17 @@
                 columns: [
                     { data: null, render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
                     { data: 'name', render: (data, t, row) => `<a href="/Admin/Student/Details/${row.studentId}" class="student-link">${data}</a>` },
+                    {
+                        data: 'timesCount',
+                        className: 'text-center',
+                        render: (data, t, row) => `
+                        <span class="badge bg-light text-dark border p-2 cursor-pointer"
+                        onclick="openEditTimesModal('${row.studentId}', ${data})"
+                        style="cursor: pointer;"
+                        title="Click to edit">
+                        <i class="fas fa-edit text-orange me-1"></i> ${data}
+                        </span>`
+                    },
                     { data: 'studentId', className: 'text-center', render: (id, t, row) => `
                         <button class="btn btn-sm btn-light border" onclick="confirmRemoveStudent('${id}', '${row.name.replace(/'/g, "\\'")}')"><i class="fas fa-trash text-danger"></i></button>`
                     }
@@ -415,5 +453,56 @@
                 }
             });
         }
+
+
+        function openEditTimesModal(studentId, currentCount) {
+            $('#editStudentId').val(studentId);
+            $('#newTimesCount').val(currentCount);
+            $('#updateTimesModal').modal('show');
+        }
+
+        function saveNewTimesCount() {
+            const studentId = $('#editStudentId').val();
+            const newCount = $('#newTimesCount').val();
+            const instructorId = '@Model.Instructor.Id'; // تأكد أن الـ ID متاح في الموديل
+            const isAr = '@isArabic' === 'True';
+            if (newCount === "" || newCount < 0) {
+                const validationMsg = isAr ? 'برجاء إدخال رقم صحيح' : 'Please enter a valid number';
+                const validationTitle = isAr ? 'خطأ في الإدخال' : 'Input Error';
+                Swal.fire(validationTitle, validationMsg, 'error');
+                return;
+        }
+
+        $.post('/Admin/Instructor/UpdateStudentTimesCount', {
+        studentId: studentId,
+        instructorId: instructorId,
+        newCount: newCount
+        }, function(res) {
+        if (res.success) {
+        $('#updateTimesModal').modal('hide');
+            
+        // رسالة النجاح بلغة الصفحة
+        const successTitle = isAr ? 'تم التحديث بنجاح' : 'Updated Successfully';
+        Swal.fire({
+        icon: 'success',
+        title: successTitle,
+        timer: 1500,
+        showConfirmButton: false
+        });
+
+        // إعادة تحميل الجدول بدون ريفرش
+        if ($.fn.DataTable.isDataTable('#InstructorStudentsTable')) {
+        $('#InstructorStudentsTable').DataTable().ajax.reload(null, false);
+        } else {
+        location.reload(); // Fallback في حالة مفيش DataTable
+        }
+        } else {
+        // رسالة الخطأ القادمة من السيرفر (أو رسالة عامة)
+        const errorTitle = isAr ? 'عذراً' : 'Error';
+        Swal.fire(errorTitle, res.message, 'error');
+        }
+        });
+        }
+
     </script>
 }

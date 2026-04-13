@@ -50,6 +50,11 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+            .swal2-container {
+                z-index: 99999 !important;
+            }
+    </style>
 </head>
 
 <body>
@@ -110,8 +115,13 @@
                             <span class="pc-mtext">@(isArabic ? "الطلاب" : "Students")</span>
                         </a>
                     </li>
-
-                    <li class="pc-item pc-hasmenu">
+                    <li class="pc-item">
+                        <a class="pc-link" href="/Admin/appointment/index">
+                            <span class="pc-micon"><i class="ti ti-calendar-event"></i></span>
+                            <span class="pc-mtext">@(isArabic ? "كل المواعيد" : "All Appointments")</span>
+                        </a>
+                    </li>
+                   @*  <li class="pc-item pc-hasmenu">
                         <a href="#!" class="pc-link">
                             <span class="pc-micon"><i class="ti ti-calendar-event"></i></span>
                             <span class="pc-mtext">@(isArabic ? "المواعيد" : "Appointments")</span>
@@ -125,7 +135,7 @@
                                 <a class="pc-link" href="/Admin/appointment/AddNewAppointment">@(isArabic ? "إضافة موعد" : "Add Appointment")</a>
                             </li>
                         </ul>
-                    </li>
+                    </li> *@
 
                     @if (User.IsInRole("SuperAdmin"))
                     {

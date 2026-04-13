@@ -33,31 +33,7 @@ namespace ELClass.Areas.Instructor.Controllers
 
             var now = DateTime.Now;
 
-            var expiredApps = appointments
-                .Where(app => app.EndDateTime < DateTime.Now.Date)
-                .ToList();
-
-            if (expiredApps.Any())
-            {
-                
-                var studentAppsToDelete = expiredApps
-                    .SelectMany(a => a.StudentAppointments)
-                    .ToList();
-
-                if (studentAppsToDelete.Any())
-                {
-                    await _unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppsToDelete);
-                }
-
-                
-                await _unitOfWork.AppoinmentRepository.DeleteAllAsync(expiredApps);
-
-                
-                await _unitOfWork.CommitAsync();
-
-               
-                appointments = appointments.Except(expiredApps).ToList();
-            }
+           
             var orderedAppointments = appointments
         .OrderBy(a => a.StartDateTime)
         .ToList();
@@ -144,10 +120,47 @@ namespace ELClass.Areas.Instructor.Controllers
         }
 
 
-        public IActionResult AddNewAppointment()
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, DateTime startDateTime, int durationInHours, string meetingLink)
         {
-            return View();
+            try
+            {
+                var existing = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == id);
+                if (existing == null)
+                    return Json(new { success = false, message = CultureHelper.IsArabic ? "الموعد غير موجود" : "Appointment not found" });
+
+                // التحقق من التعارض
+                var slotEnd = startDateTime.AddHours(durationInHours);
+                var conflicts = await _unitOfWork.AppoinmentRepository
+                    .GetAsync(a => a.Id != id && a.InstructorId == existing.InstructorId);
+
+                var conflict = conflicts.FirstOrDefault(a =>
+                    startDateTime < a.EndDateTime && slotEnd > a.StartDateTime);
+
+                if (conflict != null)
+                    return Json(new
+                    {
+                        success = false,
+                        message = (CultureHelper.IsArabic ? "يوجد تعارض في: " : "Conflict at: ")
+                                  + conflict.StartDateTime.ToString("dd/MM/yyyy hh:mm tt")
+                    });
+
+                existing.StartDateTime = startDateTime;
+                existing.DurationInHours = durationInHours;
+                existing.MeetingLink = meetingLink;
+
+                await _unitOfWork.AppoinmentRepository.EditAsync(existing);
+                await _unitOfWork.CommitAsync();
+
+                return Json(new { success = true, message = CultureHelper.IsArabic ? "تم التعديل بنجاح" : "Updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
