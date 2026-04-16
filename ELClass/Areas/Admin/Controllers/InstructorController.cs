@@ -48,7 +48,7 @@ namespace ELClass.Areas.Admin.Controllers
             var courses = await unitOfWork.InstructorCourseRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Course));
             var students = await unitOfWork.InstructorStudentRepository.GetAsync(filter: e => e.InstructorId == id, include: e => e.Include(e => e.Student));
 
-           
+
 
             var model = new InstructorDetailsVM()
             {
@@ -94,7 +94,7 @@ namespace ELClass.Areas.Admin.Controllers
                 };
                 await unitOfWork.InstructorStudentRepository.CreateAsync(instructorStudent);
                 await unitOfWork.CommitAsync();
-            
+
 
                 return Json(new { success = true });
 
@@ -109,7 +109,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> RemoveCourse(int courseId, string instructorId)
         {
-            
+
             var instructorCourse = await unitOfWork.InstructorCourseRepository.GetOneAsync(
                 filter: e => e.InstructorId == instructorId && e.CourseId == courseId);
 
@@ -118,7 +118,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return View("AdminNotFoundPage");
             }
 
-            
+
             var appointmentsToDelete = await unitOfWork.AppoinmentRepository.GetAsync(
                 filter: a => a.InstructorId == instructorId && a.CourseId == courseId);
 
@@ -126,22 +126,22 @@ namespace ELClass.Areas.Admin.Controllers
             {
                 var appointmentIds = appointmentsToDelete.Select(a => a.Id).ToList();
 
-             
+
                 var studentAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(
                     sa => appointmentIds.Contains(sa.AppointmentId));
-            
+
                 if (studentAppointments.Any())
                 {
                     await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointments);
                 }
 
-           
+
                 await unitOfWork.AppoinmentRepository.DeleteAllAsync(appointmentsToDelete);
             }
 
             await unitOfWork.InstructorCourseRepository.DeleteAsync(instructorCourse);
 
-     
+
             var success = await unitOfWork.CommitAsync();
 
             if (success)
@@ -155,7 +155,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> RemoveStudent(string studentId, string instructorId)
         {
-           
+
             var instructorStudent = await unitOfWork.InstructorStudentRepository.GetOneAsync(
                 filter: e => e.InstructorId == instructorId && e.StudentId == studentId);
 
@@ -164,27 +164,27 @@ namespace ELClass.Areas.Admin.Controllers
                 return View("AdminNotFoundPage");
             }
 
-           
+
             var instructorAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a => a.InstructorId == instructorId);
             var appointmentIds = instructorAppointments.Select(a => a.Id).ToList();
 
             if (appointmentIds.Any())
             {
-                
+
                 var studentAppointmentsToRemove = await unitOfWork.StudentAppointmentRepository.GetAsync(sa =>
                     sa.StudentId == studentId && appointmentIds.Contains(sa.AppointmentId));
 
                 if (studentAppointmentsToRemove.Any())
                 {
-                 
+
                     await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointmentsToRemove);
                 }
             }
 
-            
+
             await unitOfWork.InstructorStudentRepository.DeleteAsync(instructorStudent);
 
-            
+
             var success = await unitOfWork.CommitAsync();
 
             if (success)
@@ -193,7 +193,7 @@ namespace ELClass.Areas.Admin.Controllers
                 return RedirectToAction("details", new { id = instructorId });
             }
 
-            return BadRequest(new { message =CultureHelper.IsArabic ? "حدث خطأ أثناء محاولة حذف البيانات المرتبطة" :"there is error occurred" });
+            return BadRequest(new { message = CultureHelper.IsArabic ? "حدث خطأ أثناء محاولة حذف البيانات المرتبطة" : "there is error occurred" });
         }
 
 
@@ -281,14 +281,14 @@ namespace ELClass.Areas.Admin.Controllers
                    (CultureInfo.CurrentCulture.Name.StartsWith("ar") ? "ar" : "en");
 
                 Expression<Func<Models.Instructor, bool>> filter = c => string.IsNullOrEmpty(searchValue) ||
-                    (c.NameEn.Contains(searchValue) || c.NameAr.Contains(searchValue) );
+                    (c.NameEn.Contains(searchValue) || c.NameAr.Contains(searchValue));
 
                 var instructors = await unitOfWork.InstructorRepository.GetAsync(
-                    filter: filter,
-                    skip: start,
-                    take: length,
-                    orderBy: q => q.OrderBy(i => i.Id)
-                );
+                     filter: filter,
+                     skip: start,
+                     take: length,
+                     orderBy: q => q.OrderByDescending(i => !i.IsApproved).ThenBy(i => i.Id)
+                 );
 
                 var totalRecords = await unitOfWork.InstructorRepository.CountAsync();
                 var filteredRecords = await unitOfWork.InstructorRepository.CountAsync(filter: filter);
@@ -297,7 +297,8 @@ namespace ELClass.Areas.Admin.Controllers
                 {
                     id = c.Id,
                     name = lang == "en" ? c.NameEn : c.NameAr,
-                    specialization = lang == "en" ? c.SpecializationEn : c.SpecializationAr
+                    specialization = lang == "en" ? c.SpecializationEn : c.SpecializationAr,
+                    isApproved = c.IsApproved
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalRecords, recordsFiltered = filteredRecords, data = result });
@@ -528,11 +529,13 @@ namespace ELClass.Areas.Admin.Controllers
             ModelState.Remove("InstructorStudents");
             ModelState.Remove("InstructorCourses");
             ModelState.Remove("Bio");
+            ModelState.Remove("NameAR");
+            ModelState.Remove("NameEN");
             if (BioFile == null || BioFile.Length == 0)
             {
                 ModelState.AddModelError("BioFile", lang == "en" ? "CV file is required" : "ملف السيرة الذاتية مطلوب");
             }
-    else
+            else
             {
                 var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx" };
                 var ext = Path.GetExtension(BioFile.FileName).ToLowerInvariant();
@@ -585,12 +588,12 @@ namespace ELClass.Areas.Admin.Controllers
             var newInstructor = new Models.Instructor
             {
                 Id = ins.Id,
-                NameAr = ins.NameAr,
-                NameEn = ins.NameEn,
+                NameAr = user.NameEN ?? user.NameAR ?? "No Name",
+                NameEn = user.NameEN ?? user.NameAR ?? "No Name",
                 Bio = uniqueFileName,
                 SpecializationEn = ins.SpecializationEn,
-                SpecializationAr = ins.SpecializationAr,  
-                CreatedById= User.FindFirstValue(ClaimTypes.NameIdentifier),
+                SpecializationAr = ins.SpecializationAr,
+                CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 CreatedAt = DateTime.Now
             };
 
@@ -649,19 +652,15 @@ namespace ELClass.Areas.Admin.Controllers
                     instructorInDb.SpecializationEn = ins.SpecializationEn;
                     instructorInDb.SpecializationAr = ins.SpecializationAr;
 
-          
+
                     if (BioFile != null && BioFile.Length > 0)
                     {
-                        var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx" };
+
                         var ext = Path.GetExtension(BioFile.FileName).ToLowerInvariant();
 
-                        if (!allowedExtensions.Contains(ext))
-                        {
-                            TempData["error"] = lang == "en" ? "Only PDF, Word, TXT files allowed" : "يسمح فقط بـ PDF أو Word أو TXT";
-                            return RedirectToAction("Details", new { id = ins.Id });
-                        }
 
-                       
+
+
                         if (!string.IsNullOrEmpty(instructorInDb.Bio))
                         {
                             var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios", instructorInDb.Bio);
@@ -669,7 +668,7 @@ namespace ELClass.Areas.Admin.Controllers
                                 System.IO.File.Delete(oldPath);
                         }
 
-                   
+
                         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios");
                         Directory.CreateDirectory(uploadsFolder);
                         var uniqueFileName = $"{Guid.NewGuid()}{ext}";
@@ -680,7 +679,7 @@ namespace ELClass.Areas.Admin.Controllers
 
                         instructorInDb.Bio = uniqueFileName;
                     }
-            
+
 
                     if (instructorInDb.ApplicationUser != null && ins.ApplicationUser != null)
                     {
@@ -785,6 +784,21 @@ namespace ELClass.Areas.Admin.Controllers
 
 
         [HttpPost]
+        public async Task<IActionResult> Approve(string id)
+        {
+            //var instructor = await _context.Instructors.FindAsync(id);
+            var instructor = await unitOfWork.InstructorRepository.GetOneAsync(i => i.Id == id);
+
+            if (instructor == null)
+                return Json(new { success = false, message = "Instructor not found" });
+
+            instructor.IsApproved = true;
+            await unitOfWork.CommitAsync();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
@@ -801,7 +815,7 @@ namespace ELClass.Areas.Admin.Controllers
             using var transaction = await unitOfWork.BeginTransactionAsync();
             try
             {
-               
+
                 var relatedInstructors = await unitOfWork.InstructorRepository.GetAsync(isd => isd.CreatedById == id);
                 foreach (var ins in relatedInstructors)
                 {
@@ -816,20 +830,20 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.CourseRepository.EditAsync(course);
                 }
 
-                
+
                 var instructorAppointments = await unitOfWork.AppoinmentRepository.GetAsync(a => a.InstructorId == id);
                 if (instructorAppointments.Any())
                 {
                     var appointmentIds = instructorAppointments.Select(a => a.Id).ToList();
 
-                   
+
                     var studentAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(sa => appointmentIds.Contains(sa.AppointmentId));
                     if (studentAppointments.Any())
                     {
                         await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(studentAppointments);
                     }
 
-                    
+
                     await unitOfWork.AppoinmentRepository.DeleteAllAsync(instructorAppointments);
                 }
 
@@ -850,14 +864,15 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
                 }
 
-                
+
                 await unitOfWork.InstructorRepository.DeleteAsync(instructor);
                 await unitOfWork.CommitAsync();
 
-             
+
                 if (user != null)
                 {
                     DeleteUserImage(user.Img);
+                    DeleteInstructorBio(instructor.Bio);
                     var result = await userManager.DeleteAsync(user);
                     if (!result.Succeeded)
                     {
@@ -889,8 +904,31 @@ namespace ELClass.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                
+
                 Console.WriteLine($"Error deleting image file: {ex.Message}");
+            }
+        }
+
+        private void DeleteInstructorBio(string? bioFileName)
+        {
+            // التأكد أن اسم الملف ليس فارغاً
+            if (string.IsNullOrEmpty(bioFileName)) return;
+
+            try
+            {
+                // تحديد المسار الصحيح للمجلد
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "instructor-bios", bioFileName);
+
+                // التأكد من وجود الملف قبل محاولة حذفه
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                // طباعة الخطأ في حال حدوث مشكلة (مثل أن الملف مستخدم من قبل عملية أخرى)
+                Console.WriteLine($"Error deleting instructor bio file: {ex.Message}");
             }
         }
     }

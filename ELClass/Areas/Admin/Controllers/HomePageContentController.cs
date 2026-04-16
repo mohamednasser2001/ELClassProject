@@ -37,9 +37,27 @@ namespace ELClass.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(HomePageContent model, string tabId)
+        public async Task<IActionResult> Save(HomePageContent model, string tabId , IFormFile PlayVideoImg)
         {
             var isArabic = CultureHelper.IsArabic;
+
+            if(PlayVideoImg != null && PlayVideoImg.Length > 0)
+            {
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(PlayVideoImg.FileName)}";
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "thumbnails", fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await PlayVideoImg.CopyToAsync(stream);
+                }
+                model.PlayVideoText = $"{fileName}";
+                var allRecords = await _unitOfWork.HomePageContentRepository.GetAsync();
+                foreach (var record in allRecords)
+                {
+                    record.PlayVideoText = fileName;
+                    await _unitOfWork.HomePageContentRepository.EditAsync(record);
+                }
+            }
+
             await _unitOfWork.HomePageContentRepository.EditAsync(model);
             TempData["Success"] = isArabic ? "تم حفظ المحتوى بنجاح" : "Content saved successfully";
             return RedirectToAction("Index", new { activeTab = tabId });

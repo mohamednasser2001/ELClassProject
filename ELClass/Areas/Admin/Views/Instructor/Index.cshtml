@@ -90,8 +90,18 @@
                     {
                         data: 'name',
                         render: function (data, type, row) {
-                            return `<a href="/Admin/Instructor/Details/${row.id}" class="instructor-link">
-                                    <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                            var badge = !row.isApproved
+                                ? `<span class="position-absolute top-0 start-0 translate-middle
+                                               bg-danger rounded-circle border border-2 border-white"
+                                         title="${currentLang === 'ar' ? 'بانتظار الموافقة' : 'Pending Approval'}"
+                                         style="width:10px; height:10px; display:inline-block;">
+                                   </span>`
+                                : '';
+        
+                            return `<a href="/Admin/Instructor/Details/${row.id}"
+                                       class="instructor-link position-relative d-inline-block">
+                                        <i class="fas fa-chalkboard-teacher me-1 icon-primary" style="opacity:0.7"></i>
+                                        ${badge}${data}
                                     </a>`;
                         }
                     },

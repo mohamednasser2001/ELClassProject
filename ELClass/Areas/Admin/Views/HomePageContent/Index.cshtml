@@ -59,7 +59,7 @@
         var dir = tab.Id == "en" ? "ltr" : "rtl";
         <div class="tab-pane fade @(activeTab == tab.Id ? "show active" : "")"
              id="tab-@tab.Id" role="tabpanel">
-            <form asp-action="Save" method="post" style="direction:@dir">
+            <form asp-action="Save" method="post" enctype="multipart/form-data" style="direction:@dir">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Id" value="@c.Id" />
                 <input type="hidden" name="Language" value="@c.Language" />
@@ -130,8 +130,9 @@
                                         <input type="text" class="form-control" name="VideoUrl" value="@c.VideoUrl" />
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "نص تشغيل الفيديو" : "Play Video Text")</label>
-                                        <input type="text" class="form-control" name="PlayVideoText" value="@c.PlayVideoText" />
+                                        <label class="form-label">@(isAr ? "صورة تشغيل الفيديو" : "Play Video Image")</label>
+                                        <input type="file" class="form-control" name="PlayVideoImg" value="@c.PlayVideoText" />
+                                        @* name="PlayVideoText" *@
                                     </div>
                                 </div>
                             </div>

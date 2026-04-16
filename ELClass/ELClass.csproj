@@ -11,13 +11,14 @@
   
 
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\chat_uploads\" />
     <Folder Include="wwwroot\HomePageAssets\Images\Home\" />
+    <Folder Include="wwwroot\Images\thumbnails\" />
     <Folder Include="wwwroot\Images\Users\" />
     <Folder Include="wwwroot\js\Admin\Course\" />
   </ItemGroup>

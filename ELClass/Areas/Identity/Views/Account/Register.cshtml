@@ -91,6 +91,13 @@
                     <span class="text-danger fs--1" asp-validation-for="Email"></span>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">@(isArabic ? "رقم الهاتف" : "Phone Number")</label>
+                    <input class="form-control" type="tel" asp-for="PhoneNumber"
+                           placeholder="@(isArabic ? "01xxxxxxxxx" : "Enter your phone number")" />
+                    <span class="text-danger fs--1" asp-validation-for="PhoneNumber"></span>
+                </div>
+
 
                 @if (string.IsNullOrWhiteSpace(ViewBag.GoogleEmail as string))
                 {

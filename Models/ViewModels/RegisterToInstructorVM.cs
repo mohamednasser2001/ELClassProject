@@ -13,7 +13,7 @@ namespace Models.ViewModels
        ErrorMessage = "Name can contain Arabic letters, English letters, and numbers only")]
         [Display(Name = "Name")]
         public string? NameEN { get; set; }
-        [Required]
+       
         [RegularExpression(@"^[A-Za-z\u0600-\u06FF0-9\s]+$",
             ErrorMessage = "يسمح بالحروف العربية والإنجليزية والأرقام فقط")]
         [Display(Name = "الاسم")]

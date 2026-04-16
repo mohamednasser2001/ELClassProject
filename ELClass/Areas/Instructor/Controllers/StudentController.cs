@@ -19,8 +19,11 @@ namespace ELClass.Areas.Instructor.Controllers
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+
+           
+
             return View();
         }
 

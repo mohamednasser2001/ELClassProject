@@ -1,0 +1,118 @@
+﻿@{
+    var currentLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+    var isArabic = currentLang == "ar";
+    var direction = isArabic ? "rtl" : "ltr";
+    Layout = "";
+}
+<head>
+    <title>@(isArabic ? "لوحة تحكم المحاضر — ELClass" : "Instructor Dashboard — ELClass")</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
+    <link rel="icon" href="~/Images/Logos/logos-03.png" type="image/x-icon" />
+
+    <!-- Cairo — Arabic + Latin -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="~/assets/fonts/phosphor/duotone/style.css" />
+    <link rel="stylesheet" href="~/assets/fonts/tabler-icons.min.css" />
+    <link rel="stylesheet" href="~/assets/fonts/feather.css" />
+    <link rel="stylesheet" href="~/assets/fonts/material.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Design system -->
+    <link rel="stylesheet" href="~/css/color-tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/bootstrap-overrides.css" asp-append-version="true" />
+
+    <!-- Berry template -->
+    <link rel="stylesheet" href="~/assets/css/style.css" id="main-style-link" />
+    <link rel="stylesheet" href="~/assets/css/style-preset.css" />
+    <link rel="stylesheet" href="~/assets/css/berry-color-overrides.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/preset-color-overrides.css" asp-append-version="true" />
+
+    <!-- ELClass layout override -->
+    <link rel="stylesheet" href="~/css/elclass-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Instructor-component.css" asp-append-version="true" />
+
+    <!-- Instructor violet accent override -->
+    <style>
+        .pc-sidebar .pc-item.active > .pc-link,
+        .pc-sidebar .pc-link.active,
+        .pc-sidebar .pc-item.pc-trigger > .pc-link {
+            background: rgba(124, 58, 237, 0.15) !important;
+            color: #C4B5FD !important;
+        }
+        .el-quick-action:hover {
+            border-color: #7C3AED !important;
+            background: #F5F3FF !important;
+            color: #7C3AED !important;
+        }
+        .swal2-container {
+             z-index: 99999 !important;
+        }
+    </style>
+
+    <!-- Third-party -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
+</head>
+<div class="d-flex align-items-center justify-content-center min-vh-100" dir="@direction">
+    <div class="text-center" style="max-width: 480px; width: 100%; padding: 2rem;">
+
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+             style="width:80px; height:80px; background:#FAEEDA;">
+            <i class="fas fa-hourglass-half fa-2x" style="color:#BA7517;"></i>
+        </div>
+
+        <h2 class="fw-500 mb-3">
+            @(isArabic ? "حسابك قيد المراجعة" : "Your account is under review")
+        </h2>
+
+        <p class="text-muted mb-4" style="line-height:1.7;">
+            @(isArabic
+                ? "شكراً لتسجيلك كمدرب. فريقنا يراجع طلبك حالياً وسيتم إشعارك فور الموافقة عليه."
+                : "Thank you for registering as an instructor. Our team is currently reviewing your application and will notify you once it has been approved.")
+        </p>
+
+        <div class="rounded-3 border p-4 mb-4 text-start bg-light">
+            <p class="small fw-bold text-muted mb-3 @(isArabic ? "text-end" : "")">
+                @(isArabic ? "ماذا سيحدث بعد ذلك؟" : "What happens next?")
+            </p>
+
+            <div class="d-flex flex-column gap-3">
+                @foreach (var step in new[] {
+                    new { Icon = "fa-envelope", Ar = "ستصلك رسالة بريد إلكتروني فور الموافقة على حسابك.", En = "You'll receive an email once your account is approved." },
+                    new { Icon = "fa-clock", Ar = "تستغرق المراجعة عادةً من 1 إلى 2 يوم عمل.", En = "Review usually takes 1–2 business days." },
+                    new { Icon = "fa-check-circle", Ar = "بعد الموافقة، ستتمكن من الوصول إلى لوحة التحكم بالكامل.", En = "Once approved, you'll have full access to your dashboard." }
+                })
+                {
+                    <div class="d-flex align-items-start gap-3 @(isArabic ? "flex-row-reverse text-end" : "")">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:32px; height:32px; background:#EAF3DE;">
+                            <i class="fas @step.Icon" style="color:#3B6D11; font-size:13px;"></i>
+                        </div>
+                        <p class="mb-0 small text-muted pt-1">
+                            @(isArabic? step.Ar: step.En)
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+           
+            <a href="/identity/account/logout" class="btn btn-light border btn-sm px-4">
+                <i class="fas fa-sign-out-alt me-2"></i>
+                @(isArabic ? "تسجيل الخروج" : "Sign out")
+            </a>
+        </div>
+
+    </div>
+</div>
