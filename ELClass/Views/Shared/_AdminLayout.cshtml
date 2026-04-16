@@ -10,6 +10,7 @@
     var isArabic  = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
     var dir       = isArabic ? "rtl" : "ltr";
     var unreadCount = await _unitOfWork.ContactUsRepository.CountAsync(e => e.IsReaded == false);
+    var pendingInstructorsCount = await _unitOfWork.InstructorRepository.CountAsync(i => i.IsApproved == false);
 }
 
 <!doctype html>
@@ -104,8 +105,17 @@
 
                     <li class="pc-item">
                         <a href="/admin/instructor/index" class="pc-link">
-                            <span class="pc-micon"><i class="fa-regular fa-user"></i></span>
+                            <span class="pc-micon position-relative">
+                                <i class="fa-regular fa-user"></i>
+                            </span>
                             <span class="pc-mtext">@(isArabic ? "المحاضرون" : "Instructors")</span>
+                            @if (pendingInstructorsCount > 0)
+                            {
+                                <span class="badge bg-danger ms-1 px-1"
+                                      style="font-size:9px; border-radius:999px;">
+                                    @pendingInstructorsCount
+                                </span>
+                            }
                         </a>
                     </li>
 

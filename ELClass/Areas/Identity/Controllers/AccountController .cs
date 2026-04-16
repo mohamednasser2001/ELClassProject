@@ -5,7 +5,7 @@ using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
+
 using Models;
 using Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
@@ -124,10 +124,11 @@ namespace ELClass.Areas.Identity.Controllers
 
                 var applicationUser = new ApplicationUser
                 {
-                    NameEN = registerVM.NameEN,
-                    NameAR = registerVM.NameAR,
+                    NameEN = registerVM.NameEN ?? registerVM.NameAR,
+                    NameAR = registerVM.NameAR ?? registerVM.NameEN,
                     Email = email,
-                    UserName = userName
+                    UserName = userName,
+                    PhoneNumber = registerVM.PhoneNumber
                 };
 
                 IdentityResult result;
@@ -388,22 +389,21 @@ namespace ELClass.Areas.Identity.Controllers
                 returnUrl = Url.Content("~/");
 
             var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-
+            ModelState.Remove("NameAR");
+            ModelState.Remove("SpecializationAr");
             try
             {
                 // ── 1) Language-specific name validation ──────────────────────────
-                if ((lang == "en" && string.IsNullOrWhiteSpace(vm.NameEN)) ||
-                    (lang == "ar" && string.IsNullOrWhiteSpace(vm.NameAR)))
+                if ((lang == "en" && string.IsNullOrWhiteSpace(vm.NameEN)) )
                 {
                     ModelState.AddModelError(
-                        lang == "en" ? nameof(vm.NameEN) : nameof(vm.NameAR),
+                         nameof(vm.NameEN) ,
                         lang == "en" ? "Name is required" : "الاسم مطلوب"
                     );
                 }
 
                 // Fill missing name so DB never gets NULL
-                if (string.IsNullOrWhiteSpace(vm.NameEN) && !string.IsNullOrWhiteSpace(vm.NameAR))
-                    vm.NameEN = vm.NameAR;
+                
                 if (string.IsNullOrWhiteSpace(vm.NameAR) && !string.IsNullOrWhiteSpace(vm.NameEN))
                     vm.NameAR = vm.NameEN;
 
@@ -418,18 +418,7 @@ namespace ELClass.Areas.Identity.Controllers
                     ModelState.AddModelError(nameof(vm.Bio),
                         lang == "ar" ? "ملف السيرة الذاتية مطلوب" : "CV file is required");
                 }
-                else
-                {
-                    var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx" };
-                    var ext = Path.GetExtension(vm.Bio.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(ext))
-                    {
-                        ModelState.AddModelError(nameof(vm.Bio),
-                            lang == "ar"
-                                ? "يسمح فقط بملفات TXT، PDF أو Word"
-                                : "Only TXT, PDF or Word files are allowed");
-                    }
-                }
+                
 
                 if (!ModelState.IsValid)
                     return View(vm);
@@ -453,7 +442,7 @@ namespace ELClass.Areas.Identity.Controllers
                 var applicationUser = new ApplicationUser
                 {
                     NameEN = vm.NameEN,
-                    NameAR = vm.NameAR,
+                    NameAR = vm.NameEN,
                     Email = email,
                     UserName = userName
                 };
@@ -486,7 +475,7 @@ namespace ELClass.Areas.Identity.Controllers
                     NameAr = applicationUser.NameAR ?? "",
                     NameEn = applicationUser.NameEN ?? "",
                     Bio = uniqueFileName,   // store file name in DB
-                    SpecializationAr = vm.SpecializationAr,
+                    SpecializationAr = vm.SpecializationEn,
                     SpecializationEn = vm.SpecializationEn,
                 };
 

@@ -33,6 +33,8 @@ namespace ELClass.Areas.Instructor.Controllers
         }
         public async Task<IActionResult> Index()
         {
+           
+
             return View();
 
         }

@@ -52,7 +52,12 @@
                                 <div class="flex flex-col">
                                     <span class="text-gray-900 font-medium flex items-center gap-1">
                                         <i class="far fa-calendar-alt text-xs text-gray-400"></i>
-                                        @item.value.StartDateTime.ToString("dd MMM yyyy")
+                                        @{
+                                            var culture = isArabic
+                                                ? new System.Globalization.CultureInfo("ar-EG")
+                                                : System.Globalization.CultureInfo.InvariantCulture;
+                                        }
+                                        @item.value.StartDateTime.ToString("dddd, dd MMM yyyy", culture)
                                     </span>
                                     <span class="text-orange-600 text-xs font-semibold mt-1">
                                         <i class="far fa-clock"></i>

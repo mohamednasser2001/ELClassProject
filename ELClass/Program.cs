@@ -2,6 +2,7 @@
 using DataAccess.Repositories;
 using DataAccess.Repositories.IRepositories;
 using ELClass.Hubs;
+using ELClass.Middleware;
 using ELClass.services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -119,6 +120,8 @@ app.UseRequestLocalization(localizationOptions);
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<InstructorApprovalMiddleware>();
 
 // =======================
 // 4️⃣ Endpoints

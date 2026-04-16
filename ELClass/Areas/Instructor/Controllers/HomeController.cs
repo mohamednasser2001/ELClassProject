@@ -36,6 +36,8 @@ namespace ELClass.Areas.Instructor.Controllers
             var isArabic = CultureHelper.IsArabic;
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+          
+
             // 1. حساب الإحصائيات مع التأكد من الربط الصحيح
             var viewModel = new InstructorIndexDashboardVM
             {
@@ -503,7 +505,10 @@ namespace ELClass.Areas.Instructor.Controllers
         }
 
 
-
+        public IActionResult Waiting()
+        {
+            return View();
+        }
 
 
 

@@ -24,6 +24,7 @@ namespace ELClass.Areas.Instructor.Controllers
             var userId = _userManager.GetUserId(User); 
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
+           
 
             var appointments = (await _unitOfWork.AppoinmentRepository.GetAsync(
                 filter: e => e.InstructorId == userId,

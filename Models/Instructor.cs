@@ -20,6 +20,7 @@ namespace Models
         public string Bio { get; set; }
         public string SpecializationEn { get; set; } = string.Empty;
         public string SpecializationAr { get; set; } = string.Empty;
+        public bool IsApproved { get; set; } = false;
 
         public ApplicationUser ApplicationUser { get; set; } = null!;
         public ICollection<InstructorStudent> InstructorStudents { get; set; } = new List<InstructorStudent>();
