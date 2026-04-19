@@ -392,6 +392,101 @@
                                         <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
                                         <textarea class="form-control" name="TestimonialsParagraph" rows="2">@c.TestimonialsParagraph</textarea>
                                     </div>
+                                    <div class="col-12">
+                                        <a href="/Admin/Testimonials?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
+                                           class="btn btn-outline-primary btn-sm" target="_blank">
+                                            <i class="ti ti-stars me-1"></i>
+                                            @(isAr ? "إدارة الشهادات والتقييمات ←" : "Manage Individual Testimonials →")
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Pricing ────────────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-pricing-@tab.Id">
+                                <i class="ti ti-currency-dollar me-2"></i>
+                                @(isAr ? "قسم الأسعار" : "Pricing Section")
+                            </button>
+                        </h2>
+                        <div id="sec-pricing-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="PricingTopHeading" value="@c.PricingTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="PricingMainHeading" value="@c.PricingMainHeading" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
+                                        <textarea class="form-control" name="PricingParagraph" rows="2">@c.PricingParagraph</textarea>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">@(isAr ? "نص تبويب الشهري" : "Monthly Tab Label")</label>
+                                        <input type="text" class="form-control" name="PricingMonthlyLabel" value="@c.PricingMonthlyLabel" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">@(isAr ? "نص تبويب السنوي" : "Yearly Tab Label")</label>
+                                        <input type="text" class="form-control" name="PricingYearlyLabel" value="@c.PricingYearlyLabel" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">@(isAr ? "نص زر الاشتراك" : "CTA Button Text")</label>
+                                        <input type="text" class="form-control" name="PricingBtnText" value="@c.PricingBtnText" />
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <a href="/Admin/PricingPlans?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
+                                           class="btn btn-outline-primary btn-sm w-100" target="_blank">
+                                            <i class="ti ti-list me-1"></i>
+                                            @(isAr ? "إدارة الخطط ←" : "Manage Plans →")
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Blog / Articles ────────────────── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-blog-@tab.Id">
+                                <i class="ti ti-news me-2"></i>
+                                @(isAr ? "قسم المدونة / المقالات" : "Blog / Articles Section")
+                            </button>
+                        </h2>
+                        <div id="sec-blog-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
+                                        <input type="text" class="form-control" name="BlogTopHeading" value="@c.BlogTopHeading" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
+                                        <input type="text" class="form-control" name="BlogMainHeading" value="@c.BlogMainHeading" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
+                                        <textarea class="form-control" name="BlogParagraph" rows="2">@c.BlogParagraph</textarea>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">@(isAr ? "نص اقرأ المزيد" : "Read More Text")</label>
+                                        <input type="text" class="form-control" name="BlogReadMoreText" value="@c.BlogReadMoreText" />
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <a href="/Admin/Articles?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
+                                           class="btn btn-outline-primary btn-sm w-100" target="_blank">
+                                            <i class="ti ti-pencil me-1"></i>
+                                            @(isAr ? "إدارة المقالات ←" : "Manage Articles →")
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

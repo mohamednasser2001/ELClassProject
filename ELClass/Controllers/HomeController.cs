@@ -47,11 +47,32 @@ namespace ELClass.Controllers
             }
 
             var instructors = await _unitOfWork.InstructorRepository.GetAsync(include: e => e.Include(e => e.ApplicationUser));
+
+            // Load dynamic sections by language + country
+            string lang = isArabic ? "ar" : "en";
+            var testimonials = await _unitOfWork.TestimonialRepository.GetAsync(
+                filter: x => x.Language == lang && x.CountryCode == selectedCountry && x.IsActive,
+                orderBy: q => q.OrderBy(x => x.SortOrder),
+                tracked: false);
+
+            var pricingPlans = await _unitOfWork.PricingPlanRepository.GetAsync(
+                filter: x => x.Language == lang && x.CountryCode == selectedCountry && x.IsActive,
+                orderBy: q => q.OrderBy(x => x.SortOrder),
+                tracked: false);
+
+            var articles = await _unitOfWork.ArticleRepository.GetAsync(
+                filter: x => x.Language == lang && x.CountryCode == selectedCountry && x.IsActive,
+                orderBy: q => q.OrderBy(x => x.SortOrder),
+                tracked: false);
+
             HomePageIndexVM model = new HomePageIndexVM()
             {
                 Instructors = instructors.ToList(),
                 Content = content,
-                SelectedCountry = selectedCountry
+                SelectedCountry = selectedCountry,
+                Testimonials = testimonials.ToList(),
+                PricingPlans = pricingPlans.ToList(),
+                Articles = articles.ToList()
             };
             return View(model);
         }

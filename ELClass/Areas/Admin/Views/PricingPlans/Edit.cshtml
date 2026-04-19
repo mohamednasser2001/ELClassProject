@@ -1,0 +1,84 @@
+@model Models.PricingPlan
+
+@{
+    var isAr = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar");
+    ViewData["Title"] = isAr ? "تعديل خطة السعر" : "Edit Pricing Plan";
+    var dir = Model.Language == "en" ? "ltr" : "rtl";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="ti ti-edit me-2"></i> @(isAr ? "تعديل خطة السعر" : "Edit Pricing Plan")</h4>
+    <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="ti ti-arrow-left me-1"></i> @(isAr ? "رجوع" : "Back")
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body" style="direction:@dir">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="@Model.Id" />
+            <input type="hidden" name="Language" value="@Model.Language" />
+            <input type="hidden" name="CountryCode" value="@Model.CountryCode" />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">@(isAr ? "اسم الخطة" : "Plan Name") <span class="text-danger">*</span></label>
+                    <input name="Name" class="form-control" value="@Model.Name" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">@(isAr ? "وصف الخطة" : "Description")</label>
+                    <input name="Description" class="form-control" value="@Model.Description" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">@(isAr ? "العملة" : "Currency")</label>
+                    <input name="Currency" class="form-control" value="@Model.Currency" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">@(isAr ? "الترتيب" : "Sort Order")</label>
+                    <input type="number" name="SortOrder" class="form-control" value="@Model.SortOrder" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">@(isAr ? "السعر الشهري" : "Monthly Price")</label>
+                    <input name="MonthlyPrice" class="form-control" value="@Model.MonthlyPrice" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">@(isAr ? "السعر السنوي" : "Yearly Price")</label>
+                    <input name="YearlyPrice" class="form-control" value="@Model.YearlyPrice" />
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="IsPopular" value="true" class="form-check-input" id="isPopular"
+                               @(Model.IsPopular ? "checked" : "") />
+                        <label class="form-check-label" for="isPopular">@(isAr ? "الأكثر شعبية" : "Most Popular")</label>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive"
+                               @(Model.IsActive ? "checked" : "") />
+                        <label class="form-check-label" for="isActive">@(isAr ? "نشط" : "Active")</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        @(isAr ? "المميزات" : "Features")
+                        <small class="text-muted fw-normal">
+                            — @(isAr ? "كل سطر: نص المميزة|1 أو نص المميزة|0" : "Each line: Feature text|1 or Feature text|0")
+                        </small>
+                    </label>
+                    <textarea name="Features" class="form-control font-monospace" rows="8">@Model.Features</textarea>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy me-1"></i> @(isAr ? "حفظ التغييرات" : "Save Changes")
+                </button>
+                <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
+                   class="btn btn-outline-secondary">@(isAr ? "إلغاء" : "Cancel")</a>
+            </div>
+        </form>
+    </div>
+</div>

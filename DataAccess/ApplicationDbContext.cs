@@ -36,6 +36,9 @@ namespace DataAccess
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<StudentAppointment> StudentAppointments { get; set; }
         public DbSet<HomePageContent> HomePageContents { get; set; }
+        public DbSet<Article> Articles { get; set; }
+        public DbSet<Testimonial> Testimonials { get; set; }
+        public DbSet<PricingPlan> PricingPlans { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)

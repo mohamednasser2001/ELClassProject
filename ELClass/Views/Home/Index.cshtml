@@ -724,11 +724,7 @@
             <div class="el-team-heading text-center">
                 <h4 class="el-top-heading-center">@(c?.TestimonialsTopHeading ?? (isArabic ? "آراء العملاء" : "Testimonials"))</h4>
                 <h2 class="el-main-heading">@(c?.TestimonialsMainHeading ?? (isArabic ? "ماذا يقول طلابنا عنا" : "What Our Students Say About Us"))</h2>
-                <p class="gray-p">
-                    @(c?.TestimonialsParagraph ?? (isArabic
-                        ? "اقرأ تجارب طلابنا وأولياء الأمور مع منصتنا التعليمية"
-                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore."))
-                </p>
+                <p class="gray-p">@(c?.TestimonialsParagraph ?? "")</p>
             </div>
             <div class="row align-items-center">
                 <div class="col-xl-7 col-lg-12">
@@ -737,80 +733,26 @@
                         <div class="swiper-button-next"></div>
                         <div class="swiper el-testmnl-slider">
                             <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <div class="el-tm-banner-media custom-card" >
-                                        <img src="~/HomePageAssets/assets/img/client-1.png" alt="Client Image">
-                                       
-
-
-                                        @* <div class="avatar-container">
-                                            @if (!string.IsNullOrEmpty(studentImagePath))
+                                @foreach (var t in Model.Testimonials)
+                                {
+                                    <div class="swiper-slide">
+                                        <div class="el-tm-banner-media custom-card">
+                                            @if (!string.IsNullOrEmpty(t.ImageFileName))
                                             {
-                                                <img src="@studentImagePath" alt="Student">
+                                                <img src="/uploads/testimonials/@t.ImageFileName" alt="@t.Name">
                                             }
                                             else
                                             {
-                                                <div class="avatar-letters">
-                                                    @(isArabic ? "أ م" : "JD")
+                                                <div style="width:100%;height:200px;background:#0053B3;display:flex;align-items:center;justify-content:center;color:#fff;font-size:3rem;font-weight:700;">
+                                                    @(t.Name?.Substring(0, 1) ?? "?")
                                                 </div>
                                             }
-                                        </div> *@
-
-                                        <div class="el-tm-banner-media_content info-box">
-                                            <h6>@(isArabic ? "أحمد محمد" : "John Deo")</h6>
-                                        </div>
-
-
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="el-tm-banner-media custom-card" >
-                                        <img src="~/HomePageAssets/assets/img/client-2.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content info-box">
-                                            <h6>@(isArabic ? "فاطمة علي" : "Charlie Burns")</h6>
-                                           
+                                            <div class="el-tm-banner-media_content info-box">
+                                                <h6>@t.Name</h6>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="swiper-slide">
-                                    <div class="el-tm-banner-media custom-card" >
-                                        <img src="~/HomePageAssets/assets/img/client-3.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content info-box">
-                                            <h6>@(isArabic ? "سارة حسن" : "Nina Bennett")</h6>
-                                           
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="el-tm-banner-media custom-card">
-                                        <img src="~/HomePageAssets/assets/img/client-2.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content info-box">
-                                            <h6>@(isArabic ? "فاطمة علي" : "Charlie Burns")</h6>
-                                           
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="swiper-slide">
-                                    <div class="el-tm-banner-media custom-card">
-                                        <img src="~/HomePageAssets/assets/img/client-3.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content info-box">
-                                            <h6>@(isArabic ? "سارة حسن" : "Nina Bennett")</h6>
-                                           
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="el-tm-banner-media custom-card">
-                                        <img src="~/HomePageAssets/assets/img/client-2.png" alt="Client Image">
-                                        <div class="el-tm-banner-media_content info-box">
-                                            <h6>@(isArabic ? "فاطمة علي" : "Charlie Burns")</h6>
-                                            
-                                        </div>
-                                    </div>
-                                </div>
-
+                                }
                             </div>
                         </div>
                     </div>
@@ -818,134 +760,34 @@
                 <div class="col-xl-5 col-lg-12">
                     <div class="swiper el-temnl-text-slider">
                         <div class="swiper-wrapper">
-                            <div class="swiper-slide">
-                                <div class="el-temsl-text-slider">
-                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="gray-p">
-                                        @(isArabic
-                                                                                ? "تجربة رائعة! ابني تحسن كثيراً في الرياضيات بفضل المدرسين المتميزين. أنصح بشدة بهذه المنصة لكل ولي أمر يبحث عن أفضل تعليم لأبنائه."
-                                                                                : "Get latest news in your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
-                                    </p>
-                                    <div class="el-tesmnl-rating">
-                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
-                                        <span>4.5</span>
-                                        <span class="el-temnl-rating">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star-grey.png" alt="start">
-                                        </span>
+                            @foreach (var t in Model.Testimonials)
+                            {
+                                var fullStars = (int)Math.Floor((double)t.Rating);
+                                var hasHalf = (t.Rating - fullStars) >= 0.5m;
+                                <div class="swiper-slide">
+                                    <div class="el-temsl-text-slider">
+                                        <img src="~/HomePageAssets/assets/img/qoute.png" alt="quote image">
+                                        <p class="gray-p">@t.Quote</p>
+                                        <div class="el-tesmnl-rating">
+                                            <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating">
+                                            <span>@t.Rating.ToString("0.0")</span>
+                                            <span class="el-temnl-rating">
+                                                @for (int si = 0; si < 5; si++)
+                                                {
+                                                    if (si < fullStars)
+                                                    {
+                                                        <img src="~/HomePageAssets/assets/img/star.png" alt="star">
+                                                    }
+                                                    else
+                                                    {
+                                                        <img src="~/HomePageAssets/assets/img/star-grey.png" alt="star">
+                                                    }
+                                                }
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="el-temsl-text-slider">
-                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="gray-p">
-                                        @(isArabic
-                                                                                ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة وتحصل على درجات ممتازة. شكراً لكم!"
-                                                                                : "Get latest news in your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
-                                    </p>
-                                    <div class="el-tesmnl-rating">
-                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
-                                        <span>5.0</span>
-                                        <span class="el-temnl-rating">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="el-temsl-text-slider">
-                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="gray-p">
-                                        @(isArabic
-                                                                                ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة2  وتحصل على درجات ممتازة. شكراً لكم!"
-                                                                                : "Get latest news in your inbox.  2 Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
-                                    </p>
-                                    <div class="el-tesmnl-rating">
-                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
-                                        <span>5.0</span>
-                                        <span class="el-temnl-rating">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="el-temsl-text-slider">
-                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="gray-p">
-                                        @(isArabic
-                                                                                ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة وتحصل على 3 درجات ممتازة. شكراً لكم!"
-                                                                                : "Get latest news in 3 your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
-                                    </p>
-                                    <div class="el-tesmnl-rating">
-                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
-                                        <span>5.0</span>
-                                        <span class="el-temnl-rating">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="swiper-slide">
-                                <div class="el-temsl-text-slider">
-                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="gray-p">
-                                        @(isArabic
-                                                                                ? "منصة احترافية ومدرسون على أعلى مستوى. ابنتي أصبحت تحب الدراسة وتحصل على درجات ممتازة6 . شكراً لكم!"
-                                                                                : "Get latest  6news in your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
-                                    </p>
-                                    <div class="el-tesmnl-rating">
-                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
-                                        <span>5.0</span>
-                                        <span class="el-temnl-rating">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="swiper-slide">
-                                <div class="el-temsl-text-slider">
-                                    <img src="~/HomePageAssets/assets/img/qoute.png" alt="qoute image">
-                                    <p class="gray-p">
-                                        @(isArabic
-                                                                                ? "أفضل استثمار في تعليم أولادي. المدرسون محترفون والنتائج واضحة. ممتنة 43 جداً لهذه المنصة الرائعة."
-                                                                                : "Get latest news in 4  3 your inbox. Consectetur adipiscing elitaedipisa cingelitseddo eisusmod tempor incididunt utlabore etdolore and magnaseded doeiusmod tempor incididunt ut labore et dolore a magna aliquasded elitadipiscing elitsed.")
-                                    </p>
-                                    <div class="el-tesmnl-rating">
-                                        <img src="~/HomePageAssets/assets/img/like-star.png" alt="rating star">
-                                        <span>4.8</span>
-                                        <span class="el-temnl-rating">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                            <img src="~/HomePageAssets/assets/img/star.png" alt="start">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -957,421 +799,167 @@
     <div id="pricing" class="el-pricing-wrapper">
         <div class="container">
             <div class="el-team-heading text-center">
-                <h4 class="el-top-heading-center">@(isArabic ? "خطط الأسعار" : "Pricing Plans")</h4>
-                <h2 class="el-main-heading">@(isArabic ? "أسعار شفافة وبسيطة" : "Transparent And Simple Pricing")</h2>
-                <p class="el-para">
-                    @(isArabic
-                                        ? "اختر الخطة المناسبة لك وابدأ رحلتك التعليمية اليوم"
-                                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
-                </p>
+                <h4 class="el-top-heading-center">@(c?.PricingTopHeading ?? (isArabic ? "خطط الأسعار" : "Pricing Plans"))</h4>
+                <h2 class="el-main-heading">@(c?.PricingMainHeading ?? (isArabic ? "أسعار شفافة وبسيطة" : "Transparent And Simple Pricing"))</h2>
+                <p class="el-para">@(c?.PricingParagraph ?? "")</p>
             </div>
-            <div class="el-pricing-main-parent">
-                <div class="el-pricing-btn">
-                    <ul class="nav nav-tabs" id="myTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button" role="tab">
-                                @(isArabic ? "شهري" : "Monthly")
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="yearly-tab" data-bs-toggle="tab" data-bs-target="#yearly" type="button" role="tab">
-                                @(isArabic ? "سنوي" : "Yearly")
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-                <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="monthly" role="tabpanel">
-                        <div class="row gy-4">
-                            <div class="col-lg-4 col-md-6">
-                                <div class="el-price-box">
-                                    <div class="el-price-inner">
-                                        <div class="el-price-head">
-                                            <div class="el-price-img">
-                                                <img src="~/HomePageAssets/assets/img/basic-icon.png" alt="Icon">
+            @if (Model.PricingPlans.Any())
+            {
+                var monthlyPlans = Model.PricingPlans.ToList();
+                <div class="el-pricing-main-parent">
+                    <div class="el-pricing-btn">
+                        <ul class="nav nav-tabs" id="pricingTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button" role="tab">
+                                    @(c?.PricingMonthlyLabel ?? (isArabic ? "شهري" : "Monthly"))
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="yearly-tab" data-bs-toggle="tab" data-bs-target="#yearly" type="button" role="tab">
+                                    @(c?.PricingYearlyLabel ?? (isArabic ? "سنوي" : "Yearly"))
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="pricingTabContent">
+                        <div class="tab-pane fade show active" id="monthly" role="tabpanel">
+                            <div class="row gy-4">
+                                @foreach (var plan in monthlyPlans)
+                                {
+                                    <div class="col-lg-4 col-md-6">
+                                        <div class="el-price-box">
+                                            @if (plan.IsPopular)
+                                            {
+                                                <h4 class="el-popular-plan">@(isArabic ? "الأكثر شعبية" : "Most Popular")</h4>
+                                            }
+                                            <div class="el-price-inner">
+                                                <div class="el-price-head">
+                                                    <div class="el-price-img">
+                                                        <img src="~/HomePageAssets/assets/img/@(plan.IsPopular ? "standard-icon" : plan.SortOrder == 0 ? "basic-icon" : "premium-icon").png" alt="Icon">
+                                                    </div>
+                                                    <h4>@plan.Name</h4>
+                                                    <p class="el-para">@plan.Description</p>
+                                                    <h1>@(isArabic ? plan.MonthlyPrice : plan.Currency)@(isArabic ? " " : "")@(isArabic ? plan.Currency : plan.MonthlyPrice)<span>@(isArabic ? "/شهرياً" : "/Month")</span></h1>
+                                                    <a href="javascript:;" class="el-btn">@(c?.PricingBtnText ?? (isArabic ? "ابدأ الآن" : "Get Started Now"))</a>
+                                                </div>
+                                                <div class="el-pricing-list">
+                                                    <ul>
+                                                        @foreach (var (text, isChecked) in plan.ParsedFeatures())
+                                                        {
+                                                            <li class="el-para">
+                                                                <img src="~/HomePageAssets/assets/img/@(isChecked ? "checked" : "unchecked").png" alt="icon">
+                                                                @text
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
                                             </div>
-                                            <h4>@(isArabic ? "أساسي" : "basic")</h4>
-                                            <p class="el-para">@(isArabic ? "للمبتدئين والطلاب الجدد" : "For an individual and begineer")</p>
-                                            <h1>$199<span>@(isArabic ? "/شهرياً" : "/Month")</span></h1>
-                                            <a href="javascript:;" class="el-btn">@(isArabic ? "ابدأ الآن" : "Get Started Now")</a>
-                                        </div>
-                                        <div class="el-pricing-list">
-                                            <ul>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "وصول متميز لمدة سنة واحدة" : "One year premium access")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دورات غير محدودة" : "Unlimited courses")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "+1000 درس ومتزايد" : "1000+ lessons & growing")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "دعم عشوائي" : "Random supporter")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "تحميلات كتب مجانية" : "Free eBook downloads")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "دروس متميزة" : "Premium tutorials")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "مستخدمين غير محدودين" : "Unlimited registered user")
-                                                </li>
-                                            </ul>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="el-price-box">
-                                    <h4 class="el-popular-plan">@(isArabic ? "الأكثر شعبية" : "Most Popular")</h4>
-                                    <div class="el-price-inner">
-                                        <div class="el-price-head">
-                                            <div class="el-price-img">
-                                                <img src="~/HomePageAssets/assets/img/standard-icon.png" alt="Icon">
-                                            </div>
-                                            <h4>@(isArabic ? "قياسي" : "Standard")</h4>
-                                            <p class="el-para">@(isArabic ? "للطلاب المتوسطين" : "For an individual and begineer")</p>
-                                            <h1>$299<span>@(isArabic ? "/شهرياً" : "/Month")</span></h1>
-                                            <a href="javascript:;" class="el-btn">@(isArabic ? "ابدأ الآن" : "Get Started Now")</a>
-                                        </div>
-                                        <div class="el-pricing-list">
-                                            <ul>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "وصول متميز لمدة سنة واحدة" : "One year premium access")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دورات غير محدودة" : "Unlimited courses")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "+1000 درس ومتزايد" : "1000+ lessons & growing")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دعم عشوائي" : "Random supporter")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "تحميلات كتب مجانية" : "Free eBook downloads")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "دروس متميزة" : "Premium tutorials")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "مستخدمين غير محدودين" : "Unlimited registered user")
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="el-price-box">
-                                    <div class="el-price-inner">
-                                        <div class="el-price-head">
-                                            <div class="el-price-img">
-                                                <img src="~/HomePageAssets/assets/img/premium-icon.png" alt="Icon">
-                                            </div>
-                                            <h4>@(isArabic ? "متميز" : "Premium")</h4>
-                                            <p class="el-para">@(isArabic ? "للطلاب المحترفين" : "For an individual and begineer")</p>
-                                            <h1>$399<span>@(isArabic ? "/شهرياً" : "/Month")</span></h1>
-                                            <a href="javascript:;" class="el-btn">@(isArabic ? "ابدأ الآن" : "Get Started Now")</a>
-                                        </div>
-                                        <div class="el-pricing-list">
-                                            <ul>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "وصول متميز لمدة سنة واحدة" : "One year premium access")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دورات غير محدودة" : "Unlimited courses")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "+1000 درس ومتزايد" : "1000+ lessons & growing")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دعم عشوائي" : "Random supporter")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "تحميلات كتب مجانية" : "Free eBook downloads")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دروس متميزة" : "Premium tutorials")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "مستخدمين غير محدودين" : "Unlimited registered user")
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
+                                }
                             </div>
                         </div>
-                    </div>
-                    <div class="tab-pane fade" id="yearly" role="tabpanel">
-                        <div class="row gy-4">
-                            <div class="col-lg-4 col-md-6">
-                                <div class="el-price-box">
-                                    <div class="el-price-inner">
-                                        <div class="el-price-head">
-                                            <div class="el-price-img">
-                                                <img src="~/HomePageAssets/assets/img/basic-icon.png" alt="Icon">
+                        <div class="tab-pane fade" id="yearly" role="tabpanel">
+                            <div class="row gy-4">
+                                @foreach (var plan in monthlyPlans)
+                                {
+                                    <div class="col-lg-4 col-md-6">
+                                        <div class="el-price-box">
+                                            @if (plan.IsPopular)
+                                            {
+                                                <h4 class="el-popular-plan">@(isArabic ? "الأكثر شعبية" : "Most Popular")</h4>
+                                            }
+                                            <div class="el-price-inner">
+                                                <div class="el-price-head">
+                                                    <div class="el-price-img">
+                                                        <img src="~/HomePageAssets/assets/img/@(plan.IsPopular ? "standard-icon" : plan.SortOrder == 0 ? "basic-icon" : "premium-icon").png" alt="Icon">
+                                                    </div>
+                                                    <h4>@plan.Name</h4>
+                                                    <p class="el-para">@plan.Description</p>
+                                                    <h1>@(isArabic ? plan.YearlyPrice : plan.Currency)@(isArabic ? " " : "")@(isArabic ? plan.Currency : plan.YearlyPrice)<span>@(isArabic ? "/سنوياً" : "/Yearly")</span></h1>
+                                                    <a href="javascript:;" class="el-btn">@(c?.PricingBtnText ?? (isArabic ? "ابدأ الآن" : "Get Started Now"))</a>
+                                                </div>
+                                                <div class="el-pricing-list">
+                                                    <ul>
+                                                        @foreach (var (text, isChecked) in plan.ParsedFeatures())
+                                                        {
+                                                            <li class="el-para">
+                                                                <img src="~/HomePageAssets/assets/img/@(isChecked ? "checked" : "unchecked").png" alt="icon">
+                                                                @text
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
                                             </div>
-                                            <h4>@(isArabic ? "أساسي" : "basic")</h4>
-                                            <p class="el-para">@(isArabic ? "للمبتدئين والطلاب الجدد" : "For an individual and begineer")</p>
-                                            <h1>$1900<span>@(isArabic ? "/سنوياً" : "/Yearly")</span></h1>
-                                            <a href="javascript:;" class="el-btn">@(isArabic ? "ابدأ الآن" : "Get Started Now")</a>
-                                        </div>
-                                        <div class="el-pricing-list">
-                                            <ul>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "وصول متميز لمدة سنة واحدة" : "One year premium access")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دورات غير محدودة" : "Unlimited courses")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "+1000 درس ومتزايد" : "1000+ lessons & growing")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "دعم عشوائي" : "Random supporter")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "تحميلات كتب مجانية" : "Free eBook downloads")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "دروس متميزة" : "Premium tutorials")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "مستخدمين غير محدودين" : "Unlimited registered user")
-                                                </li>
-                                            </ul>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="el-price-box">
-                                    <h4 class="el-popular-plan">@(isArabic ? "الأكثر شعبية" : "Most Popular")</h4>
-                                    <div class="el-price-inner">
-                                        <div class="el-price-head">
-                                            <div class="el-price-img">
-                                                <img src="~/HomePageAssets/assets/img/standard-icon.png" alt="Icon">
-                                            </div>
-                                            <h4>@(isArabic ? "قياسي" : "Standard")</h4>
-                                            <p class="el-para">@(isArabic ? "للطلاب المتوسطين" : "For an individual and begineer")</p>
-                                            <h1>$2900<span>@(isArabic ? "/سنوياً" : "/Yearly")</span></h1>
-                                            <a href="javascript:;" class="el-btn">@(isArabic ? "ابدأ الآن" : "Get Started Now")</a>
-                                        </div>
-                                        <div class="el-pricing-list">
-                                            <ul>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "وصول متميز لمدة سنة واحدة" : "One year premium access")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دورات غير محدودة" : "Unlimited courses")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "+1000 درس ومتزايد" : "1000+ lessons & growing")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دعم عشوائي" : "Random supporter")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "تحميلات كتب مجانية" : "Free eBook downloads")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "دروس متميزة" : "Premium tutorials")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/unchecked.png" alt="icon">
-                                                    @(isArabic ? "مستخدمين غير محدودين" : "Unlimited registered user")
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="el-price-box">
-                                    <div class="el-price-inner">
-                                        <div class="el-price-head">
-                                            <div class="el-price-img">
-                                                <img src="~/HomePageAssets/assets/img/premium-icon.png" alt="Icon">
-                                            </div>
-                                            <h4>@(isArabic ? "متميز" : "Premium")</h4>
-                                            <p class="el-para">@(isArabic ? "للطلاب المحترفين" : "For an individual and begineer")</p>
-                                            <h1>$3900<span>@(isArabic ? "/سنوياً" : "/Yearly")</span></h1>
-                                            <a href="javascript:;" class="el-btn">@(isArabic ? "ابدأ الآن" : "Get Started Now")</a>
-                                        </div>
-                                        <div class="el-pricing-list">
-                                            <ul>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "وصول متميز لمدة سنة واحدة" : "One year premium access")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دورات غير محدودة" : "Unlimited courses")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "+1000 درس ومتزايد" : "1000+ lessons & growing")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دعم عشوائي" : "Random supporter")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "تحميلات كتب مجانية" : "Free eBook downloads")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "دروس متميزة" : "Premium tutorials")
-                                                </li>
-                                                <li class="el-para">
-                                                    <img src="~/HomePageAssets/assets/img/checked.png" alt="icon">
-                                                    @(isArabic ? "مستخدمين غير محدودين" : "Unlimited registered user")
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
+                                }
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
     <!-- Pricing Section End -->
-    <!-- Blog Section Start -->
+        <!-- Blog Section Start -->
+    @if (Model.Articles.Any())
+    {
     <div class="el-blog-wrapper">
         <div class="swiper-button-prev"></div>
         <div class="swiper-button-next"></div>
         <div class="container">
             <div class="el-team-heading text-center">
-                <h4 class="el-top-heading-center">@(isArabic ? "مدونتنا" : "Our Blogs")</h4>
-                <h2 class="el-main-heading">@(isArabic ? "أخبار ونصائح ورؤى" : "News, Tips, Blogs & Insights")</h2>
-                <p class="gray-p">
-                    @(isArabic
-                                        ? "ابق على اطلاع بأحدث الأخبار والنصائح التعليمية"
-                                        : "Get latest news in your inbox. Consectetur adipiscing elitadipiscing elitse ddo eiusmod tempor incididunt ut labore et dolore.")
-                </p>
+                <h4 class="el-top-heading-center">@(c?.BlogTopHeading ?? (isArabic ? "مدونتنا" : "Our Blogs"))</h4>
+                <h2 class="el-main-heading">@(c?.BlogMainHeading ?? (isArabic ? "أخبار ونصائح ورؤى" : "News, Tips, Blogs & Insights"))</h2>
+                <p class="gray-p">@(c?.BlogParagraph ?? "")</p>
             </div>
-            <div class="swiper el-blog-slider-parent">
-                <div class="swiper-wrapper" style="max-height:570px">
-                    <div class="swiper-slide">
-                        <div class="el-blog-box el-blog-box-1">
-                            <div class="el-blog-img">
-                                <img src="~/HomePageAssets/assets/img/b1.png" alt="Blog Image">
-                                <h4>@(isArabic ? "تعلم أونلاين" : "Online Learning")</h4>
-                            </div>
-                            <div class="el-blog-content">
-                                <h4>@(isArabic ? "5 طرق لجعل التعلم أفضل" : "5 Ways To Make Your Learning")</h4>
-                                <p class="el-para">
-                                    @(isArabic
-                                                                        ? "اكتشف أفضل الطرق لتحسين تجربة التعلم عبر الإنترنت..."
-                                                                        : "After working in coffee shops around the world Mark finds himself...")
-                                    <a href="javascript:;" class="el-orange-btn">@(isArabic ? "اقرأ المزيد" : "read more")</a>
-                                </p>
-                                <div class="el-blog-footer">
-                                    <p class="el-para">@(isArabic ? "12 يناير 2023، 5:45 صباحاً" : "12 Jan 2023, 5:45AM")</p>
-                                    <p class="el-para">
-                                        <img src="~/HomePageAssets/assets/img/comment.png" alt="icon" width="16">
-                                        @(isArabic ? "50 تعليق" : "50 Comments")
-                                    </p>
+                <div class="swiper el-blog-slider-parent">
+                    <div class="swiper-wrapper" style="max-height:570px">
+                        @{int blogColorIdx = 0;}
+                        @foreach (var article in Model.Articles)
+                        {
+                            blogColorIdx++;
+                            var boxClass = blogColorIdx == 1 ? "el-blog-box-1" : blogColorIdx == 2 ? "el-blog-box-2" : "el-blog-box-3";
+                            if (blogColorIdx > 3) blogColorIdx = 0;
+                            <div class="swiper-slide">
+                                <div class="el-blog-box @boxClass">
+                                    <div class="el-blog-img">
+                                        @if (!string.IsNullOrEmpty(article.ImageFileName))
+                                        {
+                                            <img src="/uploads/articles/@article.ImageFileName" alt="@article.Title">
+                                        }
+                                        else
+                                        {
+                                            <img src="~/HomePageAssets/assets/img/b1.png" alt="Blog Image">
+                                        }
+                                        @if (!string.IsNullOrEmpty(article.Category))
+                                        {
+                                            <h4>@article.Category</h4>
+                                        }
+                                    </div>
+                                    <div class="el-blog-content">
+                                        <h4>@article.Title</h4>
+                                        <p class="el-para">
+                                            @article.Description
+                                            <a href="@(string.IsNullOrEmpty(article.ReadMoreUrl) ? "javascript:;" : article.ReadMoreUrl)"
+                                               @(string.IsNullOrEmpty(article.ReadMoreUrl) ? "" : "target=\"_blank\" rel=\"noopener\"")
+                                               class="el-orange-btn">@(c?.BlogReadMoreText ?? (isArabic ? "اقرأ المزيد" : "read more"))</a>
+                                        </p>
+                                        <div class="el-blog-footer">
+                                            <p class="el-para">@article.PublishedDate.ToString("dd MMM yyyy")</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="swiper-slide">
-                        <div class="el-blog-box el-blog-box-2">
-                            <div class="el-blog-img">
-                                <img src="~/HomePageAssets/assets/img/b2.png" alt="Blog Image">
-                                <h4>@(isArabic ? "التكنولوجيا" : "Meta TECHNOLOGY")</h4>
-                            </div>
-                            <div class="el-blog-content">
-                                <h4>@(isArabic ? "تقنيات التعلم الحديثة" : "Modern Learning Technologies")</h4>
-                                <p class="el-para">
-                                    @(isArabic
-                                                                        ? "تعرف على أحدث التقنيات في مجال التعليم..."
-                                                                        : "After working in coffee shops around the world Mark finds himself...")
-                                    <a href="javascript:;" class="el-orange-btn">@(isArabic ? "اقرأ المزيد" : "read more")</a>
-                                </p>
-                                <div class="el-blog-footer">
-                                    <p class="el-para">@(isArabic ? "15 يناير 2023، 3:30 مساءً" : "15 Jan 2023, 3:30PM")</p>
-                                    <p class="el-para">
-                                        <img src="~/HomePageAssets/assets/img/comment.png" alt="icon" width="16">
-                                        @(isArabic ? "32 تعليق" : "32 Comments")
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="swiper-slide">
-                        <div class="el-blog-box el-blog-box-3">
-                            <div class="el-blog-img">
-                                <img src="~/HomePageAssets/assets/img/b3.png" alt="Blog Image">
-                                <h4>@(isArabic ? "الذكاء الاصطناعي" : "OPEN AI Coding")</h4>
-                            </div>
-                            <div class="el-blog-content">
-                                <h4>@(isArabic ? "مستقبل التعليم مع الذكاء الاصطناعي" : "Future of Education with AI")</h4>
-                                <p class="el-para">
-                                    @(isArabic
-                                                                        ? "كيف يغير الذكاء الاصطناعي مجال التعليم..."
-                                                                        : "After working in coffee shops around the world Mark finds himself...")
-                                    <a href="javascript:;" class="el-orange-btn">@(isArabic ? "اقرأ المزيد" : "read more")</a>
-                                </p>
-                                <div class="el-blog-footer">
-                                    <p class="el-para">@(isArabic ? "20 يناير 2023، 10:15 صباحاً" : "20 Jan 2023, 10:15AM")</p>
-                                    <p class="el-para">
-                                        <img src="~/HomePageAssets/assets/img/comment.png" alt="icon" width="16">
-                                        @(isArabic ? "68 تعليق" : "68 Comments")
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
-            </div>
         </div>
     </div>
+    }
     <!-- Blog Section End -->
-    <!-- Newsletter Section Start -->
+        <!-- Newsletter Section Start -->
     @* <div class="el-newsletter-wrapper">
         <div class="container">
             <div class="el-newsltr-flex">

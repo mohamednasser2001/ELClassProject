@@ -1,0 +1,122 @@
+@model List<Models.Article>
+@using ELClass.Areas.Admin.Controllers
+
+@{
+    var isAr = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar");
+    ViewData["Title"] = isAr ? "المقالات والأخبار" : "Articles & Blog";
+    var dir = isAr ? "rtl" : "ltr";
+
+    string lang = ViewBag.Lang ?? "en";
+    string? country = ViewBag.Country;
+    var countries = (IEnumerable<(string Code, string NameAr, string NameEn)>)ViewBag.Countries;
+
+    string LangLabel(string l, string? c)
+    {
+        if (l == "en") return "English";
+        var co = countries.FirstOrDefault(x => x.Code == c);
+        return isAr ? co.NameAr : co.NameEn;
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" style="direction:@dir">
+    <h4 class="mb-0">
+        <i class="ti ti-news me-2"></i>
+        @(isAr ? "إدارة المقالات والأخبار" : "Manage Articles & Blog")
+    </h4>
+    <a asp-action="Create" asp-route-lang="@lang" asp-route-country="@country" class="btn btn-primary btn-sm">
+        <i class="ti ti-plus me-1"></i> @(isAr ? "إضافة مقال" : "Add Article")
+    </a>
+</div>
+
+<!-- Language / Country Tabs -->
+<ul class="nav nav-tabs mb-3" style="direction:ltr; flex-wrap:wrap; gap:4px;">
+    <li class="nav-item">
+        <a class="nav-link @(lang == "en" ? "active" : "")"
+           asp-action="Index" asp-route-lang="en" asp-route-country="">
+            <i class="fi fi-gb me-1"></i> English
+        </a>
+    </li>
+    @foreach (var c in countries)
+    {
+        <li class="nav-item">
+            <a class="nav-link @(lang == "ar" && country == c.Code ? "active" : "")"
+               asp-action="Index" asp-route-lang="ar" asp-route-country="@c.Code">
+                <i class="fi fi-@c.Code.ToLower() me-1"></i>
+                @(isAr ? c.NameAr : c.NameEn)
+            </a>
+        </li>
+    }
+</ul>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="ti ti-file-off" style="font-size:3rem;"></i>
+                <p class="mt-2">@(isAr ? "لا توجد مقالات. أضف أول مقال الآن." : "No articles yet. Add your first one.")</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover mb-0" style="direction:@dir">
+                <thead class="table-light">
+                    <tr>
+                        <th>@(isAr ? "الصورة" : "Image")</th>
+                        <th>@(isAr ? "العنوان" : "Title")</th>
+                        <th>@(isAr ? "التصنيف" : "Category")</th>
+                        <th>@(isAr ? "التاريخ" : "Date")</th>
+                        <th>@(isAr ? "الترتيب" : "Order")</th>
+                        <th>@(isAr ? "نشط" : "Active")</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.ImageFileName))
+                                {
+                                    <img src="/uploads/articles/@item.ImageFileName" width="60" height="45"
+                                         style="object-fit:cover; border-radius:4px;" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td>@item.Title</td>
+                            <td><span class="badge bg-info text-dark">@item.Category</span></td>
+                            <td>@item.PublishedDate.ToString("dd MMM yyyy")</td>
+                            <td>@item.SortOrder</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success">@(isAr ? "نعم" : "Yes")</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@(isAr ? "لا" : "No")</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="ti ti-edit"></i>
+                                </a>
+                                <form asp-action="Delete" method="post" style="display:inline;"
+                                      onsubmit="return confirm('@(isAr ? "هل تريد حذف هذا المقال؟" : "Delete this article?")')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

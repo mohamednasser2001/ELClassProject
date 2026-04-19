@@ -79,5 +79,19 @@ namespace Models
         public string? TestimonialsTopHeading { get; set; }
         public string? TestimonialsMainHeading { get; set; }
         public string? TestimonialsParagraph { get; set; }
+
+        // ── Pricing ───────────────────────────────────────────────
+        public string? PricingTopHeading { get; set; }
+        public string? PricingMainHeading { get; set; }
+        public string? PricingParagraph { get; set; }
+        public string? PricingMonthlyLabel { get; set; }
+        public string? PricingYearlyLabel { get; set; }
+        public string? PricingBtnText { get; set; }
+
+        // ── Blog / Articles ───────────────────────────────────────
+        public string? BlogTopHeading { get; set; }
+        public string? BlogMainHeading { get; set; }
+        public string? BlogParagraph { get; set; }
+        public string? BlogReadMoreText { get; set; }
     }
 }

@@ -1,0 +1,91 @@
+@model Models.Article
+
+@{
+    var isAr = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar");
+    ViewData["Title"] = isAr ? "تعديل مقال" : "Edit Article";
+    var dir = Model.Language == "en" ? "ltr" : "rtl";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="ti ti-edit me-2"></i>
+        @(isAr ? "تعديل المقال" : "Edit Article")
+    </h4>
+    <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="ti ti-arrow-left me-1"></i> @(isAr ? "رجوع" : "Back")
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body" style="direction:@dir">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="@Model.Id" />
+            <input type="hidden" name="Language" value="@Model.Language" />
+            <input type="hidden" name="CountryCode" value="@Model.CountryCode" />
+
+            @if (!string.IsNullOrEmpty(Model.ImageFileName))
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">@(isAr ? "الصورة الحالية" : "Current Image")</label><br />
+                    <img src="/uploads/articles/@Model.ImageFileName" width="200" style="border-radius:6px;" />
+                    <input type="hidden" name="ImageFileName" value="@Model.ImageFileName" />
+                </div>
+            }
+
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">@(isAr ? "العنوان" : "Title") <span class="text-danger">*</span></label>
+                    <input name="Title" class="form-control" value="@Model.Title" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">@(isAr ? "التصنيف" : "Category")</label>
+                    <input name="Category" class="form-control" value="@Model.Category" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">@(isAr ? "تغيير الصورة (اختياري)" : "Change Image (optional)")</label>
+                    <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">@(isAr ? "تاريخ النشر" : "Published Date")</label>
+                    <input type="datetime-local" name="PublishedDate" class="form-control"
+                           value="@Model.PublishedDate.ToString("yyyy-MM-ddTHH:mm")" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">@(isAr ? "الترتيب" : "Sort Order")</label>
+                    <input type="number" name="SortOrder" class="form-control" value="@Model.SortOrder" />
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive"
+                               @(Model.IsActive ? "checked" : "") />
+                        <label class="form-check-label" for="isActive">@(isAr ? "نشط" : "Active")</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">@(isAr ? "رابط اقرأ المزيد" : "Read More URL")</label>
+                    <input name="ReadMoreUrl" class="form-control" value="@Model.ReadMoreUrl"
+                           placeholder="https://..." />
+                    <small class="text-muted">@(isAr ? "اتركه فارغاً إذا لم يكن هناك رابط" : "Leave empty if no link")</small>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">@(isAr ? "الوصف المختصر" : "Short Description")</label>
+                    <textarea name="Description" class="form-control" rows="3">@Model.Description</textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">@(isAr ? "المحتوى الكامل" : "Full Content")</label>
+                    <textarea name="Content" class="form-control" rows="10">@Model.Content</textarea>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy me-1"></i> @(isAr ? "حفظ التغييرات" : "Save Changes")
+                </button>
+                <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
+                   class="btn btn-outline-secondary">@(isAr ? "إلغاء" : "Cancel")</a>
+            </div>
+        </form>
+    </div>
+</div>

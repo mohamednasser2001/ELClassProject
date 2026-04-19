@@ -5,7 +5,12 @@
       "Bash(find:*)",
       "Bash(cd \"C:\\\\Users\\\\engmo\\\\source\\\\repos\\\\ELClassProject\" && dotnet ef migrations add AddHomePageContent --project DataAccess --startup-project ELClass 2>&1)",
       "Bash(cd \"C:\\\\Users\\\\engmo\\\\source\\\\repos\\\\ELClassProject\" && dotnet ef database update --project DataAccess --startup-project ELClass 2>&1)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(xargs grep:*)",
+      "Bash(powershell:*)",
+      "Bash(node:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet build:*)"
     ]
   }
 }

@@ -21,6 +21,9 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<Appointment> AppoinmentRepository { get; }
         public IRepository<StudentAppointment> StudentAppointmentRepository { get; }
         IRepository<HomePageContent> HomePageContentRepository { get; }
+        IRepository<Article> ArticleRepository { get; }
+        IRepository<Testimonial> TestimonialRepository { get; }
+        IRepository<PricingPlan> PricingPlanRepository { get; }
         Task<IDbContextTransaction> BeginTransactionAsync();
         Task<bool> CommitAsync();
         void Dispose();
