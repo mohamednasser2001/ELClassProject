@@ -1,6 +1,7 @@
 ﻿@using ELClass.services
 @using System.Security.Claims
 @{
+
     var isArabic = CultureHelper.IsArabic;
     var currentLang = isArabic ?"ar" :"en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
