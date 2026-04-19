@@ -1,6 +1,7 @@
 ﻿@using ELClass.services
 @using System.Security.Claims
 @{
+
     var isArabic = CultureHelper.IsArabic;
     var currentLang = isArabic ?"ar" :"en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
@@ -384,12 +385,16 @@
                         </button>
                     </div>
                     <div class="row g-2">
-                        <div class="col-md-6">
-                            <label class="small text-muted mb-1">${currentLang === 'ar' ? 'التاريخ' : 'Date'}</label>
-                            <input type="date" class="form-control slot-date" data-index="${slotIndex}"
-                                   min="${new Date().toISOString().split('T')[0]}">
-                        </div>
-                        <div class="col-md-6">
+                               <div class="col-md-6">
+                                    <label class="small text-muted mb-1">${currentLang === 'ar' ? 'التاريخ' : 'Date'}</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="date" class="form-control slot-date" data-index="${slotIndex}"
+                                               min="${new Date().toISOString().split('T')[0]}"
+                                               onchange="updateDayName(this)">
+                                        <span class="slot-day-name fw-bold text-orange small" style="white-space:nowrap;min-width:50px"></span>
+                                    </div>
+                                </div>
+                                                <div class="col-md-6">
                             <label class="small text-muted mb-1">${currentLang === 'ar' ? 'الوقت' : 'Time'}</label>
                             <input type="time" class="form-control slot-time" data-index="${slotIndex}">
                         </div>
@@ -485,5 +490,18 @@
                 }
             });
         });
+
+        function updateDayName(input) {
+            var daySpan = $(input).siblings('.slot-day-name');
+            if (!input.value) { daySpan.text(''); return; }
+
+            var date = new Date(input.value);
+            var days = currentLang === 'ar'
+                ? ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+                : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+            daySpan.text(days[date.getDay()]);
+        }
+
     </script>
 }

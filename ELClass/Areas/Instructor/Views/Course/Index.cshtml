@@ -1,5 +1,7 @@
-﻿@{
-    var currentLang = Context.Session.GetString("Language") ?? "en";
+﻿@using ELClass.services
+@{
+    var isArabic = CultureHelper.IsArabic;
+    var currentLang = isArabic ? "ar" : "en";
     var direction = currentLang == "ar" ? "rtl" : "ltr";
 }
 
