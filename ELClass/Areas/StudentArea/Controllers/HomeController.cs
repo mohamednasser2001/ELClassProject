@@ -92,10 +92,14 @@ namespace ELClass.Areas.StudentArea.Controllers
                 ApplicationUser = i.ApplicationUser
             }).ToList();
 
+            var appUser = await _userManager.GetUserAsync(User);
+
             var model = new StudentDashboardVM
             {
                 Courses = coursesVM,
-                Instructors = instructorsVM
+                Instructors = instructorsVM,
+                StudentNameEn = appUser?.NameEN ?? "",
+                StudentNameAr = appUser?.NameAR ?? ""
             };
 
             // ============================================================
@@ -194,7 +198,8 @@ namespace ELClass.Areas.StudentArea.Controllers
                             ? x.SA.Appointment.Instructor.NameEn
                             : x.SA.Appointment.Instructor.NameAr)
                         : "Instructor",
-                    ZoomLink = x.SA.Appointment!.MeetingLink ?? ""
+                    ZoomLink = x.SA.Appointment!.MeetingLink ?? "",
+                    EndDate = x.End
                 })
                 .ToList();
 

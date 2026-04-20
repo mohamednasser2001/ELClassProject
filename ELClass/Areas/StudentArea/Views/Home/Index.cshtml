@@ -1,378 +1,388 @@
-﻿@using Models
+@using Models
+@using Models.ViewModels
 @model Models.ViewModels.StudentDashboardVM
 
 @{
     Layout = "_StudentLayout";
     ViewData["Title"] = "Dashboard";
 
-    // =========================
-    // Language (Session-based)
-    // =========================
+    // ─── Language ───────────────────────────────────────────
     var currentLang = Context.Session.GetString("Language") ?? "en";
-    var isArabic = currentLang == "ar";
-    var direction = isArabic ? "rtl" : "ltr";
+    var isArabic    = currentLang == "ar";
+    var direction   = isArabic ? "rtl" : "ltr";
+
+    // ─── Student name + greeting ─────────────────────────────
+    var studentName  = isArabic
+        ? (Model.StudentNameAr?.Trim().Length > 0 ? Model.StudentNameAr : Model.StudentNameEn ?? "")
+        : (Model.StudentNameEn?.Trim().Length > 0 ? Model.StudentNameEn : Model.StudentNameAr ?? "");
+    var firstName = studentName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? studentName;
+
+    var hour     = DateTime.Now.Hour;
+    var greeting = isArabic
+        ? (hour < 12 ? "صباح الخير" : "مساء الخير")
+        : (hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
+
+    // ─── Overall progress (average across courses) ────────────
+    var avgProgress = (Model.Courses != null && Model.Courses.Any())
+        ? (int)Math.Round(Model.Courses.Average(c => (double)c.ProgressPercent))
+        : 0;
+
+    // ─── Next upcoming lecture ────────────────────────────────
+    var now         = DateTime.Now;
+    var nextLecture = Model.UpcomingLectures?
+        .Where(l => l.Date >= now || (l.EndDate.HasValue && l.EndDate.Value > now))
+        .OrderBy(l => l.Date)
+        .FirstOrDefault();
+
+    var isLive         = Model.CanJoinNow && Model.NextStudentAppointmentId != null;
+    var alertCssClass  = isLive ? "live" : (nextLecture != null ? "" : "no-lecture");
+    var alertTitle     = isLive
+        ? (isArabic ? "محاضرة مباشرة الآن!" : "Live lecture now!")
+        : (nextLecture != null
+            ? (isArabic ? nextLecture.SubjectName : nextLecture.SubjectName)
+            : (isArabic ? "لا توجد محاضرات قادمة" : "No upcoming lectures"));
+    var alertCourse    = isLive
+        ? (isArabic ? "انضم الآن قبل فوات الأوان" : "Join before it's too late")
+        : (nextLecture != null
+            ? (isArabic ? "المُدرس: " + nextLecture.InstructorName : "Instructor: " + nextLecture.InstructorName)
+            : "");
+
+    // ISO string for JS countdown
+    var nextJoinAtStr = nextLecture != null
+        ? nextLecture.Date.ToString("O")
+        : (isLive && Model.NextJoinAt.HasValue ? Model.NextJoinAt.Value.ToString("O") : "");
+
+    // ─── Today's sessions ─────────────────────────────────────
+    var todaySessions = Model.UpcomingLectures?
+        .Where(l => l.Date.Date == now.Date || (l.EndDate.HasValue && l.EndDate.Value.Date == now.Date))
+        .OrderBy(l => l.Date)
+        .ToList() ?? new List<UpcomingLectureVM>();
+
+    // ─── Session dates for calendar (JSON) ───────────────────
+    var sessionDatesJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.UpcomingLectures?
+            .Select(l => l.Date.ToString("yyyy-MM-dd"))
+            .Distinct()
+            .ToList() ?? new List<string>()
+    );
 }
 
-<div class="sd-wrap">
-
+<div class="sd-wrap" dir="@direction">
     <div class="sd-grid">
 
+        <!-- ══════════════════════════════════════════════════
+             LEFT COLUMN
+             ══════════════════════════════════════════════════ -->
         <aside class="sd-left">
 
-            <div class="sd-card sd-upcoming">
-                <div class="sd-card-head">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-calendar-days sd-ic-fa"></i>
-                        <span>@(isArabic ? "المحاضرات القادمة" : "Upcoming lectures")</span>
+            <!-- ① Lecture Alert Badge -->
+            <div id="sdLectureAlert" class="sd-lecture-alert @alertCssClass">
+                <div class="sd-la-top">
+                    <div class="sd-la-icon">
+                        <i class="fa-solid @(isLive ? "fa-circle-play" : "fa-chalkboard-user")"></i>
+                    </div>
+                    <div id="sdLaTimer" class="sd-la-timer">
+                        @(isLive ? (isArabic ? "مباشر" : "LIVE") : "--:--:--")
                     </div>
                 </div>
 
-                <div class="sd-card-body">
+                <div class="sd-la-title" id="sdLaTitle">@alertTitle</div>
+                <div class="sd-la-course" id="sdLaCourse">@alertCourse</div>
 
-                    @if (Model.UpcomingLectures != null && Model.UpcomingLectures.Any())
+                <div class="sd-la-actions">
+                    @if (isLive && Model.NextStudentAppointmentId != null)
                     {
-                        <div class="sd-up-table">
-
-                            <div class="sd-up-row sd-up-head">
-                                <div>@(isArabic ? "الوقت" : "TIME")</div>
-                                <div>@(isArabic ? "الكورس" : "COURSE")</div>
-                                <div>@(isArabic ? "المُدرس" : "INSTRUCTOR")</div>
-                                <div>@(isArabic ? "لينك المحاضرة " : "ZOOM")</div>
-                            </div>
-
-                            @foreach (var lec in Model.UpcomingLectures.Take(5))
-                            {
-                                var canJoinThis = DateTime.Now >= lec.Date;
-
-                                <div class="sd-up-row">
-                                    <div class="sd-up-time">
-                                        <div class="sd-up-time-main">@lec.Date.ToString("ddd, dd MMM")</div>
-                                        <div class="sd-up-time-sub">@lec.Date.ToString(isArabic ? "HH:mm" : "hh:mm tt")</div>
-                                    </div>
-
-                                    <div class="sd-up-course">
-                                        <div class="sd-up-course-main" title="@lec.SubjectName">@lec.SubjectName</div>
-                                    </div>
-
-                                    <div class="sd-up-inst">
-                                        <div class="sd-up-inst-main" title="@lec.InstructorName">@lec.InstructorName</div>
-                                    </div>
-
-                                    <div class="sd-up-zoom">
-                                        @if (canJoinThis && !string.IsNullOrWhiteSpace(lec.ZoomLink))
-                                        {
-                                            <a class="sd-up-zoom-btn" href="@lec.ZoomLink" target="_blank" rel="noopener">
-                                                <i class="fa-solid fa-video"></i> @(isArabic ? "انضم" : "Join")
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <span class="sd-up-zoom-muted">
-                                                <i class="fa-regular fa-clock"></i> @(isArabic ? "لم تبدأ بعد" : "Not started")
-                                            </span>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        <a class="sd-la-btn sd-la-btn-join"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Join"
+                           asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
+                            <i class="fa-solid fa-play"></i>
+                            @(isArabic ? "انضم الآن" : "Join Now")
+                        </a>
+                    }
+                    else if (nextLecture != null)
+                    {
+                        <span class="sd-la-status" id="sdLaStatusText">
+                            <i class="fa-regular fa-clock"></i>
+                            @(isArabic ? "لم تبدأ بعد" : "Not started yet")
+                        </span>
                     }
                     else
                     {
-                        <div class="sd-empty">@(isArabic ? "لا توجد محاضرات قادمة بعد." : "No upcoming lectures yet.")</div>
+                        <span class="sd-la-status">
+                            <i class="fa-solid fa-calendar-xmark"></i>
+                            @(isArabic ? "لا توجد محاضرات" : "No lectures scheduled")
+                        </span>
                     }
-
-                    <div class="sd-upcoming-footer">
-                        <a class="sd-link sd-link-danger"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Schedule">
-                            <i class="fa-solid fa-calendar-check"></i> @(isArabic ? "عرض جدول المحاضرات" : "View lecture schedule")
-                        </a>
-                    </div>
                 </div>
             </div>
 
-            <div class="sd-card sd-tips">
-                <div class="sd-card-head">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-lightbulb sd-ic-fa"></i>
-                        <span>@(isArabic ? "نصائح" : "Tips")</span>
-                    </div>
+            <!-- ② Overall Performance Gauge -->
+            <div class="sd-perf-card">
+                <div class="sd-perf-title">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    @(isArabic ? "الأداء العام للطالب" : "Overall Performance")
                 </div>
 
-                <div class="sd-card-body">
-                    <div class="sd-tips-item">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>@(isArabic ? "حدد وقتًا ثابتًا للمذاكرة لتبقى مركزًا ومنتظمًا." : "Set a regular study time to stay focused and consistent.")</span>
+                <div class="sd-gauge-wrap">
+                    <div class="sd-gauge-donut" style="--pct: @avgProgress">
+                        <div class="sd-gauge-inner">
+                            <span class="sd-gauge-num">@avgProgress%</span>
+                            <span class="sd-gauge-label-inner">@(isArabic ? "تقدم" : "Progress")</span>
+                        </div>
                     </div>
 
-                    <div class="sd-tips-item">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>@(isArabic ? "راجع مواد الدرس والموارد بعد كل جلسة." : "Review lesson materials and resources after each session.")</span>
+                    <div class="sd-gauge-sub">
+                        @if (avgProgress >= 70)
+                        {
+                            <span>@(isArabic ? "🎉 أداء ممتاز! استمر هكذا" : "🎉 Excellent! Keep it up")</span>
+                        }
+                        else if (avgProgress >= 40)
+                        {
+                            <span>@(isArabic ? "👍 أداء جيد، واصل التعلم" : "👍 Good progress, keep going")</span>
+                        }
+                        else
+                        {
+                            <span>@(isArabic ? "💪 استمر في التعلم!" : "💪 Keep learning!")</span>
+                        }
                     </div>
 
-                    <div class="sd-tips-item">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>@(isArabic ? "تابع تقدمك وارجع للمواضيع التي تجدها صعبة." : "Track your progress and revisit topics you find challenging.")</span>
-                    </div>
-
-                    <div class="sd-tips-item">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>@(isArabic ? "لا تتردد في السؤال أو مراجعة تفاصيل الكورس عند الحاجة." : "Don’t hesitate to ask questions or check course details when needed.")</span>
-                    </div>
-                    <div class="sd-tips-item">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>@(isArabic ? "قسّم وقتك بين الدراسة والراحة لتجنب الإرهاق وزيادة الإنتاجية." : "Balance study time with breaks to avoid burnout and boost productivity.")</span>
-                    </div>
-
-
+                    @if (Model.Courses != null && Model.Courses.Any())
+                    {
+                        <div class="sd-perf-stats">
+                            <div class="sd-perf-stat">
+                                <div class="sd-perf-stat-num">@Model.Courses.Count()</div>
+                                <div class="sd-perf-stat-label">@(isArabic ? "كورسات" : "Courses")</div>
+                            </div>
+                            <div class="sd-perf-stat">
+                                <div class="sd-perf-stat-num">@Model.Courses.Sum(c => c.AttendedCount)</div>
+                                <div class="sd-perf-stat-label">@(isArabic ? "حصص حضرتها" : "Attended")</div>
+                            </div>
+                            <div class="sd-perf-stat">
+                                <div class="sd-perf-stat-num">@Model.UpcomingLectures.Count</div>
+                                <div class="sd-perf-stat-label">@(isArabic ? "محاضرات قادمة" : "Upcoming")</div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
 
         </aside>
 
+
+        <!-- ══════════════════════════════════════════════════
+             CENTER COLUMN
+             ══════════════════════════════════════════════════ -->
         <main class="sd-center">
 
-            <div class="sd-join">
-                <div class="sd-join-icon">
-                    <i class="fa-solid fa-video sd-join-ic"></i>
+            <!-- ① Welcome Banner -->
+            <div class="sd-welcome">
+                <div class="sd-welcome-greeting">
+                    👋 <span id="sdGreeting">@greeting</span>
+                    <span class="sd-welcome-name"> @firstName</span>
                 </div>
-
-                <h2 class="sd-join-title">@(isArabic ? "انضم لمحاضرة أونلاين" : "Join online lecture")</h2>
-
-                @{
-                    var nextLecture = Model.UpcomingLectures?
-                        .OrderBy(x => x.Date)
-                        .FirstOrDefault();
-                    var hasUpcoming = nextLecture != null;
-                }
-
-                @if (Model.CanJoinNow && Model.NextStudentAppointmentId != null)
-                {
-                    <p class="sd-join-desc">
-                        @(isArabic ? "هناك محاضرة مباشرة الآن. يمكنك الانضمام فورًا." : "A lecture is live right now. You can join immediately.")
-                    </p>
-
-                    <div class="sd-join-actions" id="joinActions">
-                        <a class="sd-btn sd-btn-primary"
-                           id="joinNowBtn"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Join"
-                           asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
-                            <i class="fa-solid fa-play"></i> @(isArabic ? "انضم الآن" : "Join now")
-                        </a>
-
-                        <a class="sd-btn sd-btn-ghost"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Schedule">
-                            @(isArabic ? "كل المحاضرات" : "All lectures") <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-
-                    <div class="sd-status">
-                        <span class="sd-dot"></span>
-                        <span class="sd-status-text">@(isArabic ? "جلسة مباشرة متاحة" : "Live session available")</span>
-                    </div>
-                }
-                else
-                {
-                    <p class="sd-join-desc">
-                        @if (hasUpcoming)
-                        {
-                            <text>
-                                @(isArabic ? "لا توجد محاضرة مباشرة الآن. المحاضرة القادمة:" : "No live lecture at the moment. Next lecture:")
-                                <b>@nextLecture!.Date.ToString(isArabic ? "ddd, dd MMM • HH:mm" : "ddd, dd MMM • hh:mm tt")</b>
-                            </text>
-                        }
-                        else
-                        {
-                            <text>@(isArabic ? "لا توجد محاضرة مباشرة الآن. لا توجد محاضرات قادمة بعد." : "No live lecture at the moment. There are no upcoming lectures yet.")</text>
-                        }
-                    </p>
-
-                    <div class="sd-join-actions" id="joinActions">
-                        <button class="sd-btn sd-btn-primary"
-                                type="button"
-                                onclick="location.reload();">
-                            <i class="fa-solid fa-rotate-right"></i> @(isArabic ? "تحقق" : "Check")
-                        </button>
-
-                        <a class="sd-btn sd-btn-ghost"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Schedule">
-                            @(isArabic ? "كل المحاضرات" : "All lectures") <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-
-                    <div class="sd-status">
-                        <span class="sd-dot"></span>
-                        <span class="sd-status-text">@(isArabic ? "التحقق التلقائي جاهز" : "Auto-check is ready")</span>
-                    </div>
-                }
+                <div class="sd-welcome-sub">
+                    @if (isArabic)
+                    {
+                        <text>أنت <b>أنجزت @avgProgress%</b> من هدفك للأسبوع دا!</text>
+                    }
+                    else
+                    {
+                        <text>You've <b>achieved @avgProgress%</b> of your weekly goal!</text>
+                    }
+                </div>
             </div>
 
-            <div class="sd-card sd-last">
-                <div class="sd-card-head">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-clock-rotate-left sd-ic-fa"></i>
-                        <span>@(isArabic ? "آخر الدروس" : "Last lessons")</span>
+            <!-- ② My Courses -->
+            <div class="sd-courses-card">
+                <div class="sd-courses-head">
+                    <div class="sd-courses-head-title">
+                        <i class="fa-solid fa-book-open"></i>
+                        @(isArabic ? "المواد الدراسية" : "My Courses")
                     </div>
+                    <a class="sd-courses-head-link"
+                       asp-area="StudentArea"
+                       asp-controller="Course"
+                       asp-action="Index">
+                        @(isArabic ? "عرض الكل" : "View all")
+                        <i class="fa-solid fa-arrow-@(isArabic ? "left" : "right") ms-1"></i>
+                    </a>
                 </div>
 
-                <div class="sd-card-body">
-                    <div class="sd-last-list">
-                        @if (Model.LastLessons != null && Model.LastLessons.Any())
+                <div class="sd-courses-body">
+                    @if (Model.Courses != null && Model.Courses.Any())
+                    {
+                        var colorIndex = 0;
+                        foreach (var c in Model.Courses.Take(4))
                         {
-                            foreach (var l in Model.LastLessons.Take(5))
-                            {
-                                <div class="sd-last-row">
-                                    <div class="sd-last-main">
-                                        <div class="sd-last-title">@l.LessonTitle</div>
-                                        <div class="sd-last-sub">@(isArabic ? "الكورس:" : "Course:") @l.CourseTitle</div>
-                                    </div>
+                            var title = isArabic
+                                ? (c.CourseTitleAr?.Trim().Length > 0 ? c.CourseTitleAr : c.CourseTitleEn)
+                                : (c.CourseTitleEn?.Trim().Length > 0 ? c.CourseTitleEn : c.CourseTitleAr);
+                            var pct = c.ProgressPercent;
+                            var ciClass = "ci-" + (colorIndex % 4);
+                            // SVG stroke-dasharray: circumference=100 (r≈15.915)
+                            var dash  = pct;
+                            var space = 100 - pct;
 
-                                    <button type="button" class="sd-last-toggle" onclick="toggleLastLesson(this)">
-                                        <i class="fa-solid fa-chevron-down"></i>
-                                    </button>
-
-                                    <div class="sd-last-details">
-                                        <div class="content-links">
-                                            @if (!string.IsNullOrEmpty(l.DriveLink))
-                                            {
-                                                <a href="@l.DriveLink" target="_blank" rel="noopener" class="content-link video">
-                                                    <i class="fas fa-video"></i> @(isArabic ? "مشاهدة المحاضرة" : "Watch lecture")
-                                                </a>
-                                            }
-                                            @if (!string.IsNullOrEmpty(l.LecturePdfUrl))
-                                            {
-                                                <a href="@l.LecturePdfUrl" target="_blank" rel="noopener" class="content-link pdf">
-                                                    <i class="fas fa-file-pdf"></i> @(isArabic ? "ملف المحاضرة PDF" : "Lecture PDF")
-                                                </a>
-                                            }
-                                            @if (!string.IsNullOrEmpty(l.AssignmentPdfUrl))
-                                            {
-                                                <a href="@l.AssignmentPdfUrl" target="_blank" rel="noopener" class="content-link assignment">
-                                                    <i class="fas fa-tasks"></i> @(isArabic ? "الواجب" : "Assignment")
-                                                </a>
-                                            }
-                                            @if (string.IsNullOrEmpty(l.DriveLink) && string.IsNullOrEmpty(l.LecturePdfUrl) && string.IsNullOrEmpty(l.AssignmentPdfUrl))
-                                            {
-                                                <div class="sd-empty">@(isArabic ? "لا توجد ملفات/روابط مضافة بعد." : "No resources added yet.")</div>
-                                            }
-                                        </div>
+                            <div class="sd-ci">
+                                <div class="sd-ci-info">
+                                    <div class="sd-ci-name" title="@title">@title</div>
+                                    <div class="sd-ci-count">
+                                        @(isArabic ? "عدد الحصص" : "Sessions")
+                                        @c.AttendedCount / @c.GoalCount
                                     </div>
+                                    <a class="sd-ci-btn"
+                                       asp-area="StudentArea"
+                                       asp-controller="Course"
+                                       asp-action="Details"
+                                       asp-route-id="@c.CourseId">
+                                        <i class="fa-solid fa-play fa-xs"></i>
+                                        @(isArabic ? "واصل التعلم" : "Continue")
+                                    </a>
                                 </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="sd-empty">@(isArabic ? "لا توجد دروس حديثة بعد." : "No recent lessons yet.")</div>
-                        }
-                    </div>
 
-                    <div class="sd-last-footer">
-                        <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                            @(isArabic ? "عرض كل الدروس" : "View all lessons") <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
+                                <!-- Circular SVG progress -->
+                                <svg class="sd-circ" viewBox="0 0 36 36" aria-hidden="true">
+                                    <circle class="sd-circ-bg"
+                                            cx="18" cy="18" r="15.9155" />
+                                    <circle class="sd-circ-bar @ciClass"
+                                            cx="18" cy="18" r="15.9155"
+                                            stroke-dasharray="@dash @space"
+                                            stroke-dashoffset="0" />
+                                    <text class="sd-circ-pct" x="18" y="18">@pct%</text>
+                                </svg>
+                            </div>
+                            colorIndex++;
+                        }
+                    }
+                    else
+                    {
+                        <div class="sd-empty">
+                            <i class="fa-solid fa-book-open me-2"></i>
+                            @(isArabic ? "لا توجد كورسات مسجل بها بعد." : "No courses enrolled yet.")
+                        </div>
+                    }
                 </div>
             </div>
 
         </main>
 
+
+        <!-- ══════════════════════════════════════════════════
+             RIGHT COLUMN
+             ══════════════════════════════════════════════════ -->
         <aside class="sd-right">
 
-            <div class="sd-card sd-courses">
-                <div class="sd-card-head sd-head-blue">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-book-open sd-ic-fa"></i>
-                        <span>@(isArabic ? "كورساتي" : "My courses")</span>
+            <!-- ① Mini Calendar -->
+            <div class="sd-cal-card">
+                <div class="sd-cal-header">
+                    <div class="sd-cal-title" id="sdCalTitle"></div>
+                    <div class="sd-cal-nav">
+                        <button class="sd-cal-nav-btn" id="sdCalPrev" type="button" title="Previous">
+                            <i class="fa-solid fa-chevron-@(isArabic ? "right" : "left")"></i>
+                        </button>
+                        <button class="sd-cal-nav-btn" id="sdCalNext" type="button" title="Next">
+                            <i class="fa-solid fa-chevron-@(isArabic ? "left" : "right")"></i>
+                        </button>
                     </div>
                 </div>
+                <div class="sd-cal-grid" id="sdCalGrid"></div>
+            </div>
 
-                <div class="sd-card-body">
-                    <div class="sd-course-list sd-course-list-simple">
-                        @if (Model.Courses != null && Model.Courses.Any())
+            <!-- ② Today's Sessions -->
+            <div class="sd-sessions-card">
+                <div class="sd-sessions-head">
+                    <i class="fa-solid fa-calendar-day"></i>
+                    @(isArabic ? "الحصص" : "Sessions")
+                    @if (todaySessions.Any())
+                    {
+                        <span style="margin-@(isArabic ? "right" : "left"):auto; font-size:12px; font-weight:600; color:var(--sd-muted)">
+                            @now.ToString(isArabic ? "dd MMMM" : "MMM dd")
+                        </span>
+                    }
+                </div>
+
+                <div class="sd-sessions-body">
+                    @if (todaySessions.Any())
+                    {
+                        foreach (var s in todaySessions)
                         {
-                            foreach (var c in Model.Courses.Take(3))
-                            {
-                                var title = !string.IsNullOrWhiteSpace(c.CourseTitleEn) ? c.CourseTitleEn : c.CourseTitleAr;
+                            var sessionLive = now >= s.Date && (!s.EndDate.HasValue || now <= s.EndDate.Value);
+                            var sessionClass = sessionLive ? "sd-session live" : "sd-session";
+                            var timeStr = s.Date.ToString(isArabic ? "HH:mm" : "hh:mm tt");
+                            var endStr  = s.EndDate.HasValue
+                                ? s.EndDate.Value.ToString(isArabic ? "HH:mm" : "hh:mm tt")
+                                : "";
 
-                                <div class="sd-course-card">
-                                    <div class="sd-course-row">
-                                        <div class="sd-course-left">
-                                            <div class="sd-course-name">@title</div>
-                                            <div class="sd-course-hint">@(isArabic ? "افتح محتوى الكورس والأقسام" : "Open course content & sections")</div>
-                                        </div>
+                            <div class="@sessionClass">
+                                <div class="sd-session-dot"></div>
+                                <div class="sd-session-info">
+                                    <div class="sd-session-name" title="@s.SubjectName">@s.SubjectName</div>
+                                    <div class="sd-session-meta">@s.InstructorName</div>
+                                    <div class="sd-session-time">
+                                        <i class="fa-regular fa-clock fa-xs"></i>
+                                        @timeStr @(endStr.Length > 0 ? "— " + endStr : "")
+                                    </div>
 
-                                        <a class="sd-course-action"
-                                           asp-area="StudentArea"
-                                           asp-controller="Course"
-                                           asp-action="Details"
-                                           asp-route-id="@c.CourseId">
-                                            @(isArabic ? "عرض التفاصيل" : "View details") <i class="fa-solid fa-arrow-right"></i>
+                                    @if (sessionLive && !string.IsNullOrWhiteSpace(s.ZoomLink))
+                                    {
+                                        <a class="sd-session-join" href="@s.ZoomLink" target="_blank" rel="noopener">
+                                            <i class="fa-solid fa-play fa-xs"></i>
+                                            @(isArabic ? "انضم" : "Join")
                                         </a>
+                                    }
+                                    else if (!sessionLive)
+                                    {
+                                        <span class="sd-session-pending">
+                                            <i class="fa-regular fa-hourglass fa-xs"></i>
+                                            @(isArabic ? "لم تبدأ بعد" : "Not started")
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        var nextSessions = Model.UpcomingLectures
+                            .Where(l => l.Date > now)
+                            .OrderBy(l => l.Date)
+                            .Take(3)
+                            .ToList();
+
+                        if (nextSessions.Any())
+                        {
+                            <div style="font-size:12px; color:var(--sd-muted); padding:4px 0 8px; font-weight:600">
+                                @(isArabic ? "المحاضرات القادمة" : "Upcoming lectures")
+                            </div>
+
+                            foreach (var s in nextSessions)
+                            {
+                                var timeStr = s.Date.ToString(isArabic ? "ddd, dd MMM • HH:mm" : "ddd, dd MMM • hh:mm tt");
+
+                                <div class="sd-session">
+                                    <div class="sd-session-dot"></div>
+                                    <div class="sd-session-info">
+                                        <div class="sd-session-name" title="@s.SubjectName">@s.SubjectName</div>
+                                        <div class="sd-session-meta">@s.InstructorName</div>
+                                        <div class="sd-session-time">
+                                            <i class="fa-regular fa-clock fa-xs"></i>
+                                            @timeStr
+                                        </div>
                                     </div>
                                 </div>
                             }
-
-                            <div class="sd-courses-footer">
-                                <a class="sd-link" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                                    @(isArabic ? "كل الكورسات" : "All courses") <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
                         }
                         else
                         {
-                            <div class="sd-empty">@(isArabic ? "لا توجد كورسات بعد." : "No courses yet.")</div>
+                            <div class="sd-empty">
+                                <i class="fa-regular fa-calendar fa-lg mb-2 d-block"></i>
+                                @(isArabic ? "لا توجد محاضرات اليوم" : "No sessions today")
+                            </div>
                         }
-                    </div>
+                    }
                 </div>
-            </div>
-
-            <div class="sd-card sd-quick">
-                <div class="sd-card-head">
-                    <div class="sd-head-title">
-                        <i class="fa-solid fa-bolt sd-ic-fa"></i>
-                        <span>@(isArabic ? "إجراءات سريعة" : "Quick actions")</span>
-                    </div>
-                </div>
-
-                <div class="sd-card-body">
-                    <div class="sd-quick-grid">
-                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Course" asp-action="Index">
-                            <i class="fa-solid fa-layer-group"></i>
-                            <span>@(isArabic ? "كل الكورسات" : "All courses")</span>
-                        </a>
-
-                        <a class="sd-quick-item" asp-area="StudentArea" asp-controller="Lectures" asp-action="Schedule">
-                            <i class="fa-solid fa-video"></i>
-                            <span>@(isArabic ? "المحاضرات" : "Lectures")</span>
-                        </a>
-
-                        <!-- ✅ تعديل الزر الأخير ليكون تواصل معنا -->
-                        <a class="sd-quick-item" target="_blank"
-                           href="https://mail.google.com/mail/?view=cm&fs=1&to=elclassplatform@gmail.com">
-                            <i class="fa-solid fa-envelope"></i>
-                            <span>@(isArabic ? "تواصل معنا" : "Contact Us")</span>
-                        </a>
-
-
-                        <a class="sd-quick-item" asp-area="Identity" asp-controller="MyProfile" asp-action="MyProfile">
-                            <i class="fa-solid fa-user-gear"></i>
-                            <span>@(isArabic ? "حسابي" : "My profile")</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="sd-help">
-                <div class="sd-help-title">@(isArabic ? "تحتاج مساعدة؟" : "Need help?")</div>
-                <div class="sd-help-sub">@(isArabic ? "راجع الأدلة وكتيبات المساعدة الخاصة بنا" : "Please review our guides and help manuals")</div>
             </div>
 
         </aside>
@@ -380,12 +390,16 @@
     </div>
 </div>
 
-@* Chat Widget (Student) *@
-<button id="chatFab" class="chat-fab" type="button" aria-label="Open chat"> 
+
+@* ──────────────────────────────────────────────────────────
+   Chat Widget (kept as-is)
+   ────────────────────────────────────────────────────────── *@
+<button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
     <span class="chat-fab-icon" aria-hidden="true">
         <i class="fa-regular fa-comment-dots"></i>
-    </span> 
-    <span id="chatFabBadge" class="chat-fab-badge hidden">0</span> </button>
+    </span>
+    <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
+</button>
 
 <div id="chatWidget" class="chat-widget" aria-hidden="true">
     @Html.AntiForgeryToken()
@@ -402,7 +416,6 @@
         </div>
     </div>
 
-    @* Screen 1: List *@
     <div class="chat-screen" id="screenList">
         <div class="chat-search">
             <input id="chatSearch" type="text" placeholder="@(isArabic ? "ابحث عن المُدرسين..." : "Search instructors...")" autocomplete="off" />
@@ -410,7 +423,6 @@
         <div class="chat-items" id="chatItems"></div>
     </div>
 
-    @* Screen 2: Thread *@
     <div class="chat-screen hidden" id="screenThread">
         <div class="messages" id="messagesBox"></div>
         <div class="composer">
@@ -418,19 +430,15 @@
                 <span id="attachName"></span>
                 <button type="button" id="attachClearBtn" class="attach-clear" aria-label="Remove file">×</button>
             </div>
-
             <input id="chatInput" type="text" placeholder="@(isArabic ? "اكتب رسالة..." : "Type a message...")" autocomplete="off" />
             <input type="file" id="chatFile" hidden />
-
             <button type="button" id="attachBtn" class="chat-attach-btn" title="Attach file">
                 <i class="fa-solid fa-paperclip"></i>
             </button>
-
             <button id="sendBtn" type="button" aria-label="Send">➤</button>
         </div>
     </div>
 </div>
-
 
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -440,61 +448,214 @@
 
     <input type="hidden" id="currentUserId" value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
 
+    <!-- ══════════════════════════════════════════════════════
+         Lecture Alert: countdown timer + live-switch
+         ══════════════════════════════════════════════════════ -->
     <script>
-        // =========================
-        // Config (endpoints)
-        // =========================
+        (function () {
+            const isArabic     = '@currentLang' === 'ar';
+            const nextJoinAtStr= '@nextJoinAtStr';
+            const nextId       = '@(Model.NextStudentAppointmentId?.ToString() ?? "")';
+            const isLive       = @(isLive ? "true" : "false");
+
+            const alertEl      = document.getElementById('sdLectureAlert');
+            const timerEl      = document.getElementById('sdLaTimer');
+            const actionsEl    = alertEl?.querySelector('.sd-la-actions');
+
+            function pad(n) { return String(n).padStart(2, '0'); }
+
+            function formatCountdown(ms) {
+                if (ms <= 0) return isArabic ? 'الآن!' : 'NOW!';
+                const totalSec = Math.floor(ms / 1000);
+                const h = Math.floor(totalSec / 3600);
+                const m = Math.floor((totalSec % 3600) / 60);
+                const s = totalSec % 60;
+                return `${pad(h)}:${pad(m)}:${pad(s)}`;
+            }
+
+            function switchToLive() {
+                if (!alertEl) return;
+                alertEl.classList.add('live');
+                alertEl.classList.remove('urgent');
+
+                if (timerEl) timerEl.textContent = isArabic ? 'مباشر' : 'LIVE';
+
+                if (actionsEl && nextId) {
+                    actionsEl.innerHTML = `
+                        <a class="sd-la-btn sd-la-btn-join"
+                           href="/StudentArea/Lectures/Join?studentAppointmentId=${nextId}">
+                            <i class="fa-solid fa-play"></i>
+                            ${isArabic ? 'انضم الآن' : 'Join Now'}
+                        </a>`;
+                }
+            }
+
+            // If already live, nothing to count down
+            if (isLive) return;
+
+            if (!nextJoinAtStr || !timerEl) return;
+
+            const target = new Date(nextJoinAtStr).getTime();
+
+            function tick() {
+                const diff = target - Date.now();
+                if (diff <= 0) {
+                    switchToLive();
+                    clearInterval(timer);
+                    return;
+                }
+                timerEl.textContent = formatCountdown(diff);
+
+                // add urgent pulse in last 5 minutes
+                if (diff < 5 * 60 * 1000 && alertEl) {
+                    alertEl.classList.add('urgent');
+                    if (actionsEl) {
+                        const statusEl = actionsEl.querySelector('.sd-la-status');
+                        if (statusEl) {
+                            statusEl.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i>
+                                ${isArabic ? 'لازم تدخل المحاضرة قريب!' : 'Join the lecture soon!'}`;
+                        }
+                    }
+                }
+            }
+
+            tick();
+            const timer = setInterval(tick, 1000);
+        })();
+    </script>
+
+    <!-- ══════════════════════════════════════════════════════
+         Mini Calendar
+         ══════════════════════════════════════════════════════ -->
+    <script>
+        (function () {
+            const isArabic   = '@currentLang' === 'ar';
+            const sessionDates = @Html.Raw(sessionDatesJson);
+            const sessionSet   = new Set(sessionDates);
+
+            const monthsEn = ['January','February','March','April','May','June',
+                               'July','August','September','October','November','December'];
+            const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+                               'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+            const dowEn    = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+            const dowAr    = ['أح','إث','ثل','أر','خم','جم','سب'];
+
+            let viewYear  = new Date().getFullYear();
+            let viewMonth = new Date().getMonth();
+
+            const titleEl = document.getElementById('sdCalTitle');
+            const gridEl  = document.getElementById('sdCalGrid');
+            const prevBtn = document.getElementById('sdCalPrev');
+            const nextBtn = document.getElementById('sdCalNext');
+
+            function isoDate(y, m, d) {
+                return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            }
+
+            function render() {
+                if (!titleEl || !gridEl) return;
+
+                const months = isArabic ? monthsAr : monthsEn;
+                const dows   = isArabic ? dowAr    : dowEn;
+
+                titleEl.textContent = `${months[viewMonth]} ${viewYear}`;
+
+                const today     = new Date();
+                const todayIso  = isoDate(today.getFullYear(), today.getMonth(), today.getDate());
+                const firstDay  = new Date(viewYear, viewMonth, 1).getDay();
+                const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+                let html = '';
+
+                // Day-of-week headers
+                for (const d of dows) {
+                    html += `<div class="sd-cal-dow">${d}</div>`;
+                }
+
+                // Leading blanks
+                for (let i = 0; i < firstDay; i++) {
+                    html += `<div class="sd-cal-day other-month"></div>`;
+                }
+
+                // Days
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const iso     = isoDate(viewYear, viewMonth, d);
+                    let   classes = 'sd-cal-day';
+                    if (iso === todayIso)     classes += ' today';
+                    if (sessionSet.has(iso))  classes += ' has-session';
+                    html += `<div class="${classes}">${d}</div>`;
+                }
+
+                gridEl.innerHTML = html;
+            }
+
+            prevBtn?.addEventListener('click', () => {
+                viewMonth--;
+                if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+                render();
+            });
+
+            nextBtn?.addEventListener('click', () => {
+                viewMonth++;
+                if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+                render();
+            });
+
+            render();
+        })();
+    </script>
+
+    <!-- ══════════════════════════════════════════════════════
+         Greeting update (based on real-time hour in browser)
+         ══════════════════════════════════════════════════════ -->
+    <script>
+        (function () {
+            const isArabic = '@currentLang' === 'ar';
+            const h = new Date().getHours();
+            const g = isArabic
+                ? (h < 12 ? 'صباح الخير' : 'مساء الخير')
+                : (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
+            const el = document.getElementById('sdGreeting');
+            if (el) el.textContent = g;
+        })();
+    </script>
+
+    <!-- ══════════════════════════════════════════════════════
+         Chat Widget (full implementation kept intact)
+         ══════════════════════════════════════════════════════ -->
+    <script>
         const API = {
             conversations: '/StudentArea/Home/GetMyConversations',
-            history: '/StudentArea/Home/GetChatHistory',
-            save: '/StudentArea/Home/SaveMessage',
-            saveWithFile: '/StudentArea/Home/SendMessageWithFile',
-            markRead: '/StudentArea/Home/MarkAsRead',
-            download: '/StudentArea/Home/DownloadAttachment'
+            history:       '/StudentArea/Home/GetChatHistory',
+            save:          '/StudentArea/Home/SaveMessage',
+            saveWithFile:  '/StudentArea/Home/SendMessageWithFile',
+            markRead:      '/StudentArea/Home/MarkAsRead',
+            download:      '/StudentArea/Home/DownloadAttachment'
         };
 
-        // =========================
-        // Elements
-        // =========================
-        const chatFab = document.getElementById('chatFab');
-        const chatFabBadge = document.getElementById('chatFabBadge');
-        const chatWidget = document.getElementById('chatWidget');
-        const chatCloseBtn = document.getElementById('chatCloseBtn');
-        const chatBackBtn = document.getElementById('chatBackBtn');
+        const chatFab         = document.getElementById('chatFab');
+        const chatFabBadge    = document.getElementById('chatFabBadge');
+        const chatWidget      = document.getElementById('chatWidget');
+        const chatCloseBtn    = document.getElementById('chatCloseBtn');
+        const chatBackBtn     = document.getElementById('chatBackBtn');
         const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+        const screenList      = document.getElementById('screenList');
+        const screenThread    = document.getElementById('screenThread');
+        const chatSearch      = document.getElementById('chatSearch');
+        const chatItemsBox    = document.getElementById('chatItems');
+        const messagesBox     = document.getElementById('messagesBox');
+        const chatInput       = document.getElementById('chatInput');
+        const sendBtn         = document.getElementById('sendBtn');
+        const attachBtn       = document.getElementById('attachBtn');
+        const chatFile        = document.getElementById('chatFile');
+        const attachName      = document.getElementById('attachName');
+        const attachChip      = document.getElementById('attachChip');
+        const attachClearBtn  = document.getElementById('attachClearBtn');
+        const currentUserId   = document.getElementById('currentUserId')?.value;
+        const headerNameEl    = document.getElementById('chatHeaderName');
+        const headerStatusEl  = document.getElementById('chatHeaderStatus');
 
-        const screenList = document.getElementById('screenList');
-        const screenThread = document.getElementById('screenThread');
-
-        const chatSearch = document.getElementById('chatSearch');
-        const chatItemsBox = document.getElementById('chatItems');
-
-        const messagesBox = document.getElementById('messagesBox');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-
-        // ✅ Attachment elements
-        const attachBtn = document.getElementById("attachBtn");
-        const chatFile = document.getElementById("chatFile");
-
-        // ✅ old span (fallback)
-        const attachName = document.getElementById("attachName");
-
-        // ✅ new chip (if you added it in HTML)
-        const attachChip = document.getElementById("attachChip");
-        const attachClearBtn = document.getElementById("attachClearBtn");
-
-        const currentUserId = document.getElementById('currentUserId')?.value;
-
-        // ✅ Header elements (Student)
-        const headerNameEl = document.getElementById("chatHeaderName");
-        const headerStatusEl = document.getElementById("chatHeaderStatus");
-
-        // =========================
-        // ✅ Anti-forgery token helper
-        // =========================
         function getAntiForgeryToken() {
-            // token موجود داخل chatWidget (لأنك حطيت @Html.AntiForgeryToken())
             const el = chatWidget?.querySelector('input[name="__RequestVerificationToken"]')
                 || document.querySelector('input[name="__RequestVerificationToken"]');
             return el?.value || '';
@@ -502,79 +663,35 @@
 
         function addCsrfHeader(headersObj) {
             const token = getAntiForgeryToken();
-            if (token) headersObj['RequestVerificationToken'] = token; // ASP.NET Core default header
+            if (token) headersObj['RequestVerificationToken'] = token;
             return headersObj;
         }
 
-        // =========================
-        // State
-        // =========================
         const readCache = new Set();
         const state = {
-            isOpen: false,
-            currentInstructorId: null,
-            currentInstructorName: '',
-            conversationId: null,
-            conversationsCache: [],
-
-            take: 10,
-            hasMore: true,
-            oldestId: null,
-            isLoadingOlder: false
+            isOpen: false, currentInstructorId: null, currentInstructorName: '',
+            conversationId: null, conversationsCache: [],
+            take: 10, hasMore: true, oldestId: null, isLoadingOlder: false
         };
 
-        // =========================
-        // Audio (unused حاليا)
-        // =========================
-        let audioReady = false;
-        let audioCtx = null;
-
+        let audioReady = false, audioCtx = null;
         function initAudio() {
             if (audioReady) return;
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioReady = true;
-            } catch {
-                audioReady = false;
-            }
+            try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioReady = true; } catch {}
         }
 
-        // =========================
-        // FAB Badge + Pulse
-        // =========================
         function setFabUnread(count) {
             const n = Math.max(0, parseInt(count || 0));
             if (!chatFabBadge) return;
-
-            if (n === 0) {
-                chatFabBadge.classList.add('hidden');
-                chatFab.classList.remove('pulse');
-                chatFabBadge.textContent = '0';
-            } else {
-                chatFabBadge.classList.remove('hidden');
-                chatFabBadge.textContent = (n > 99) ? '99+' : String(n);
-                chatFab.classList.add('pulse');
-            }
+            if (n === 0) { chatFabBadge.classList.add('hidden'); chatFab.classList.remove('pulse'); chatFabBadge.textContent = '0'; }
+            else { chatFabBadge.classList.remove('hidden'); chatFabBadge.textContent = (n > 99) ? '99+' : String(n); chatFab.classList.add('pulse'); }
         }
 
-        function calcTotalUnread() {
-            return (state.conversationsCache || []).reduce((sum, c) => sum + (c.unread || 0), 0);
-        }
+        function calcTotalUnread() { return (state.conversationsCache || []).reduce((s, c) => s + (c.unread || 0), 0); }
+        function syncFabUnreadFromList() { setFabUnread(calcTotalUnread()); }
 
-        function syncFabUnreadFromList() {
-            setFabUnread(calcTotalUnread());
-        }
-
-        // =========================
-        // UI Helpers
-        // =========================
         function escapeHtml(str) {
-            return (str ?? '')
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", "&#039;");
+            return (str ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
         }
 
         function toTime(sentAt) {
@@ -593,1002 +710,378 @@
             return (first + second).toUpperCase();
         }
 
-        function isImageContentType(ct) {
-            return typeof ct === 'string' && ct.toLowerCase().startsWith('image/');
-        }
+        function isImageContentType(ct) { return typeof ct === 'string' && ct.toLowerCase().startsWith('image/'); }
+        function buildDownloadUrl(messageId) { return `${API.download}?messageId=${encodeURIComponent(messageId)}`; }
 
-        function buildDownloadUrl(messageId) {
-            return `${API.download}?messageId=${encodeURIComponent(messageId)}`;
-        }
-
-        // =========================
-        // ✅ Image Preview Modal (click to open)
-        // =========================
         function ensureImageModal() {
             if (document.getElementById('imgPreviewModal')) return;
-
             const modal = document.createElement('div');
             modal.id = 'imgPreviewModal';
             modal.className = 'img-preview-modal hidden';
-            modal.innerHTML = `
-                <div class="img-preview-backdrop"></div>
-                <div class="img-preview-content" role="dialog" aria-modal="true">
-                    <button type="button" class="img-preview-close" aria-label="Close">✕</button>
-                    <img class="img-preview-img" alt="Preview" />
-                </div>
-            `;
+            modal.innerHTML = `<div class="img-preview-backdrop"></div><div class="img-preview-content" role="dialog" aria-modal="true"><button type="button" class="img-preview-close" aria-label="Close">✕</button><img class="img-preview-img" alt="Preview" /></div>`;
             document.body.appendChild(modal);
-
             const close = () => modal.classList.add('hidden');
-
             modal.querySelector('.img-preview-backdrop')?.addEventListener('click', close);
             modal.querySelector('.img-preview-close')?.addEventListener('click', close);
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
-            });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) close(); });
         }
 
         function openImagePreview(src) {
             if (!src) return;
             ensureImageModal();
             const modal = document.getElementById('imgPreviewModal');
-            const img = modal.querySelector('.img-preview-img');
-            img.src = src;
+            modal.querySelector('.img-preview-img').src = src;
             modal.classList.remove('hidden');
         }
 
-        // =========================
-        // ✅ Presence helpers
-        // =========================
         const presenceMap = new Map();
-
         function setHeaderStatus(isOnline) {
             if (!headerStatusEl) return;
-
             headerStatusEl.textContent = isOnline ? "● Online" : "● Offline";
             headerStatusEl.classList.toggle("online", !!isOnline);
             headerStatusEl.classList.toggle("offline", !isOnline);
         }
 
-        // =========================
-        // ✅ Attachment helpers
-        // =========================
-        function getSelectedFile() {
-            return (chatFile && chatFile.files && chatFile.files.length > 0) ? chatFile.files[0] : null;
-        }
-
+        function getSelectedFile() { return (chatFile && chatFile.files && chatFile.files.length > 0) ? chatFile.files[0] : null; }
         function showAttachmentName(name) {
-            if (attachChip) {
-                attachChip.classList.remove("hidden");
-                const nameEl = attachChip.querySelector("#attachName");
-                if (nameEl) nameEl.textContent = name;
-                return;
-            }
-
-            if (attachName) {
-                attachName.style.display = "inline-block";
-                attachName.textContent = name;
-            }
+            if (attachChip) { attachChip.classList.remove("hidden"); const n = attachChip.querySelector("#attachName"); if (n) n.textContent = name; return; }
+            if (attachName) { attachName.style.display = "inline-block"; attachName.textContent = name; }
         }
-
         function hideAttachmentName() {
-            if (attachChip) {
-                attachChip.classList.add("hidden");
-                const nameEl = attachChip.querySelector("#attachName");
-                if (nameEl) nameEl.textContent = "";
-            }
-            if (attachName) {
-                attachName.style.display = "none";
-                attachName.textContent = "";
-            }
+            if (attachChip) { attachChip.classList.add("hidden"); const n = attachChip.querySelector("#attachName"); if (n) n.textContent = ""; }
+            if (attachName) { attachName.style.display = "none"; attachName.textContent = ""; }
         }
-
-        function clearAttachmentUI() {
-            if (chatFile) chatFile.value = "";
-            hideAttachmentName();
-        }
+        function clearAttachmentUI() { if (chatFile) chatFile.value = ""; hideAttachmentName(); }
 
         if (attachBtn && chatFile) {
             attachBtn.addEventListener("click", () => chatFile.click());
-
-            chatFile.addEventListener("change", () => {
-                const f = getSelectedFile();
-                if (f) showAttachmentName(f.name);
-                else clearAttachmentUI();
-            });
+            chatFile.addEventListener("change", () => { const f = getSelectedFile(); if (f) showAttachmentName(f.name); else clearAttachmentUI(); });
         }
-
         attachClearBtn?.addEventListener("click", () => clearAttachmentUI());
 
-        // =========================
-        // Open / Close
-        // =========================
         function showWidget() {
-            state.isOpen = true;
-
-            chatWidget.classList.add('open');
-            chatWidget.setAttribute('aria-hidden', 'false');
-            chatFab.style.display = 'none';
-
-            showListScreen();
-            loadMyConversations();
+            state.isOpen = true; chatWidget.classList.add('open'); chatWidget.setAttribute('aria-hidden','false'); chatFab.style.display = 'none';
+            showListScreen(); loadMyConversations();
         }
-
         function hideWidget() {
-            state.isOpen = false;
-
-            chatWidget.classList.remove('open');
-            chatWidget.setAttribute('aria-hidden', 'true');
-            chatFab.style.display = 'block';
-
-            state.currentInstructorId = null;
-            state.currentInstructorName = '';
-            state.conversationId = null;
-
-            state.hasMore = true;
-            state.oldestId = null;
-            state.isLoadingOlder = false;
-
-            messagesBox.innerHTML = '';
-            chatInput.value = '';
-            chatSearch.value = '';
-            clearAttachmentUI();
-
+            state.isOpen = false; chatWidget.classList.remove('open'); chatWidget.setAttribute('aria-hidden','true'); chatFab.style.display = 'block';
+            state.currentInstructorId = null; state.currentInstructorName = ''; state.conversationId = null;
+            state.hasMore = true; state.oldestId = null; state.isLoadingOlder = false;
+            messagesBox.innerHTML = ''; chatInput.value = ''; chatSearch.value = ''; clearAttachmentUI();
             if (headerNameEl) headerNameEl.textContent = "Chats";
             if (headerStatusEl) headerStatusEl.textContent = "";
         }
-
         function showListScreen() {
-            screenThread.classList.add('hidden');
-            screenList.classList.remove('hidden');
-            chatBackBtn.classList.add('hidden');
-
+            screenThread.classList.add('hidden'); screenList.classList.remove('hidden'); chatBackBtn.classList.add('hidden');
             if (headerNameEl) headerNameEl.textContent = "Chats";
             if (headerStatusEl) headerStatusEl.textContent = "";
-
-            state.currentInstructorId = null;
-            state.currentInstructorName = '';
-            state.conversationId = null;
-
-            state.hasMore = true;
-            state.oldestId = null;
-            state.isLoadingOlder = false;
-
-            messagesBox.innerHTML = '';
-            clearAttachmentUI();
+            state.currentInstructorId = null; state.currentInstructorName = ''; state.conversationId = null;
+            state.hasMore = true; state.oldestId = null; state.isLoadingOlder = false;
+            messagesBox.innerHTML = ''; clearAttachmentUI();
         }
-
-        function showThreadScreen(instructorName) {
-            screenList.classList.add('hidden');
-            screenThread.classList.remove('hidden');
-            chatBackBtn.classList.remove('hidden');
-
-            if (headerNameEl) headerNameEl.textContent = instructorName || "Chat";
+        function showThreadScreen(n) {
+            screenList.classList.add('hidden'); screenThread.classList.remove('hidden'); chatBackBtn.classList.remove('hidden');
+            if (headerNameEl) headerNameEl.textContent = n || "Chat";
         }
-
-        function setActiveItem(instructorId) {
-            document.querySelectorAll('.chat-item').forEach(x => {
-                x.classList.toggle('active', x.dataset.instructorId === instructorId);
-            });
-        }
-
-        function findItem(instructorId) {
-            return document.querySelector(`.chat-item[data-instructor-id="${CSS.escape(instructorId)}"]`);
-        }
-
-        function removeBadge(instructorId) {
-            const item = findItem(instructorId);
+        function setActiveItem(id) { document.querySelectorAll('.chat-item').forEach(x => x.classList.toggle('active', x.dataset.instructorId === id)); }
+        function findItem(id) { return document.querySelector(`.chat-item[data-instructor-id="${CSS.escape(id)}"]`); }
+        function removeBadge(id) { const b = findItem(id)?.querySelector('.badge'); if (b) b.remove(); }
+        function incrementBadge(id) {
+            const item = findItem(id);
             if (!item) return;
-            const badge = item.querySelector('.badge');
-            if (badge) badge.remove();
+            let b = item.querySelector('.badge');
+            if (!b) { b = document.createElement('div'); b.className = 'badge'; b.textContent = '1'; item.appendChild(b); }
+            else b.textContent = (parseInt(b.textContent||'0')+1).toString();
         }
 
-        function incrementBadge(instructorId) {
-            const item = findItem(instructorId);
-            if (!item) return;
-
-            let badge = item.querySelector('.badge');
-            if (!badge) {
-                badge = document.createElement('div');
-                badge.className = 'badge';
-                badge.textContent = '1';
-                item.appendChild(badge);
-            } else {
-                badge.textContent = (parseInt(badge.textContent || '0') + 1).toString();
-            }
-        }
-
-        // =========================
-        // Conversations
-        // =========================
         async function loadMyConversations() {
             try {
                 const res = await fetch(API.conversations);
                 const data = await res.json();
-
                 state.conversationsCache = Array.isArray(data) ? data : [];
                 renderConversations(state.conversationsCache);
-
                 syncFabUnreadFromList();
-
-            } catch (e) {
-                console.error(e);
-                chatItemsBox.innerHTML = `<div class="empty">Failed to load chats</div>`;
-            }
+            } catch(e) { console.error(e); chatItemsBox.innerHTML = `<div class="empty">Failed to load chats</div>`; }
         }
 
         function renderConversations(list) {
             chatItemsBox.innerHTML = '';
-
-            if (!list || list.length === 0) {
-                chatItemsBox.innerHTML = `<div class="empty">No chats yet</div>`;
-                return;
-            }
-
+            if (!list || list.length === 0) { chatItemsBox.innerHTML = `<div class="empty">No chats yet</div>`; return; }
             for (const c of list) {
-                const idStr = String(c.instructorId ?? '');
-                const name = c.instructorName ?? 'Instructor';
-                const preview = c.lastMessage ?? '';
+                const idStr  = String(c.instructorId ?? '');
+                const name   = c.instructorName ?? 'Instructor';
                 const unread = c.unread ?? 0;
-
                 const avatarHtml = c.photoUrl
                     ? `<img class="avatar-img" src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(name)}" />`
                     : `<div class="avatar-text">${escapeHtml(initials(name))}</div>`;
-
                 const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
-
                 const isOnline = presenceMap.get(idStr) === true;
-                const dotClass = isOnline ? 'online' : 'offline';
-
                 chatItemsBox.insertAdjacentHTML('beforeend', `
-                    <div class="chat-item"
-                         data-instructor-id="${escapeHtml(idStr)}"
-                         data-instructor-name="${escapeHtml(name)}">
-                         <div class="avatar">
-                            ${avatarHtml}
-                            <span class="presence-dot ${dotClass}" data-presence-id="${escapeHtml(idStr)}"></span>
-                        </div>
-                        <div class="meta">
-                            <div class="name">${escapeHtml(name)}</div>
-                            <div class="preview">${escapeHtml(preview)}</div>
-                        </div>
+                    <div class="chat-item" data-instructor-id="${escapeHtml(idStr)}" data-instructor-name="${escapeHtml(name)}">
+                        <div class="avatar">${avatarHtml}<span class="presence-dot ${isOnline?'online':'offline'}" data-presence-id="${escapeHtml(idStr)}"></span></div>
+                        <div class="meta"><div class="name">${escapeHtml(name)}</div><div class="preview">${escapeHtml(c.lastMessage??'')}</div></div>
                         ${unreadHtml}
-                    </div>
-                `);
+                    </div>`);
             }
-
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
         }
 
         chatItemsBox.addEventListener('click', (e) => {
             const item = e.target.closest('.chat-item');
             if (!item) return;
-
-            const instructorId = item.dataset.instructorId;
-            const instructorName = item.dataset.instructorName;
-
-            openChat(instructorId, instructorName);
+            openChat(item.dataset.instructorId, item.dataset.instructorName);
         });
 
         chatSearch.addEventListener('input', () => {
-            const q = (chatSearch.value ?? '').trim().toLowerCase();
-            const filtered = !q
-                ? state.conversationsCache
-                : state.conversationsCache.filter(x => (x.instructorName ?? '').toLowerCase().includes(q));
-
-            renderConversations(filtered);
-
+            const q = (chatSearch.value??'').trim().toLowerCase();
+            renderConversations(!q ? state.conversationsCache : state.conversationsCache.filter(x=>(x.instructorName??'').toLowerCase().includes(q)));
             if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
         });
 
         async function openChat(instructorId, instructorName) {
-            state.currentInstructorId = instructorId;
-            state.currentInstructorName = instructorName;
-
-            setActiveItem(instructorId);
-            showThreadScreen(instructorName);
-
-            clearAttachmentUI();
-
+            state.currentInstructorId = instructorId; state.currentInstructorName = instructorName;
+            setActiveItem(instructorId); showThreadScreen(instructorName); clearAttachmentUI();
             await loadChatHistoryFirstPage();
-
-            await markAsRead(instructorId);
-            scheduleMarkAsReadHub();
-
-            removeBadge(instructorId);
-
-            await loadMyConversations();
-
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-
-            // ✅ Presence for header
+            await markAsRead(instructorId); scheduleMarkAsReadHub(); removeBadge(instructorId);
+            await loadMyConversations(); messagesBox.scrollTop = messagesBox.scrollHeight;
             try {
                 if (headerNameEl) headerNameEl.textContent = instructorName || "Chat";
-
                 const cached = presenceMap.get(String(state.currentInstructorId));
-                if (cached !== undefined) {
-                    setHeaderStatus(cached);
-                    return;
-                }
-
+                if (cached !== undefined) { setHeaderStatus(cached); return; }
                 const isOnline = await studentConnection.invoke("IsUserOnline", state.currentInstructorId);
-                presenceMap.set(String(state.currentInstructorId), !!isOnline);
-                setHeaderStatus(!!isOnline);
-
-            } catch (e) {
-                console.error("IsUserOnline invoke error:", e);
-            }
+                presenceMap.set(String(state.currentInstructorId), !!isOnline); setHeaderStatus(!!isOnline);
+            } catch(e) { console.error("IsUserOnline:", e); }
         }
 
-        async function markAsRead(instructorId) {
-            try {
-                await fetch(API.markRead, {
-                    method: 'POST',
-                    headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
-                    body: new URLSearchParams({ instructorId })
-                });
-            } catch (e) {
-                console.error(e);
-            }
+        async function markAsRead(id) {
+            try { await fetch(API.markRead, { method:'POST', headers: addCsrfHeader({'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'}), body: new URLSearchParams({instructorId:id}) }); } catch(e) { console.error(e); }
         }
 
-        // =========================
-        // Chat History (Cursor paging)
-        // =========================
         async function loadChatHistoryFirstPage() {
-            messagesBox.innerHTML = '';
-
-            state.hasMore = true;
-            state.oldestId = null;
-            state.isLoadingOlder = false;
-
+            messagesBox.innerHTML = ''; state.hasMore = true; state.oldestId = null; state.isLoadingOlder = false;
             await loadOlderMessages();
         }
 
         async function loadOlderMessages() {
-            if (!state.currentInstructorId) return;
-            if (!state.hasMore || state.isLoadingOlder) return;
-
+            if (!state.currentInstructorId || !state.hasMore || state.isLoadingOlder) return;
             state.isLoadingOlder = true;
-
-            const prevScrollHeight = messagesBox.scrollHeight;
-            const prevScrollTop = messagesBox.scrollTop;
-
-            const url =
-                `${API.history}?instructorId=${encodeURIComponent(state.currentInstructorId)}`
-                + `&take=${state.take}`
-                + (state.oldestId ? `&beforeId=${state.oldestId}` : ``);
-
+            const prevH = messagesBox.scrollHeight, prevT = messagesBox.scrollTop;
+            const url = `${API.history}?instructorId=${encodeURIComponent(state.currentInstructorId)}&take=${state.take}${state.oldestId?`&beforeId=${state.oldestId}`:''}`;
             try {
-                const res = await fetch(url);
-                const data = await res.json();
-
-                const list = data.messages ?? [];
-                state.conversationId = data.conversationId ?? null;
-                state.hasMore = data.hasMore === true;
-
-                if (list.length === 0) {
-                    state.isLoadingOlder = false;
-                    return;
-                }
-
+                const res = await fetch(url); const data = await res.json();
+                const list = data.messages??[]; state.conversationId = data.conversationId??null; state.hasMore = data.hasMore===true;
+                if (!list.length) { state.isLoadingOlder = false; return; }
                 const frag = document.createDocumentFragment();
                 for (const m of list) frag.appendChild(messageNode(m));
-                messagesBox.prepend(frag);
-
-                state.oldestId = list[0].id ?? list[0].Id;
-
-                const newScrollHeight = messagesBox.scrollHeight;
-                messagesBox.scrollTop = (newScrollHeight - prevScrollHeight) + prevScrollTop;
-
-            } catch (e) {
-                console.error(e);
-            } finally {
-                state.isLoadingOlder = false;
-            }
+                messagesBox.prepend(frag); state.oldestId = list[0].id??list[0].Id;
+                messagesBox.scrollTop = (messagesBox.scrollHeight - prevH) + prevT;
+            } catch(e) { console.error(e); } finally { state.isLoadingOlder = false; }
         }
 
         messagesBox.addEventListener('scroll', () => {
-            if (messagesBox.scrollTop <= 10) {
-                loadOlderMessages();
-            }
-
-            if (messagesBox.scrollTop + messagesBox.clientHeight >= messagesBox.scrollHeight - 6) {
-                scheduleMarkAsReadHub();
-            }
+            if (messagesBox.scrollTop <= 10) loadOlderMessages();
+            if (messagesBox.scrollTop + messagesBox.clientHeight >= messagesBox.scrollHeight - 6) scheduleMarkAsReadHub();
         });
 
-        // =========================
-        // ✓✓ Ticks (Student)
-        // =========================
         function ticksHtml(isMine, isRead) {
             if (!isMine) return '';
-            const cls = isRead ? 'ticks read' : 'ticks';
-            return `<span class="${cls}" title="${isRead ? 'Read' : 'Sent'}">✓✓</span>`;
+            return `<span class="${isRead?'ticks read':'ticks'}" title="${isRead?'Read':'Sent'}">✓✓</span>`;
         }
 
-        // =========================
-        // ✅ Attachment parsing (supports your old + new payload)
-        // =========================
         function readAttachmentFromMessage(m) {
-            const a = m.attachment ?? m.Attachment ?? null;
-
-            const storedName = m.attachmentStoredName ?? m.AttachmentStoredName ?? a?.storedName ?? a?.StoredName ?? null;
-            const originalName = m.attachmentOriginalName ?? m.AttachmentOriginalName ?? a?.name ?? a?.Name ?? null;
-            const contentType = m.attachmentContentType ?? m.AttachmentContentType ?? a?.type ?? a?.Type ?? null;
-            const size = m.attachmentSize ?? m.AttachmentSize ?? a?.size ?? a?.Size ?? null;
-
-            // ✅ الجديد عندنا: AttachmentUrl يرجع جاهز
-            const attachmentUrl = m.attachmentUrl ?? m.AttachmentUrl ?? null;
-
-            // ✅ القديم: previewUrl (optimistic local only)
-            const previewUrl = m.previewUrl ?? null;
-
-            return { storedName, originalName, contentType, size, attachmentUrl, previewUrl };
+            const a = m.attachment??m.Attachment??null;
+            return {
+                storedName:    m.attachmentStoredName??m.AttachmentStoredName??a?.storedName??a?.StoredName??null,
+                originalName:  m.attachmentOriginalName??m.AttachmentOriginalName??a?.name??a?.Name??null,
+                contentType:   m.attachmentContentType??m.AttachmentContentType??a?.type??a?.Type??null,
+                size:          m.attachmentSize??m.AttachmentSize??a?.size??a?.Size??null,
+                attachmentUrl: m.attachmentUrl??m.AttachmentUrl??null,
+                previewUrl:    m.previewUrl??null
+            };
         }
 
-        // =========================
-        // Render Message Node (Unified)
-        // =========================
         function messageNode(m) {
-            const id = (m.id ?? m.Id ?? '');
-            const senderId = (m.senderId ?? m.SenderId ?? '');
-            const receiverId = (m.receiverId ?? m.ReceiverId ?? '');
-            const content = (m.content ?? m.Content ?? '');
-            const sentAt = (m.sentAt ?? m.SentAt);
-            const isRead = (m.isRead ?? m.IsRead) === true;
-            const idStr = String(id || '');
-            const alreadyRead = isRead || readCache.has(idStr);
-
+            const id = (m.id??m.Id??''); const senderId = (m.senderId??m.SenderId??'');
+            const content = (m.content??m.Content??''); const sentAt = (m.sentAt??m.SentAt);
+            const isRead = (m.isRead??m.IsRead)===true; const alreadyRead = isRead||readCache.has(String(id||''));
             const isMine = currentUserId && senderId === currentUserId;
-
             const att = readAttachmentFromMessage(m);
-
             let attachmentHtml = '';
-            // ✅ لو فيه AttachmentUrl من السيرفر (الأفضل)
             if (att.attachmentUrl) {
-                if (isImageContentType(att.contentType)) {
-                    attachmentHtml = `
-                        <div class="att">
-                            <img class="att-img js-preview-img"
-                                 src="${escapeHtml(att.attachmentUrl)}"
-                                 data-full-src="${escapeHtml(att.attachmentUrl)}"
-                                 alt="${escapeHtml(att.originalName || 'image')}" />
-                        </div>
-                    `;
-                } else {
-                    attachmentHtml = `
-                        <div class="att">
-                            <a class="att-file" href="${escapeHtml(att.attachmentUrl)}" target="_blank" rel="noopener">
-                                📎 ${escapeHtml(att.originalName || 'file')}
-                            </a>
-                        </div>
-                    `;
-                }
+                if (isImageContentType(att.contentType)) attachmentHtml = `<div class="att"><img class="att-img js-preview-img" src="${escapeHtml(att.attachmentUrl)}" data-full-src="${escapeHtml(att.attachmentUrl)}" alt="${escapeHtml(att.originalName||'image')}" /></div>`;
+                else attachmentHtml = `<div class="att"><a class="att-file" href="${escapeHtml(att.attachmentUrl)}" target="_blank" rel="noopener">📎 ${escapeHtml(att.originalName||'file')}</a></div>`;
+            } else if (att.previewUrl && isImageContentType(att.contentType)) {
+                attachmentHtml = `<div class="att"><img class="att-img js-preview-img" src="${escapeHtml(att.previewUrl)}" data-full-src="${escapeHtml(att.previewUrl)}" alt="${escapeHtml(att.originalName||'image')}" /></div>`;
+            } else if (id && (att.storedName||att.originalName)) {
+                const dl = buildDownloadUrl(id);
+                if (isImageContentType(att.contentType)) attachmentHtml = `<div class="att"><img class="att-img js-preview-img" src="${escapeHtml(dl)}" data-full-src="${escapeHtml(dl)}" alt="${escapeHtml(att.originalName||'image')}" /></div>`;
+                else attachmentHtml = `<div class="att"><a class="att-file" href="${escapeHtml(dl)}" target="_blank" rel="noopener">📎 ${escapeHtml(att.originalName||'file')}</a></div>`;
             }
-            // ✅ fallback للـ optimistic previewUrl (local)
-            else if (att.previewUrl && isImageContentType(att.contentType)) {
-                attachmentHtml = `
-                    <div class="att">
-                        <img class="att-img js-preview-img"
-                             src="${escapeHtml(att.previewUrl)}"
-                             data-full-src="${escapeHtml(att.previewUrl)}"
-                             alt="${escapeHtml(att.originalName || 'image')}" />
-                    </div>
-                `;
-            }
-            // ✅ fallback للـ download endpoint القديم (لو عندك history بيرجع storedName فقط)
-            else if (id && (att.storedName || att.originalName)) {
-                const downloadHref = buildDownloadUrl(id);
-                if (isImageContentType(att.contentType)) {
-                    attachmentHtml = `
-                        <div class="att">
-                            <img class="att-img js-preview-img"
-                                 src="${escapeHtml(downloadHref)}"
-                                 data-full-src="${escapeHtml(downloadHref)}"
-                                 alt="${escapeHtml(att.originalName || 'image')}" />
-                        </div>
-                    `;
-                } else {
-                    attachmentHtml = `
-                        <div class="att">
-                            <a class="att-file" href="${escapeHtml(downloadHref)}" target="_blank" rel="noopener">
-                                📎 ${escapeHtml(att.originalName || 'file')}
-                            </a>
-                        </div>
-                    `;
-                }
-            }
-
             const wrapper = document.createElement('div');
-            wrapper.className = `msg-row ${isMine ? 'mine' : ''}`;
-            wrapper.dataset.messageId = String(id || '');
-
+            wrapper.className = `msg-row ${isMine?'mine':''}`;
+            wrapper.dataset.messageId = String(id||'');
             const textHtml = content ? `<div class="att-text">${escapeHtml(content)}</div>` : '';
-
-            wrapper.innerHTML = `
-                <div class="bubble">
-                    ${textHtml}
-                    ${attachmentHtml}
-                    <span class="time">
-                        ${escapeHtml(toTime(sentAt))}
-                       ${ticksHtml(isMine, alreadyRead)}
-
-                    </span>
-                </div>
-            `;
-
+            wrapper.innerHTML = `<div class="bubble">${textHtml}${attachmentHtml}<span class="time">${escapeHtml(toTime(sentAt))} ${ticksHtml(isMine,alreadyRead)}</span></div>`;
             return wrapper;
         }
 
         function renderMessage(m) {
-            const id = (m.id ?? m.Id ?? null);
-            if (id) {
-                // ✅ منع التكرار: لو الرسالة موجودة بالفعل (مثلاً optimistic اتحول ل real)
-                const existing = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(id))}"]`);
-                if (existing) return existing;
-            }
-
-            const node = messageNode(m);
-            messagesBox.appendChild(node);
-            return node;
+            const id = (m.id??m.Id??null);
+            if (id) { const ex = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(id))}"]`); if (ex) return ex; }
+            const node = messageNode(m); messagesBox.appendChild(node); return node;
         }
 
-
         function markMessagesReadInUI(messageIds) {
-            if (!Array.isArray(messageIds) || messageIds.length === 0) return;
-
+            if (!Array.isArray(messageIds)||!messageIds.length) return;
             messageIds.forEach(id => {
-                readCache.add(String(id)); // 👈 خزنها
-
-                const row = messagesBox.querySelector(
-                    `.msg-row[data-message-id="${CSS.escape(String(id))}"]`
-                );
-                const tick = row?.querySelector('.ticks');
-                if (tick) {
-                    tick.classList.add("read");
-                    tick.title = "Read";
-                }
+                readCache.add(String(id));
+                const tick = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(id))}"] .ticks`);
+                if (tick) { tick.classList.add("read"); tick.title = "Read"; }
             });
         }
 
-        // =========================
-        // ✅ click on image to preview
-        // =========================
         messagesBox.addEventListener('click', (e) => {
             const img = e.target.closest('img.js-preview-img');
             if (!img) return;
-            const src = img.getAttribute('data-full-src') || img.src;
-            openImagePreview(src);
+            openImagePreview(img.getAttribute('data-full-src')||img.src);
         });
 
-        // =========================
-        // ✅ Optimistic patch helper (keep your old one but improved)
-        // =========================
-        function patchOptimisticToReal(optimisticRowEl, payload) {
-            if (!optimisticRowEl || !payload) return;
-
-            const realId = payload.id ?? payload.Id;
+        function patchOptimisticToReal(el, payload) {
+            if (!el||!payload) return;
+            const realId = payload.id??payload.Id;
             if (!realId) return;
-
-            // update id
-            optimisticRowEl.dataset.messageId = String(realId);
-
-            // replace attachment from previewUrl to attachmentUrl if exists
-            const attUrl = payload.attachmentUrl ?? payload.AttachmentUrl ?? null;
-            const ct = payload.attachmentContentType ?? payload.AttachmentContentType ?? '';
-
+            el.dataset.messageId = String(realId);
+            const attUrl = payload.attachmentUrl??payload.AttachmentUrl??null;
+            const ct = payload.attachmentContentType??payload.AttachmentContentType??'';
             if (!attUrl) return;
-
-            const img = optimisticRowEl.querySelector('img.att-img');
-            const a = optimisticRowEl.querySelector('a.att-file');
-
-            if (isImageContentType(ct)) {
-                if (img) {
-                    img.src = attUrl;
-                    img.setAttribute('data-full-src', attUrl);
-                }
-            } else {
-                if (a) a.href = attUrl;
-            }
+            const img = el.querySelector('img.att-img'), a = el.querySelector('a.att-file');
+            if (isImageContentType(ct)) { if (img) { img.src=attUrl; img.setAttribute('data-full-src',attUrl); } }
+            else { if (a) a.href=attUrl; }
         }
 
-        // =========================
-        // Send Message (Student) ✅ (Text OR File)
-        // =========================
         async function sendMessageFromUI() {
-            const text = (chatInput.value || '').trim();
-            const file = getSelectedFile();
-
-            if (!state.currentInstructorId) return;
-            if (!text && !file) return;
-
-            const nowIso = new Date().toISOString();
-            const tempId = `tmp-${Date.now()}`;
-
-            let previewUrl = null;
-            let fileType = null;
-            let fileName = null;
-
-            if (file) {
-                fileType = file.type || '';
-                fileName = file.name || 'file';
-                if (isImageContentType(fileType)) {
-                    previewUrl = URL.createObjectURL(file);
-                }
-            }
-
-            // ✅ optimistic render
-            const optimisticNode = renderMessage({
-                id: tempId,
-                senderId: currentUserId,
-                receiverId: state.currentInstructorId,
-                content: text,
-                sentAt: nowIso,
-                isRead: false,
-                attachment: file ? { name: fileName, type: fileType, size: file.size } : null,
-                previewUrl: previewUrl
-            });
-
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-            chatInput.value = '';
-            clearAttachmentUI();
-
-            // preview in list
+            const text = (chatInput.value||'').trim(); const file = getSelectedFile();
+            if (!state.currentInstructorId||(!text&&!file)) return;
+            const nowIso = new Date().toISOString(); const tempId = `tmp-${Date.now()}`;
+            let previewUrl=null, fileType=null, fileName=null;
+            if (file) { fileType=file.type||''; fileName=file.name||'file'; if(isImageContentType(fileType)) previewUrl=URL.createObjectURL(file); }
+            const optimisticNode = renderMessage({ id:tempId, senderId:currentUserId, receiverId:state.currentInstructorId, content:text, sentAt:nowIso, isRead:false, attachment:file?{name:fileName,type:fileType,size:file.size}:null, previewUrl });
+            messagesBox.scrollTop = messagesBox.scrollHeight; chatInput.value = ''; clearAttachmentUI();
             const item = findItem(state.currentInstructorId);
-            if (item) {
-                const previewEl = item.querySelector('.preview');
-                if (previewEl) previewEl.textContent = text || (file ? `📎 ${fileName}` : '');
-            }
-
+            if (item) { const p = item.querySelector('.preview'); if (p) p.textContent = text||(file?`📎 ${fileName}`:''); }
             try {
-                // ✅ File (with/without text)
                 if (file) {
-                    const fd = new FormData();
-                    fd.append("ReceiverId", state.currentInstructorId);
-                    fd.append("Content", text);
-                    fd.append("File", file);
-
-                    const res = await fetch(API.saveWithFile, {
-                        method: 'POST',
-                        headers: addCsrfHeader({}), // token
-                        body: fd
-                    });
-
-                    if (!res.ok) {
-                        const errText = await res.text();
-                        console.error("SendMessageWithFile failed:", errText);
-                        return;
-                    }
-
-                    const payload = await res.json();
-
-                    // ✅ patch optimistic to real (id + attachmentUrl)
-                    patchOptimisticToReal(optimisticNode, payload);
-
-                    // ✅ free local preview url
+                    const fd = new FormData(); fd.append("ReceiverId",state.currentInstructorId); fd.append("Content",text); fd.append("File",file);
+                    const res = await fetch(API.saveWithFile,{method:'POST',headers:addCsrfHeader({}),body:fd});
+                    if (!res.ok) { console.error("SendMessageWithFile failed:", await res.text()); return; }
+                    const payload = await res.json(); patchOptimisticToReal(optimisticNode,payload);
                     if (previewUrl) URL.revokeObjectURL(previewUrl);
-
-                    // IMPORTANT:
-                    // - لا تبعت SendMessage hub هنا
-                    // - السيرفر بالفعل بيعمل SignalR broadcast (للـ receiver + للـ sender)
-                    // - وإحنا بنمنع التكرار بالـ messageId
-
                     return;
                 }
-
-             
-                const res = await fetch(API.save, {
-                    method: 'POST',
-                    headers: addCsrfHeader({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
-                    body: new URLSearchParams({ receiverId: state.currentInstructorId, content: text })
-                });
-
+                const res = await fetch(API.save,{method:'POST',headers:addCsrfHeader({'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'}),body:new URLSearchParams({receiverId:state.currentInstructorId,content:text})});
                 const data = await res.json();
-                if (!data || data.success !== true) {
-                    console.log('SaveMessage failed:', data);
-                    return;
-                }
-
-                console.log("[SaveMessage response]", data);
-
-                const realId =
-                    data.id ??
-                    data.Id ??
-                    data.messageId ??
-                    data.savedMessageId ??
-                    data.data?.id ??
-                    data.data?.Id ??
-                    data.message?.id ??     
-                    data.message?.Id;       
-
-                if (realId && optimisticNode) {
-                    optimisticNode.dataset.messageId = String(realId);
-                }
-
-                // القديم: لسه بتبعت realtime نص فقط
+                if (!data||data.success!==true) { console.log('SaveMessage failed:',data); return; }
+                const realId = data.id??data.Id??data.messageId??data.savedMessageId??data.data?.id??data.data?.Id??data.message?.id??data.message?.Id;
+                if (realId&&optimisticNode) optimisticNode.dataset.messageId = String(realId);
                 await sendRealtimeToInstructor(state.currentInstructorId, text);
-
-            } catch (e) {
-                console.error(e);
-            }
+            } catch(e) { console.error(e); }
         }
 
         sendBtn.addEventListener('click', sendMessageFromUI);
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendMessageFromUI();
-        });
-
-        // =========================
-        // Open/Close/Back
-        // =========================
+        chatInput.addEventListener('keydown', (e) => { if (e.key==='Enter') sendMessageFromUI(); });
         chatFab.addEventListener('click', () => { initAudio(); showWidget(); });
         chatCloseBtn.addEventListener('click', hideWidget);
         chatBackBtn.addEventListener('click', showListScreen);
 
-        // =========================
-        // SignalR (Student)
-        // =========================
         const studentConnection = new signalR.HubConnectionBuilder()
-            .withUrl("/chatHub", {
-                transport: signalR.HttpTransportType.LongPolling,
-                skipNegotiation: false
-            })
-            .withAutomaticReconnect()
-            .build();
+            .withUrl("/chatHub",{transport:signalR.HttpTransportType.LongPolling,skipNegotiation:false})
+            .withAutomaticReconnect().build();
 
-        studentConnection.on("PresenceChanged", function (userId, isOnline) {
-            const id = String(userId);
-            presenceMap.set(id, !!isOnline);
-
-            if (state.currentInstructorId && String(state.currentInstructorId) === id) {
-                setHeaderStatus(!!isOnline);
-            }
-
+        studentConnection.on("PresenceChanged", (userId, isOnline) => {
+            const id = String(userId); presenceMap.set(id, !!isOnline);
+            if (state.currentInstructorId && String(state.currentInstructorId)===id) setHeaderStatus(!!isOnline);
             const dot = document.querySelector(`.presence-dot[data-presence-id="${CSS.escape(id)}"]`);
-            if (dot) {
-                dot.classList.toggle("online", !!isOnline);
-                dot.classList.toggle("offline", !isOnline);
-            }
+            if (dot) { dot.classList.toggle("online",!!isOnline); dot.classList.toggle("offline",!isOnline); }
         });
 
         studentConnection.onreconnected(async () => {
             if (!state.currentInstructorId) return;
-            try {
-                const isOnline = await studentConnection.invoke("IsUserOnline", state.currentInstructorId);
-                presenceMap.set(String(state.currentInstructorId), !!isOnline);
-                setHeaderStatus(!!isOnline);
-            } catch (e) {
-                console.error("Reconnected IsUserOnline error:", e);
-            }
+            try { const ok = await studentConnection.invoke("IsUserOnline",state.currentInstructorId); presenceMap.set(String(state.currentInstructorId),!!ok); setHeaderStatus(!!ok); } catch(e) { console.error(e); }
         });
 
-        studentConnection.start()
-            .then(() => console.log("SignalR Connected (Student)!"))
-            .catch(err => console.error(err.toString()));
+        studentConnection.start().then(()=>console.log("SignalR Connected!")).catch(e=>console.error(e.toString()));
 
         let readDebounceTimer = null;
         function scheduleMarkAsReadHub() {
             clearTimeout(readDebounceTimer);
             readDebounceTimer = setTimeout(() => {
-                if (!state.isOpen) return;
-                if (!state.conversationId) return;
-                if (!state.currentInstructorId) return;
-
-                studentConnection.invoke("MarkAsRead", state.conversationId, state.currentInstructorId)
-                    .catch(err => console.error("MarkAsRead invoke error:", err));
+                if (!state.isOpen||!state.conversationId||!state.currentInstructorId) return;
+                studentConnection.invoke("MarkAsRead",state.conversationId,state.currentInstructorId).catch(e=>console.error(e));
             }, 200);
         }
 
-        // ✅ ReceiveMessage: supports BOTH
-        // 1) new payload object (server sends payload)
-        // 2) old signature (senderId, message, timestamp)
-        studentConnection.on("ReceiveMessage", async function (arg1, arg2, arg3) {
-
-            // NEW payload object
-            if (arg1 && typeof arg1 === 'object') {
+        studentConnection.on("ReceiveMessage", async (arg1, arg2, arg3) => {
+            if (arg1 && typeof arg1==='object') {
                 const p = arg1;
-
-                const senderId = String(p.senderId ?? p.SenderId ?? '');
-                const receiverId = String(p.receiverId ?? p.ReceiverId ?? '');
-                const messageId = (p.id ?? p.Id ?? null);
-
-                const sameOpenChat =
-                    state.isOpen
-                    && state.currentInstructorId
-                    && (
-                        // الرسالة جاية من المدرس للطالب
-                        senderId === String(state.currentInstructorId)
-                        // أو echo للطالب نفسه
-                        || senderId === String(currentUserId)
-                    );
-
+                const senderId   = String(p.senderId??p.SenderId??'');
+                const receiverId = String(p.receiverId??p.ReceiverId??'');
+                const messageId  = (p.id??p.Id??null);
+                const sameOpenChat = state.isOpen && state.currentInstructorId && (senderId===String(state.currentInstructorId)||senderId===String(currentUserId));
                 if (sameOpenChat) {
-                    // منع التكرار لو موجودة
-                    if (messageId) {
-                        const exists = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(messageId))}"]`);
-                        if (exists) return;
-                    }
-
-                    renderMessage(p);
-                    messagesBox.scrollTop = messagesBox.scrollHeight;
-
-                    scheduleMarkAsReadHub();
-
-                    // لو جاية من المدرس (مش echo من الطالب)
-                    if (senderId === String(state.currentInstructorId)) {
-                        await markAsRead(senderId);
-                        removeBadge(senderId);
-                    }
-
-                    await loadMyConversations();
-                    return;
+                    if (messageId) { const ex=messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(messageId))}"]`); if(ex) return; }
+                    renderMessage(p); messagesBox.scrollTop=messagesBox.scrollHeight; scheduleMarkAsReadHub();
+                    if (senderId===String(state.currentInstructorId)) { await markAsRead(senderId); removeBadge(senderId); }
+                    await loadMyConversations(); return;
                 }
-
-                // لو مش فاتح نفس الشات: update preview + badge
-                const otherId = senderId === String(currentUserId) ? receiverId : senderId;
-
+                const otherId = senderId===String(currentUserId)?receiverId:senderId;
                 const item = findItem(otherId);
                 if (item) {
-                    const previewEl = item.querySelector('.preview');
-                    const previewText = (p.content ?? p.Content ?? '').trim()
-                        || (p.attachmentOriginalName ?? p.AttachmentOriginalName ? `📎 ${(p.attachmentOriginalName ?? p.AttachmentOriginalName)}` : '');
-
-                    if (previewEl) previewEl.textContent = previewText;
-
-                    // لو الرسالة جاية لينا من الطرف التاني زوّد badge
-                    if (senderId !== String(currentUserId)) {
-                        incrementBadge(otherId);
-                        syncFabUnreadFromList();
-                    }
-
-                    await loadMyConversations();
-                } else {
-                    await loadMyConversations();
+                    const pEl = item.querySelector('.preview');
+                    const pText = (p.content??p.Content??'').trim()||(p.attachmentOriginalName??p.AttachmentOriginalName?`📎 ${(p.attachmentOriginalName??p.AttachmentOriginalName)}`:'');
+                    if (pEl) pEl.textContent = pText;
+                    if (senderId!==String(currentUserId)) { incrementBadge(otherId); syncFabUnreadFromList(); }
                 }
-
-                return;
+                await loadMyConversations(); return;
             }
-
-            // OLD signature
-            const senderId = arg1;
-            const message = arg2;
-            const timestamp = arg3;
-
-            const sameOpenChat = state.isOpen && state.currentInstructorId && senderId === state.currentInstructorId;
-
+            // old signature
+            const senderId=arg1, message=arg2, timestamp=arg3;
+            const sameOpenChat = state.isOpen&&state.currentInstructorId&&senderId===state.currentInstructorId;
             if (sameOpenChat) {
-                renderMessage({ senderId, receiverId: currentUserId, content: message, sentAt: timestamp });
-                messagesBox.scrollTop = messagesBox.scrollHeight;
-                scheduleMarkAsReadHub();
-
-                await markAsRead(senderId);
-                removeBadge(senderId);
-
-                await loadMyConversations();
-                return;
+                renderMessage({senderId,receiverId:currentUserId,content:message,sentAt:timestamp});
+                messagesBox.scrollTop=messagesBox.scrollHeight; scheduleMarkAsReadHub();
+                await markAsRead(senderId); removeBadge(senderId); await loadMyConversations(); return;
             }
-
             const item = findItem(senderId);
-            if (item) {
-                const previewEl = item.querySelector('.preview');
-                if (previewEl) previewEl.textContent = message;
-
-                incrementBadge(senderId);
-
-                syncFabUnreadFromList();
-                await loadMyConversations();
-
-            } else {
-                await loadMyConversations();
-            }
+            if (item) { const p=item.querySelector('.preview'); if(p) p.textContent=message; incrementBadge(senderId); syncFabUnreadFromList(); }
+            await loadMyConversations();
         });
 
-        studentConnection.on("MessagesRead", function (payload) {
-            console.log("[MessagesRead] payload:", payload, {
-                isOpen: state.isOpen,
-                conversationId: state.conversationId,
-                currentInstructorId: state.currentInstructorId
-            });
-
-            if (!payload) return;
-            if (!state.isOpen) return;
-            if (!state.conversationId) return;
-            if (String(payload.conversationId) !== String(state.conversationId)) return;
-
+        studentConnection.on("MessagesRead", (payload) => {
+            if (!payload||!state.isOpen||!state.conversationId||String(payload.conversationId)!==String(state.conversationId)) return;
             markMessagesReadInUI(payload.messageIds);
         });
 
-        studentConnection.on("UpdateConversationList", function () {
-            loadMyConversations();
-        });
+        studentConnection.on("UpdateConversationList", () => { loadMyConversations(); });
 
-        async function sendRealtimeToInstructor(instructorId, message) {
-            try {
-                await studentConnection.invoke("SendMessage", instructorId, message);
-            } catch (e) {
-                console.error(e.toString());
-            }
+        async function sendRealtimeToInstructor(id, msg) {
+            try { await studentConnection.invoke("SendMessage",id,msg); } catch(e) { console.error(e); }
         }
     </script>
 
-    <script>
-            (function () {
-                // NextJoinAt from server (ISO string) - may be null
-                const nextJoinAtStr = '@(Model.NextJoinAt.HasValue ? Model.NextJoinAt.Value.ToString("O") : "")';
-                const nextId = '@(Model.NextStudentAppointmentId?.ToString() ?? "")';
-
-                if (!nextJoinAtStr || !nextId) return; // مفيش ميعاد جاي معروف
-
-                const nextJoinAt = new Date(nextJoinAtStr).getTime();
-                const container = document.getElementById("joinActions");
-
-                if (!container) return;
-
-                function switchToJoinNow() {
-                    // لو اتبدّل قبل كده، متعملش حاجة
-                    if (document.getElementById("joinNowBtn")) return;
-
-                    container.insertAdjacentHTML("afterbegin", `
-                        <a class="sd-btn sd-btn-primary" id="joinNowBtn"
-                           href="/Student/Lectures/Join?studentAppointmentId=${nextId}">
-                           <i class="fa-solid fa-play"></i> Join now
-                        </a>
-                    `);
-
-                    const notBtn = document.getElementById("notAvailableBtn");
-                    if (notBtn) notBtn.remove();
-                }
-
-                function tick() {
-                    const now = Date.now();
-                    if (now >= nextJoinAt) {
-                        switchToJoinNow();
-                        clearInterval(timer);
-                    }
-                }
-
-                // check immediately + every 10 seconds
-                tick();
-                const timer = setInterval(tick, 10000);
-            })();
-    </script>
     <script>
         function toggleLastLesson(btn) {
             const row = btn.closest('.sd-last-row');
             const details = row.querySelector('.sd-last-details');
-
-            // اقفل أي واحد مفتوح
             document.querySelectorAll('.sd-last-row').forEach(r => {
-                if (r !== row) {
-                    r.classList.remove('active');
-                    const d = r.querySelector('.sd-last-details');
-                    if (d) d.style.maxHeight = null;
-                }
+                if (r !== row) { r.classList.remove('active'); const d=r.querySelector('.sd-last-details'); if(d) d.style.maxHeight=null; }
             });
-
-            // افتح/اقفل الحالي
             row.classList.toggle('active');
-
-            if (row.classList.contains('active')) {
-                details.style.maxHeight = details.scrollHeight + "px";
-            } else {
-                details.style.maxHeight = null;
-            }
+            if (row.classList.contains('active')) details.style.maxHeight = details.scrollHeight + "px";
+            else details.style.maxHeight = null;
         }
-
     </script>
-
-
 }
-
-
-
-
 
 @section Styles {
     <link rel="stylesheet" href="~/css/ChatMessage.css" asp-append-version="true" />
-
 }
-
-

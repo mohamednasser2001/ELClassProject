@@ -11,5 +11,6 @@ namespace Models.ViewModels
         public string SubjectName { get; set; } = string.Empty;
         public string InstructorName { get; set; } = string.Empty;
         public string ZoomLink { get; set; } = string.Empty;
+        public DateTime? EndDate { get; set; }
     }
 }
