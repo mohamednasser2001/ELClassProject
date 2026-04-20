@@ -19,5 +19,6 @@ namespace Models
         public ICollection<InstructorStudent> InstructorStudents { get; set; } = new List<InstructorStudent>();
         public ICollection<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();
         public ICollection<StudentAppointment> StudentAppointments { get; set; } = new List<StudentAppointment>();
+        public ICollection<StudentLesson> StudentLessons { get; set; } = new List<StudentLesson>();
     }
 }

@@ -21,7 +21,7 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <form asp-action="EditLesson" method="post" class="p-4 md:p-6 space-y-5">
+            <form asp-action="EditLesson" method="post" enctype="multipart/form-data" class="p-4 md:p-6 space-y-5">
 
                 @* Hidden Fields *@
                 <input type="hidden" asp-for="Id" />
@@ -58,23 +58,75 @@
                     </div>
                 </div>
 
+                @* استبدل الـ grid بتاع LecturePdfUrl و AssignmentPdfUrl بده: *@
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label asp-for="LecturePdfUrl" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">@((isArabic) ? "رابط PDF للمحاضرة" : "Lecture PDF URL")</label>
-                        <div class="relative">
-                            <span class="material-icons absolute left-3 top-2.5 text-slate-400 text-sm">picture_as_pdf</span>
-                            <input asp-for="LecturePdfUrl" placeholder="@((isArabic) ? "رابط PDF للمحاضرة" : "Link to PDF")"
-                                   class="w-full pl-10 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary text-sm" />
-                        </div>
+                    
+                    <div class="space-y-3">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">
+                            <i class="fas fa-file-upload text-orange-500 me-1"></i>
+                            @(isArabic ? "ملفات المحاضرة" : "Lesson Materials")
+                        </label>
+
+                        @if (Model.LessonMaterials.Any())
+                        {
+                            <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg space-y-2">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">
+                                    @(isArabic ? "الملفات الحالية:" : "Current Files:")
+                                </p>
+                                @foreach (var m in Model.LessonMaterials)
+                                {
+                                    var ext = m.FileUrl.Split('.').Last().ToLower();
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <i class="fas fa-file-@(ext == "pdf" ? "pdf text-red-400" : "alt text-blue-400")"></i>
+                                        <a href="/uploads/materials/@m.FileUrl" target="_blank"
+                                               class="text-blue-600 hover:underline truncate max-w-[180px]">
+                                            File .@ext
+                                        </a>
+                                    </div>
+                                }
+                                <p class="text-[10px] text-slate-400 italic mt-1">
+                                    @(isArabic ? "لو رفعت ملفات جديدة هتتبدل" : "Uploading new files will replace these")
+                                </p>
+                            </div>
+                        }
+
+                        <input type="file" name="materials" multiple
+                               class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 border border-dashed border-slate-300 p-2 rounded-lg">
                     </div>
 
-                    <div>
-                        <label asp-for="AssignmentPdfUrl" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">@((isArabic) ? "رابط PDF للواجب" : "Assignment PDF URL")</label>
-                        <div class="relative">
-                            <span class="material-icons absolute left-3 top-2.5 text-slate-400 text-sm">assignment</span>
-                            <input asp-for="AssignmentPdfUrl" placeholder="@((isArabic) ? "رابط PDF للواجب" : "Link to Task")"
-                                   class="w-full pl-10 rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary text-sm" />
-                        </div>
+            
+                    <div class="space-y-3">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">
+                            <i class="fas fa-tasks text-blue-500 me-1"></i>
+                            @(isArabic ? "ملفات الواجبات" : "Assignment Files")
+                        </label>
+
+                        @if (Model.LessonAssignments.Any())
+                        {
+                            <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg space-y-2">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">
+                                    @(isArabic ? "الواجبات الحالية:" : "Current Assignments:")
+                                </p>
+                                @foreach (var a in Model.LessonAssignments)
+                                {
+                                    var ext = a.FileUrl.Split('.').Last().ToLower();
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <i class="fas fa-file-@(ext == "pdf" ? "pdf text-red-400" : "alt text-green-400")"></i>
+                                        <a href="/uploads/assignments/@a.FileUrl" target="_blank"
+                                               class="text-blue-600 hover:underline truncate max-w-[180px]">
+                                            Assignment .@ext
+                                        </a>
+                                    </div>
+                                }
+                                <p class="text-[10px] text-slate-400 italic mt-1">
+                                    @(isArabic ? "لو رفعت ملفات جديدة هتتبدل" : "Uploading new files will replace these")
+                                </p>
+                            </div>
+                        }
+
+                        <input type="file" name="assignments" multiple
+                               class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 border border-dashed border-slate-300 p-2 rounded-lg">
                     </div>
                 </div>
 

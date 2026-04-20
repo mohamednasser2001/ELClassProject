@@ -639,6 +639,12 @@ namespace ELClass.Areas.Admin.Controllers
                     await unitOfWork.InstructorStudentRepository.DeleteAsync(isd);
                 }
 
+                var StudentLessons = await unitOfWork.StudentLessonRepository.GetAsync(sl => sl.StudentId == id);
+                foreach (var sl in StudentLessons)
+                {
+                    await unitOfWork.StudentLessonRepository.DeleteAsync(sl);
+                }
+
                 var relatedAppointments = await unitOfWork.StudentAppointmentRepository.GetAsync(sa => sa.StudentId == id);
                 await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(relatedAppointments);
                 await unitOfWork.StudentRepository.DeleteAsync(student);

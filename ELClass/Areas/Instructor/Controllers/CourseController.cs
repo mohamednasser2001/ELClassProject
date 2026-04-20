@@ -18,9 +18,9 @@ namespace ELClass.Areas.Instructor.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public CourseController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
+        public CourseController(IUnitOfWork _unitOfWork, UserManager<ApplicationUser> userManager)
         {
-            this._unitOfWork = unitOfWork;
+            this._unitOfWork = _unitOfWork;
             this._userManager = userManager;
         }
         public IActionResult ChangeLanguage(string lang)
@@ -122,7 +122,9 @@ namespace ELClass.Areas.Instructor.Controllers
             ViewData["CourseId"] = course.Id;
             ViewData["CourseTitle"] = course.TitleEn;
             var insId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var lessons = await _unitOfWork.LessonRepository.GetAsync(l => l.CourseId == id && l.InstructorId == insId);
+            var lessons = await _unitOfWork.LessonRepository.GetAsync(l => l.CourseId == id && l.InstructorId == insId ,
+                l=>l.Include(l=>l.LessonMaterials).Include(l=>l.LessonAssignments)
+                .Include(e=>e.StudentLessons).ThenInclude(e=>e.Student));
             return View(lessons);
         }
 
@@ -150,27 +152,163 @@ namespace ELClass.Areas.Instructor.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> createLesson(Lesson lsn)
+        //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateLesson(Lesson lsn, IFormFileCollection materials, IFormFileCollection assignments)
         {
             ModelState.Remove("Course");
             ModelState.Remove("Instructor");
+            ModelState.Remove("LessonMaterials");
+            ModelState.Remove("LessonAssignments");
+
             if (ModelState.IsValid)
             {
                 lsn.CreatedAt = DateTime.Now;
-                lsn.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                lsn.InstructorId= User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                lsn.CreatedById = userId;
+                lsn.InstructorId = userId!;
+
+
+                if (materials != null && materials.Count > 0)
+                {
+                    foreach (var file in materials)
+                    {
+                        var fileName = await SaveFileAsync(file, "materials");
+                        lsn.LessonMaterials.Add(new LessonMaterials { FileUrl = fileName });
+                    }
+                }
+
+            
+                if (assignments != null && assignments.Count > 0)
+                {
+                    foreach (var file in assignments)
+                    {
+                        var fileName = await SaveFileAsync(file, "assignments");
+                        lsn.LessonAssignments.Add(new LessonAssignments { FileUrl = fileName });
+                    }
+                }
+
                 await _unitOfWork.LessonRepository.CreateAsync(lsn);
                 await _unitOfWork.CommitAsync();
-                TempData["success"] = "Lesson created successfully";
+
+                TempData["success"] = "Lesson and files created successfully";
                 return RedirectToAction("Details", new { id = lsn.CourseId });
             }
             return View(lsn);
         }
 
+
+
+        [HttpPost]
+        public async Task<IActionResult> CreateLesson2(Lesson lsn, IFormFileCollection materials,
+        IFormFileCollection assignments, [FromForm] List<string> studentIds,
+        [FromForm] List<double> degrees)
+            {
+                ModelState.Remove("Course");
+                ModelState.Remove("Instructor");
+                ModelState.Remove("LessonMaterials");
+                ModelState.Remove("LessonAssignments");
+
+                if (ModelState.IsValid)
+                {
+                    lsn.CreatedAt = DateTime.Now;
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    lsn.CreatedById = userId;
+                    lsn.InstructorId = userId!;
+
+                    if (materials != null && materials.Count > 0)
+                        foreach (var file in materials)
+                            lsn.LessonMaterials.Add(new LessonMaterials { FileUrl = await SaveFileAsync(file, "materials") });
+
+                    if (assignments != null && assignments.Count > 0)
+                        foreach (var file in assignments)
+                            lsn.LessonAssignments.Add(new LessonAssignments { FileUrl = await SaveFileAsync(file, "assignments") });
+
+                    // لو مفيش studentIds جاية من الفورم، جيب طلاب الـ appointment
+                    if (!studentIds.Any())
+                    {
+                        var appointmentId = int.Parse(Request.Form["lessonAppointmentId"].FirstOrDefault() ?? "0");
+                        if (appointmentId > 0)
+                        {
+                            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(
+                                a => a.Id == appointmentId,
+                                include: e => e.Include(e => e.StudentAppointments)
+                            );
+                            if (appointment != null)
+                                studentIds = appointment.StudentAppointments.Select(sa => sa.StudentId).ToList();
+                        }
+                    }
+
+                    // كل الطلاب بياخدوا درجتهم أو صفر لو مش محددة
+                    for (int i = 0; i < studentIds.Count; i++)
+                    {
+                        lsn.StudentLessons.Add(new StudentLesson
+                        {
+                            StudentId = studentIds[i],
+                            Degree = i < degrees.Count ? degrees[i] : 0  // صفر تلقائي
+                        });
+                    }
+
+                    await _unitOfWork.LessonRepository.CreateAsync(lsn);
+                    await _unitOfWork.CommitAsync();
+
+                    return Json(new { success = true, message = "Lesson created successfully" });
+                }
+
+                return Json(new { success = false, message = "Validation failed" });
+            }
+
+
+
+        private async Task<string> SaveFileAsync(IFormFile file, string folderName)
+        {
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderName);
+            Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return uniqueFileName; 
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateStudentDegrees([FromBody] List<UpdateDegreeDto> updates)
+        {
+            try
+            {
+                foreach (var update in updates)
+                {
+                    var sl = await _unitOfWork.StudentLessonRepository.GetOneAsync(x => x.Id == update.StudentLessonId);
+                    if (sl != null)
+                    {
+                        sl.Degree = update.Degree;
+                        await _unitOfWork.StudentLessonRepository.EditAsync(sl);
+                    }
+                }
+                await _unitOfWork.CommitAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        public class UpdateDegreeDto
+        {
+            public int StudentLessonId { get; set; }
+            public double Degree { get; set; }
+        }
+
+
+
         public async Task<IActionResult> EditLesson(int id)
         {
-            var lesson = await _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id);
+            var lesson = await _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id ,e=>e.Include(e=>e.LessonMaterials).Include(e=>e.LessonAssignments));
             if (lesson == null)
             {
                 return NotFound();
@@ -180,35 +318,129 @@ namespace ELClass.Areas.Instructor.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditLesson(Lesson lsn)
+        public async Task<IActionResult> EditLesson(Lesson lsn, IFormFileCollection materials, IFormFileCollection assignments)
         {
             ModelState.Remove("Course");
             ModelState.Remove("Instructor");
+            ModelState.Remove("LessonMaterials");
+            ModelState.Remove("LessonAssignments");
+
             if (ModelState.IsValid)
             {
                 lsn.UpdatedAt = DateTime.Now;
                 lsn.InstructorId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            
+                if (materials != null && materials.Count > 0)
+                {
+                    var oldMaterials = await _unitOfWork.LessonMaterialsRepository
+                        .GetAsync(m => m.LessonId == lsn.Id);
+
+                    foreach (var old in oldMaterials)
+                    {
+                        DeletePhysicalFile(old.FileUrl, "materials");
+                        await _unitOfWork.LessonMaterialsRepository.DeleteAsync(old);
+                    }
+
+                    foreach (var file in materials)
+                    {
+                        var fileName = await SaveFileAsync(file, "materials");
+                        lsn.LessonMaterials.Add(new LessonMaterials { FileUrl = fileName, LessonId = lsn.Id });
+                    }
+                }
+
+         
+                if (assignments != null && assignments.Count > 0)
+                {
+                    var oldAssignments = await _unitOfWork.LessonAssignmentsRepository
+                        .GetAsync(a => a.LessonId == lsn.Id);
+
+                    foreach (var old in oldAssignments)
+                    {
+                        DeletePhysicalFile(old.FileUrl, "assignments");
+                        await _unitOfWork.LessonAssignmentsRepository.DeleteAsync(old);
+                    }
+
+                    foreach (var file in assignments)
+                    {
+                        var fileName = await SaveFileAsync(file, "assignments");
+                        lsn.LessonAssignments.Add(new LessonAssignments { FileUrl = fileName, LessonId = lsn.Id });
+                    }
+                }
+
                 await _unitOfWork.LessonRepository.EditAsync(lsn);
                 await _unitOfWork.CommitAsync();
+
                 TempData["success"] = "Lesson updated successfully";
                 return RedirectToAction("Details", new { id = lsn.CourseId });
             }
             return View(lsn);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteLesson(int id)
         {
-            var lesson = await _unitOfWork.LessonRepository.GetOneAsync(l => l.Id == id);
-            if (lesson == null)
+
+            var lesson = await _unitOfWork.LessonRepository.GetOneAsync(
+                l => l.Id == id,
+                include: e => e.Include(e => e.LessonAssignments).Include(e => e.LessonMaterials).Include(e => e.StudentLessons)
+            );
+
+            try
             {
-                return View("AdminNotFoundPage");
+
+
+
+
+                foreach (var material in lesson.LessonMaterials)
+                {
+                    DeletePhysicalFile(material.FileUrl, "materials");
+
+                }
+
+                foreach (var assign in lesson.LessonAssignments)
+                {
+                    DeletePhysicalFile(assign.FileUrl, "assignments");
+
+                }
+
+
+                if (lesson.LessonMaterials.Any())
+                    await _unitOfWork.LessonMaterialsRepository.DeleteAllAsync(lesson.LessonMaterials);
+
+                if (lesson.LessonAssignments.Any())
+                    await _unitOfWork.LessonAssignmentsRepository.DeleteAllAsync(lesson.LessonAssignments);
+
+                if (lesson.StudentLessons.Any())
+                    await _unitOfWork.StudentLessonRepository.DeleteAllAsync(lesson.StudentLessons);
+
+                await _unitOfWork.LessonRepository.DeleteAsync(lesson);
+
+
+                await _unitOfWork.CommitAsync();
+
+                TempData["success"] = "Lesson and all associated data deleted successfully";
             }
-            await _unitOfWork.LessonRepository.DeleteAsync(lesson);
-            await _unitOfWork.CommitAsync();
-            TempData["success"] = "Lesson deleted successfully";
-            return RedirectToAction("Details", new { id = lesson.CourseId });
+            catch (Exception ex)
+            {
+                TempData["error"] = "Error while deleting: " + ex.Message;
+            }
+
+            return RedirectToAction("Details", "Course", new { id = lesson.CourseId });
+        }
+
+
+        private void DeletePhysicalFile(string fileUrl, string folder)
+        {
+            if (string.IsNullOrEmpty(fileUrl)) return;
+
+
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folder, fileUrl);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
         }
     }
 }

@@ -64,6 +64,9 @@
                             @(isArabic ? "تاريخ المحاضرة" : "Lecture Date")
                         </th>
                         <th class="px-6 py-4 text-center">
+                            @(isArabic ? "الطلاب" : "Students")
+                        </th>
+                        <th class="px-6 py-4 text-center">
                             @(isArabic ? "الإجراءات" : "Actions")
                         </th>
                     </tr>
@@ -71,7 +74,29 @@
                 <tbody class="divide-y divide-gray-50">
                     @foreach (var item in Model)
                     {
-                        <tr class="hover:bg-blue-50/30 transition-colors">
+                        var materialsJson = System.Text.Json.JsonSerializer.Serialize(
+                           item.LessonMaterials.Select(m => m.FileUrl).ToList()
+                       );
+                        var assignmentsJson = System.Text.Json.JsonSerializer.Serialize(
+                            item.LessonAssignments.Select(a => a.FileUrl).ToList()
+                        );
+
+
+                        var studentsJson = System.Text.Json.JsonSerializer.Serialize(
+                            item.StudentLessons.Select(sl => new
+                            {
+                                id = sl.Id,
+                                studentId = sl.StudentId,
+                                name = isArabic ? sl.Student?.NameAr : sl.Student?.NameEn,
+                                degree = sl.Degree
+                            }).ToList()
+                        );
+
+                        <tr class="hover:bg-blue-50/30 transition-colors"
+                            data-lesson-id="@item.Id"
+                            data-materials="@materialsJson"
+                            data-assignments="@assignmentsJson"
+                            data-students="@studentsJson">
 
       
                             <td class="px-6 py-4 text-center text-gray-400 font-medium">@(index++)</td>
@@ -101,28 +126,25 @@
                             </td>
 
                             <td class="px-6 py-4 text-center">
-                                <div class="flex justify-center gap-2">
-                                    @if (!string.IsNullOrEmpty(item.LecturePdfUrl))
-                                    {
-                                        <a href="@item.LecturePdfUrl" target="_blank"
-                                               class="inline-flex items-center justify-center p-2 rounded-lg bg-orange-50 text-orange-500 hover:bg-orange-100 transition-colors border border-orange-100"
-                                               title="@(isArabic ? "ملف المحاضرة" : "Lecture PDF")">
-                                            <i class="fas fa-file-pdf text-sm"></i>
-                                        </a>
-                                    }
-                                    @if (!string.IsNullOrEmpty(item.AssignmentPdfUrl))
-                                    {
-                                        <a href="@item.AssignmentPdfUrl" target="_blank"
-                                               class="inline-flex items-center justify-center p-2 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors border border-blue-100"
-                                               title="@(isArabic ? "ملف الواجب" : "Assignment PDF")">
-                                            <i class="fas fa-file-alt text-sm"></i>
-                                        </a>
-                                    }
-                                    @if (string.IsNullOrEmpty(item.LecturePdfUrl) && string.IsNullOrEmpty(item.AssignmentPdfUrl))
-                                    {
-                                        <span class="text-gray-300">—</span>
-                                    }
-                                </div>
+                                @{
+                                    var hasMaterials = item.LessonMaterials.Any();
+                                    var hasAssignments = item.LessonAssignments.Any();
+                                }
+                                @if (hasMaterials || hasAssignments)
+                                {
+                                    <button onclick="openFilesModal(@item.Id, '@item.Title')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100 text-xs font-semibold">
+                                        <i class="fas fa-folder-open text-xs"></i>
+                                        @(isArabic ? "عرض الملفات" : "View Files")
+                                        <span class="bg-blue-200 text-blue-800 rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+                                            @(item.LessonMaterials.Count + item.LessonAssignments.Count)
+                                        </span>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-300">—</span>
+                                }
                             </td>
 
                             <td class="px-6 py-4">
@@ -137,7 +159,25 @@
                                 </span>
                             </td>
 
-        
+                            <td class="px-6 py-4 text-center">
+                                @{
+                                    var studentCount = item.StudentLessons.Count;
+                                }
+                                @if (studentCount > 0)
+                                {
+                                    <button onclick="openStudentsModal(@item.Id, '@item.Title')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-full transition-colors border border-green-100 text-xs font-semibold">
+                                        <i class="fas fa-users text-xs"></i>
+                                        @studentCount
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-300 text-xs">—</span>
+                                }
+                            </td>
+
+
                             <td class="px-6 py-4">
                                 <div class="flex justify-center gap-2">
                                     <a asp-action="EditLesson" asp-route-id="@item.Id"
@@ -167,6 +207,83 @@
                     }
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="filesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+
+            <div class="modal-header border-b border-gray-100">
+                <h5 class="modal-title flex items-center gap-2 text-gray-800 font-bold text-sm">
+                    <i class="fas fa-folder-open text-blue-800"></i>
+                    <span id="filesModalTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4 space-y-4">
+
+                <div id="materialsSection">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                        <i class="fas fa-file-upload text-orange-400"></i>
+                        @(isArabic ? "ملفات المحاضرة" : "Lesson Materials")
+                    </p>
+                    <div id="materialsList" class="space-y-2"></div>
+                </div>
+
+                <hr class="border-gray-100" id="filesDivider">
+
+       
+                <div id="assignmentsSection">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                        <i class="fas fa-tasks text-blue-400"></i>
+                        @(isArabic ? "ملفات الواجبات" : "Assignment Files")
+                    </p>
+                    <div id="assignmentsList" class="space-y-2"></div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-t border-gray-100">
+                <button type="button" class="btn btn-light border px-4 rounded-lg" data-bs-dismiss="modal">
+                    @(isArabic ? "إغلاق" : "Close")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="studentsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+
+            <div class="modal-header border-b border-gray-100">
+                <h5 class="modal-title flex items-center gap-2 text-gray-800 font-bold text-sm">
+                    <i class="fas fa-users text-green-600"></i>
+                    <span id="studentsModalTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div id="studentsEvalList" class="space-y-2"></div>
+            </div>
+
+            <div class="modal-footer border-t border-gray-100">
+                <button type="button" class="btn btn-light border px-4 rounded-lg" data-bs-dismiss="modal">
+                    @(isArabic ? "إغلاق" : "Close")
+                </button>
+                <button type="button" id="saveStudentDegreesBtn"
+                        class="inline-flex items-center px-5 py-2 bg-blue-800 hover:bg-blue-700 text-white font-medium rounded-lg transition-all shadow-sm gap-2 text-sm">
+                    <i class="fas fa-save me-1"></i>
+                    @(isArabic ? "حفظ التعديلات" : "Save Changes")
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -206,5 +323,157 @@
         }
         });
         }
+
+
+        var isAr = "@isArabic".toLowerCase() === "true";
+        var uploadsBase = '/uploads/';
+
+        function openFilesModal(lessonId, lessonTitle) {
+        document.getElementById('filesModalTitle').textContent = lessonTitle;
+
+        // اجيب البيانات من الـ data attributes على الـ row
+        var row = document.querySelector('tr[data-lesson-id="' + lessonId + '"]');
+        var materials = JSON.parse(row.dataset.materials || '[]');
+        var assignments = JSON.parse(row.dataset.assignments || '[]');
+
+        renderFilesList('materialsList', 'materialsSection', materials, 'materials', 'orange');
+        renderFilesList('assignmentsList', 'assignmentsSection', assignments, 'assignments', 'blue');
+
+        // إخفاء الـ divider لو أحدهم فاضي
+        var showDivider = materials.length > 0 && assignments.length > 0;
+        document.getElementById('filesDivider').style.display = showDivider ? 'block' : 'none';
+
+        new bootstrap.Modal(document.getElementById('filesModal')).show();
+        }
+
+        function renderFilesList(listId, sectionId, files, folder, color) {
+        var section = document.getElementById(sectionId);
+        var list = document.getElementById(listId);
+
+        if (!files || files.length === 0) {
+        section.style.display = 'none';
+        return;
+        }
+
+        section.style.display = 'block';
+        list.innerHTML = '';
+
+        files.forEach(function (fileName, i) {
+        var ext = fileName.split('.').pop().toLowerCase();
+        var icon = getFileIcon(ext, color);
+        var fileUrl = '/uploads/' + folder + '/' + fileName;
+        var displayName = (isAr ? 'ملف' : 'File') + ' ' + (i + 1) + ' .' + ext;
+
+        list.innerHTML +=
+        '<a href="' + fileUrl + '" target="_blank" ' +
+        'class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group no-underline">' +
+        '<div class="w-8 h-8 rounded-lg bg-' + color + '-50 flex items-center justify-center flex-shrink-0">' +
+        '<i class="' + icon + ' text-' + color + '-500 text-sm"></i>' +
+        '</div>' +
+        '<span class="text-gray-700 text-sm font-medium group-hover:text-' + color + '-700 transition-colors">' + displayName + '</span>' +
+        '<i class="fas fa-external-link-alt text-xs text-gray-300 group-hover:text-' + color + '-400 ms-auto transition-colors"></i>' +
+        '</a>';
+        });
+        }
+
+        function getFileIcon(ext, color) {
+        var icons = {
+        'pdf': 'fas fa-file-pdf',
+        'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word',
+        'xls': 'fas fa-file-excel', 'xlsx': 'fas fa-file-excel',
+        'ppt': 'fas fa-file-powerpoint', 'pptx': 'fas fa-file-powerpoint',
+        'jpg': 'fas fa-file-image', 'jpeg': 'fas fa-file-image',
+        'png': 'fas fa-file-image', 'gif': 'fas fa-file-image',
+        'zip': 'fas fa-file-archive', 'rar': 'fas fa-file-archive',
+        'mp4': 'fas fa-file-video', 'mp3': 'fas fa-file-audio',
+        };
+        return icons[ext] || 'fas fa-file';
+        }
+
+
+        var currentLessonId = 0;
+
+        function openStudentsModal(lessonId, lessonTitle) {
+        currentLessonId = lessonId;
+        document.getElementById('studentsModalTitle').textContent = lessonTitle;
+
+        var row = document.querySelector('tr[data-lesson-id="' + lessonId + '"]');
+        var students = JSON.parse(row.dataset.students || '[]');
+
+        var html = '';
+        if (!students || students.length === 0) {
+        html = '<div class="text-center text-gray-400 py-8">' +
+        '<i class="fas fa-users text-3xl mb-2 block text-gray-200"></i>' +
+        (isAr ? 'لا يوجد طلاب في هذا الدرس' : 'No students in this lesson') +
+        '</div>';
+        } else {
+        students.forEach(function (s) {
+        html +=
+        '<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">' +
+        '<div class="flex items-center gap-3">' +
+        '<div class="w-9 h-9 rounded-full bg-green-100 d-flex align-items-center justify-content-center text-green-700 font-bold text-sm flex-shrink-0">' +
+        (s.name ? s.name.charAt(0) : '?') +
+        '</div>' +
+        '<span class="font-semibold text-gray-800 text-sm">' + (s.name || '—') + '</span>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<label class="text-xs text-gray-500 font-medium">' + (isAr ? 'الدرجة' : 'Score') + '</label>' +
+        '<input type="number" min="0" max="10" value="' + s.degree + '" ' +
+        'data-student-lesson-id="' + s.id + '" ' +
+        'data-student-id="' + s.studentId + '" ' +
+        'class="student-degree-input form-control form-control-sm text-center rounded-lg border-gray-200" style="width:75px">' +
+        '<span class="text-xs text-gray-400">/ 10</span>' +
+        '</div>' +
+        '</div>';
+        });
+        }
+
+        document.getElementById('studentsEvalList').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('studentsModal')).show();
+        }
+
+        $('#saveStudentDegreesBtn').on('click', function () {
+        var updates = [];
+        $('.student-degree-input').each(function () {
+        updates.push({
+        studentLessonId: parseInt($(this).data('student-lesson-id')),
+        degree: parseFloat($(this).val()) || 0
+        });
+        });
+
+        if (updates.length === 0) return;
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.ajax({
+        url: '/instructor/Course/UpdateStudentDegrees',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(updates),
+        success: function (res) {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ التعديلات' : 'Save Changes'));
+        if (res.success) {
+        Swal.fire({
+        icon: 'success',
+        title: isAr ? 'تم الحفظ' : 'Saved',
+        timer: 1200,
+        showConfirmButton: false
+        }).then(function () {
+        bootstrap.Modal.getInstance(document.getElementById('studentsModal')).hide();
+        location.reload();
+        });
+        } else {
+        Swal.fire('Error', res.message, 'error');
+        }
+        },
+        error: function () {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ التعديلات' : 'Save Changes'));
+        Swal.fire('Error', isAr ? 'فشل الاتصال' : 'Connection failed', 'error');
+        }
+        });
+        });
+
+
     </script>
 }

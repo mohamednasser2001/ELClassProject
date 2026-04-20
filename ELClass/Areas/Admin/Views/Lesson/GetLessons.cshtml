@@ -1,12 +1,8 @@
 ﻿@{
     if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-    {
         Layout = "_AdminLayout";
-    }
     else
-    {
         Layout = "_InstrcutorLayout";
-    }
 }
 
 @using Models
@@ -14,22 +10,15 @@
 
 @{
     ViewData["Title"] = "Lecture Management";
-
     int index = 1;
 }
-
-
-
-<style>
-
-</style>
 
 <div class="bg-white dark:bg-slate-900 min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-200">
     <div class="w-full px-2 sm:px-4 py-4">
 
         <header class="flex flex-col lg:flex-row lg:items-center justify-between mb-4 gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg shadow-sm">
             <nav class="flex items-center space-x-2 text-sm md:text-base font-medium overflow-hidden">
-                <a class="text-slate-500 hover:text-primary transition-colors no-underline whitespace-nowrap" asp-action="Index">Rounds</a>
+                <a class="text-slate-500 hover:text-primary transition-colors no-underline whitespace-nowrap" asp-controller="course" asp-action="Index">Rounds</a>
                 <span class="material-icons text-slate-400 text-sm flex-shrink-0">chevron_right</span>
                 <span class="text-slate-900 dark:text-white font-bold truncate">@ViewData["CourseTitle"]</span>
             </nav>
@@ -45,22 +34,8 @@
                         }
                     </select>
                 </div>
-
-                <a asp-action="CreateLesson" asp-route-courseId="@ViewData["CourseId"]"
-                   class="bg-primary hover:bg-orange-600 hover:scale-[1.02] active:scale-95 text-white px-4 py-2 rounded shadow-md flex items-center justify-center gap-2 font-semibold transition-all no-underline w-full sm:w-auto text-sm whitespace-nowrap">
-                    <span class="material-icons text-lg">add</span>
-                    <span>Add Lecture</span>
-                </a>
             </div>
         </header>
-
-        <div class="border-b border-slate-200 dark:border-slate-700 mb-4 px-2">
-            <nav class="flex space-x-6">
-                <a class="border-b-2 border-primary py-3 px-1 text-primary font-bold text-sm no-underline" href="#">Lectures</a>
-                @* <a class="border-b-2 border-transparent py-3 px-1 text-slate-500 hover:text-primary font-medium text-sm transition-all no-underline"
-                   asp-action="GetStudents" asp-route-id="@ViewData["CourseId"]">Students</a> *@
-            </nav>
-        </div>
 
         <div class="bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden rounded-md">
             <div class="overflow-x-auto custom-scrollbar">
@@ -68,56 +43,118 @@
                     <thead>
                         <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600">
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">No.</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Instructor Name</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Instructor</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Name</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">Drive Link</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">PDFs</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Lecture Date</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">Files</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">Students</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Date</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="lessonsTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
                         @foreach (var item in Model)
                         {
+                            var materialsJson = System.Text.Json.JsonSerializer.Serialize(
+                                item.LessonMaterials.Select(m => m.FileUrl).ToList()
+                            );
+                            var assignmentsJson = System.Text.Json.JsonSerializer.Serialize(
+                                item.LessonAssignments.Select(a => a.FileUrl).ToList()
+                            );
+                            var studentsJson = System.Text.Json.JsonSerializer.Serialize(
+                                item.StudentLessons.Select(sl => new
+                                {
+                                    id = sl.Id,
+                                    studentId = sl.StudentId,
+                                    name = sl.Student?.NameEn,
+                                    degree = sl.Degree
+                                }).ToList()
+                            );
+
                             <tr class="lesson-row hover:bg-orange-50 dark:hover:bg-slate-700/40 transition-colors group"
-                                data-instructor-id="@item.InstructorId">
+                                data-instructor-id="@item.InstructorId"
+                                data-lesson-id="@item.Id"
+                                data-materials="@materialsJson"
+                                data-assignments="@assignmentsJson"
+                                data-students="@studentsJson">
+
                                 <td class="px-4 py-4 text-sm text-slate-500 group-hover:text-primary font-medium row-index">@(index++)</td>
+
                                 <td class="px-4 py-4 text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-semibold text-slate-800 dark:text-slate-100"> <a href="/admin/Instructor/details/@item.InstructorId">@item.Instructor.NameEn</a></span>
-                                    </div>
+                                    <a href="/admin/Instructor/details/@item.InstructorId"
+                                           class="font-semibold text-slate-800 dark:text-slate-100 hover:text-primary no-underline">
+                                        @item.Instructor.NameEn
+                                    </a>
                                 </td>
+
                                 <td class="px-4 py-4 text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-semibold text-slate-800 dark:text-slate-100">@item.Title</span>
-                                    </div>
+                                    <span class="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+                                        <i class="fas fa-book text-xs text-blue-400"></i>
+                                        @item.Title
+                                    </span>
                                 </td>
+
+            
                                 <td class="px-4 py-4 text-center">
                                     @if (!string.IsNullOrEmpty(item.DriveLink))
                                     {
-                                        <a href="@item.DriveLink" target="_blank" class="inline-block p-1.5 rounded-full hover:bg-blue-50 text-blue-600 transition-all">
-                                            <span class="material-icons text-xl">cloud_download</span>
+                                        <a href="@item.DriveLink" target="_blank"
+                                               class="inline-flex items-center justify-center p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-100"
+                                               title="Open Link">
+                                            <i class="fas fa-cloud-download-alt text-sm"></i>
                                         </a>
                                     }
+                                    else
+                                    {
+                                        <span class="text-slate-300">—</span>
+                                    }
                                 </td>
+
+            
                                 <td class="px-4 py-4 text-center">
-                                    <div class="flex justify-center gap-2">
-                                        @if (!string.IsNullOrEmpty(item.LecturePdfUrl))
-                                        {
-                                            <a href="@item.LecturePdfUrl" title="Lecture PDF" class="text-orange-500 hover:text-orange-700"><span class="material-icons">picture_as_pdf</span></a>
-                                        }
-                                        @if (!string.IsNullOrEmpty(item.AssignmentPdfUrl))
-                                        {
-                                            <a href="@item.AssignmentPdfUrl" title="Assignment PDF" class="text-blue-500 hover:text-blue-700"><span class="material-icons">assignment</span></a>
-                                        }
-                                    </div>
+                                    @{
+                                        var totalFiles = item.LessonMaterials.Count + item.LessonAssignments.Count;
+                                    }
+                                    @if (totalFiles > 0)
+                                    {
+                                        <button onclick="openFilesModal(@item.Id, '@item.Title')"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100 text-xs font-semibold">
+                                            <i class="fas fa-folder-open text-xs"></i>
+                                            Files
+                                            <span class="bg-blue-200 text-blue-800 rounded-full px-1.5 py-0.5 text-[10px] font-bold">@totalFiles</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-300">—</span>
+                                    }
                                 </td>
+
+                                <td class="px-4 py-4 text-center">
+                                    @if (item.StudentLessons.Any())
+                                    {
+                                        <button onclick="openStudentsModal(@item.Id, '@item.Title')"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-full transition-colors border border-green-100 text-xs font-semibold">
+                                            <i class="fas fa-users text-xs"></i>
+                                            @item.StudentLessons.Count
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-300 text-xs">—</span>
+                                    }
+                                </td>
+
+              
                                 <td class="px-4 py-4 text-sm font-mono text-slate-500">
                                     @item.LectureDate.ToString("yyyy-MM-dd")
                                 </td>
+
+                 
                                 <td class="px-4 py-4 text-center">
                                     <div class="flex justify-center gap-2">
-                                        <a asp-action="EditLesson" asp-route-id="@item.Id" class="p-1.5 rounded-full hover:bg-orange-100 text-orange-400 hover:text-primary transition-all">
+                                        <a asp-action="EditLesson" asp-route-id="@item.Id"
+                                               class="p-1.5 rounded-full hover:bg-orange-100 text-orange-400 hover:text-primary transition-all">
                                             <span class="material-icons text-xl">edit</span>
                                         </a>
                                         <button type="button"
@@ -134,7 +171,64 @@
             </div>
         </div>
         @Html.AntiForgeryToken()
+    </div>
+</div>
 
+
+<div class="modal fade" id="filesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-b border-gray-100">
+                <h5 class="modal-title flex items-center gap-2 text-gray-800 font-bold text-sm">
+                    <i class="fas fa-folder-open text-blue-800"></i>
+                    <span id="filesModalTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 space-y-4">
+                <div id="materialsSection">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                        <i class="fas fa-file-upload text-orange-400"></i> Lesson Materials
+                    </p>
+                    <div id="materialsList" class="space-y-2"></div>
+                </div>
+                <hr class="border-gray-100" id="filesDivider">
+                <div id="assignmentsSection">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                        <i class="fas fa-tasks text-blue-400"></i> Assignment Files
+                    </p>
+                    <div id="assignmentsList" class="space-y-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-t border-gray-100">
+                <button type="button" class="btn btn-light border px-4 rounded-lg" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="studentsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-b border-gray-100">
+                <h5 class="modal-title flex items-center gap-2 text-gray-800 font-bold text-sm">
+                    <i class="fas fa-users text-green-600"></i>
+                    <span id="studentsModalTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="studentsEvalList" class="space-y-2"></div>
+            </div>
+            <div class="modal-footer border-t border-gray-100">
+                <button type="button" class="btn btn-light border px-4 rounded-lg" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="saveStudentDegreesBtn"
+                        class="inline-flex items-center px-5 py-2 bg-blue-800 hover:bg-blue-700 text-white font-medium rounded-lg transition-all shadow-sm gap-2 text-sm">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -142,54 +236,169 @@
 
 @section Scripts {
     <script>
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This lesson will be permanently deleted!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444', // Red
-                cancelButtonColor: '#64748b', // Slate
-                confirmButtonText: 'Yes, delete it!',
-                showClass: { popup: 'animate__animated animate__shakeX' }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // إنشاء Form وهمي لإرسال الـ POST مع الـ Token
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/Admin/Lesson/DeleteLesson/' + id; // تأكد من المسار الصحيح
+        // ==================== Filter ====================
+        document.getElementById('instructorFilter').addEventListener('change', function () {
+        const selectedId = this.value;
+        const rows = document.querySelectorAll('.lesson-row');
+        let visibleIndex = 1;
+        rows.forEach(row => {
+        const rowInstructorId = row.getAttribute('data-instructor-id');
+        if (selectedId === 'all' || rowInstructorId === selectedId) {
+        row.style.display = '';
+        row.querySelector('.row-index').textContent = visibleIndex++;
+        } else {
+        row.style.display = 'none';
+        }
+        });
+        });
 
-                    // إضافة Anti-Forgery Token
-                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-                    const tokenInput = document.createElement('input');
-                    tokenInput.type = 'hidden';
-                    tokenInput.name = '__RequestVerificationToken';
-                    tokenInput.value = token;
+        // ==================== Files Modal ====================
+        function openFilesModal(lessonId, lessonTitle) {
+        document.getElementById('filesModalTitle').textContent = lessonTitle;
+        var row = document.querySelector('tr[data-lesson-id="' + lessonId + '"]');
+        var materials = JSON.parse(row.dataset.materials || '[]');
+        var assignments = JSON.parse(row.dataset.assignments || '[]');
 
-                    form.appendChild(tokenInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            })
+        renderFilesList('materialsList', 'materialsSection', materials, 'materials', 'orange');
+        renderFilesList('assignmentsList', 'assignmentsSection', assignments, 'assignments', 'blue');
+
+        document.getElementById('filesDivider').style.display =
+        (materials.length > 0 && assignments.length > 0) ? 'block' : 'none';
+
+        new bootstrap.Modal(document.getElementById('filesModal')).show();
         }
 
-
-        document.getElementById('instructorFilter').addEventListener('change', function () {
-            const selectedId = this.value; // ده هايكون الـ GUID بتاع الانستراكتور
-            const rows = document.querySelectorAll('.lesson-row');
-            let visibleIndex = 1;
-
-            rows.forEach(row => {
-                const rowInstructorId = row.getAttribute('data-instructor-id');
-
-                // مقارنة دقيقة تماماً (Exact Match)
-                if (selectedId === 'all' || rowInstructorId === selectedId) {
-                    row.style.display = '';
-                    row.querySelector('.row-index').textContent = visibleIndex++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        function renderFilesList(listId, sectionId, files, folder, color) {
+        var section = document.getElementById(sectionId);
+        var list = document.getElementById(listId);
+        if (!files || files.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+        list.innerHTML = '';
+        files.forEach(function (fileName, i) {
+        var ext = fileName.split('.').pop().toLowerCase();
+        var fileUrl = '/uploads/' + folder + '/' + fileName;
+        var displayName = 'File ' + (i + 1) + ' .' + ext;
+        list.innerHTML +=
+        '<a href="' + fileUrl + '" target="_blank" ' +
+        'class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group no-underline">' +
+        '<div class="w-8 h-8 rounded-lg bg-' + color + '-50 flex items-center justify-center flex-shrink-0">' +
+        '<i class="' + getFileIcon(ext) + ' text-' + color + '-500 text-sm"></i>' +
+        '</div>' +
+        '<span class="text-gray-700 text-sm font-medium">' + displayName + '</span>' +
+        '<i class="fas fa-external-link-alt text-xs text-gray-300 ms-auto"></i>' +
+        '</a>';
         });
+        }
+
+        function getFileIcon(ext) {
+        var icons = {
+        'pdf': 'fas fa-file-pdf', 'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word',
+        'xls': 'fas fa-file-excel', 'xlsx': 'fas fa-file-excel',
+        'ppt': 'fas fa-file-powerpoint', 'pptx': 'fas fa-file-powerpoint',
+        'jpg': 'fas fa-file-image', 'jpeg': 'fas fa-file-image', 'png': 'fas fa-file-image',
+        'zip': 'fas fa-file-archive', 'rar': 'fas fa-file-archive',
+        'mp4': 'fas fa-file-video', 'mp3': 'fas fa-file-audio'
+        };
+        return icons[ext] || 'fas fa-file';
+        }
+
+        // ==================== Students Modal ====================
+        var currentLessonId = 0;
+
+        function openStudentsModal(lessonId, lessonTitle) {
+        currentLessonId = lessonId;
+        document.getElementById('studentsModalTitle').textContent = lessonTitle;
+
+        var row = document.querySelector('tr[data-lesson-id="' + lessonId + '"]');
+        var students = JSON.parse(row.dataset.students || '[]');
+
+        var html = '';
+        if (!students || students.length === 0) {
+        html = '<div class="text-center text-gray-400 py-8">' +
+        '<i class="fas fa-users text-3xl mb-2 block text-gray-200"></i>No students</div>';
+        } else {
+        students.forEach(function (s) {
+        html += '<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">' +
+        '<div class="flex items-center gap-3">' +
+        '<div class="w-9 h-9 rounded-full bg-green-100 d-flex align-items-center justify-content-center text-green-700 font-bold text-sm flex-shrink-0">' +
+        (s.name ? s.name.charAt(0) : '?') + '</div>' +
+        '<span class="font-semibold text-gray-800 text-sm">' + (s.name || '—') + '</span>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<label class="text-xs text-gray-500 font-medium">Score</label>' +
+        '<input type="number" min="0" max="10" value="' + s.degree + '" ' +
+        'data-student-lesson-id="' + s.id + '" ' +
+        'class="student-degree-input form-control form-control-sm text-center rounded-lg border-gray-200" style="width:75px">' +
+        '<span class="text-xs text-gray-400">/ 10</span>' +
+        '</div></div>';
+        });
+        }
+        document.getElementById('studentsEvalList').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('studentsModal')).show();
+        }
+
+        $('#saveStudentDegreesBtn').on('click', function () {
+        var updates = [];
+        $('.student-degree-input').each(function () {
+        updates.push({
+        studentLessonId: parseInt($(this).data('student-lesson-id')),
+        degree: parseFloat($(this).val()) || 0
+        });
+        });
+        if (updates.length === 0) return;
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.ajax({
+        url: '/Admin/Lesson/UpdateStudentDegrees',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(updates),
+        success: function (res) {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
+        if (res.success) {
+        Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false })
+        .then(function () {
+        bootstrap.Modal.getInstance(document.getElementById('studentsModal')).hide();
+        location.reload();
+        });
+        } else {
+        Swal.fire('Error', res.message, 'error');
+        }
+        },
+        error: function () {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
+        Swal.fire('Error', 'Connection failed', 'error');
+        }
+        });
+        });
+
+        // ==================== Delete ====================
+        function confirmDelete(id) {
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "This lesson will be permanently deleted!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Admin/Lesson/DeleteLesson/' + id;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '__RequestVerificationToken';
+        tokenInput.value = token;
+        form.appendChild(tokenInput);
+        document.body.appendChild(form);
+        form.submit();
+        }
+        });
+        }
     </script>
 }
