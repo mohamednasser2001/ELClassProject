@@ -2,8 +2,9 @@
 @model StudentProfileVM
 
 @{
-    var currentLang = Context.Session.GetString("Language") ?? "en";
-    var direction = currentLang == "ar" ? "rtl" : "ltr";
+    var isArabic = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var currentLang = isArabic ? "ar" : "en";
+    var direction = isArabic ? "rtl" : "ltr";
 
     if (User.IsInRole("Admin"))
         Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -90,13 +91,13 @@
                     </h5>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Full Name</label>
+                        <label class="form-label fw-bold small text-muted">@(isArabic ? "الاسم الكامل" : "Full Name")</label>
                         <input asp-for="FullName" class="form-control shadow-sm">
                         <span asp-validation-for="FullName" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Phone Number</label>
+                        <label class="form-label fw-bold small text-muted">@(isArabic ? "رقم الهاتف" : "Phone Number")</label>
                         <input asp-for="PhoneNumber" class="form-control shadow-sm">
                         <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                     </div>
@@ -105,26 +106,26 @@
 
                     <h6 class="fw-bold mb-3">
                         <i class="fas fa-lock text-orange me-2"></i>
-                        @(currentLang == "ar" ? "الأمان" : "Security")
+                        @(isArabic ? "الأمان" : "Security")
                     </h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-muted">New Password</label>
+                            <label class="form-label small fw-bold text-muted">@(isArabic ? "كلمة المرور الجديدة" : "New Password")</label>
                             <input asp-for="NewPassword" type="password" class="form-control shadow-sm">
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-muted">Confirm Password</label>
+                            <label class="form-label small fw-bold text-muted">@(isArabic ? "تأكيد كلمة المرور" : "Confirm Password")</label>
                             <input asp-for="ConfirmPassword" type="password" class="form-control shadow-sm">
                             <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                         </div>
                     </div>
 
-                    <div class="mt-4 text-end">
+                    <div class="mt-4 @(isArabic ? "text-start" : "text-end")">
                         <button type="submit" class="btn btn-orange-custom px-5 shadow-sm">
                             <i class="fas fa-save me-2"></i>
-                            @(currentLang == "ar" ? "حفظ التغييرات" : "Save Changes")
+                            @(isArabic ? "حفظ التغييرات" : "Save Changes")
                         </button>
                     </div>
 

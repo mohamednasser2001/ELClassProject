@@ -444,7 +444,8 @@ namespace ELClass.Areas.Identity.Controllers
                     NameEN = vm.NameEN,
                     NameAR = vm.NameEN,
                     Email = email,
-                    UserName = userName
+                    UserName = userName,
+                    PhoneNumber = vm.PhoneNumber
                 };
 
                 var result = await _userManager.CreateAsync(applicationUser, vm.Password!);

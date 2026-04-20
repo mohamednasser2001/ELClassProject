@@ -230,6 +230,26 @@ body {
   margin-right: 0 !important;
 }
 
+/* RTL mobile: sidebar hides off-screen to the right, header & container fill full width */
+@media (max-width: 1024px) {
+  [dir="rtl"] .pc-sidebar {
+    left: auto !important;
+    right: -260px !important;
+  }
+  [dir="rtl"] .pc-sidebar.mob-sidebar-active {
+    right: 0 !important;
+    left: auto !important;
+  }
+  [dir="rtl"] .pc-header {
+    right: 0 !important;
+    left: 0 !important;
+  }
+  [dir="rtl"] .pc-container {
+    margin-right: 10px !important;
+    margin-left: 10px !important;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════
    HEADER
    ══════════════════════════════════════════════════════════ */

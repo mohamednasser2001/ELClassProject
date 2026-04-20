@@ -113,6 +113,13 @@
 
 
                 <div class="form-group">
+                    <label class="form-label">@(isArabic ? "رقم الهاتف" : "Phone Number")</label>
+                    <input class="form-control" type="tel" asp-for="PhoneNumber"
+                           placeholder="01XXXXXXXXX" />
+                    <span class="text-danger fs--1" asp-validation-for="PhoneNumber"></span>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">@(isArabic ? "التخصص" : "Specialization")</label>
                     <input class="form-control" asp-for="SpecializationEn" 
                            placeholder="@(isArabic ? "مثلاً: تطوير المواقع، علم البيانات..." : "e.g. Web Development, Data Science...")" />

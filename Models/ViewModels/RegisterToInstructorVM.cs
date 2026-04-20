@@ -23,6 +23,10 @@ namespace Models.ViewModels
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         public string Email { get; set; } = null!;
 
+        [Required(ErrorMessage = "Phone number is required")]
+        [Phone(ErrorMessage = "Invalid phone number")]
+        public string PhoneNumber { get; set; } = null!;
+
         public IFormFile Bio { get; set; }
 
         public string SpecializationEn { get; set; } = string.Empty;
