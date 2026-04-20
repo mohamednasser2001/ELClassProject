@@ -17,10 +17,7 @@ namespace Models
         public string? DriveLink { get; set; } = string.Empty;
 
 
-        // ابقى احذف دول يا محمد 
-        public string LecturePdfUrl { get; set; } = string.Empty;
-        public string AssignmentPdfUrl { get; set; } = string.Empty;
-        //لحد هنا 
+       
         public  string InstructorId { get; set; } = string.Empty;
         public Instructor Instructor { get; set; } = null!;
 

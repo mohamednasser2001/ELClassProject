@@ -126,12 +126,16 @@ namespace ELClass.Areas.StudentArea.Controllers
                          && l.LectureDate != null
                          && l.LectureDate <= nowForLessons
                          && (
-                             !string.IsNullOrWhiteSpace(l.DriveLink)
-                             || !string.IsNullOrWhiteSpace(l.LecturePdfUrl)
-                             || !string.IsNullOrWhiteSpace(l.AssignmentPdfUrl)
-                         ),
+                            !string.IsNullOrWhiteSpace(l.DriveLink)
+                            || l.LessonMaterials.Any()
+                            || l.LessonAssignments.Any()
+                        ),
+
                     tracked: false,
-                    include: q => q.Include(l => l.Course),
+                    include: q => q
+                    .Include(l => l.Course)
+                    .Include(l => l.LessonMaterials)
+                    .Include(l => l.LessonAssignments),
                     orderBy: q => q.OrderByDescending(l => l.LectureDate)
                 );
 
@@ -147,8 +151,8 @@ namespace ELClass.Areas.StudentArea.Controllers
                             : "Course",
 
                         DriveLink = l.DriveLink,
-                        LecturePdfUrl = l.LecturePdfUrl,
-                        AssignmentPdfUrl = l.AssignmentPdfUrl,
+                        MaterialUrls = l.LessonMaterials.Select(m => m.FileUrl).ToList(),      
+                        AssignmentUrls = l.LessonAssignments.Select(a => a.FileUrl).ToList(),
                         LectureDate = l.LectureDate!,
                     })
                     .ToList();
