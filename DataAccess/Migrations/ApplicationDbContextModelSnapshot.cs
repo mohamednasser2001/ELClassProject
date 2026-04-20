@@ -817,10 +817,6 @@ namespace DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AssignmentPdfUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
@@ -840,10 +836,6 @@ namespace DataAccess.Migrations
 
                     b.Property<DateTime>("LectureDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("LecturePdfUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()

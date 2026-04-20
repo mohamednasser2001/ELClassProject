@@ -1,10 +1,6 @@
 ﻿@model Models.Lesson
 @{
     Layout = "_StudentLayout";
-
-    // =========================
-    // Language (Session-based)
-    // =========================
     var currentLang = Context.Session.GetString("Language") ?? "en";
     var isArabic = currentLang == "ar";
 }
@@ -16,10 +12,9 @@
                 <h3 class="mb-0 text-white">
                     <i class="fas fa-play-circle me-2"></i> @Model.Title
                 </h3>
-
                 <a asp-action="Details"
-                   asp-route-id="@Model.CourseId"
-                   class="btn btn-outline-light btn-sm">
+                       asp-route-id="@Model.CourseId"
+                       class="btn btn-outline-light btn-sm">
                     <i class="fas @(isArabic ? "fa-chevron-right" : "fa-chevron-left")"></i>
                     @(isArabic ? "العودة إلى المحاضرات" : "Back to Lessons")
                 </a>
@@ -29,80 +24,101 @@
         <div class="card-body p-5 bg-light">
             <div class="row g-4">
 
-                <!-- Lecture Video -->
-                <div class="col-md-4">
-                    <div class="text-center p-4 h-100 shadow-sm bg-white"
-                         style="border-radius: 15px; border-bottom: 5px solid #d35400;">
-                        <i class="fab fa-google-drive fa-3x mb-3" style="color: #d35400;"></i>
-
-                        <h5 class="fw-bold">
-                            @(isArabic ? "رابط المحاضرة" : "Lecture Link")
-                        </h5>
-
-                        <p class="text-muted small">
-                            @(isArabic
-                                ? "شاهد المحاضرة المسجلة على Google Drive"
-                                : "Watch the recorded session on Google Drive")
-                        </p>
-
-                        <a href="@Model.DriveLink"
-                           target="_blank"
-                           class="btn w-100 text-white"
-                           style="background-color: #d35400;">
-                            @(isArabic ? "فتح الفيديو" : "Open Video")
-                        </a>
+                <!-- ===== Lecture Video ===== -->
+                @if (!string.IsNullOrEmpty(Model.DriveLink))
+                {
+                    <div class="col-md-4">
+                        <div class="text-center p-4 h-100 shadow-sm bg-white"
+                             style="border-radius: 15px; border-bottom: 5px solid #d35400;">
+                            <i class="fab fa-google-drive fa-3x mb-3" style="color: #d35400;"></i>
+                            <h5 class="fw-bold">@(isArabic ? "رابط المحاضرة" : "Lecture Link")</h5>
+                            <p class="text-muted small">
+                                @(isArabic ? "شاهد المحاضرة المسجلة على Google Drive" : "Watch the recorded session on Google Drive")
+                            </p>
+                            <a href="@Model.DriveLink" target="_blank"
+                                   class="btn w-100 text-white" style="background-color: #d35400;">
+                                @(isArabic ? "فتح الفيديو" : "Open Video")
+                            </a>
+                        </div>
                     </div>
-                </div>
+                }
 
-                <!-- PDF -->
-                <div class="col-md-4">
-                    <div class="text-center p-4 h-100 shadow-sm bg-white"
-                         style="border-radius: 15px; border-bottom: 5px solid #9dbfad;">
-                        <i class="fas fa-file-pdf fa-3x mb-3" style="color: #9dbfad;"></i>
-
-                        <h5 class="fw-bold">
-                            @(isArabic ? "مذكرة الشرح" : "Study Notes")
-                        </h5>
-
-                        <p class="text-muted small">
-                            @(isArabic
-                                ? "تحميل أو عرض ملف المحاضرة PDF"
-                                : "Download or view the lecture PDF materials")
-                        </p>
-
-                        <a href="@Model.LecturePdfUrl"
-                           target="_blank"
-                           class="btn w-100 text-white"
-                           style="background-color: #9dbfad;">
-                            @(isArabic ? "عرض الملف" : "View PDF")
-                        </a>
+                <!-- ===== Materials ===== -->
+                @if (Model.LessonMaterials != null && Model.LessonMaterials.Any())
+                {
+                    <div class="col-md-4">
+                        <div class="text-center p-4 h-100 shadow-sm bg-white"
+                             style="border-radius: 15px; border-bottom: 5px solid #9dbfad;">
+                            <i class="fas fa-file-alt fa-3x mb-3" style="color: #9dbfad;"></i>
+                            <h5 class="fw-bold">@(isArabic ? "مواد الشرح" : "Study Materials")</h5>
+                            <p class="text-muted small">
+                                @(isArabic ? "تحميل أو عرض ملفات المحاضرة" : "Download or view lecture materials")
+                            </p>
+                            <div class="d-flex flex-column gap-2 mt-3">
+                                @{
+                                    int mIdx = 1;
+                                }
+                                @foreach (var mat in Model.LessonMaterials)
+                                {
+                                    var ext = System.IO.Path.GetExtension(mat.FileUrl)?.TrimStart('.').ToUpper() ?? "FILE";
+                                    <a href="/uploads/materials/@mat.FileUrl"
+                                           target="_blank" rel="noopener"
+                                           class="btn w-100 text-white d-flex align-items-center justify-content-center gap-2"
+                                           style="background-color: #9dbfad;">
+                                        <i class="fas fa-file"></i>
+                                        @(isArabic ? "ملف" : "File") @mIdx
+                                        <span class="badge bg-white text-dark ms-auto" style="font-size:0.65rem">@ext</span>
+                                    </a>
+                                    mIdx++;
+                                }
+                            </div>
+                        </div>
                     </div>
-                </div>
+                }
 
-                <!-- Assignment -->
-                <div class="col-md-4">
-                    <div class="text-center p-4 h-100 shadow-sm bg-white"
-                         style="border-radius: 15px; border-bottom: 5px solid #2c3e50;">
-                        <i class="fas fa-tasks fa-3x mb-3" style="color: #2c3e50;"></i>
-
-                        <h5 class="fw-bold">
-                            @(isArabic ? "الواجب" : "Assignment")
-                        </h5>
-
-                        <p class="text-muted small">
-                            @(isArabic
-                                ? "قم بحل المهام وتأكد من فهمك للدرس"
-                                : "Solve the tasks and check your understanding")
-                        </p>
-
-                        <a href="@Model.AssignmentPdfUrl"
-                           target="_blank"
-                           class="btn w-100 text-white"
-                           style="background-color: #2c3e50;">
-                            @(isArabic ? "عرض المهام" : "Go to Tasks")
-                        </a>
+                <!-- ===== Assignments ===== -->
+                @if (Model.LessonAssignments != null && Model.LessonAssignments.Any())
+                {
+                    <div class="col-md-4">
+                        <div class="text-center p-4 h-100 shadow-sm bg-white"
+                             style="border-radius: 15px; border-bottom: 5px solid #2c3e50;">
+                            <i class="fas fa-tasks fa-3x mb-3" style="color: #2c3e50;"></i>
+                            <h5 class="fw-bold">@(isArabic ? "الواجبات" : "Assignments")</h5>
+                            <p class="text-muted small">
+                                @(isArabic ? "قم بحل المهام وتأكد من فهمك للدرس" : "Solve the tasks and check your understanding")
+                            </p>
+                            <div class="d-flex flex-column gap-2 mt-3">
+                                @{
+                                    int aIdx = 1;
+                                }
+                                @foreach (var asgn in Model.LessonAssignments)
+                                {
+                                    var ext = System.IO.Path.GetExtension(asgn.FileUrl)?.TrimStart('.').ToUpper() ?? "FILE";
+                                    <a href="/uploads/assignments/@asgn.FileUrl"
+                                           target="_blank" rel="noopener"
+                                           class="btn w-100 text-white d-flex align-items-center justify-content-center gap-2"
+                                           style="background-color: #2c3e50;">
+                                        <i class="fas fa-tasks"></i>
+                                        @(isArabic ? "واجب" : "Assignment") @aIdx
+                                        <span class="badge bg-white text-dark ms-auto" style="font-size:0.65rem">@ext</span>
+                                    </a>
+                                    aIdx++;
+                                }
+                            </div>
+                        </div>
                     </div>
-                </div>
+                }
+
+                <!-- ===== Empty State ===== -->
+                @if (string.IsNullOrEmpty(Model.DriveLink)
+                                     && (Model.LessonMaterials == null || !Model.LessonMaterials.Any())
+                                     && (Model.LessonAssignments == null || !Model.LessonAssignments.Any()))
+                {
+                    <div class="col-12 text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                        @(isArabic ? "لا توجد محتويات لهذه المحاضرة بعد." : "No content available for this lesson yet.")
+                    </div>
+                }
 
             </div>
         </div>

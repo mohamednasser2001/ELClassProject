@@ -12,8 +12,8 @@ namespace Models.ViewModels
         public string CourseTitle { get; set; } = "";
         public DateTime? LectureDate { get; set; }
         public string? DriveLink { get; set; }
-        public string? LecturePdfUrl { get; set; }
-        public string? AssignmentPdfUrl { get; set; }
+        public List<string> MaterialUrls { get; set; } = new();    
+        public List<string> AssignmentUrls { get; set; } = new(); 
 
     }
 }

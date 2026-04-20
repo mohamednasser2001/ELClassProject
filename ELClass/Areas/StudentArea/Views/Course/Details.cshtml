@@ -2,16 +2,10 @@
 @{
     Layout = "_StudentLayout";
     int? openLessonId = ViewBag.OpenLessonId as int?;
-
-    // =========================
-    // Language (Session-based)
-    // =========================
     var currentLang = Context.Session.GetString("Language") ?? "en";
     var isArabic = currentLang == "ar";
+    string studentId = ViewBag.StudentId ?? "";
 }
-
-<!-- ✅ Back button (always left) -->
-
 
 <div class="content-wrapper course-details-page">
     <div class="header-section">
@@ -26,7 +20,6 @@
         </div>
         <h2 class="course-title">@(!string.IsNullOrWhiteSpace(Model.TitleEn) ? Model.TitleEn : Model.TitleAr)</h2>
         <p class="course-subtitle">@(isArabic ? "محاضرات ومواد تعلم الكورس" : "Lectures and course learning materials")</p>
-
     </div>
 
     <div class="lectures-container">
@@ -35,7 +28,11 @@
             int count = 1;
             foreach (var lesson in Model.Lessons)
             {
+                var studentLesson = lesson.StudentLessons?.FirstOrDefault(sl => sl.StudentId == studentId);
+                double? degree = studentLesson?.Degree;
+
                 <div class="lecture-item" data-lesson-id="@lesson.Id">
+
                     <div class="lecture-header" onclick="toggleLecture(this)">
                         <div class="lecture-title">
                             <span class="lecture-number">@count</span>
@@ -43,13 +40,37 @@
                                 @(isArabic ? "محاضرة" : "Lecture") @count: @lesson.Title
                             </h3>
                         </div>
-
-                        <!-- ✅ Arrow فقط Toggle (مش لينك) -->
                         <i class="fas fa-chevron-down arrow-icon" title="@(isArabic ? "توسيع" : "Expand")"></i>
                     </div>
 
+                    @* ===== Grade Progress Bar (دايمًا ظاهر تحت الهيدر لو في درجة) ===== *@
+                    @if (degree.HasValue)
+                    {
+                        var pct = Math.Min((degree.Value / 10.0) * 100, 100);
+                        var barColor = pct >= 80 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
+                        <div class="lecture-grade-bar-wrap">
+                            <div class="lecture-grade-bar-labels">
+                                <span class="grade-label-text">
+                                    <i class="fas fa-star" style="color:@barColor"></i>
+                                    @(isArabic ? "تقييمك" : "Grade")
+                                </span>
+                                <span class="grade-label-value" style="color:@barColor">
+                                    @degree.Value.ToString("0.##") / 10
+                                </span>
+                            </div>
+                            <div class="lecture-grade-track">
+                                <div class="lecture-grade-fill"
+                                     style="width:@(pct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;
+                                            background:@barColor">
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <div class="lecture-content">
                         <div class="content-links">
+
+                            @* ===== Video Link ===== *@
                             @if (!string.IsNullOrEmpty(lesson.DriveLink))
                             {
                                 <a href="@lesson.DriveLink"
@@ -57,34 +78,104 @@
                                    rel="noopener"
                                    class="content-link video">
                                     <i class="fas fa-video"></i>
-                                    @(isArabic ? "مشاهدة المحاضرة" : "Watch lecture")
+                                    @(isArabic ? "مشاهدة المحاضرة" : "Watch Lecture")
                                 </a>
                             }
 
-                            @if (!string.IsNullOrEmpty(lesson.LecturePdfUrl))
+                            @* ===== Materials Button ===== *@
+                            @if (lesson.LessonMaterials != null && lesson.LessonMaterials.Any())
                             {
-                                <a href="@lesson.LecturePdfUrl"
-                                   target="_blank"
-                                   rel="noopener"
-                                   class="content-link pdf">
-                                    <i class="fas fa-file-pdf"></i>
-                                    @(isArabic ? "ملف المحاضرة PDF" : "Lecture PDF")
-                                </a>
+                                <button type="button"
+                                        class="content-link pdf"
+                                        onclick="openFilesModal('materials-@lesson.Id')">
+                                    <i class="fas fa-file-alt"></i>
+                                    @(isArabic ? "المواد التعليمية" : "Materials")
+                                    <span class="files-count-badge">@lesson.LessonMaterials.Count()</span>
+                                </button>
                             }
 
-                            @if (!string.IsNullOrEmpty(lesson.AssignmentPdfUrl))
+                            @* ===== Assignments Button ===== *@
+                            @if (lesson.LessonAssignments != null && lesson.LessonAssignments.Any())
                             {
-                                <a href="@lesson.AssignmentPdfUrl"
-                                   target="_blank"
-                                   rel="noopener"
-                                   class="content-link assignment">
+                                <button type="button"
+                                        class="content-link assignment"
+                                        onclick="openFilesModal('assignments-@lesson.Id')">
                                     <i class="fas fa-tasks"></i>
-                                    @(isArabic ? "الواجب" : "Assignment")
-                                </a>
+                                    @(isArabic ? "الواجبات" : "Assignments")
+                                    <span class="files-count-badge">@lesson.LessonAssignments.Count()</span>
+                                </button>
                             }
+
                         </div>
                     </div>
                 </div>
+
+                @* ===== Materials Modal ===== *@
+                @if (lesson.LessonMaterials != null && lesson.LessonMaterials.Any())
+                {
+                    <div class="files-modal-overlay" id="modal-materials-@lesson.Id" onclick="closeModalOnOverlay(event, this)">
+                        <div class="files-modal">
+                            <div class="files-modal-header">
+                                <h4>
+                                    <i class="fas fa-file-alt"></i>
+                                    @(isArabic ? "مواد" : "Materials") — @lesson.Title
+                                </h4>
+                                <button type="button" class="modal-close-btn" onclick="closeFilesModal('materials-@lesson.Id')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <ul class="files-modal-list">
+                                @{ int mIdx = 1; }
+                                @foreach (var mat in lesson.LessonMaterials)
+                                {
+                                    var ext = System.IO.Path.GetExtension(mat.FileUrl)?.TrimStart('.').ToUpper() ?? "FILE";
+                                    <li>
+                                        <a href="/uploads/materials/@mat.FileUrl" target="_blank" rel="noopener" class="file-item-link">
+                                            <span class="file-icon-badge @GetExtClass(ext)">@ext</span>
+                                            <span class="file-label">@(isArabic ? "ملف" : "File") @mIdx</span>
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </li>
+                                    mIdx++;
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                @* ===== Assignments Modal ===== *@
+                @if (lesson.LessonAssignments != null && lesson.LessonAssignments.Any())
+                {
+                    <div class="files-modal-overlay" id="modal-assignments-@lesson.Id" onclick="closeModalOnOverlay(event, this)">
+                        <div class="files-modal">
+                            <div class="files-modal-header">
+                                <h4>
+                                    <i class="fas fa-tasks"></i>
+                                    @(isArabic ? "واجبات" : "Assignments") — @lesson.Title
+                                </h4>
+                                <button type="button" class="modal-close-btn" onclick="closeFilesModal('assignments-@lesson.Id')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <ul class="files-modal-list">
+                                @{ int aIdx = 1; }
+                                @foreach (var asgn in lesson.LessonAssignments)
+                                {
+                                    var ext = System.IO.Path.GetExtension(asgn.FileUrl)?.TrimStart('.').ToUpper() ?? "FILE";
+                                    <li>
+                                        <a href="/uploads/assignments/@asgn.FileUrl" target="_blank" rel="noopener" class="file-item-link">
+                                            <span class="file-icon-badge @GetExtClass(ext)">@ext</span>
+                                            <span class="file-label">@(isArabic ? "واجب" : "Assignment") @aIdx</span>
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </li>
+                                    aIdx++;
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
                 count++;
             }
         }
@@ -97,7 +188,232 @@
     </div>
 </div>
 
+@functions {
+    string GetExtClass(string ext) => ext switch
+    {
+        "PDF" => "ext-pdf",
+        "DOC" or "DOCX" => "ext-doc",
+        "PPT" or "PPTX" => "ext-ppt",
+        "XLS" or "XLSX" => "ext-xls",
+        "MP4" or "MOV" or "AVI" => "ext-video",
+        _ => "ext-default"
+    };
+}
+
+<style>
+    /* ===== Grade Progress Bar ===== */
+    .lecture-grade-bar-wrap {
+        width: 100%;
+        padding: 6px 16px 10px;
+        background: rgba(0,0,0,0.03);
+        border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .lecture-grade-bar-labels {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .grade-label-text {
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .grade-label-value {
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .lecture-grade-track {
+        width: 100%;
+        height: 7px;
+        background: #e5e7eb;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+
+    .lecture-grade-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ===== Files Count Badge on Button ===== */
+    .files-count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.3);
+        color: inherit;
+        font-size: 0.72rem;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        padding: 0 4px;
+        margin-inline-start: 4px;
+    }
+
+    /* ===== Modal Overlay ===== */
+    .files-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .files-modal-overlay.open {
+        display: flex;
+    }
+
+    /* ===== Modal Box ===== */
+    .files-modal {
+        background: #fff;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 480px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        animation: modalIn 0.2s ease;
+    }
+
+    @@keyframes modalIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .files-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .files-modal-header h4 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .modal-close-btn {
+        background: #f3f4f6;
+        border: none;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #6b7280;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .modal-close-btn:hover {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    /* ===== Files List ===== */
+    .files-modal-list {
+        list-style: none;
+        margin: 0;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .file-item-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        text-decoration: none;
+        color: #374151;
+        transition: background 0.15s, border-color 0.15s;
+        font-size: 0.9rem;
+    }
+
+    .file-item-link:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #111827;
+    }
+
+    .file-item-link .fa-external-link-alt {
+        margin-inline-start: auto;
+        font-size: 0.8rem;
+        color: #9ca3af;
+    }
+
+    /* ===== Extension Badges ===== */
+    .file-icon-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 6px;
+        letter-spacing: 0.03em;
+        min-width: 38px;
+        color: #fff;
+    }
+
+    .ext-pdf     { background: #dc2626; }
+    .ext-doc     { background: #2563eb; }
+    .ext-ppt     { background: #ea580c; }
+    .ext-xls     { background: #16a34a; }
+    .ext-video   { background: #7c3aed; }
+    .ext-default { background: #6b7280; }
+</style>
+
 <script>
+    function openFilesModal(key) {
+        const el = document.getElementById('modal-' + key);
+        if (el) el.classList.add('open');
+    }
+
+    function closeFilesModal(key) {
+        const el = document.getElementById('modal-' + key);
+        if (el) el.classList.remove('open');
+    }
+
+    function closeModalOnOverlay(event, overlay) {
+        if (event.target === overlay) overlay.classList.remove('open');
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.files-modal-overlay.open')
+                .forEach(el => el.classList.remove('open'));
+        }
+    });
+
     function closeLecture(item) {
         item.classList.remove('active');
         const content = item.querySelector('.lecture-content');
@@ -112,13 +428,9 @@
 
     function toggleLecture(header) {
         const item = header.closest('.lecture-item');
-
-        // اقفل أي محاضرة تانية (اختياري)
         document.querySelectorAll('.lecture-item').forEach(el => {
             if (el !== item) closeLecture(el);
         });
-
-        // Toggle الحالية
         if (item.classList.contains('active')) {
             closeLecture(item);
         } else {
@@ -127,18 +439,13 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        // ابدأ كله مقفول
         document.querySelectorAll('.lecture-item').forEach(el => closeLecture(el));
 
-        // ✅ افتح lecture معينة لو جاية من dashboard عبر openLessonId
         const openId = @((openLessonId.HasValue) ? openLessonId.Value.ToString() : "null");
         if (openId !== null) {
             const target = document.querySelector(`.lecture-item[data-lesson-id="${openId}"]`);
             if (target) {
-                // افتحها
                 openLecture(target);
-
-                // scroll لطيف عليها
                 setTimeout(() => {
                     target.scrollIntoView({ behavior: "smooth", block: "center" });
                 }, 50);

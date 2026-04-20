@@ -63,30 +63,25 @@ namespace ELClass.Areas.StudentArea.Controllers
         {
             var userId = _userManager.GetUserId(User);
 
-            // 1) تأكد إن الطالب enrolled في الكورس
             var isEnrolled = await _unitOfWork.StudentCourseRepository.GetOneAsync(
                 sc => sc.StudentId == userId && sc.CourseId == id
             );
             if (isEnrolled == null) return Forbid();
 
-            // 2) هات المدرس بتاع الطالب (اللي مربوط بيه) - ممكن يكون null
             var insLink = await _unitOfWork.InstructorStudentRepository.GetOneAsync(
                 x => x.StudentId == userId
             );
 
             string? instructorId = insLink?.InstructorId;
 
-            // Flags للـ View
             ViewBag.HasInstructor = (instructorId != null);
             ViewBag.AssignedInstructorId = instructorId;
 
-            // 3) هات الكورس بدون Lessons
             var course = await _unitOfWork.CourseRepository.GetOneAsync(
                 c => c.Id == id
             );
             if (course == null) return NotFound();
 
-            // 4) هات Lessons للكورس بتاعة المدرس ده فقط (ولو مفيش مدرس => فاضي)
             var lessons = new List<Lesson>();
 
             if (instructorId != null)
@@ -94,7 +89,11 @@ namespace ELClass.Areas.StudentArea.Controllers
                 var result = await _unitOfWork.LessonRepository.GetAsync(
                     l => l.CourseId == id && l.InstructorId == instructorId,
                     tracked: false,
-                    orderBy: q => q.OrderBy(l => l.LectureDate)
+                    orderBy: q => q.OrderBy(l => l.LectureDate),
+                    include: q => q
+                        .Include(l => l.LessonMaterials)
+                        .Include(l => l.LessonAssignments)
+                        .Include(l => l.StudentLessons.Where(sl => sl.StudentId == userId))
                 );
 
                 lessons = result?.ToList() ?? new List<Lesson>();
@@ -103,6 +102,7 @@ namespace ELClass.Areas.StudentArea.Controllers
             course.Lessons = lessons;
 
             ViewBag.OpenLessonId = openLessonId;
+            ViewBag.StudentId = userId;
             return View(course);
         }
 
@@ -114,7 +114,9 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             var lesson = await _unitOfWork.LessonRepository.GetOneAsync(
                 l => l.Id == id,
-                q => q.Include(x => x.Course),
+                q => q.Include(x => x.Course)
+                      .Include(x => x.LessonMaterials)      
+                      .Include(x => x.LessonAssignments),  
                 tracked: false
             );
 
