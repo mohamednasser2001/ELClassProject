@@ -14,14 +14,21 @@ namespace Models
         public string Title { get; set; } = string.Empty;
 
         public DateTime LectureDate { get; set; }= DateTime.Now;
-        public string DriveLink { get; set; } = string.Empty;
-        public string LecturePdfUrl { get; set; } = string.Empty;
-        public string AssignmentPdfUrl { get; set; }  = string.Empty;
+        public string? DriveLink { get; set; } = string.Empty;
 
+
+        // ابقى احذف دول يا محمد 
+        public string LecturePdfUrl { get; set; } = string.Empty;
+        public string AssignmentPdfUrl { get; set; } = string.Empty;
+        //لحد هنا 
         public  string InstructorId { get; set; } = string.Empty;
         public Instructor Instructor { get; set; } = null!;
 
         public int CourseId { get; set; }
         public Course Course { get; set; } = null!;
+        public ICollection<LessonMaterials> LessonMaterials { get; set; } = new List<LessonMaterials>();
+        public ICollection<StudentLesson> StudentLessons { get; set; } = new List<StudentLesson>();
+        public ICollection<LessonAssignments> LessonAssignments { get; set; } = new List<LessonAssignments>();
+        
     }
 }

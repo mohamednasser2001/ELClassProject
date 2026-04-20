@@ -30,7 +30,7 @@
 
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <form asp-action="CreateLesson" method="post" class="p-6 space-y-6">
+        <form asp-action="CreateLesson" method="post" enctype="multipart/form-data" class="p-6 space-y-6">
 
             <input type="hidden" asp-for="CourseId" />
 
@@ -76,33 +76,23 @@
     
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label asp-for="LecturePdfUrl" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                        <i class="fas fa-file-pdf text-xs text-orange-400 me-1"></i>
-                        @(isArabic ? "رابط PDF المحاضرة" : "Lecture PDF URL")
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                        <i class="fas fa-file-upload text-xs text-orange-400 me-1"></i>
+                        @(isArabic ? "ملفات المحاضرة (PDFs/Resources)" : "Lesson Materials")
                     </label>
-                    <div class="relative">
-                        <span class="absolute @(isArabic ? "right-3" : "left-3") top-2.5 text-orange-400">
-                            <i class="fas fa-file-pdf text-xs"></i>
-                        </span>
-                        <input asp-for="LecturePdfUrl"
-                               placeholder="@(isArabic ? "رابط الـ PDF" : "Link to PDF")"
-                               class="w-full @(isArabic ? "pr-9" : "pl-9") rounded-lg border-gray-200 bg-gray-50 focus:ring-blue-800 focus:border-blue-800 text-sm" />
-                    </div>
+                    <input type="file" name="materials" multiple
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1" />
+                    <p class="text-[10px] text-gray-400 mt-1 italic">@(isArabic ? "يمكنك اختيار أكثر من ملف" : "You can select multiple files")</p>
                 </div>
 
                 <div>
-                    <label asp-for="AssignmentPdfUrl" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                        <i class="fas fa-file-alt text-xs text-blue-400 me-1"></i>
-                        @(isArabic ? "رابط PDF الواجب" : "Assignment PDF URL")
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                        <i class="fas fa-tasks text-xs text-blue-400 me-1"></i>
+                        @(isArabic ? "ملفات الواجبات" : "Assignment Files")
                     </label>
-                    <div class="relative">
-                        <span class="absolute @(isArabic ? "right-3" : "left-3") top-2.5 text-blue-400">
-                            <i class="fas fa-file-alt text-xs"></i>
-                        </span>
-                        <input asp-for="AssignmentPdfUrl"
-                               placeholder="@(isArabic ? "رابط الواجب" : "Link to Task")"
-                               class="w-full @(isArabic ? "pr-9" : "pl-9") rounded-lg border-gray-200 bg-gray-50 focus:ring-blue-800 focus:border-blue-800 text-sm" />
-                    </div>
+                    <input type="file" name="assignments" multiple
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1" />
+                    <p class="text-[10px] text-gray-400 mt-1 italic">@(isArabic ? "يمكنك اختيار أكثر من ملف" : "You can select multiple files")</p>
                 </div>
             </div>
 

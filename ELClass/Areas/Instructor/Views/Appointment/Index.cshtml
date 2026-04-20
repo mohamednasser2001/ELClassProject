@@ -36,7 +36,7 @@
                 <tbody class="divide-y divide-gray-50">
                     @foreach (var item in Model.Select((value, index) => new { value, index }))
                     {
-                        <tr class="hover:bg-blue-80/30 transition-colors">
+                        <tr class="hover:bg-blue-80/30 transition-colors @(DateTime.Now > item.value.StartDateTime.AddHours(item.value.DurationInHours) ? "opacity-60 bg-gray-100/100" : "")">
                             <td class="px-6 py-4 text-center text-gray-400 font-medium">@(item.index + 1)</td>
 
                             <td class="px-6 py-4">
@@ -79,14 +79,27 @@
                             </td>
 
                             <td class="px-6 py-4">
-                                @if (item.value.IsActive)
+                                @{
+                                    var endDateTime = item.value.StartDateTime.AddHours(item.value.DurationInHours);
+                                    var isFinished = DateTime.Now > endDateTime;
+                                }
+
+                                @if (isFinished)
+                                {
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                        <i class="fas fa-check-circle"></i>
+                                        @(isArabic ? "منتهي" : "Finished")
+                                    </span>
+                                }
+                                else if (item.value.IsActive)
                                 {
                                     @if (!string.IsNullOrEmpty(item.value.MeetingLink))
                                     {
                                         <a href="@item.value.MeetingLink" target="_blank"
-                                               class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm"
+                                               class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm inline-block"
                                                title="@(isArabic ? "انضم الآن" : "Join Now")">
                                             <i class="fas fa-video animate-pulse"></i>
+                                            <span class="text-xs ms-1">@(isArabic ? "مباشر الآن" : "Live Now")</span>
                                         </a>
                                     }
                                     else
@@ -99,8 +112,8 @@
                                 }
                                 else
                                 {
-                                    <span class="text-blue-500  items-center gap-1">
-                                        <i class="fas fa-hourglass-start text-xs"></i>
+                                    <span class="text-blue-500 flex items-center gap-1 text-xs font-medium">
+                                        <i class="fas fa-hourglass-start text-[10px]"></i>
                                         @(isArabic ? "قادم" : "Upcoming")
                                     </span>
                                 }
@@ -108,34 +121,54 @@
 
                             <td class="px-6 py-4">
                                 <div class="flex justify-center gap-2">
-                                    @* زر التعديل *@
-                                    <button onclick="openEditModal(@item.value.Id, '@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm")', @item.value.DurationInHours, '@item.value.MeetingLink')"
-                                            class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors border border-gray-100" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-
-                                    @if (item.value.IsActive)
+                                    @if (isFinished)
                                     {
-                                        @* الزرار وهو شغال *@
-                                        <a href="@item.value.MeetingLink" target="_blank"
-                                           class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm"
-                                           title="@(isArabic ? "انضم الآن" : "Join Now")">
-                                            <i class="fas fa-video animate-pulse"></i>
-                                        </a>
+                                        @* زر إنشاء درس جديد - يظهر فقط بعد انتهاء الموعد *@
+                                        <button onclick="openLessonModal(@item.value.Id, @item.value.Course?.Id ?? 0, '@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)', '@item.value.StartDateTime.ToString("yyyy-MM-dd")')"
+                                                class="inline-flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+                                                title="@(isArabic ? "إنشاء درس لهذا الموعد" : "Create Lesson for this appointment")">
+                                            <i class="fas fa-plus-square"></i>
+                                            @(isArabic ? "إنشاء درس" : "Create Lesson")
+                                        </button>
+            
+                                        @* زر الحذف يظل متاحاً حتى لو انتهى الموعد *@
+                                        <button onclick="deleteAppointment(@item.value.Id)"
+                                                class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     }
                                     else
                                     {
-                                        @* الزرار وهو غير نشط (مقفول) *@
-                                        <span class="p-2 text-gray-300 bg-gray-50 border border-gray-100 rounded-lg cursor-not-allowed"
-                                              title="@(isArabic ? "الموعد غير متاح حالياً" : "Meeting not available yet")">
-                                            <i class="fas fa-video-slash"></i>
-                                        </span>
-                                    }
+                                       
+            
+                                        @* زر التعديل *@
+                                        <button onclick="openEditModal(@item.value.Id, '@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm")', @item.value.DurationInHours, '@item.value.MeetingLink')"
+                                                class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors border border-gray-100" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
 
-                                    @* زر الحذف *@
-                                    <button onclick="deleteAppointment(@item.value.Id)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
+                                        @if (item.value.IsActive)
+                                        {
+                                            <a href="@item.value.MeetingLink" target="_blank"
+                                                   class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm"
+                                                   title="@(isArabic ? "انضم الآن" : "Join Now")">
+                                                <i class="fas fa-video animate-pulse"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="p-2 text-gray-300 bg-gray-50 border border-gray-100 rounded-lg cursor-not-allowed"
+                                                  title="@(isArabic ? "الموعد غير متاح حالياً" : "Meeting not available yet")">
+                                                <i class="fas fa-video-slash"></i>
+                                            </span>
+                                        }
+
+                                        @* زر الحذف *@
+                                        <button onclick="deleteAppointment(@item.value.Id)"
+                                                class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -199,60 +232,320 @@
     </div>
 </div>
 
+
+<div class="modal fade" id="createLessonModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+
+            <div class="modal-header border-b border-gray-100 pb-3">
+                <h5 class="modal-title flex items-center gap-2 text-gray-800 font-bold">
+                    <i class="fas fa-chalkboard-teacher text-blue-800"></i>
+                    <span id="modalCourseTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+ 
+            <div class="flex border-b border-gray-100 px-4">
+                <button onclick="switchTab('lesson')" id="tab-lesson"
+                        class="px-5 py-3 text-sm font-bold border-b-2 border-blue-800 text-blue-800 transition-all">
+                    <i class="fas fa-book me-1"></i>
+                    @(isArabic ? "إنشاء درس" : "Create Lesson")
+                </button>
+                <button onclick="switchTab('eval')" id="tab-eval"
+                        class="px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">
+                    <i class="fas fa-star me-1"></i>
+                    @(isArabic ? "تقييم الطلاب" : "Evaluate Students")
+                </button>
+            </div>
+
+            <div class="modal-body p-4">
+
+            
+                <div id="panel-lesson">
+                    <form id="createLessonForm" class="space-y-4">
+                        <input type="hidden" id="lessonCourseId">
+                        <input type="hidden" id="lessonAppointmentId">
+
+                   
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                <i class="fas fa-book text-xs text-blue-400 me-1"></i>
+                                @(isArabic ? "عنوان المحاضرة" : "Lesson Title")
+                            </label>
+                            <input type="text" id="lessonTitle"
+                                   placeholder="@(isArabic ? "أدخل اسم المحاضرة..." : "Enter lesson name...")"
+                                   class="form-control bg-gray-50 rounded-lg border-gray-200 text-sm">
+                        </div>
+
+                  
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <i class="far fa-calendar-alt text-xs text-blue-400 me-1"></i>
+                                    @(isArabic ? "تاريخ المحاضرة" : "Lecture Date")
+                                </label>
+                                <input type="date" id="lessonDate" class="form-control bg-gray-100 rounded-lg border-gray-200 text-sm text-gray-500" readonly>
+                                <p class="text-[10px] text-gray-400 mt-1 italic">
+                                    @(isArabic ? "مأخوذ تلقائياً من الميعاد" : "Auto-filled from appointment")
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <i class="fab fa-google-drive text-xs text-blue-400 me-1"></i>
+                                    @(isArabic ? "رابط جوجل درايف" : "Google Drive Link")
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fas fa-link text-gray-400 text-xs"></i>
+                                    </span>
+                                    <input type="url" id="lessonDriveLink"
+                                           placeholder="https://drive.google.com/..."
+                                           class="form-control bg-gray-50 border-start-0 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+               
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <i class="fas fa-file-upload text-xs text-orange-400 me-1"></i>
+                                    @(isArabic ? "ملفات المحاضرة" : "Lesson Materials")
+                                </label>
+                                <input type="file" id="lessonMaterials" name="materials" multiple
+                                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1">
+                                <p class="text-[10px] text-gray-400 mt-1 italic">@(isArabic ? "يمكنك اختيار أكثر من ملف" : "Multiple files allowed")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <i class="fas fa-tasks text-xs text-blue-400 me-1"></i>
+                                    @(isArabic ? "ملفات الواجبات" : "Assignment Files")
+                                </label>
+                                <input type="file" id="lessonAssignments" name="assignments" multiple
+                                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1">
+                                <p class="text-[10px] text-gray-400 mt-1 italic">@(isArabic ? "يمكنك اختيار أكثر من ملف" : "Multiple files allowed")</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+ 
+                <div id="panel-eval" style="display:none">
+                    <p class="text-xs text-gray-400 mb-3 italic">
+                        <i class="fas fa-info-circle me-1"></i>
+                        @(isArabic ? "التقييمات هتتحفظ مع الدرس تلقائياً" : "Evaluations will be saved together with the lesson")
+                    </p>
+                    <div id="evalStudentsList" class="space-y-3">
+                        <div class="text-center text-gray-400 py-8">
+                            <i class="fas fa-spinner fa-spin text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-t border-gray-100">
+                <button type="button" class="btn btn-light border px-4 rounded-lg" data-bs-dismiss="modal">
+                    @(isArabic ? "إلغاء" : "Cancel")
+                </button>
+                <button type="button" id="saveLessonBtn"
+                        class="inline-flex items-center px-5 py-2 bg-blue-800 hover:bg-blue-700 text-white font-medium rounded-lg transition-all shadow-sm gap-2 text-sm">
+                    <i class="fas fa-save me-1"></i>
+                    @(isArabic ? "حفظ الدرس والتقييمات" : "Save Lesson & Evaluations")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
 @section Scripts{
     <script>
-        function deleteAppointment(id) {
-            const isAr = "@isArabic".toLowerCase() === "true";
+        var currentTab = 'lesson';
+        var currentAppointmentId = 0;
+        var currentCourseId = 0;
+        var isAr = "@isArabic".toLowerCase() === "true";
 
-            Swal.fire({
-                title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
-                text: isAr ? 'لن تتمكن من استعادة هذا الموعد!' : "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, delete it!',
-                cancelButtonText: isAr ? 'إلغاء' : 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.post('/instructor/Appointment/Delete', { id: id }, function (res) {
-                        if (res.success) {
-                            Swal.fire(
-                                isAr ? 'تم الحذف!' : 'Deleted!',
-                                isAr ? 'تم حذف الموعد بنجاح.' : 'The appointment has been deleted.',
-                                'success'
-                            ).then(() => {
-                                
-                                location.reload();
-                               
-                            });
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
-                        }
-                    });
-                }
-            });
+        // ==================== Lesson Modal ====================
+
+        function openLessonModal(appointmentId, courseId, courseTitle , appointmentDate) {
+        currentAppointmentId = appointmentId;
+        currentCourseId = courseId;
+
+        document.getElementById('lessonTitle').value = '';
+        document.getElementById('lessonDate').value = appointmentDate;
+        document.getElementById('lessonDriveLink').value = '';
+        document.getElementById('lessonMaterials').value = '';
+        document.getElementById('lessonAssignments').value = '';
+        document.getElementById('lessonCourseId').value = courseId;
+        document.getElementById('lessonAppointmentId').value = appointmentId;
+        document.getElementById('modalCourseTitle').textContent = courseTitle;
+        document.getElementById('evalStudentsList').innerHTML =
+        '<div class="text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i></div>';
+
+        switchTab('lesson');
+        new bootstrap.Modal(document.getElementById('createLessonModal')).show();
+        }
+
+        // ==================== Tab switch ====================
+        function switchTab(tab) {
+        currentTab = tab;
+        ['lesson', 'eval'].forEach(function (t) {
+        var btn = document.getElementById('tab-' + t);
+        var panel = document.getElementById('panel-' + t);
+        if (t === tab) {
+        btn.className = 'px-5 py-3 text-sm font-bold border-b-2 border-blue-800 text-blue-800 transition-all';
+        panel.style.display = 'block';
+        } else {
+        btn.className = 'px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all';
+        panel.style.display = 'none';
+        }
+        });
+
+        var saveBtn = document.getElementById('saveLessonBtn');
+        if (tab === 'lesson') {
+        saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations');
+        } else {
+        saveBtn.innerHTML = '<i class="fas fa-star me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations');
+        }
+        }
+        // ==================== Load Students ====================
+        function loadStudentsForEval() {
+        // لو اتحملوا قبل كده متحملش تاني
+        if (document.getElementById('evalStudentsList').dataset.loaded === 'true') return;
+
+        $.get('/instructor/Appointment/GetAppointmentStudents', { appointmentId: currentAppointmentId }, function (students) {
+        var html = '';
+        if (!students || students.length === 0) {
+        html = '<div class="text-center text-gray-400 py-8">' +
+        '<i class="fas fa-users text-3xl mb-2 block text-gray-200"></i>' +
+        (isAr ? 'لا يوجد طلاب في هذا الموعد' : 'No students in this appointment') +
+        '</div>';
+        } else {
+        students.forEach(function (s) {
+        html += '<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 mb-2">' +
+        '<div class="flex items-center gap-3">' +
+        '<div class="w-9 h-9 rounded-full bg-blue-100 d-flex align-items-center justify-content-center text-blue-700 font-bold text-sm">' +
+        s.name.charAt(0) + '</div>' +
+        '<span class="font-semibold text-gray-800 text-sm">' + s.name + '</span>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<label class="text-xs text-gray-500 font-medium">' + (isAr ? 'الدرجة' : 'Score') + '</label>' +
+        '<input type="number" min="0" max="10" value="0" ' +
+        'data-student-id="' + s.studentId + '" ' +
+        'class="eval-score form-control form-control-sm text-center rounded-lg" style="width:80px">' +
+        '<span class="text-xs text-gray-400">/ 10</span>' +
+        '</div></div>';
+        });
+        }
+        var list = document.getElementById('evalStudentsList');
+        list.innerHTML = html;
+        list.dataset.loaded = 'true';
+        });
+        }
+
+        // ==================== Save (Lesson + Evaluations together) ====================
+        $('#saveLessonBtn').on('click', function () {
+        saveLesson();
+        });
+
+        function saveLesson() {
+        var title = $('#lessonTitle').val().trim();
+        if (!title) {
+        Swal.fire('', isAr ? 'أدخل عنوان المحاضرة' : 'Enter lesson title', 'warning');
+        switchTab('lesson');
+        return;
+        }
+
+        var formData = new FormData();
+        formData.append('Title', title);
+        formData.append('LectureDate', $('#lessonDate').val());
+        formData.append('DriveLink', $('#lessonDriveLink').val() ||"");
+        formData.append('CourseId', currentCourseId);
+
+        // ملفات المحاضرة
+        var materials = document.getElementById('lessonMaterials').files;
+        for (var i = 0; i < materials.length; i++)
+        formData.append('materials', materials[i]);
+
+        // ملفات الواجبات
+        var assignments = document.getElementById('lessonAssignments').files;
+        for (var i = 0; i < assignments.length; i++)
+        formData.append('assignments', assignments[i]);
+
+        // التقييمات - بعتها مع الفورم
+        var hasStudents = false;
+        $('.eval-score').each(function () {
+        formData.append('studentIds', $(this).data('student-id'));
+        formData.append('degrees', $(this).val() || '0');
+        hasStudents = true;
+        });
+
+        var btn = $('#saveLessonBtn');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.ajax({
+        url: '/instructor/Course/CreateLesson2',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        success: function (res) {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations'));
+        if (res.success) {
+        Swal.fire({
+        icon: 'success',
+        title: isAr ? 'تم الحفظ بنجاح' : 'Saved Successfully',
+        text: isAr ? 'تم إنشاء الدرس وحفظ التقييمات' : 'Lesson created and evaluations saved',
+        timer: 1800,
+        showConfirmButton: false
+        }).then(function () {
+        bootstrap.Modal.getInstance(document.getElementById('createLessonModal')).hide();
+        });
+        } else {
+        Swal.fire('Error', res.message, 'error');
+        }
+        },
+        error: function () {
+        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations'));
+        Swal.fire('Error', isAr ? 'فشل الاتصال' : 'Connection failed', 'error');
+        }
+        });
+        }
+
+        // ==================== openLessonModal ====================
+        function openLessonModal(appointmentId, courseId, courseTitle, appointmentDate) {
+        currentAppointmentId = appointmentId;
+        currentCourseId = courseId;
+
+        document.getElementById('lessonTitle').value = '';
+        document.getElementById('lessonDate').value = appointmentDate;
+        document.getElementById('lessonDriveLink').value = '';
+        document.getElementById('lessonMaterials').value = '';
+        document.getElementById('lessonAssignments').value = '';
+        document.getElementById('lessonCourseId').value = courseId;
+        document.getElementById('lessonAppointmentId').value = appointmentId;
+        document.getElementById('modalCourseTitle').textContent = courseTitle;
+
+        // reset قائمة الطلاب
+        var list = document.getElementById('evalStudentsList');
+        list.innerHTML = '<div class="text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl"></i></div>';
+        list.dataset.loaded = 'false';
+
+        switchTab('lesson');
+        new bootstrap.Modal(document.getElementById('createLessonModal')).show();
+        loadStudentsForEval();
         }
 
 
-
-
-        function openEditModal(id, startDateTime, duration, meetingLink) {
-        $('#editAppointmentId').val(id);
-        $('#editStartDateTime').val(startDateTime);
-        $('#editDuration').val(duration);
-        $('#editMeetingLink').val(meetingLink);
-        new bootstrap.Modal(document.getElementById('editModal')).show();
-        }
-
-        $('#saveEditBtn').on('click', function() {
+        $('#saveEditBtn').on('click', function () {
         var id = $('#editAppointmentId').val();
         var startDateTime = $('#editStartDateTime').val();
         var duration = $('#editDuration').val();
         var meetingLink = $('#editMeetingLink').val();
-        var isAr = "@isArabic".toLowerCase() === "true";
 
         if (!startDateTime || !duration || !meetingLink) {
         Swal.fire('', isAr ? 'أكمل جميع البيانات' : 'Fill all fields', 'warning');
@@ -265,33 +558,51 @@
         $.ajax({
         url: '/instructor/Appointment/Edit',
         type: 'POST',
-        data: {
-        id: id,
-        startDateTime: startDateTime,
-        durationInHours: duration,
-        meetingLink: meetingLink
-        },
-        success: function(res) {
+        data: { id: id, startDateTime: startDateTime, durationInHours: duration, meetingLink: meetingLink },
+        success: function (res) {
         btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ التعديلات' : 'Save Changes'));
         if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-        Swal.fire({
-        icon: 'success',
-        title: isAr ? 'تم بنجاح' : 'Success',
-        timer: 1500,
-        showConfirmButton: false
-        }).then(() => location.reload());
+        Swal.fire({ icon: 'success', title: isAr ? 'تم بنجاح' : 'Success', timer: 1500, showConfirmButton: false })
+        .then(function () { location.reload(); });
         } else {
         Swal.fire('Error', res.message, 'error');
         }
         },
-        error: function() {
+        error: function () {
         btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ التعديلات' : 'Save Changes'));
         Swal.fire('Error', isAr ? 'فشل الاتصال' : 'Connection failed', 'error');
         }
         });
         });
 
+        // ==================== Delete ====================
 
+        function deleteAppointment(id) {
+        Swal.fire({
+        title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+        text: isAr ? 'لن تتمكن من استعادة هذا الموعد!' : "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, delete it!',
+        cancelButtonText: isAr ? 'إلغاء' : 'Cancel'
+        }).then(function (result) {
+        if (result.isConfirmed) {
+        $.post('/instructor/Appointment/Delete', { id: id }, function (res) {
+        if (res.success) {
+        Swal.fire(
+        isAr ? 'تم الحذف!' : 'Deleted!',
+        isAr ? 'تم حذف الموعد بنجاح.' : 'The appointment has been deleted.',
+        'success'
+        ).then(function () { location.reload(); });
+        } else {
+        Swal.fire('Error', res.message, 'error');
+        }
+        });
+        }
+        });
+        }
     </script>
 }

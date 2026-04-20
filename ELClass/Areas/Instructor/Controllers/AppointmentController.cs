@@ -13,7 +13,7 @@ namespace ELClass.Areas.Instructor.Controllers
 {
     [Area("Instructor")]
     [Authorize(Roles = "Instructor")]
-    public class AppointmentController(IUnitOfWork unitOfWork , UserManager<ApplicationUser> userManager) : Controller
+    public class AppointmentController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager) : Controller
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
@@ -21,10 +21,10 @@ namespace ELClass.Areas.Instructor.Controllers
         public async Task<IActionResult> Index()
         {
 
-            var userId = _userManager.GetUserId(User); 
+            var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-           
+
 
             var appointments = (await _unitOfWork.AppoinmentRepository.GetAsync(
                 filter: e => e.InstructorId == userId,
@@ -34,14 +34,14 @@ namespace ELClass.Areas.Instructor.Controllers
 
             var now = DateTime.Now;
 
-           
+
             var orderedAppointments = appointments
         .OrderBy(a => a.StartDateTime)
         .ToList();
             return View(orderedAppointments);
         }
 
-     
+
 
 
         [HttpGet]
@@ -49,18 +49,18 @@ namespace ELClass.Areas.Instructor.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            
+
             var studentCourses = await _unitOfWork.StudentCourseRepository.GetAsync(
                 filter: sc => sc.CourseId == courseId &&
                               (string.IsNullOrEmpty(term) ||
                                sc.Student.NameEn.Contains(term) ||
-                               sc.Student.NameAr.Contains(term ) ||
+                               sc.Student.NameAr.Contains(term) ||
                                sc.Student.ApplicationUser.Email!.Contains(term)),
                 include: q => q.Include(sc => sc.Student)
-                               .ThenInclude(s => s.InstructorStudents) 
+                               .ThenInclude(s => s.InstructorStudents)
             );
 
-           
+
             var results = studentCourses
                 .Where(sc => sc.Student.InstructorStudents.Any(isc => isc.InstructorId == userId))
                 .Select(sc => new
@@ -78,12 +78,12 @@ namespace ELClass.Areas.Instructor.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            
+
             var courses = await _unitOfWork.InstructorCourseRepository.GetAsync(
                 filter: ic => ic.InstructorId == userId &&
                          (string.IsNullOrEmpty(term) ||
                           ic.Course.TitleAr.Contains(term) ||
-                          ic.Course.TitleEn.Contains(term)) , include: ic => ic.Include(ic => ic.Course)
+                          ic.Course.TitleEn.Contains(term)), include: ic => ic.Include(ic => ic.Course)
             );
 
             var results = courses.Select(c => new
@@ -213,13 +213,13 @@ namespace ELClass.Areas.Instructor.Controllers
         [HttpPost]
         public async Task<IActionResult> AddStudentToAppointment(string StudentId, int AppointmentId, int TimeCount)
         {
-            
+
             var isExists = await _unitOfWork.StudentAppointmentRepository
                 .GetOneAsync(e => e.StudentId == StudentId && e.AppointmentId == AppointmentId);
 
             if (isExists != null)
             {
-               
+
                 var errorMsg = CultureHelper.IsArabic
                     ? "هذا الطالب مضاف بالفعل لهذا الموعد."
                     : "This student is already added to this appointment.";
@@ -227,32 +227,32 @@ namespace ELClass.Areas.Instructor.Controllers
                 return Json(new { success = false, message = errorMsg });
             }
 
-            
+
             var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(e => e.Id == AppointmentId);
             if (appointment == null)
             {
                 return Json(new { success = false, message = "Appointment not found." });
             }
-            
-                if (appointment.StartDateTime.Date < DateTime.Now.Date)
-                {
-                    return Json(new { success = false, message = "لا يمكن إضافة طلاب لموعد قديم" });
-                }
-            
+
+            if (appointment.StartDateTime.Date < DateTime.Now.Date)
+            {
+                return Json(new { success = false, message = "لا يمكن إضافة طلاب لموعد قديم" });
+            }
+
             DateTime? expiryDate = null;
 
-           
-            
-                expiryDate = appointment.EndDateTime;
+
+
+            expiryDate = appointment.EndDateTime;
 
             var link = new StudentAppointment
             {
                 StudentId = StudentId,
                 AppointmentId = AppointmentId,
-               
+
             };
 
-            
+
             await _unitOfWork.StudentAppointmentRepository.CreateAsync(link);
             await _unitOfWork.CommitAsync();
             TempData["Success"] = CultureHelper.IsArabic ? "تم اضافة الطالب بنجاح " : " the student has been added successfully";
@@ -262,17 +262,42 @@ namespace ELClass.Areas.Instructor.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveStudentFromAppointment(int studentAppointmentId)
         {
-            var item = await _unitOfWork.StudentAppointmentRepository.GetOneAsync(e=>e.Id == studentAppointmentId);
+            var item = await _unitOfWork.StudentAppointmentRepository.GetOneAsync(e => e.Id == studentAppointmentId);
             if (item != null)
             {
                 await _unitOfWork.StudentAppointmentRepository.DeleteAsync(item);
                 await _unitOfWork.CommitAsync();
-                
+
                 return Json(new { success = true });
             }
 
             return Json(new { success = false });
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetAppointmentStudents(int appointmentId)
+        {
+            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(
+                a => a.Id == appointmentId,
+                include: e => e.Include(e => e.StudentAppointments)
+                               .ThenInclude(sa => sa.Student!)
+            );
+
+            if (appointment == null) return Json(new List<object>());
+
+            var result = appointment.StudentAppointments.Select(sa => new
+            {
+                studentId = sa.StudentId,
+                name = CultureHelper.IsArabic
+                    ? sa.Student!.NameAr
+                    : sa.Student!.NameEn
+            });
+
+            return Json(result);
+        }
+
+       
 
 
     }
