@@ -122,10 +122,9 @@ namespace ELClass.Controllers
 
 
                 var existingUser = await _userManager.FindByEmailAsync(contactUs.Email);
-                if (existingUser == null)
+                if (existingUser == null && !string.IsNullOrWhiteSpace(contactUs.Email))
                 {
                     var userName = await GenerateUniqueUsernameAsync(contactUs.Email);
-
                     var newUser = new ApplicationUser
                     {
                         Email = contactUs.Email,
@@ -134,13 +133,10 @@ namespace ELClass.Controllers
                         NameAR = contactUs.Name,
                         PhoneNumber = contactUs.PhoneNumber,
                     };
-
                     var result = await _userManager.CreateAsync(newUser, "@Aa123456");
-
                     if (result.Succeeded)
                     {
                         await _userManager.AddToRoleAsync(newUser, "Student");
-
                         var student = new Student
                         {
                             Id = newUser.Id,
@@ -148,21 +144,10 @@ namespace ELClass.Controllers
                             NameAr = contactUs.Name,
                             CreatedDate = DateTime.UtcNow
                         };
-
                         await _unitOfWork.StudentRepository.CreateAsync(student);
                         await _unitOfWork.CommitAsync();
-
-                        // إرسال الباسورد للطالب على الإيميل
-                        //await _emailSender.SendEmailAsync(
-                        //    contactUs.Email,
-                        //    isArabic ? "بيانات حسابك" : "Your Account Credentials",
-                        //    isArabic
-                        //        ? $"تم إنشاء حسابك بنجاح!<br/>البريد الإلكتروني: {contactUs.Email}<br/>كلمة المرور: @Aa123456"
-                        //        : $"Your account has been created!<br/>Email: {contactUs.Email}<br/>Password: @Aa123456"
-                        //);
                     }
                 }
-                // ────────────────────────────────────────────────────────────
 
                 TempData["Success"] = isArabic ? "تم إرسال رسالتك بنجاح!" : "Your message has been sent successfully!";
                 await _realHub.Clients.All.SendAsync("ReceiveMessage", "New Contact Us Message",

@@ -641,7 +641,7 @@ p {
   width: 100%;
   top: 0;
   left: 0;
-  z-index: 2;
+  z-index: 100;
   background: transparent;
 }
 
@@ -650,7 +650,7 @@ p {
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 2;
+  z-index: 100;
   background: #ffffff;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
 }

@@ -31,8 +31,7 @@
                         <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600">
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">No.</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "المرسل" : "Sender")</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "العمر" : "Age")</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "التواصل" : "Contact Info")</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "السنة الدراسية / التواصل" : "Academic Year / Contact")</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الدورة" : "Course")</th>
                             <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
                         </tr>
@@ -48,11 +47,8 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 text-sm">
-                                    <span class="text-slate-600 dark:text-slate-300 font-medium">@item.Age</span>
-                                    
-                                </td>
-                                <td class="px-4 py-4 text-sm">
                                     <div class="flex flex-col gap-1 text-xs">
+                                        <span class="flex items-center gap-1"><i class="material-icons text-xs">school</i> @item.AcademicYear</span>
                                         <span class="flex items-center gap-1"><i class="material-icons text-xs">email</i> @item.Email</span>
                                         <span class="flex items-center gap-1"><i class="material-icons text-xs">phone</i> @item.PhoneNumber</span>
                                     </div>

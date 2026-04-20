@@ -364,7 +364,6 @@ a {
     font-size: 1.1rem;
     line-height: 1.8;
     color: rgba(255,255,255,0.9);
-    margin-bottom: 30px;
 }
 .gray-p {
     font-size: 1.1rem;
@@ -1025,9 +1024,14 @@ a {
     }
 
 /* Team Section */
+/* Instructors Section */
+.el-team-parent .swiper-slide {
+    padding: 16px 8px;
+}
+
 .el-team-wrapper {
     padding: 100px 0;
-    background: white;
+    background: linear-gradient(180deg, #f4f7fc 0%, #ffffff 100%);
 }
 
 .el-team-heading {
@@ -1035,96 +1039,116 @@ a {
 }
 
 .el-team-box {
-    background: white;
+    background: #fff;
     border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-    transition: all 0.3s;
-    margin-bottom:0;
+    overflow: visible;
+    box-shadow: 0 4px 24px rgba(0, 83, 179, 0.08);
+    border: 1px solid rgba(0, 83, 179, 0.07);
+    transition: transform 0.3s, box-shadow 0.3s;
+    padding: 36px 20px 28px;
+    text-align: center;
+    margin-bottom: 0;
+    position: relative;
 }
 
+    .el-team-box::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #0053B3, #1a7fe8);
+        border-radius: 20px 20px 0 0;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
     .el-team-box:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        transform: translateY(-8px);
+        box-shadow: 0 16px 48px rgba(0, 83, 179, 0.15);
+    }
+
+    .el-team-box:hover::before {
+        opacity: 1;
     }
 
 .el-team-img {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 18px;
     position: relative;
-    overflow: hidden;
 }
 
     .el-team-img img {
-        width: 100%;
-        height: 300px;
+        width: 110px;
+        height: 110px;
         object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        box-shadow: 0 0 0 3px #0053B3, 0 8px 24px rgba(0,83,179,0.18);
+        transition: box-shadow 0.3s;
     }
 
-    .el-team-img span {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(255,255,255,0.95);
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-weight: 700;
-        color: var(--dark);
-        display: flex;
-        align-items: center;
-        gap: 5px;
+    .el-team-box:hover .el-team-img img {
+        box-shadow: 0 0 0 3px #FF716B, 0 8px 28px rgba(255,113,107,0.25);
     }
 
 .el-team-content {
-    padding: 25px;
+    padding: 0;
     text-align: center;
 }
 
     .el-team-content h4 {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         font-weight: 700;
-        color: var(--dark);
-        margin-bottom: 8px;
+        color: #1a2340;
+        margin-bottom: 10px;
     }
 
-    .el-team-content p {
-        color: var(--gray);
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-.el-team-social {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
+.el-team-spec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #0053B3, #1a7fe8);
+    color: #fff;
+    font-size: 0.78rem;
+    padding: 5px 16px;
+    border-radius: 50px;
+    margin-bottom: 18px;
+    font-weight: 500;
 }
 
-    .el-team-social a {
-        width: 36px;
-        height: 36px;
-        background: var(--light-gray);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s;
+.el-team-book-btn {
+    display: inline-block;
+    padding: 12px 35px;
+    margin-top: 10px;
+    background: linear-gradient(to right, #ffcc66 0%, #ff8866 50%, #ffcc66 100%);
+    background-size: 200% 100%;
+    background-position: right center;
+    color: #fff !important;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(255, 136, 102, 0.4);
+    transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    font-family: inherit;
+}
+
+    .el-team-book-btn:hover {
+        background-position: left center;
+        letter-spacing: 2.5px;
+        transform: translateY(-6px);
+        box-shadow: 0 8px 25px rgba(255, 136, 102, 0.6);
+        color: #fff !important;
+        text-decoration: none;
     }
 
-        .el-team-social a:hover {
-            background: var(--primary-blue);
-            transform: translateY(-3px);
-        }
-
-    .el-team-social svg {
-        fill: var(--dark);
-        width: 14px;
-        height: 14px;
-    }
-
-    .el-team-social a:hover svg {
-        fill: white;
-    }
+[lang="ar"] .el-team-book-btn {
+    letter-spacing: 0;
+}
 
 
 /* Contact/Enroll Section */
@@ -1290,6 +1314,57 @@ a {
     justify-content: center;
 }
 
+/* Academic Year select field */
+.el-academic-field {
+    background: linear-gradient(135deg, #eef4ff 0%, #ddeaff 100%);
+    border: 2px solid #0053B3 !important;
+    border-radius: 12px !important;
+    padding: 10px 15px 12px !important;
+    position: relative;
+}
+
+.el-academic-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0053B3;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+    .el-academic-label i {
+        margin-inline-end: 5px;
+    }
+
+.el-academic-field select {
+    width: 100%;
+    background: transparent;
+    border: none !important;
+    outline: none !important;
+    color: #1a2340;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.el-academic-field::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: 16px;
+    top: 50%;
+    transform: translateY(4px);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #0053B3;
+    pointer-events: none;
+}
+
 
 /* استهداف الـ textarea جوه الـ input-field */
 .el-input-field textarea {
@@ -1449,12 +1524,10 @@ a {
 
 /* الكروت الخلفية (غير النشطة) */
 .el-testmnl-slider .swiper-slide {
-    width: 280px !important; /* نفس عرض الكارت */
+    width: 280px !important;
     display: flex;
     justify-content: center;
     transition: all 0.5s ease;
-    /* إلغاء أي مسافات جانبية افتراضية */
-    margin: 0 -40px !important;
 }
 
 /* الكارت اللي في النص (النشط) */
@@ -1536,10 +1609,16 @@ a {
 .el-tesml-main-parent .swiper-button-prev {
     color: #00bcd4;
     background: white;
-    width: 40px;
-    height: 40px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.el-tesml-main-parent .swiper-button-next::after,
+.el-tesml-main-parent .swiper-button-prev::after {
+    font-size: 18px;
+    font-weight: 900;
 }
 
 /* تنسيق محتوى النص */
@@ -1661,6 +1740,13 @@ a {
     margin-bottom: 8px;
 }
 
+.el-plan-name {
+    font-family: 'El Messiri', sans-serif !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px;
+}
+
 .el-price-head p {
     color: var(--gray);
     margin-bottom: 20px;
@@ -1700,7 +1786,7 @@ a {
 
 /* Blog Section */
 .el-blog-wrapper {
-    padding: 100px 0;
+    padding: 100px 0 0;
     background: var(--light-gray);
     position: relative;
 }

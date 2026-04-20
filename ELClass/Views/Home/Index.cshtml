@@ -31,7 +31,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=El+Messiri:wght@700&display=swap" rel="stylesheet">
 
     <!-- CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css">
@@ -51,26 +51,98 @@
                 </div>
                 @if (isArabic)
                 {
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <form action="/Home/SetCountry" method="post" style="display:inline-flex;align-items:center;gap:4px;">
+                    var countryFlags = new Dictionary<string, string>
+                    {
+                        {"SA","🇸🇦"}, {"AE","🇦🇪"}, {"KW","🇰🇼"},
+                        {"BH","🇧🇭"}, {"OM","🇴🇲"}, {"EG","🇪🇬"}, {"QA","🇶🇦"}
+                    };
+                    var selName = countries.FirstOrDefault(x => x.Item1 == Model.SelectedCountry).Item2 ?? countries[0].Item2;
+                    var selFlag = countryFlags.ContainsKey(Model.SelectedCountry ?? "") ? countryFlags[Model.SelectedCountry!] : countryFlags[countries[0].Item1];
+                    var selCode = Model.SelectedCountry ?? countries[0].Item1;
+                    <div class="el-country-picker" id="elCountryPicker">
+                        <button type="button" class="el-country-btn" onclick="toggleCountryDropdown(event)" aria-haspopup="listbox">
+                            <span class="el-country-flag">@selFlag</span>
+                            <span class="el-country-label">@selName</span>
+                            <svg class="el-country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none">
+                                <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <ul class="el-country-menu" role="listbox">
+                            @foreach (var (code, name) in countries)
+                            {
+                                var flag = countryFlags.ContainsKey(code) ? countryFlags[code] : "";
+                                var active = code == selCode;
+                                <li role="option" aria-selected="@active.ToString().ToLower()"
+                                    class="el-country-option @(active ? "active" : "")"
+                                    onclick="selectCountry('@code')">
+                                    <span class="el-country-flag">@flag</span>
+                                    <span>@name</span>
+                                    @if (active) { <svg class="el-country-check" width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> }
+                                </li>
+                            }
+                        </ul>
+                        <form id="elCountryForm" action="/Home/SetCountry" method="post" style="display:none;">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-                            <select name="country" onchange="this.form.submit()"
-                                    style="border:1px solid rgba(255,255,255,0.4);background:#001a33;color:#fff;border-radius:6px;padding:2px 8px;font-size:13px;cursor:pointer;outline:none;">
-                                @foreach (var (code, name) in countries)
-                                {
-                                    if (Model.SelectedCountry == code)
-                                    {
-                                        <option value="@code" selected style="background:#001a33;color:#fff;">@name</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@code" style="background:#001a33;color:#fff;">@name</option>
-                                    }
-                                }
-                            </select>
+                            <input type="hidden" name="country" id="elCountryInput" value="@selCode" />
                         </form>
                     </div>
+                    <style>
+                        .el-country-picker { position: relative; z-index: 9999; }
+                        .el-country-btn {
+                            display: inline-flex; align-items: center; gap: 6px;
+                            background: rgba(255,255,255,0.08);
+                            border: 1px solid rgba(255,255,255,0.22);
+                            color: #fff; border-radius: 20px;
+                            padding: 4px 12px 4px 8px;
+                            font-size: 13px; font-family: inherit; cursor: pointer;
+                            transition: background .2s, border-color .2s;
+                            white-space: nowrap;
+                        }
+                        .el-country-btn:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.45); }
+                        .el-country-flag { font-size: 16px; line-height: 1; }
+                        .el-country-chevron { transition: transform .25s; flex-shrink: 0; opacity: .8; }
+                        .el-country-picker.open .el-country-chevron { transform: rotate(180deg); }
+                        .el-country-menu {
+                            display: none; position: absolute;
+                            top: calc(100% + 8px); right: 0;
+                            background: #0b2340;
+                            border: 1px solid rgba(255,255,255,0.15);
+                            border-radius: 12px; padding: 6px;
+                            margin: 0; list-style: none;
+                            min-width: 148px;
+                            box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+                            animation: elDropIn .18s ease;
+                        }
+                        .el-country-picker.open .el-country-menu { display: block; }
+                        @@keyframes elDropIn {
+                            from { opacity: 0; transform: translateY(-6px) scale(.97); }
+                            to   { opacity: 1; transform: translateY(0)   scale(1); }
+                        }
+                        .el-country-option {
+                            display: flex; align-items: center; gap: 8px;
+                            padding: 7px 10px; border-radius: 8px;
+                            color: rgba(255,255,255,0.82); font-size: 13px;
+                            cursor: pointer; transition: background .15s;
+                        }
+                        .el-country-option:hover { background: rgba(255,255,255,0.1); color: #fff; }
+                        .el-country-option.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 600; }
+                        .el-country-check { margin-right: auto; color: #4fc3f7; flex-shrink: 0; }
+                    </style>
+                    <script>
+                        function toggleCountryDropdown(e) {
+                            e.stopPropagation();
+                            document.getElementById('elCountryPicker').classList.toggle('open');
+                        }
+                        function selectCountry(code) {
+                            document.getElementById('elCountryInput').value = code;
+                            document.getElementById('elCountryForm').submit();
+                        }
+                        document.addEventListener('click', function () {
+                            var p = document.getElementById('elCountryPicker');
+                            if (p) p.classList.remove('open');
+                        });
+                    </script>
                 }
                 <div class="el-top-header-right">
                     <p>
@@ -315,7 +387,7 @@
                                 @(c?.AboutBullet4 ?? (isArabic ? "مدرسون في جميع المواد" : "Tutors in all subjects"))
                             </li>
                         </ul>
-                        <a href="javascript:;" class="el-btn">@(c?.AboutReadMoreBtn ?? (isArabic ? "اقرأ المزيد" : "read more"))</a>
+                        <a href="#join-us" class="el-btn">@(c?.AboutReadMoreBtn ?? (isArabic ? "اقرأ المزيد" : "read more"))</a>
                     </div>
                 </div>
             </div>
@@ -335,147 +407,85 @@
                 </p>
             </div>
 
-            <div class="el-tab-parent">
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="all-courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab">
-                            @(isArabic ? "جميع المواد" : "all courses")
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="design-tab" data-bs-toggle="tab" data-bs-target="#design" type="button" role="tab">
-                            @(isArabic ? "العلوم" : "Science")
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="development-tab" data-bs-toggle="tab" data-bs-target="#development" type="button" role="tab">
-                            @(isArabic ? "اللغات" : "Languages")
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="cyber-security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab">
-                            @(isArabic ? "الرياضيات" : "Mathematics")
-                        </button>
-                    </li>
-                </ul>
+            <!-- Subjects Filter -->
+            <style>
+            .el-flt-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:36px}
+            .el-flt-btn{background:transparent;border:1.5px solid #dde3ef;color:#555;border-radius:50px;padding:8px 22px;font-size:14px;font-family:inherit;cursor:pointer;transition:all .25s;white-space:nowrap}
+            .el-flt-btn:hover{border-color:#0053B3;color:#0053B3}
+            .el-flt-btn.active{background:#0053B3;border-color:#0053B3;color:#fff}
+            .el-sbj-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:8px}
+            @@media(max-width:1199px){.el-sbj-grid{grid-template-columns:repeat(3,1fr)}}
+            @@media(max-width:767px){.el-sbj-grid{grid-template-columns:repeat(2,1fr);gap:16px}}
+            .el-sbj-card{background:#fff;border-radius:16px;padding:24px 18px 20px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.07);transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column;align-items:center;gap:12px}
+            .el-sbj-card:hover{transform:translateY(-5px);box-shadow:0 10px 32px rgba(0,0,0,.13)}
+            .el-sbj-card.el-sbj-hidden{display:none !important}
+            .el-sbj-icon{width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px;line-height:1;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+            .el-sbj-card h4{font-size:16px;font-weight:700;color:#1a2340;margin:0}
+            .el-sbj-card p{font-size:13px;color:#777;margin:0;line-height:1.5}
+            .el-sbj-card .el-orange-btn{margin-top:4px;font-size:12px;padding:6px 18px}
+            @@keyframes elSbjIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+            .el-sbj-card{animation:elSbjIn .35s ease both}
+            </style>
 
-                <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="courses" role="tabpanel">
-                        <div class="el-tab-slider-parent swiper">
-                            <div class="swiper-wrapper" style="max-height:300px">
-                                <div class="swiper-slide">
-                                    <div class="el-tab-content-box ">
-                                        
-                                        <div class="el-tab-img">
-                                            <svg fill="#0053B3" height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g><g><path d="M436.833,262.291v-46.995c16.002-6.136,27.367-21.634,27.367-39.796c0-23.536-19.08-42.616-42.616-42.616 c-10.173,0-19.508,3.569-26.835,9.517l-40.71-23.504V32.101h-30.496v86.797L256,157.894l-67.543-38.997V32.101h-30.496v86.797 l-40.71,23.504c-7.327-5.948-16.662-9.517-26.835-9.517c-23.536,0-42.616,19.08-42.616,42.616 c0,18.162,11.366,33.66,27.368,39.796v46.995L0,305.688l15.248,26.41l75.162-43.394l67.549,39v77.986l-75.167,43.398l15.248,26.41 l75.167-43.398l82.791,47.8l55.958-32.308c7.327,5.948,16.662,9.517,26.835,9.517c23.536,0,42.616-19.08,42.616-42.616 c0-18.162-11.366-33.66-27.368-39.796v-46.995l67.55-38.998l75.162,43.394L512,305.689L436.833,262.291z M173.203,301.289 l-67.537-38.993v-47.001h-0.001c16.002-6.136,27.367-21.634,27.367-39.796c0-2.277-0.183-4.511-0.528-6.693l40.703-23.5 l67.543,38.997v47.001c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.276,0.183,4.508,0.527,6.687L173.203,301.289z M323.543,374.699c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.277,0.183,4.511,0.528,6.693L256,444.688l-67.543-38.999 v-77.985l40.71-23.504c7.327,5.947,16.662,9.516,26.834,9.516c10.172,0,19.508-3.569,26.834-9.516l40.71,23.504V374.699z M406.337,262.297l-67.539,38.993l-40.708-23.503c0.344-2.18,0.527-4.412,0.527-6.687c0-18.162-11.365-33.66-27.367-39.796 v-47.001l67.543-38.997l40.703,23.5c-0.345,2.182-0.528,4.416-0.528,6.693c0,18.162,11.366,33.66,27.368,39.796V262.297z" /></g></g></svg>
-                                        </div>
-                                        <div class="el-tab-inner">
-                                            <h4>@(isArabic ? "أحياء" : "Biology")</h4>
-                                            <p>@(isArabic ? "تعلم علم الأحياء مع مدرسين متخصصين" : "Learn biology with expert tutors")</p>
-                                            
-                                            <a href="javascript:;" class="el-orange-btn">
-                                                @(isArabic ? "احجز الآن" : "Enroll Now")
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="swiper-slide">
-                                    <div class="el-tab-content-box ">
-                                       
-                                        <div class="el-tab-img">
-                                            <svg viewBox="0 0 24 24" fill="#FF716B" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10.5523 17 11 16.5523 11 16C11 15.4477 10.5523 15 10 15C9.44772 15 9 15.4477 9 16C9 16.5523 9.44772 17 10 17Z" /><path d="M15 18C15 18.5523 14.5523 19 14 19C13.4477 19 13 18.5523 13 18C13 17.4477 13.4477 17 14 17C14.5523 17 15 17.4477 15 18Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M15 3V7.58152C17.9318 8.76829 20 11.6426 20 15C20 19.4183 16.4183 23 12 23C7.58172 23 4 19.4183 4 15C4 11.6426 6.06817 8.76829 9 7.58152V3H8C7.44772 3 7 2.55228 7 2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2C17 2.55228 16.5523 3 16 3H15ZM9.75043 9.43539L10.3752 9.18249C10.7529 9.02962 11 8.66295 11 8.25555V3H13V8.25555C13 8.66295 13.2471 9.02962 13.6248 9.18249L14.2496 9.43539C15.1075 9.78268 15.8661 10.3221 16.4726 11L7.52739 11C8.13388 10.3221 8.89249 9.78268 9.75043 9.43539ZM6.3414 13C6.12025 13.6258 6 14.2991 6 15C6 18.3137 8.68629 21 12 21C15.3137 21 18 18.3137 18 15C18 14.2991 17.8798 13.6258 17.6586 13L6.3414 13Z" /></svg>
-                                        </div>
-                                        <div class="el-tab-inner">
-                                            <h4>@(isArabic ? "كيمياء" : "Chemistry")</h4>
-                                            <p>@(isArabic ? "اكتشف عالم الكيمياء مع خبرائنا" : "Discover chemistry with our experts")</p>
-                                           
-                                            <a href="javascript:;" class="el-orange-btn">
-                                                @(isArabic ? "احجز الآن" : "Enroll Now")
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="swiper-slide">
-                                    <div class="el-tab-content-box ">
-                                       
-                                        <div class="el-tab-img">
-                                            <svg height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53.5 53.5" fill="#82DAFF"><path d="M52,50.5H3v-49C3,0.671,2.329,0,1.5,0S0,0.671,0,1.5V52c0,0.829,0.671,1.5,1.5,1.5H52 c0.829,0,1.5-0.671,1.5-1.5C53.5,51.172,52.828,50.5,52,50.5z" /><path d="M12.108,36.417l-4.375,8c-0.398,0.727-0.131,1.638,0.596,2.036c0.229,0.125,0.475,0.184,0.718,0.184 c0.531,0,1.045-0.282,1.317-0.781l4.375-8c0.712-1.302,1.616-2.337,2.585-3.004c0.155,0.027,0.312,0.048,0.474,0.048 c0.792,0,1.501-0.337,2.005-0.871c0.719,0.024,1.374,0.296,1.949,0.831c1.379,1.282,3.05,1.744,4.707,1.299 c2.452-0.658,4.512-3.172,5.651-6.896l1.445-4.719c0.515-1.681,1.047-2.754,1.489-3.432c0.312,0.122,0.649,0.195,1.004,0.195 c0.177,0,0.349-0.021,0.517-0.052l2.377,5.023c0.354,0.748,1.248,1.068,1.998,0.714c0.749-0.355,1.069-1.249,0.714-1.998 l-2.625-5.546c-0.083-0.176-0.173-0.319-0.261-0.47c0.023-0.143,0.044-0.286,0.044-0.435c0-1.526-1.237-2.764-2.764-2.764 c-1.516,0-2.745,1.222-2.761,2.734c-1.003,1.11-1.892,2.838-2.601,5.152l-1.445,4.719c-0.964,3.149-2.472,4.583-3.562,4.876 c-0.647,0.176-1.265-0.021-1.886-0.599c-0.99-0.921-2.181-1.459-3.449-1.598c-0.419-0.994-1.402-1.692-2.548-1.692 c-1.526,0-2.764,1.237-2.764,2.764c0,0.215,0.03,0.421,0.076,0.622C13.962,33.671,12.933,34.909,12.108,36.417z" /></svg>
-                                        </div>
-                                        <div class="el-tab-inner">
-                                            <h4>@(isArabic ? "رياضيات" : "Mathematics")</h4>
-                                            <p>@(isArabic ? "تحسين مهاراتك في الرياضيات" : "Improve your math skills")</p>
-                                           
-                                            <a href="javascript:;" class="el-orange-btn">
-                                                @(isArabic ? "احجز الآن" : "Enroll Now")
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="el-tab-content-box el-tab-content-box1">
-
-                                        <div class="el-tab-img">
-                                            <svg fill="#0053B3" height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g><g><path d="M436.833,262.291v-46.995c16.002-6.136,27.367-21.634,27.367-39.796c0-23.536-19.08-42.616-42.616-42.616 c-10.173,0-19.508,3.569-26.835,9.517l-40.71-23.504V32.101h-30.496v86.797L256,157.894l-67.543-38.997V32.101h-30.496v86.797 l-40.71,23.504c-7.327-5.948-16.662-9.517-26.835-9.517c-23.536,0-42.616,19.08-42.616,42.616 c0,18.162,11.366,33.66,27.368,39.796v46.995L0,305.688l15.248,26.41l75.162-43.394l67.549,39v77.986l-75.167,43.398l15.248,26.41 l75.167-43.398l82.791,47.8l55.958-32.308c7.327,5.948,16.662,9.517,26.835,9.517c23.536,0,42.616-19.08,42.616-42.616 c0-18.162-11.366-33.66-27.368-39.796v-46.995l67.55-38.998l75.162,43.394L512,305.689L436.833,262.291z M173.203,301.289 l-67.537-38.993v-47.001h-0.001c16.002-6.136,27.367-21.634,27.367-39.796c0-2.277-0.183-4.511-0.528-6.693l40.703-23.5 l67.543,38.997v47.001c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.276,0.183,4.508,0.527,6.687L173.203,301.289z M323.543,374.699c-16.002,6.136-27.367,21.634-27.367,39.796c0,2.277,0.183,4.511,0.528,6.693L256,444.688l-67.543-38.999 v-77.985l40.71-23.504c7.327,5.947,16.662,9.516,26.834,9.516c10.172,0,19.508-3.569,26.834-9.516l40.71,23.504V374.699z M406.337,262.297l-67.539,38.993l-40.708-23.503c0.344-2.18,0.527-4.412,0.527-6.687c0-18.162-11.365-33.66-27.367-39.796 v-47.001l67.543-38.997l40.703,23.5c-0.345,2.182-0.528,4.416-0.528,6.693c0,18.162,11.366,33.66,27.368,39.796V262.297z" /></g></g></svg>
-                                        </div>
-                                        <div class="el-tab-inner">
-                                            <h4>@(isArabic ? "أحياء" : "Biology")</h4>
-                                            <p>@(isArabic ? "تعلم علم الأحياء مع مدرسين متخصصين" : "Learn biology with expert tutors")</p>
-
-                                            <a href="javascript:;" class="el-orange-btn">
-                                                @(isArabic ? "احجز الآن" : "Enroll Now")
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="swiper-slide">
-                                    <div class="el-tab-content-box el-tab-content-box2">
-
-                                        <div class="el-tab-img">
-                                            <svg viewBox="0 0 24 24" fill="#FF716B" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10.5523 17 11 16.5523 11 16C11 15.4477 10.5523 15 10 15C9.44772 15 9 15.4477 9 16C9 16.5523 9.44772 17 10 17Z" /><path d="M15 18C15 18.5523 14.5523 19 14 19C13.4477 19 13 18.5523 13 18C13 17.4477 13.4477 17 14 17C14.5523 17 15 17.4477 15 18Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M15 3V7.58152C17.9318 8.76829 20 11.6426 20 15C20 19.4183 16.4183 23 12 23C7.58172 23 4 19.4183 4 15C4 11.6426 6.06817 8.76829 9 7.58152V3H8C7.44772 3 7 2.55228 7 2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2C17 2.55228 16.5523 3 16 3H15ZM9.75043 9.43539L10.3752 9.18249C10.7529 9.02962 11 8.66295 11 8.25555V3H13V8.25555C13 8.66295 13.2471 9.02962 13.6248 9.18249L14.2496 9.43539C15.1075 9.78268 15.8661 10.3221 16.4726 11L7.52739 11C8.13388 10.3221 8.89249 9.78268 9.75043 9.43539ZM6.3414 13C6.12025 13.6258 6 14.2991 6 15C6 18.3137 8.68629 21 12 21C15.3137 21 18 18.3137 18 15C18 14.2991 17.8798 13.6258 17.6586 13L6.3414 13Z" /></svg>
-                                        </div>
-                                        <div class="el-tab-inner">
-                                            <h4>@(isArabic ? "كيمياء" : "Chemistry")</h4>
-                                            <p>@(isArabic ? "اكتشف عالم الكيمياء مع خبرائنا" : "Discover chemistry with our experts")</p>
-
-                                            <a href="javascript:;" class="el-orange-btn">
-                                                @(isArabic ? "احجز الآن" : "Enroll Now")
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="swiper-slide">
-                                    <div class="el-tab-content-box el-tab-content-box3">
-
-                                        <div class="el-tab-img">
-                                            <svg height="200px" width="200px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53.5 53.5" fill="#82DAFF"><path d="M52,50.5H3v-49C3,0.671,2.329,0,1.5,0S0,0.671,0,1.5V52c0,0.829,0.671,1.5,1.5,1.5H52 c0.829,0,1.5-0.671,1.5-1.5C53.5,51.172,52.828,50.5,52,50.5z" /><path d="M12.108,36.417l-4.375,8c-0.398,0.727-0.131,1.638,0.596,2.036c0.229,0.125,0.475,0.184,0.718,0.184 c0.531,0,1.045-0.282,1.317-0.781l4.375-8c0.712-1.302,1.616-2.337,2.585-3.004c0.155,0.027,0.312,0.048,0.474,0.048 c0.792,0,1.501-0.337,2.005-0.871c0.719,0.024,1.374,0.296,1.949,0.831c1.379,1.282,3.05,1.744,4.707,1.299 c2.452-0.658,4.512-3.172,5.651-6.896l1.445-4.719c0.515-1.681,1.047-2.754,1.489-3.432c0.312,0.122,0.649,0.195,1.004,0.195 c0.177,0,0.349-0.021,0.517-0.052l2.377,5.023c0.354,0.748,1.248,1.068,1.998,0.714c0.749-0.355,1.069-1.249,0.714-1.998 l-2.625-5.546c-0.083-0.176-0.173-0.319-0.261-0.47c0.023-0.143,0.044-0.286,0.044-0.435c0-1.526-1.237-2.764-2.764-2.764 c-1.516,0-2.745,1.222-2.761,2.734c-1.003,1.11-1.892,2.838-2.601,5.152l-1.445,4.719c-0.964,3.149-2.472,4.583-3.562,4.876 c-0.647,0.176-1.265-0.021-1.886-0.599c-0.99-0.921-2.181-1.459-3.449-1.598c-0.419-0.994-1.402-1.692-2.548-1.692 c-1.526,0-2.764,1.237-2.764,2.764c0,0.215,0.03,0.421,0.076,0.622C13.962,33.671,12.933,34.909,12.108,36.417z" /></svg>
-                                        </div>
-                                        <div class="el-tab-inner">
-                                            <h4>@(isArabic ? "رياضيات" : "Mathematics")</h4>
-                                            <p>@(isArabic ? "تحسين مهاراتك في الرياضيات" : "Improve your math skills")</p>
-
-                                            <a href="javascript:;" class="el-orange-btn">
-                                                @(isArabic ? "احجز الآن" : "Enroll Now")
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @* <div class="swiper-button-prev"></div>
-                        <div class="swiper-button-next"></div> *@
-                    </div>
-                </div>
+            <div class="el-flt-bar">
+                <button class="el-flt-btn active" data-filter="all">@(isArabic ? "جميع المواد" : "All Courses")</button>
+                <button class="el-flt-btn" data-filter="science">@(isArabic ? "العلوم" : "Science")</button>
+                <button class="el-flt-btn" data-filter="math">@(isArabic ? "الرياضيات" : "Mathematics")</button>
+                <button class="el-flt-btn" data-filter="languages">@(isArabic ? "اللغات" : "Languages")</button>
+                <button class="el-flt-btn" data-filter="social">@(isArabic ? "الاجتماعيات" : "Social Studies")</button>
             </div>
+
+            @{
+                var subjects = new (string En, string Ar, string DescEn, string DescAr, string Cat, string Emoji, string Grad)[]
+                {
+                    ("Biology",          "أحياء",             "Learn biology with expert tutors",       "تعلم علم الأحياء مع مدرسين متخصصين",   "science",   "🧬", "linear-gradient(135deg,#0053B3,#1a7fe8)"),
+                    ("Chemistry",        "كيمياء",            "Discover chemistry with our experts",    "اكتشف عالم الكيمياء مع خبرائنا",         "science",   "⚗️", "linear-gradient(135deg,#FF5722,#FF8A65)"),
+                    ("Physics",          "فيزياء",            "Master physics concepts step by step",   "أتقن مفاهيم الفيزياء خطوة بخطوة",        "science",   "⚡", "linear-gradient(135deg,#00897B,#26C6DA)"),
+                    ("Mathematics",      "رياضيات",           "Improve your math skills with ease",     "طور مهاراتك في الرياضيات بسهولة",        "math",      "📐", "linear-gradient(135deg,#7B1FA2,#CE93D8)"),
+                    ("Algebra",          "جبر",               "Understand algebra from the ground up",  "افهم الجبر من الأساس",                   "math",      "✏️", "linear-gradient(135deg,#E91E63,#F48FB1)"),
+                    ("Statistics",       "إحصاء",             "Analyze data and understand statistics", "حلل البيانات وافهم الإحصاء",              "math",      "📊", "linear-gradient(135deg,#0288D1,#4FC3F7)"),
+                    ("Arabic Language",  "اللغة العربية",     "Strengthen your Arabic language skills", "قوّي مهاراتك في اللغة العربية",           "languages", "📖", "linear-gradient(135deg,#2E7D32,#66BB6A)"),
+                    ("English Language", "اللغة الإنجليزية",  "Speak and write English confidently",    "تحدث واكتب الإنجليزية بثقة",             "languages", "🔤", "linear-gradient(135deg,#1565C0,#42A5F5)"),
+                    ("French Language",  "اللغة الفرنسية",    "Learn French with native-level tutors",  "تعلم الفرنسية مع مدرسين متمرسين",        "languages", "🗣️", "linear-gradient(135deg,#C62828,#EF9A9A)"),
+                    ("History",          "تاريخ",             "Explore world and regional history",     "استكشف التاريخ العالمي والمحلي",           "social",    "🏛️", "linear-gradient(135deg,#F57F17,#FFCA28)"),
+                    ("Geography",        "جغرافيا",           "Understand our world's geography",       "افهم جغرافية عالمنا",                    "social",    "🌍", "linear-gradient(135deg,#4E342E,#A1887F)"),
+                    ("Islamic Studies",  "تربية إسلامية",     "Deepen your Islamic knowledge",          "عمّق معرفتك بالتربية الإسلامية",          "social",    "☪️", "linear-gradient(135deg,#00695C,#4DB6AC)"),
+                };
+            }
+            <div class="el-sbj-grid" id="elSbjGrid">
+                @foreach (var s in subjects)
+                {
+                    <div class="el-sbj-card" data-cat="@s.Cat">
+                        <div class="el-sbj-icon" style="background:@s.Grad">@s.Emoji</div>
+                        <h4>@(isArabic ? s.Ar : s.En)</h4>
+                        <p>@(isArabic ? s.DescAr : s.DescEn)</p>
+                        <a href="#ContactUsSection" class="el-orange-btn">@(isArabic ? "احجز الآن" : "Enroll Now")</a>
+                    </div>
+                }
+            </div>
+
+            <script>
+            (function(){
+                var btns = document.querySelectorAll('.el-flt-btn');
+                var cards = document.querySelectorAll('#elSbjGrid .el-sbj-card');
+                btns.forEach(function(btn){
+                    btn.addEventListener('click', function(){
+                        btns.forEach(function(b){ b.classList.remove('active'); });
+                        btn.classList.add('active');
+                        var f = btn.getAttribute('data-filter');
+                        cards.forEach(function(c){
+                            c.classList.toggle('el-sbj-hidden', f !== 'all' && c.getAttribute('data-cat') !== f);
+                        });
+                    });
+                });
+            })();
+            </script>
         </div>
     </div>
     <!-- Course Section End -->
 
     <!-- Team Section Start -->
-    <div class="el-team-wrapper p-4">
+    <div class="el-team-wrapper">
         <div class="container">
             <div class="el-team-heading text-center">
                 <h4 class="el-top-heading-center">@(c?.TeamTopHeading ?? (isArabic ? "مدرسونا" : "Our instructors"))</h4>
@@ -492,49 +502,22 @@
                     {
                         <div class="swiper-slide">
                             <div class="el-team-box">
-                                <div class="el-team-box-inner">
-                                    <div class="el-team-img">
-                                        <img src="@(item.ApplicationUser.Img != null
-                                                                                                                                                                               ? Url.Content("~/images/users/" + item.ApplicationUser.Img)
-                                                                                                                                                                               : $"https://ui-avatars.com/api/?name={(isArabic ? item.NameAr : item.NameEn)}&background=0053B3&color=fff&size=300")"
-                                             alt="@(isArabic? item.NameAr: item.NameEn)">
-                                        
+                                <div class="el-team-img">
+                                    @{ var instructorName = isArabic ? item.NameAr : item.NameEn; }
+                                    <img src="@(item.ApplicationUser.Img != null ? Url.Content("~/images/users/" + item.ApplicationUser.Img) : $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(instructorName ?? "?")}&background=0053B3&color=fff&size=300")"
+                                         alt="@instructorName">
+                                </div>
+                                <div class="el-team-content">
+                                    <h4>@instructorName</h4>
+                                    <div>
+                                        <span class="el-team-spec-badge">
+                                            <i class="fa-solid fa-chalkboard-user"></i>
+                                            @(isArabic ? item.SpecializationAr : item.SpecializationEn)
+                                        </span>
                                     </div>
-                                    <div class="el-team-content">
-                                        <h4>@(isArabic? item.NameAr: item.NameEn)</h4>
-                                        <p class="el-para">
-                                            <i class="fa-solid fa-user-tag"></i>
-                                            @(isArabic? item.SpecializationAr: item.SpecializationEn)
-                                        </p>
-                                        <div class="el-team-social">
-                                            <a href="javascript:;">
-                                                <svg width="8" height="14" viewBox="0 0 8 14">
-                                                    <path d="M4.61903 13.1094V7.13001H6.71611L7.03074 4.79906H4.61903V3.31108C4.61903 2.63643 4.81405 2.17666 5.82647 2.17666L7.11562 2.17615V0.0912609C6.89268 0.0635446 6.1274 0 5.2367 0C3.37678 0 2.10344 1.08609 2.10344 3.08022V4.79906H0V7.13001H2.10344V13.1094H4.61903Z" />
-                                                </svg>
-                                            </a>
-                                            <a href="javascript:;">
-                                                <svg width="13" height="13" viewBox="0 0 13 13">
-                                                    <path d="M6.49122 6.32693C6.39192 6.32693 6.31152 6.40742 6.31152 6.50663C6.31152 6.60594 6.39201 6.68633 6.49122 6.68633C6.59052 6.68633 6.67092 6.60585 6.67092 6.50663C6.67092 6.40733 6.59044 6.32693 6.49122 6.32693ZM6.49122 6.62327C6.42676 6.62327 6.37458 6.57106 6.37458 6.50663C6.37458 6.4422 6.42679 6.39 6.49122 6.39C6.55565 6.39 6.60786 6.4422 6.60786 6.50663C6.60789 6.57106 6.55568 6.62327 6.49122 6.62327Z" />
-                                                    <path d="M6.63544 6.15866C6.57101 6.15566 6.41141 6.1558 6.34692 6.15866C6.29025 6.16132 6.24027 6.175 6.19997 6.2153C6.13262 6.28265 6.14123 6.37341 6.14123 6.5065C6.14123 6.64272 6.13364 6.73137 6.19997 6.7977C6.26758 6.86529 6.35965 6.85644 6.49117 6.85644C6.6261 6.85644 6.67267 6.85653 6.72038 6.83806C6.78525 6.81288 6.83422 6.75489 6.83901 6.65075C6.84204 6.58628 6.84187 6.42672 6.83901 6.36223C6.83323 6.23929 6.76725 6.16473 6.63544 6.15866ZM6.73743 6.75314C6.69328 6.79729 6.63202 6.79335 6.49032 6.79335C6.34441 6.79335 6.28591 6.79551 6.24321 6.7527C6.19404 6.70377 6.20294 6.62518 6.20294 6.50604C6.20294 6.34481 6.1864 6.2287 6.34821 6.22041C6.38538 6.2191 6.39633 6.21866 6.48991 6.21866L6.49122 6.21954C6.64673 6.21954 6.76874 6.20325 6.77606 6.36503C6.77773 6.40195 6.7781 6.41304 6.7781 6.50647C6.77808 6.65069 6.78082 6.70955 6.73743 6.75314Z" />
-                                                    <path d="M6.67798 6.36178C6.70117 6.36178 6.71997 6.34298 6.71997 6.31979C6.71997 6.2966 6.70117 6.2778 6.67798 6.2778C6.65479 6.2778 6.63599 6.2966 6.63599 6.31979C6.63599 6.34298 6.65479 6.36178 6.67798 6.36178Z" />
-                                                    <path d="M9.13196 6.50726C9.13196 7.02936 8.97714 7.53973 8.68708 7.97384C8.39702 8.40795 7.98474 8.7463 7.50239 8.9461C7.02003 9.1459 6.48926 9.19817 5.9772 9.09631C5.46513 8.99446 4.99477 8.74304 4.62559 8.37387C4.25641 8.00469 4.005 7.53432 3.90314 7.02226C3.80128 6.51019 3.85356 5.97942 4.05336 5.49707C4.25316 5.01471 4.5915 4.60244 5.02561 4.31237C5.45972 4.02231 5.97009 3.86749 6.49219 3.86749C7.1923 3.86749 7.86374 4.14561 8.35879 4.64066C8.85384 5.13572 9.13196 5.80715 9.13196 6.50726Z" />
-                                                    <path d="M12.6654 1.83646C12.5339 1.49494 12.3322 1.18479 12.0734 0.925995C11.8146 0.667203 11.5044 0.465518 11.1629 0.333942C10.8839 0.226196 10.4626 0.0963628 9.6922 0.0613454C8.85717 0.0230956 8.60666 0.0150146 6.49215 0.0150146C4.37764 0.0150146 4.12713 0.0230951 3.2921 0.0608061C2.5201 0.0963622 2.10043 0.222425 1.82137 0.333942C1.47986 0.46563 1.16969 0.667349 0.910823 0.926121C0.651958 1.18489 0.450127 1.49499 0.318317 1.83646C0.210571 2.11552 0.0812765 2.53681 0.0457204 3.30719C0.00800935 4.14222 -0.000610352 4.39273 -0.000610352 6.50724C-0.000610352 8.62175 0.00800935 8.87226 0.0457204 9.70783C0.0812765 10.4798 0.207339 10.899 0.318317 11.178C0.45021 11.5195 0.652063 11.8296 0.910913 12.0885C1.16976 12.3473 1.47989 12.5492 1.82137 12.6811C2.10043 12.7888 2.52172 12.9187 3.2921 12.9537C4.12713 12.9919 4.3771 13 6.49215 13C8.6072 13 8.85717 12.9919 9.6922 12.9537C10.4642 12.9187 10.8839 12.7894 11.1624 12.6811C11.504 12.5494 11.8142 12.3476 12.0731 12.0887C12.332 11.8298 12.5338 11.5196 12.6654 11.178C12.7732 10.899 12.903 10.4777 12.9386 9.70783C12.9763 8.87226 12.9844 8.62175 12.9844 6.50724C12.9844 4.39273 12.9763 4.14222 12.9386 3.30719C12.903 2.53519 12.7743 2.11552 12.6654 1.83646ZM6.49215 10.5736C5.68791 10.5736 4.90173 10.3351 4.23302 9.88826C3.56432 9.44145 3.04313 8.80638 2.73536 8.06335C2.42759 7.32033 2.34706 6.50273 2.50396 5.71394C2.66086 4.92515 3.04814 4.2006 3.61682 3.63191C4.18551 3.06322 4.91006 2.67594 5.69885 2.51904C6.48764 2.36214 7.30524 2.44267 8.04827 2.75044C8.79129 3.05821 9.42636 3.5794 9.87318 4.24811C10.32 4.91681 10.5585 5.70299 10.5585 6.50724C10.5585 7.04123 10.4533 7.57 10.2489 8.06335C10.0446 8.5567 9.74507 9.00497 9.36748 9.38256C8.98988 9.76016 8.54162 10.0597 8.04827 10.264C7.55492 10.4684 7.02615 10.5736 6.49215 10.5736ZM10.7196 3.23015C10.5316 3.23015 10.3479 3.17441 10.1916 3.06999C10.0353 2.96557 9.91351 2.81715 9.84158 2.6435C9.76965 2.46985 9.75083 2.27878 9.7875 2.09443C9.82417 1.91009 9.91468 1.74076 10.0476 1.60785C10.1805 1.47495 10.3498 1.38444 10.5342 1.34777C10.7185 1.3111 10.9096 1.32992 11.0832 1.40185C11.2569 1.47378 11.4053 1.59558 11.5097 1.75186C11.6141 1.90814 11.6699 2.09188 11.6699 2.27983C11.6699 2.53187 11.5698 2.77359 11.3915 2.95181C11.2133 3.13003 10.9716 3.23015 10.7196 3.23015Z" />
-                                                </svg>
-                                            </a>
-                                            <a href="javascript:;">
-                                                <svg width="13" height="12" viewBox="0 0 13 12">
-                                                    <path d="M8.10133 4.95035L12.5911 0H10.8861L7.36169 3.8843L4.66349 0H0L4.72103 6.79234L0 11.9954H1.70496L5.4601 7.85667L8.33707 12H13L8.10133 4.95035ZM2.40325 1.275H4.02944L10.5962 10.729H8.97057L2.40325 1.275Z" />
-                                                </svg>
-                                            </a>
-                                            <a href="javascript:;">
-                                                <svg width="11" height="11" viewBox="0 0 11 11">
-                                                    <path d="M11 11V6.97126C11 4.99126 10.5737 3.47876 8.26373 3.47876C7.14998 3.47876 6.40749 4.08376 6.10499 4.66126H6.07749V3.65751H3.89124V11H6.17374V7.35626C6.17374 6.39376 6.35249 5.47251 7.53499 5.47251C8.70374 5.47251 8.71749 6.55876 8.71749 7.41126V10.9863H11V11Z" />
-                                                    <path d="M0.178711 3.6575H2.46121V11H0.178711V3.6575Z" />
-                                                    <path d="M1.32 0C0.59125 0 0 0.59125 0 1.32C0 2.04875 0.59125 2.65375 1.32 2.65375C2.04875 2.65375 2.64 2.04875 2.64 1.32C2.64 0.59125 2.04875 0 1.32 0Z" />
-                                                </svg>
-                                            </a>
-                                        </div>
-                                    </div>
+                                    <a href="#ContactUsSection" class="el-team-book-btn">
+                                        @(isArabic ? "احجز معه" : "Book Now")
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -569,13 +552,53 @@
                                     <input type="text" name="name" placeholder="@(isArabic ? "الاسم الكامل" : "Full Name")">
                                 </div>
                                 <div class="el-input-field">
-                                    <input type="text" name="email" placeholder="@(isArabic ? "البريد الإلكتروني" : "Email")">
+                                    <input type="email" name="email" placeholder="@(isArabic ? "البريد الإلكتروني" : "Email")">
+                                </div>
+                                <div class="el-input-field el-academic-field">
+                                    <span class="el-academic-label">
+                                        <i class="fa-solid fa-graduation-cap"></i>
+                                        @(isArabic ? "السنة الدراسية" : "Academic Year")
+                                    </span>
+                                    <select name="AcademicYear">
+                                        <option value="" disabled selected>@(isArabic ? "— اختر الصف الدراسي —" : "— Select Grade —")</option>
+                                        @if (isArabic)
+                                        {
+                                            <option value="روضة">روضة</option>
+                                            <option value="الصف الأول الابتدائي">الصف الأول الابتدائي</option>
+                                            <option value="الصف الثاني الابتدائي">الصف الثاني الابتدائي</option>
+                                            <option value="الصف الثالث الابتدائي">الصف الثالث الابتدائي</option>
+                                            <option value="الصف الرابع الابتدائي">الصف الرابع الابتدائي</option>
+                                            <option value="الصف الخامس الابتدائي">الصف الخامس الابتدائي</option>
+                                            <option value="الصف السادس الابتدائي">الصف السادس الابتدائي</option>
+                                            <option value="الصف الأول الإعدادي">الصف الأول الإعدادي</option>
+                                            <option value="الصف الثاني الإعدادي">الصف الثاني الإعدادي</option>
+                                            <option value="الصف الثالث الإعدادي">الصف الثالث الإعدادي</option>
+                                            <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
+                                            <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+                                            <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+                                            <option value="جامعي">جامعي</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Kindergarten">Kindergarten</option>
+                                            <option value="Grade 1">Grade 1</option>
+                                            <option value="Grade 2">Grade 2</option>
+                                            <option value="Grade 3">Grade 3</option>
+                                            <option value="Grade 4">Grade 4</option>
+                                            <option value="Grade 5">Grade 5</option>
+                                            <option value="Grade 6">Grade 6</option>
+                                            <option value="Grade 7">Grade 7</option>
+                                            <option value="Grade 8">Grade 8</option>
+                                            <option value="Grade 9">Grade 9</option>
+                                            <option value="Grade 10">Grade 10</option>
+                                            <option value="Grade 11">Grade 11</option>
+                                            <option value="Grade 12">Grade 12</option>
+                                            <option value="University">University</option>
+                                        }
+                                    </select>
                                 </div>
                                 <div class="el-input-field">
                                     <input type="text" name="PhoneNumber" placeholder="@(isArabic ? "رقم الهاتف" : "Mobile Number")">
-                                </div>
-                                <div class="el-input-field">
-                                    <input type="text" name="Age" placeholder="@(isArabic ? "العمر" : "Age")">
                                 </div>
                                 <div class="el-input-field">
                                     <input type="text" name="Course" placeholder="@(isArabic ? "اسم الدورة" : "Course Name")">
@@ -622,7 +645,7 @@
     </div>
     <!-- Contact/Enroll Section End -->
     <!-- Work Section Start -->
-    <div class="el-work-wrapper">
+    <div id="join-us" class="el-work-wrapper">
         <div class="container">
             <div class="el-work-heading text-center">
                 <h4 class="el-top-heading-center">@(c?.WorkTopHeading ?? (isArabic ? "انضم إلينا" : "JOIN US"))</h4>
@@ -731,7 +754,7 @@
                     <div class="el-tesml-main-parent">
                         <div class="swiper-button-prev"></div>
                         <div class="swiper-button-next"></div>
-                        <div class="swiper el-testmnl-slider">
+                        <div class="swiper el-testmnl-slider" dir="ltr">
                             <div class="swiper-wrapper">
                                 @foreach (var t in Model.Testimonials)
                                 {
@@ -837,7 +860,7 @@
                                                     <div class="el-price-img">
                                                         <img src="~/HomePageAssets/assets/img/@(plan.IsPopular ? "standard-icon" : plan.SortOrder == 0 ? "basic-icon" : "premium-icon").png" alt="Icon">
                                                     </div>
-                                                    <h4>@plan.Name</h4>
+                                                    <h4 class="el-plan-name">@plan.Name</h4>
                                                     <p class="el-para">@plan.Description</p>
                                                     <h1>@(isArabic ? plan.MonthlyPrice : plan.Currency)@(isArabic ? " " : "")@(isArabic ? plan.Currency : plan.MonthlyPrice)<span>@(isArabic ? "/شهرياً" : "/Month")</span></h1>
                                                     <a href="javascript:;" class="el-btn">@(c?.PricingBtnText ?? (isArabic ? "ابدأ الآن" : "Get Started Now"))</a>
@@ -874,7 +897,7 @@
                                                     <div class="el-price-img">
                                                         <img src="~/HomePageAssets/assets/img/@(plan.IsPopular ? "standard-icon" : plan.SortOrder == 0 ? "basic-icon" : "premium-icon").png" alt="Icon">
                                                     </div>
-                                                    <h4>@plan.Name</h4>
+                                                    <h4 class="el-plan-name">@plan.Name</h4>
                                                     <p class="el-para">@plan.Description</p>
                                                     <h1>@(isArabic ? plan.YearlyPrice : plan.Currency)@(isArabic ? " " : "")@(isArabic ? plan.Currency : plan.YearlyPrice)<span>@(isArabic ? "/سنوياً" : "/Yearly")</span></h1>
                                                     <a href="javascript:;" class="el-btn">@(c?.PricingBtnText ?? (isArabic ? "ابدأ الآن" : "Get Started Now"))</a>
@@ -1202,24 +1225,23 @@
             }
         });
         // تهيئة سلايدر الصور
-         const testimonialsSwiper = new Swiper('.el-testmnl-slider', {
+        const testimonialsSwiper = new Swiper('.el-testmnl-slider', {
             effect: 'coverflow',
             grabCursor: true,
-            centeredSlides: true, // يضمن بقاء الكارت النشط في المنتصف تماماً
+            centeredSlides: true,
             slidesPerView: 'auto',
-            loop: true,           // يضمن وجود كروت قبل وبعد دائماً حتى لو البيانات قليلة
-
-            speed: 1000,          // سرعة الانتقال (1000ms = ثانية كاملة) لجعل الحركة أبطأ وأنعيم
+            loop: true,
+            speed: 800,
             observer: true,
             observeParents: true,
             autoplay: {
-                delay: 4000,      // التأخير بين النقلات
+                delay: 4000,
                 disableOnInteraction: false,
             },
             coverflowEffect: {
                 rotate: 0,
-                stretch: -010,    // سحب الكروت لتقترب من الكارت النشط وتتداخل خلفه
-                depth: 150,       // خلق عمق بصري للكروت الخلفية
+                stretch: 60,
+                depth: 200,
                 modifier: 1,
                 slideShadows: false,
             },
