@@ -23,5 +23,7 @@ namespace Models.ViewModels
 
         public List<UpcomingLectureVM> UpcomingLectures { get; set; } = new();
 
+        public string StudentNameEn { get; set; } = string.Empty;
+        public string StudentNameAr { get; set; } = string.Empty;
     }
 }

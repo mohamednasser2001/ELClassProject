@@ -502,48 +502,8 @@
         <!-- Right actions -->
         <div class="nav-actions">
 
-            <!-- Notifications -->
-            <div class="position-relative">
-                <button class="nav-icon-btn" id="elNotifyBtn" type="button" aria-label="Notifications">
-                    <i class="fa-solid fa-bell"></i>
-                    @if (notifyCount > 0)
-                    {
-                        <span class="notif-badge">@notifyCount</span>
-                    }
-                </button>
-
-                <div class="el-notify-dropdown d-none" id="elNotifyMenu">
-                    <div class="notify-head">
-                        <span class="notify-title">@(isArabic ? "الإشعارات" : "Notifications")</span>
-                        @if (notifyCount > 0)
-                        {
-                            <span class="notify-count">@notifyCount</span>
-                        }
-                    </div>
-                    <div class="notify-body">
-                        @if (notifyItems.Any())
-                        {
-                            foreach (var n in notifyItems)
-                            {
-                                <a href="/StudentArea/Lectures/Join?studentAppointmentId=@n.studentAppointmentId" class="notify-item">
-                                    <div class="notify-icon"><i class="fa-solid fa-video"></i></div>
-                                    <div>
-                                        <p class="mb-0 fw-bold" style="font-size:13px;">@n.course</p>
-                                        <small class="text-muted">@n.instructor · @n.start.ToString("hh:mm tt")</small>
-                                    </div>
-                                </a>
-                            }
-                        }
-                        else
-                        {
-                            <div class="notify-empty">
-                                <i class="fa-solid fa-bell-slash d-block mb-2" style="font-size:28px;"></i>
-                                <span class="small">@(isArabic ? "لا توجد إشعارات" : "No notifications")</span>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
+            <!-- Notifications (ViewComponent) -->
+            @await Component.InvokeAsync("StudentNotifications", new { isArabic = isArabic })
 
             <!-- User capsule -->
             <div class="position-relative">
@@ -644,8 +604,6 @@
             });
         }
     </script>
-
-    @await Component.InvokeAsync("StudentNotifications", new { isArabic = isArabic })
 
     @RenderSection("Scripts", required: false)
 </body>

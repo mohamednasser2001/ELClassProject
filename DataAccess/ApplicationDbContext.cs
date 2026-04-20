@@ -39,6 +39,9 @@ namespace DataAccess
         public DbSet<Article> Articles { get; set; }
         public DbSet<Testimonial> Testimonials { get; set; }
         public DbSet<PricingPlan> PricingPlans { get; set; }
+        public DbSet<LessonAssignments> LessonAssignments { get; set; }
+        public DbSet<LessonMaterials> LessonMaterials { get; set; }
+        public DbSet<StudentLesson> StudentLessons { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
