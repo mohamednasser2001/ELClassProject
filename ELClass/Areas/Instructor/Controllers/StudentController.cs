@@ -74,23 +74,34 @@ namespace ELClass.Areas.Instructor.Controllers
                     };
                 };
 
+                var instructorCourseIds = (await _unitOfWork.InstructorCourseRepository
+                    .GetAsync(ic => ic.InstructorId == userId))
+                    .Select(ic => ic.CourseId)
+                    .ToList();
 
                 var instructorStudents = await _unitOfWork.InstructorStudentRepository.GetAsync(
                     filter: filter,
                     orderBy: orderBy,
                     skip: start,
                     take: length,
-                    include: q => q.Include(x => x.Student)
+                    include: q => q.Include(x => x.Student).ThenInclude(s => s.StudentCourses)
+                    .ThenInclude(sc => sc.Course)
                 );
 
                 var totalRecords = await _unitOfWork.InstructorStudentRepository.CountAsync(x => x.InstructorId == userId);
                 var filteredRecords = await _unitOfWork.InstructorStudentRepository.CountAsync(filter: filter);
 
-                var data = instructorStudents.Select(x => new
-                {
-                    id = x.Student.Id,
-                    name = lang == "en" ? x.Student.NameEn : x.Student.NameAr,
-                    timesCount = x.TimesCount
+                var data = instructorStudents.Select(x => {
+                    var sharedCourse = x.Student.StudentCourses
+                        .FirstOrDefault(sc => instructorCourseIds.Contains(sc.CourseId));
+                    return new
+                    {
+                        id = x.Student.Id,
+                        name = lang == "en" ? x.Student.NameEn : x.Student.NameAr,
+                        timesCount = x.TimesCount,
+                        courseId = sharedCourse?.CourseId ?? 0,
+                        courseName = sharedCourse == null ? "" : (lang == "en" ? sharedCourse.Course.TitleEn : sharedCourse.Course.TitleAr)
+                    };
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalRecords, recordsFiltered = filteredRecords, data = data });

@@ -604,5 +604,15 @@
         }
         });
         }
+
+
+        function openEditModal(id, startDateTime, duration, meetingLink) {
+            $('#editAppointmentId').val(id);
+            $('#editStartDateTime').val(startDateTime);
+            $('#editDuration').val(duration);
+            $('#editMeetingLink').val(meetingLink);
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
     </script>
 }

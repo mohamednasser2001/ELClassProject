@@ -56,14 +56,8 @@
             <div class="modal-body p-4">
 
            
-                <div class="mb-4">
-                    <label class="small fw-bold text-muted mb-2">
-                        <i class="fas fa-book text-orange me-1"></i>
-                        @(isArabic ? "الكورس" : "Course")
-                    </label>
-                    <select id="modalCourseSelect" class="form-control">
-                        <option value="">@(isArabic ? "اختر الكورس..." : "Select course...")</option>
-                    </select>
+                <div style="display:none">
+                    <select id="modalCourseSelect" class="form-control"></select>
                 </div>
 
    
@@ -219,9 +213,8 @@
                         data: 'name',
                         width:"50%",
                         render: function (data, type, row) {
-                            return `
-                                    <i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
-                                    `;
+                            return `<i class="fas fa-user-circle me-1 icon-primary" style="opacity:0.7"></i> ${data}
+                                    <br><small class="text-muted"><i class="fas fa-book me-1 text-orange" style="opacity:0.7"></i>${row.courseName}</small>`;
                         }
                     },
                     {
@@ -240,7 +233,7 @@
                         orderable: false,
                         className: 'text-center',
                         render: function (data, type, row) {
-                            return `<button class="btn btn-sm btn-orange-custom" onclick="openAppointmentModal('${row.id}', '${row.name}')">
+                            return `<button class="btn btn-sm btn-orange-custom" onclick="openAppointmentModal('${row.id}', '${row.name}', ${row.courseId})">
                                         <i class="fas fa-calendar-plus me-1"></i>
                                         ${currentLang === 'ar' ? 'إضافة ميعاد' : 'Add Appointment'}
                                     </button>`;
@@ -268,17 +261,18 @@
         var selectedStudentIds = [];
         var slots = [];
 
-        function openAppointmentModal(studentId, studentName) {
+        function openAppointmentModal(studentId, studentName, courseId) {
             currentStudentId = studentId;
             selectedStudentIds = [studentId]; // الطالب الأساسي دايماً موجود
             slots = [];
             $('#slotsContainer').empty();
             $('#modalStudentName').text(studentName);
             $('#sharedMeetingLink').val('');
-            $('#sharedDuration').val(1);
+    
             $('#extraStudentsSection').hide();
             $('#selectedStudentsTags').empty();
-            $('#modalCourseSelect').empty().append('<option value="">' + (currentLang === 'ar' ? 'اختر الكورس...' : 'Select course...') + '</option>');
+            $('#modalCourseSelect').empty().append(`<option value="${courseId}">${courseId}</option>`);
+            $('#modalCourseSelect').val(courseId);
 
             //  الـ TimesCount
             $.get('@Url.Action("GetStudentTimesCount", "Student", new { area = "Instructor" })',
@@ -290,30 +284,15 @@
             );
 
             //  الكورسات المشتركة
-            $.get('@Url.Action("GetSharedCourses", "Student", new { area = "Instructor" })',
-                { studentId: studentId },
-                function(courses) {
-                    courses.forEach(function(c) {
-                        $('#modalCourseSelect').append(`<option value="${c.id}">${c.text}</option>`);
-                    });
-                }
-            );
-
+   
+            loadExtraStudents(courseId);
             new bootstrap.Modal(document.getElementById('appointmentModal')).show();
         }
 
         
-        $('#modalCourseSelect').on('change', function() {
-            var courseId = $(this).val();
-            if (!courseId) {
-                $('#extraStudentsSection').hide();
-                return;
-            }
-
+        function loadExtraStudents(courseId) {
             $('#extraStudentsSection').show();
 
-        
-            $('#extraStudentsSelect').empty();
             if ($('#extraStudentsSelect').hasClass('select2-hidden-accessible'))
                 $('#extraStudentsSelect').select2('destroy');
 
@@ -334,18 +313,17 @@
                     processResults: data => ({ results: data })
                 }
             });
-
-            // لما يختار طالب يضيفه للـ tags
-            $('#extraStudentsSelect').on('select2:select', function(e) {
-                var studentId = e.params.data.id;
-                var studentName = e.params.data.text;
-
-                if (!selectedStudentIds.includes(studentId)) {
-                    selectedStudentIds.push(studentId);
-                    addStudentTag(studentId, studentName);
+            $('#extraStudentsSelect').off('select2:select').on('select2:select', function(e) {
+                var sId = e.params.data.id;
+                var sName = e.params.data.text;
+                if (!selectedStudentIds.includes(sId)) {
+                    selectedStudentIds.push(sId);
+                    addStudentTag(sId, sName);
                 }
             });
-        });
+        }
+
+
 
         function addStudentTag(studentId, studentName) {
             var tag = `<span class="badge bg-light border text-dark px-3 py-2" id="tag-${studentId}">

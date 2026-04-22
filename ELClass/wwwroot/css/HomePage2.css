@@ -1,12 +1,14 @@
-﻿/* الكلاس الجديد اللي هيخلي الزرار هادي */
+﻿/* =========================================
+   1. كلاس الزرار الهادي (بدون تغيير)
+   ========================================= */
 .el-btn-muted {
     display: inline-flex;
     align-items: center;
-    justify-content: center; /* عشان الكلام يسنتر */
+    justify-content: center;
     gap: 10px;
     padding: 12px 28px;
     background: linear-gradient(135deg, rgba(252, 194, 71, 0.8) 0%, rgba(255, 165, 0, 0.7) 100%);
-    color: #1a2b3c; /* حط اللون المباشر لو الـ variable مش شغال */
+    color: #1a2b3c;
     text-decoration: none !important;
     border-radius: 50px;
     font-weight: 600;
@@ -22,3 +24,150 @@
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         color: #1a2b3c;
     }
+
+/* Full-width button on small screens */
+@media (max-width: 767px) {
+    .el-about-content .el-btn,
+    .el-about-content .el-orange-btn,
+    .el-banner-btns .el-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* =========================================
+   2. YouTube-Style Video Thumbnail (بدون تغيير جوهري)
+   ========================================= */
+.el-video-thumb-wrapper {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 520px !important; /* زودته شوية عشان يناسب الزرار الكبير */
+    margin: 0 auto !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+    cursor: pointer !important;
+    flex: none !important;
+    align-self: center !important;
+}
+
+.el-video-thumb-img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    object-fit: cover !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+}
+
+.el-youtube-play-btn {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 10 !important;
+    width: 85px !important;
+    height: 60px !important;
+    background: #ff0000 !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.4) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    gap: 0 !important;
+    color: inherit !important;
+    font-weight: normal !important;
+    text-decoration: none !important;
+    backdrop-filter: none !important;
+}
+
+    .el-youtube-play-btn:hover {
+        background: #cc0000 !important;
+        transform: translate(-50%, -50%) scale(1.15) !important;
+        box-shadow: 0 12px 35px rgba(255, 0, 0, 0.6) !important;
+    }
+
+    .el-youtube-play-btn svg {
+        width: 36px !important;
+        height: 36px !important;
+        fill: #ffffff !important;
+        margin: 0 !important;
+        margin-left: 2px !important;
+    }
+
+.el-banner-play-icon,
+.el-banner-play-icon a,
+.el-banner-play-icon span {
+    all: unset !important;
+    display: none !important;
+}
+
+@media (max-width: 991px) {
+    .el-video-thumb-wrapper {
+        max-width: 100% !important;
+    }
+
+    .el-youtube-play-btn {
+        width: 70px !important;
+        height: 50px !important;
+    }
+
+        .el-youtube-play-btn svg {
+            width: 28px !important;
+            height: 28px !important;
+        }
+}
+
+/* =========================================
+   3. ترتيب العناصر + زرار "ابدأ الآن" (التعديل المطلوب)
+   ========================================= */
+.el-banner-btns {
+    display: flex !important;
+    flex-direction: column !important; /* زرار فوق، صورة تحت */
+    align-items: flex-start !important; /* محاذاة حسب اتجاه اللغة */
+    gap: 25px !important;
+    width: 100% !important;
+    /* ❌ شيلت الـ max-width: 480px عشان ميخنقش الزرار على الديسكتوب */
+}
+
+/* الإعدادات الأساسية للزرار */
+.el-hero-start-btn {
+    padding: 18px 42px !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 10px 30px rgba(252, 194, 71, 0.45) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* 🟢 الشاشات الكبيرة (Desktop ≥ 992px): الزرار أعرض وأكبر */
+@media (min-width: 992px) {
+    .el-hero-start-btn {
+        padding: 22px 70px !important; /* مساحة داخلية أكبر */
+        font-size: 1.5rem !important; /* خط أكبر وواضح */
+        width: 100% !important;
+        max-width: 500px !important; /* عرض مثالي للديسكتوب */
+        justify-content: center !important;
+        text-align: center !important;
+    }
+}
+
+/* 🟡 الشاشات الصغيرة (Tablet & Mobile ≤ 991px): التنسيق المناسب للموبايل */
+@media (max-width: 991px) {
+    .el-banner-btns {
+        align-items: center !important; /* توسيط العناصر */
+    }
+
+    .el-hero-start-btn {
+        width: 100% !important;
+        max-width: 360px !important; /* عرض مناسب للموبايل */
+        padding: 12px 20px !important;
+        font-size: 1.15rem !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+}
