@@ -58,6 +58,16 @@
         .OrderBy(l => l.Date)
         .ToList() ?? new List<UpcomingLectureVM>();
 
+    // ─── Grades chart data (JSON) ────────────────────────────
+    var gradesChartJson = System.Text.Json.JsonSerializer.Serialize(
+        (Model.CourseGrades ?? new List<CourseGradeVM>()).Select(cg => new {
+            name  = isArabic
+                ? (cg.CourseNameAr?.Trim().Length > 0 ? cg.CourseNameAr : cg.CourseNameEn)
+                : (cg.CourseNameEn?.Trim().Length > 0 ? cg.CourseNameEn : cg.CourseNameAr),
+            grade = cg.AverageGrade
+        }).ToList()
+    );
+
     // ─── Session dates for calendar (JSON) ───────────────────
     var sessionDatesJson = System.Text.Json.JsonSerializer.Serialize(
         Model.UpcomingLectures?
@@ -71,104 +81,24 @@
     <div class="sd-grid">
 
         <!-- ══════════════════════════════════════════════════
-             LEFT COLUMN
+             WELCOME BANNER (grid child — first on mobile)
              ══════════════════════════════════════════════════ -->
-        <aside class="sd-left">
-
-            <!-- ① Lecture Alert Badge -->
-            <div id="sdLectureAlert" class="sd-lecture-alert @alertCssClass">
-                <div class="sd-la-top">
-                    <div class="sd-la-icon">
-                        <i class="fa-solid @(isLive ? "fa-circle-play" : "fa-chalkboard-user")"></i>
-                    </div>
-                    <div id="sdLaTimer" class="sd-la-timer">
-                        @(isLive ? (isArabic ? "مباشر" : "LIVE") : "--:--:--")
-                    </div>
-                </div>
-
-                <div class="sd-la-title" id="sdLaTitle">@alertTitle</div>
-                <div class="sd-la-course" id="sdLaCourse">@alertCourse</div>
-
-                <div class="sd-la-actions">
-                    @if (isLive && Model.NextStudentAppointmentId != null)
-                    {
-                        <a class="sd-la-btn sd-la-btn-join"
-                           asp-area="StudentArea"
-                           asp-controller="Lectures"
-                           asp-action="Join"
-                           asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
-                            <i class="fa-solid fa-play"></i>
-                            @(isArabic ? "انضم الآن" : "Join Now")
-                        </a>
-                    }
-                    else if (nextLecture != null)
-                    {
-                        <span class="sd-la-status" id="sdLaStatusText">
-                            <i class="fa-regular fa-clock"></i>
-                            @(isArabic ? "لم تبدأ بعد" : "Not started yet")
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="sd-la-status">
-                            <i class="fa-solid fa-calendar-xmark"></i>
-                            @(isArabic ? "لا توجد محاضرات" : "No lectures scheduled")
-                        </span>
-                    }
-                </div>
+        <div class="sd-welcome">
+            <div class="sd-welcome-greeting">
+                👋 <span id="sdGreeting">@greeting</span>
+                <span class="sd-welcome-name"> @firstName</span>
             </div>
-
-            <!-- ② Overall Performance Gauge -->
-            <div class="sd-perf-card">
-                <div class="sd-perf-title">
-                    <i class="fa-solid fa-gauge-high"></i>
-                    @(isArabic ? "الأداء العام للطالب" : "Overall Performance")
-                </div>
-
-                <div class="sd-gauge-wrap">
-                    <div class="sd-gauge-donut" style="--pct: @avgProgress">
-                        <div class="sd-gauge-inner">
-                            <span class="sd-gauge-num">@avgProgress%</span>
-                            <span class="sd-gauge-label-inner">@(isArabic ? "تقدم" : "Progress")</span>
-                        </div>
-                    </div>
-
-                    <div class="sd-gauge-sub">
-                        @if (avgProgress >= 70)
-                        {
-                            <span>@(isArabic ? "🎉 أداء ممتاز! استمر هكذا" : "🎉 Excellent! Keep it up")</span>
-                        }
-                        else if (avgProgress >= 40)
-                        {
-                            <span>@(isArabic ? "👍 أداء جيد، واصل التعلم" : "👍 Good progress, keep going")</span>
-                        }
-                        else
-                        {
-                            <span>@(isArabic ? "💪 استمر في التعلم!" : "💪 Keep learning!")</span>
-                        }
-                    </div>
-
-                    @if (Model.Courses != null && Model.Courses.Any())
-                    {
-                        <div class="sd-perf-stats">
-                            <div class="sd-perf-stat">
-                                <div class="sd-perf-stat-num">@Model.Courses.Count()</div>
-                                <div class="sd-perf-stat-label">@(isArabic ? "كورسات" : "Courses")</div>
-                            </div>
-                            <div class="sd-perf-stat">
-                                <div class="sd-perf-stat-num">@Model.Courses.Sum(c => c.AttendedCount)</div>
-                                <div class="sd-perf-stat-label">@(isArabic ? "حصص حضرتها" : "Attended")</div>
-                            </div>
-                            <div class="sd-perf-stat">
-                                <div class="sd-perf-stat-num">@Model.UpcomingLectures.Count</div>
-                                <div class="sd-perf-stat-label">@(isArabic ? "محاضرات قادمة" : "Upcoming")</div>
-                            </div>
-                        </div>
-                    }
-                </div>
+            <div class="sd-welcome-sub">
+                @if (isArabic)
+                {
+                    <text>أنت <b>أنجزت @avgProgress%</b> من هدفك للأسبوع دا!</text>
+                }
+                else
+                {
+                    <text>You've <b>achieved @avgProgress%</b> of your weekly goal!</text>
+                }
             </div>
-
-        </aside>
+        </div>
 
 
         <!-- ══════════════════════════════════════════════════
@@ -176,25 +106,7 @@
              ══════════════════════════════════════════════════ -->
         <main class="sd-center">
 
-            <!-- ① Welcome Banner -->
-            <div class="sd-welcome">
-                <div class="sd-welcome-greeting">
-                    👋 <span id="sdGreeting">@greeting</span>
-                    <span class="sd-welcome-name"> @firstName</span>
-                </div>
-                <div class="sd-welcome-sub">
-                    @if (isArabic)
-                    {
-                        <text>أنت <b>أنجزت @avgProgress%</b> من هدفك للأسبوع دا!</text>
-                    }
-                    else
-                    {
-                        <text>You've <b>achieved @avgProgress%</b> of your weekly goal!</text>
-                    }
-                </div>
-            </div>
-
-            <!-- ② My Courses -->
+            <!-- My Courses -->
             <div class="sd-courses-card">
                 <div class="sd-courses-head">
                     <div class="sd-courses-head-title">
@@ -229,8 +141,21 @@
                                 <div class="sd-ci-info">
                                     <div class="sd-ci-name" title="@title">@title</div>
                                     <div class="sd-ci-count">
-                                        @(isArabic ? "عدد الحصص" : "Sessions")
-                                        @c.AttendedCount / @c.GoalCount
+                                        @if (c.GoalCount > 0)
+                                        {
+                                            if (isArabic)
+                                            {
+                                                <text>حضرت <strong>@c.AttendedCount</strong> من <strong>@c.GoalCount</strong> محاضرة</text>
+                                            }
+                                            else
+                                            {
+                                                <text>Attended <strong>@c.AttendedCount</strong> of <strong>@c.GoalCount</strong> lectures</text>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <text>@(isArabic ? "لا توجد محاضرات بعد" : "No lectures yet")</text>
+                                        }
                                     </div>
                                     <a class="sd-ci-btn"
                                        asp-area="StudentArea"
@@ -266,7 +191,125 @@
                 </div>
             </div>
 
+            @if (Model.CourseGrades != null && Model.CourseGrades.Any())
+            {
+                <!-- Grades Bar Chart -->
+                <div class="sd-chart-card">
+                    <div class="sd-chart-head">
+                        <i class="fa-solid fa-chart-column"></i>
+                        @(isArabic ? "متوسط الدرجات لكل مادة" : "Average Grade per Course")
+                    </div>
+                    <div class="sd-chart-body">
+                        <canvas id="gradesChart"></canvas>
+                    </div>
+                </div>
+            }
+
         </main>
+
+
+        <!-- ══════════════════════════════════════════════════
+             LECTURE ALERT (grid child — controls mobile order)
+             ══════════════════════════════════════════════════ -->
+        <div id="sdLectureAlert" class="sd-lecture-alert @alertCssClass">
+            <div class="sd-la-top">
+                <div class="sd-la-icon">
+                    <i class="fa-solid @(isLive ? "fa-circle-play" : "fa-chalkboard-user")"></i>
+                </div>
+                <div id="sdLaTimer" class="sd-la-timer">
+                    @(isLive ? (isArabic ? "مباشر" : "LIVE") : "--:--:--")
+                </div>
+            </div>
+
+            <div class="sd-la-title" id="sdLaTitle">@alertTitle</div>
+            <div class="sd-la-course" id="sdLaCourse">@alertCourse</div>
+
+            <div class="sd-la-actions">
+                @if (isLive && Model.NextStudentAppointmentId != null)
+                {
+                    <a class="sd-la-btn sd-la-btn-join"
+                       asp-area="StudentArea"
+                       asp-controller="Lectures"
+                       asp-action="Join"
+                       asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
+                        <i class="fa-solid fa-play"></i>
+                        @(isArabic ? "انضم الآن" : "Join Now")
+                    </a>
+                }
+                else if (nextLecture != null)
+                {
+                    <span class="sd-la-status" id="sdLaStatusText">
+                        <i class="fa-regular fa-clock"></i>
+                        @(isArabic ? "لم تبدأ بعد" : "Not started yet")
+                    </span>
+                }
+                else
+                {
+                    <span class="sd-la-status">
+                        <i class="fa-solid fa-calendar-xmark"></i>
+                        @(isArabic ? "لا توجد محاضرات" : "No lectures scheduled")
+                    </span>
+                }
+            </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════════════════
+             LEFT COLUMN
+             ══════════════════════════════════════════════════ -->
+        <aside class="sd-left">
+
+            <!-- Overall Performance Gauge -->
+            <div class="sd-perf-card">
+                <div class="sd-perf-title">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    @(isArabic ? "الأداء العام للطالب" : "Overall Performance")
+                </div>
+
+                <div class="sd-gauge-wrap">
+                    <div class="sd-gauge-donut" style="--pct: @Model.OverallProgress">
+                        <div class="sd-gauge-inner">
+                            <span class="sd-gauge-num">@Model.OverallProgress%</span>
+                            <span class="sd-gauge-label-inner">@(isArabic ? "تقدم" : "Progress")</span>
+                        </div>
+                    </div>
+
+                    <div class="sd-gauge-sub">
+                        @if (Model.OverallProgress >= 70)
+                        {
+                            <span>@(isArabic ? "🎉 أداء ممتاز! استمر هكذا" : "🎉 Excellent! Keep it up")</span>
+                        }
+                        else if (Model.OverallProgress >= 40)
+                        {
+                            <span>@(isArabic ? "👍 أداء جيد، واصل التعلم" : "👍 Good progress, keep going")</span>
+                        }
+                        else
+                        {
+                            <span>@(isArabic ? "💪 استمر في التعلم!" : "💪 Keep learning!")</span>
+                        }
+                    </div>
+
+                    @if (Model.Courses != null && Model.Courses.Any())
+                    {
+                        <div class="sd-perf-stats">
+                            <div class="sd-perf-stat">
+                                <div class="sd-perf-stat-num">@Model.Courses.Count()</div>
+                                <div class="sd-perf-stat-label">@(isArabic ? "كورسات" : "Courses")</div>
+                            </div>
+                            <div class="sd-perf-stat">
+                                <div class="sd-perf-stat-num">@Model.AttendanceRate%</div>
+                                <div class="sd-perf-stat-label">@(isArabic ? "معدل الحضور" : "Attendance")</div>
+                            </div>
+                            <div class="sd-perf-stat">
+                                <div class="sd-perf-stat-num">@Model.UpcomingLectures.Count</div>
+                                <div class="sd-perf-stat-label">@(isArabic ? "محاضرات قادمة" : "Upcoming")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </aside>
 
 
         <!-- ══════════════════════════════════════════════════
@@ -391,12 +434,10 @@
 </div>
 
 
-@* ──────────────────────────────────────────────────────────
-   Chat Widget (kept as-is)
-   ────────────────────────────────────────────────────────── *@
+@* ── Chat Widget ──────────────────────────────────────── *@
 <button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
     <span class="chat-fab-icon" aria-hidden="true">
-        <i class="fa-regular fa-comment-dots"></i>
+        <i class="fa-solid fa-message"></i>
     </span>
     <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
 </button>
@@ -405,14 +446,21 @@
     @Html.AntiForgeryToken()
     <div class="chat-header">
         <div class="header-left">
-            <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
+            <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">
+                <i class="fa-solid fa-arrow-@(isArabic ? "right" : "left") fa-sm"></i>
+            </button>
+            <div id="chatHeaderAvatar" class="cw-header-avatar hidden">
+                <span id="chatHeaderAvatarText"></span>
+            </div>
             <div class="title" id="chatHeaderTitle">
                 <div id="chatHeaderName">@(isArabic ? "المحادثات" : "Chats")</div>
                 <div id="chatHeaderStatus" class="chat-status"></div>
             </div>
         </div>
         <div class="actions">
-            <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">✕</button>
+            <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
     </div>
 
@@ -775,6 +823,7 @@
             screenThread.classList.add('hidden'); screenList.classList.remove('hidden'); chatBackBtn.classList.add('hidden');
             if (headerNameEl) headerNameEl.textContent = "Chats";
             if (headerStatusEl) headerStatusEl.textContent = "";
+            document.getElementById('chatHeaderAvatar')?.classList.add('hidden');
             state.currentInstructorId = null; state.currentInstructorName = ''; state.conversationId = null;
             state.hasMore = true; state.oldestId = null; state.isLoadingOlder = false;
             messagesBox.innerHTML = ''; clearAttachmentUI();
@@ -782,6 +831,13 @@
         function showThreadScreen(n) {
             screenList.classList.add('hidden'); screenThread.classList.remove('hidden'); chatBackBtn.classList.remove('hidden');
             if (headerNameEl) headerNameEl.textContent = n || "Chat";
+            const avatarEl = document.getElementById('chatHeaderAvatar');
+            const avatarTextEl = document.getElementById('chatHeaderAvatarText');
+            if (avatarEl && avatarTextEl && n) {
+                const parts = n.trim().split(/\s+/).filter(Boolean);
+                avatarTextEl.textContent = ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? parts[0]?.[1] ?? '')).toUpperCase();
+                avatarEl.classList.remove('hidden');
+            }
         }
         function setActiveItem(id) { document.querySelectorAll('.chat-item').forEach(x => x.classList.toggle('active', x.dataset.instructorId === id)); }
         function findItem(id) { return document.querySelector(`.chat-item[data-instructor-id="${CSS.escape(id)}"]`); }
@@ -1067,6 +1123,77 @@
             try { await studentConnection.invoke("SendMessage",id,msg); } catch(e) { console.error(e); }
         }
     </script>
+
+    @if (Model.CourseGrades != null && Model.CourseGrades.Any())
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+        <script>
+            (function () {
+                const isArabic = '@currentLang' === 'ar';
+                const raw = @Html.Raw(gradesChartJson);
+
+                const labels = raw.map(d => d.name);
+                const values = raw.map(d => d.grade);
+                const colors = values.map(v =>
+                    v >= 70 ? 'rgba(16,185,129,0.85)'
+                    : v >= 40 ? 'rgba(245,158,11,0.85)'
+                    : 'rgba(239,68,68,0.85)'
+                );
+
+                new Chart(document.getElementById('gradesChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: isArabic ? 'متوسط الدرجة' : 'Avg Grade',
+                            data: values,
+                            backgroundColor: colors,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                rtl: isArabic,
+                                callbacks: {
+                                    label: ctx => ` ${ctx.raw} / 100`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    font: { family: 'Cairo', size: 11 },
+                                    color: '#64748B',
+                                    stepSize: 25,
+                                    callback: v => v + '%'
+                                },
+                                grid: { color: '#F1F5F9' }
+                            },
+                            x: {
+                                ticks: {
+                                    font: { family: 'Cairo', weight: '700', size: 12 },
+                                    color: '#0F172A',
+                                    maxRotation: 0,
+                                    callback: function(val) {
+                                        const label = this.getLabelForValue(val);
+                                        return label.length > 12 ? label.slice(0, 12) + '…' : label;
+                                    }
+                                },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            })();
+        </script>
+    }
 
     <script>
         function toggleLastLesson(btn) {

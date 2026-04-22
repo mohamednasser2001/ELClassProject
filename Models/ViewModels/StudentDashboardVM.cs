@@ -20,8 +20,12 @@ namespace Models.ViewModels
         public int TotalCoursesCount { get; set; }
         public DateTime? NextJoinAt { get; set; }
         public List<LastLessonVM> LastLessons { get; set; } = new();
-
         public List<UpcomingLectureVM> UpcomingLectures { get; set; } = new();
+        public List<CourseGradeVM> CourseGrades { get; set; } = new();
+
+        public int AttendedAppointmentsCount { get; set; }
+        public int TotalAppointmentsCount { get; set; }
+        public int AttendanceRate { get; set; }
 
         public string StudentNameEn { get; set; } = string.Empty;
         public string StudentNameAr { get; set; } = string.Empty;

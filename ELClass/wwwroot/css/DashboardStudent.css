@@ -57,6 +57,13 @@
     gap:            16px;
 }
 
+/* Desktop explicit grid placement (DOM order is optimised for mobile) */
+.sd-welcome         { grid-column: 2; grid-row: 1; }
+#sdLectureAlert     { grid-column: 1; grid-row: 1; }
+.sd-center          { grid-column: 2; grid-row: 2; }
+.sd-left            { grid-column: 1; grid-row: 2; }
+.sd-right           { grid-column: 3; grid-row: 1 / span 2; }
+
 
 /* ============================================================
    Base card
@@ -885,6 +892,36 @@
 
 
 /* ============================================================
+   Grades Chart Card
+   ============================================================ */
+.sd-chart-card {
+    background:    var(--sd-card);
+    border-radius: var(--sd-radius);
+    box-shadow:    var(--sd-shadow-sm);
+    border:        1px solid var(--sd-border);
+    animation:     fadeUp 0.3s ease 0.1s both;
+}
+
+.sd-chart-head {
+    padding:       14px 18px;
+    border-bottom: 1px solid var(--sd-border);
+    font-size:     15px;
+    font-weight:   700;
+    display:       flex;
+    align-items:   center;
+    gap:           8px;
+    color:         var(--sd-text);
+}
+
+.sd-chart-head i { color: var(--sd-primary); }
+
+.sd-chart-body {
+    padding: 16px 18px;
+    height:  200px;
+}
+
+
+/* ============================================================
    Animation
    ============================================================ */
 @keyframes fadeUp {
@@ -1279,6 +1316,7 @@
 
     .sd-right {
         grid-column: 1 / -1;
+        grid-row:    3;
         display:     grid;
         grid-template-columns: 1fr 1fr;
         gap:         16px;
@@ -1337,13 +1375,12 @@
         max-width:      100% !important;
     }
 
-    .sd-left, .sd-center, .sd-right {
+    .sd-welcome, .sd-left, .sd-center, .sd-right, #sdLectureAlert {
         width:     100% !important;
         max-width: 100% !important;
-        gap:       14px !important;
-        display:   flex !important;
-        flex-direction: column !important;
     }
+
+    /* Mobile order: sd-welcome → #sdLectureAlert → sd-center → sd-left → sd-right (DOM order) */
 
     .sd-card { width: 100% !important; max-width: 100% !important; }
 

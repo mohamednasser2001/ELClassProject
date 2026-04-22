@@ -59,23 +59,34 @@ namespace ELClass.Areas.StudentArea.Controllers
                           .ThenInclude(i => i.ApplicationUser)
                 );
 
-            var attendedCountByCourseId = allStudentAppointments
-                .Where(sa => sa.Appointment != null && sa.IsAttended)
+            var studentLessons = await _unitOfWork.StudentLessonRepository
+                .GetAsync(
+                    sl => sl.StudentId == userId,
+                    q => q.Include(sl => sl.Lesson),
+                    tracked: false
+                );
+
+            var evaluatedCountByCourseId = studentLessons
+                .Where(sl => sl.Lesson != null)
+                .GroupBy(sl => sl.Lesson.CourseId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var appointmentCountByCourseId = allStudentAppointments
+                .Where(sa => sa.Appointment != null)
                 .GroupBy(sa => sa.Appointment!.CourseId)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            const int defaultGoal = 8;
-
             var coursesVM = courses.Select(sc =>
             {
-                var attended = attendedCountByCourseId.TryGetValue(sc.CourseId, out var c) ? c : 0;
+                var attended = evaluatedCountByCourseId.TryGetValue(sc.CourseId, out var c) ? c : 0;
+                var totalAppointments = appointmentCountByCourseId.TryGetValue(sc.CourseId, out var t) ? t : 0;
                 return new StudentCoursesVM
                 {
                     CourseId = sc.CourseId,
                     CourseTitleEn = sc.Course.TitleEn,
                     CourseTitleAr = sc.Course.TitleAr,
                     AttendedCount = attended,
-                    GoalCount = defaultGoal
+                    GoalCount = totalAppointments
                 };
             })
             .Take(4)
@@ -213,9 +224,34 @@ namespace ELClass.Areas.StudentArea.Controllers
             model.NextStudentAppointmentId = live?.SA.Id;
             model.CanJoinNow = live != null;
 
-            model.OverallProgress = model.TotalLessons > 0
-                ? (int)((double)model.CompletedLessons / model.TotalLessons * 100)
+            model.CompletedLessons = studentLessons.Count();
+            model.TotalLessons = courses.Sum(sc => sc.Course.Lessons?.Count ?? 0);
+            model.OverallProgress = studentLessons.Any()
+                ? (int)Math.Round(studentLessons.Average(sl => sl.Degree))
                 : 0;
+
+            var attendedAppts = allStudentAppointments.Count(sa => sa.Appointment != null && sa.IsAttended);
+            var totalAppts    = allStudentAppointments.Count(sa => sa.Appointment != null);
+            model.AttendedAppointmentsCount = attendedAppts;
+            model.TotalAppointmentsCount    = totalAppts;
+            model.AttendanceRate = totalAppts > 0
+                ? (int)Math.Round(attendedAppts * 100.0 / totalAppts)
+                : 0;
+
+            model.CourseGrades = courses.Select(sc =>
+            {
+                var grades = studentLessons
+                    .Where(sl => sl.Lesson != null && sl.Lesson.CourseId == sc.CourseId)
+                    .ToList();
+                return new CourseGradeVM
+                {
+                    CourseNameEn  = sc.Course.TitleEn ?? "",
+                    CourseNameAr  = sc.Course.TitleAr ?? "",
+                    AverageGrade  = grades.Any() ? Math.Round(grades.Average(sl => sl.Degree), 1) : 0
+                };
+            })
+            .Where(cg => cg.AverageGrade > 0)
+            .ToList();
 
             model.NewNotifications = allStudentAppointments.Count(sa =>
                 sa.Appointment != null &&
