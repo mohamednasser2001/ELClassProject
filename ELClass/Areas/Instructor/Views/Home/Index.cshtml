@@ -28,7 +28,7 @@
 <!-- ─── Stat Cards ────────────────────────────────────────── -->
 <div class="row g-4 mb-4" style="direction:@(isAr ? "rtl" : "ltr")">
 
-    <div class="col-xl-3 col-md-6">
+    <div class="col-6 col-md-6 col-xl-3">
         <div class="el-stat-card el-stat-violet">
             <div class="stat-icon"><i class="ti ti-users"></i></div>
             <div class="stat-number">@Model.TotalStudents.ToString("N0")</div>
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6">
+    <div class="col-6 col-md-6 col-xl-3">
         <div class="el-stat-card el-stat-blue">
             <div class="stat-icon"><i class="ti ti-book"></i></div>
             <div class="stat-number">@Model.ActiveLessons.ToString("N0")</div>
@@ -52,9 +52,9 @@
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6">
+    <div class="col-6 col-md-6 col-xl-3">
         <div class="el-stat-card el-stat-green">
-            <div class="stat-icon"><i class="ti ti-books"></i></div>
+            <div class="stat-icon"><i class="ti ti-school"></i></div>
             <div class="stat-number">@Model.TotalCourses.ToString("N0")</div>
             <div class="stat-label">@(isAr ? "كورساتي" : "My Courses")</div>
             <div class="stat-trend neutral">
@@ -64,7 +64,7 @@
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6">
+    <div class="col-6 col-md-6 col-xl-3">
         <div class="el-stat-card el-stat-amber">
             <div class="stat-icon"><i class="fa-regular fa-user"></i></div>
             <div class="stat-number">@Model.TotalInstructors.ToString("N0")</div>
@@ -88,28 +88,28 @@
             <span class="ch-title">@(isAr ? "إجراءات سريعة" : "Quick Actions")</span>
         </div>
         <div class="row g-3">
-            <div class="col-xl-3 col-md-6">
+            <div class="col-6 col-md-6 col-xl-3">
                 <a href="/Instructor/Student" class="el-quick-action">
                     <div class="qa-icon qa-violet"><i class="ti ti-users"></i></div>
                     <div class="qa-label">@(isAr ? "طلابي" : "My Students")</div>
                     <div class="qa-sublabel">@(isAr ? "عرض وتعديل ملفات الطلاب" : "View and edit student profiles")</div>
                 </a>
             </div>
-            <div class="col-xl-3 col-md-6">
+            <div class="col-6 col-md-6 col-xl-3">
                 <a href="/Instructor/Course" class="el-quick-action">
                     <div class="qa-icon qa-blue"><i class="ti ti-book"></i></div>
                     <div class="qa-label">@(isAr ? "الكورسات" : "Courses")</div>
                     <div class="qa-sublabel">@(isAr ? "إنشاء وتنظيم المحتوى" : "Create and organize content")</div>
                 </a>
             </div>
-            <div class="col-xl-3 col-md-6">
+            <div class="col-6 col-md-6 col-xl-3">
                 <a href="/Instructor/appointment/create" class="el-quick-action">
                     <div class="qa-icon qa-green"><i class="ti ti-calendar-plus"></i></div>
                     <div class="qa-label">@(isAr ? "إضافة موعد" : "Add Appointment")</div>
                     <div class="qa-sublabel">@(isAr ? "جدولة محاضرة جديدة" : "Schedule a new lecture")</div>
                 </a>
             </div>
-            <div class="col-xl-3 col-md-6">
+            <div class="col-6 col-md-6 col-xl-3">
                 <a href="/Instructor/appointment/index" class="el-quick-action">
                     <div class="qa-icon qa-amber"><i class="ti ti-calendar-event"></i></div>
                     <div class="qa-label">@(isAr ? "كل المواعيد" : "All Appointments")</div>

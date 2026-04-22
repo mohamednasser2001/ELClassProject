@@ -36,7 +36,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
     <link rel="stylesheet" href="~/css/HomePage.css" />
     <link rel="stylesheet" href="~/css/HomePage2.css" />
 </head>
@@ -51,18 +51,21 @@
                 </div>
                 @if (isArabic)
                 {
+                   
                     var countryFlags = new Dictionary<string, string>
                     {
-                        {"SA","🇸🇦"}, {"AE","🇦🇪"}, {"KW","🇰🇼"},
-                        {"BH","🇧🇭"}, {"OM","🇴🇲"}, {"EG","🇪🇬"}, {"QA","🇶🇦"}
+                        {"SA","sa"}, {"AE","ae"}, {"KW","kw"},
+                        {"BH","bh"}, {"OM","om"}, {"EG","eg"}, {"QA","qa"}
                     };
-                    var selName = countries.FirstOrDefault(x => x.Item1 == Model.SelectedCountry).Item2 ?? countries[0].Item2;
-                    var selFlag = countryFlags.ContainsKey(Model.SelectedCountry ?? "") ? countryFlags[Model.SelectedCountry!] : countryFlags[countries[0].Item1];
-                    var selCode = Model.SelectedCountry ?? countries[0].Item1;
+    
+                    var selCode = (Model.SelectedCountry ?? "SA").ToUpper();
+                    var selName = countries.FirstOrDefault(x => x.Item1 == selCode).Item2 ?? "السعودية";
+                    var flagClass = selCode.ToLower();
+                    @* var selFlag = countryFlags.ContainsKey(Model.SelectedCountry ?? "") ? countryFlags[Model.SelectedCountry!] : countryFlags[countries[0].Item1]; *@
                     <div class="el-country-picker" id="elCountryPicker">
-                        <button type="button" class="el-country-btn" onclick="toggleCountryDropdown(event)" aria-haspopup="listbox">
-                            <span class="el-country-flag">@selFlag</span>
-                            <span class="el-country-label">@selName</span>
+                        <button type="button" class="el-country-btn" onclick="toggleCountryDropdown(event)">
+                               <span class="fi fi-@flagClass"></span> 
+                                <span class="el-country-label">@selName</span>
                             <svg class="el-country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none">
                                 <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -70,14 +73,11 @@
                         <ul class="el-country-menu" role="listbox">
                             @foreach (var (code, name) in countries)
                             {
-                                var flag = countryFlags.ContainsKey(code) ? countryFlags[code] : "";
+                                var lowerCode = code.ToLower();
                                 var active = code == selCode;
-                                <li role="option" aria-selected="@active.ToString().ToLower()"
-                                    class="el-country-option @(active ? "active" : "")"
-                                    onclick="selectCountry('@code')">
-                                    <span class="el-country-flag">@flag</span>
-                                    <span>@name</span>
-                                    @if (active) { <svg class="el-country-check" width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> }
+                                <li role="option" class="el-country-option @(active ? "active" : "")" onclick="selectCountry('@code')">
+                                    <span class="fi fi-@lowerCode"></span> <span>@name</span>
+                                     @if (active) { <svg class="el-country-check" width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> }
                                 </li>
                             }
                         </ul>
@@ -88,7 +88,7 @@
                         </form>
                     </div>
                     <style>
-                        .el-country-picker { position: relative; z-index: 9999; }
+                        .el-country-picker { position: relative; z-index: 100; }
                         .el-country-btn {
                             display: inline-flex; align-items: center; gap: 6px;
                             background: rgba(255,255,255,0.08);
@@ -135,8 +135,13 @@
                             document.getElementById('elCountryPicker').classList.toggle('open');
                         }
                         function selectCountry(code) {
-                            document.getElementById('elCountryInput').value = code;
-                            document.getElementById('elCountryForm').submit();
+                            var input = document.getElementById('elCountryInput');
+                            var form = document.getElementById('elCountryForm');
+    
+                            if(input && form) {
+                                input.value = code; 
+                                form.submit();
+                            }
                         }
                         document.addEventListener('click', function () {
                             var p = document.getElementById('elCountryPicker');
@@ -210,28 +215,26 @@
                                 : "We help students reach their life goals faster and more efficiently. Growing online learning. From this side you read and buy online courses anywhere, any time."))
                         </p>
                         <div class="el-banner-btns">
-                            <a href="#ContactUsSection" class="el-btn">
+                            <!-- زرار ابدأ الآن (أكبر) -->
+                            <a href="#ContactUsSection" class="el-btn el-hero-start-btn">
                                 @(c?.HeroStartBtnText ?? (isArabic ? "ابدأ الآن" : "get started"))
                             </a>
-                            <div class="el-banner-play-icon">
-                                
-                                <a class="video-popup" href="#" onclick="openVideoModal()">
-                                    <span>
-                                        <svg width="16" height="19" viewBox="0 0 16 19">
-                                            <path d="M15.5467 8.67162L1.32444 0.121637C1.18929 0.040615 1.03668 -0.00130209 0.881723 3.08244e-05C0.726761 0.00136374 0.574808 0.0459005 0.440889 0.129237C0.306634 0.212869 0.195261 0.332685 0.117894 0.476718C0.0405275 0.62075 -0.000123954 0.783957 2.83917e-07 0.950036V18.05C-0.000123954 18.2161 0.0405275 18.3793 0.117894 18.5233C0.195261 18.6674 0.306634 18.7872 0.440889 18.8708C0.577033 18.9551 0.731537 18.9997 0.888889 19C1.03822 19 1.18933 18.9601 1.32444 18.8784L15.5467 10.3284C15.8258 10.1593 16 9.84392 16 9.50002C16 9.15612 15.8258 8.84072 15.5467 8.67162Z" />
-                                        </svg>
-                                    </span>
-                                    <img alt="Thumbnail For Video" width="200" height="110" src="/Images/thumbnails/@(c?.PlayVideoText)" />
-                                    @* @(c?.PlayVideoText ?? (isArabic ? "شاهد الفيديو" : "play video")) *@
+
+                            <!-- حاوية الصورة وزرار التشغيل (ستايل يوتيوب) -->
+                            <div class="el-video-thumb-wrapper">
+                                <img src="/Images/thumbnails/@(c?.PlayVideoText)" alt="Video Thumbnail" class="el-video-thumb-img" />
+                                <a class="video-popup el-youtube-play-btn" href="#" onclick="openVideoModal()" title="تشغيل الفيديو">
+                                    <!-- SVG مطابق لزرار يوتيوب الرسمي -->
+                                    <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="#FF0000"/>
+                                        <path d="M45,24 27,14 27,34" fill="#FFFFFF"/>
+                                    </svg>
                                 </a>
-                                
-                                
-                              
                             </div>
                         </div>
 
                         <!-- Video Modal -->
-                        <div id="videoModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+                        <div id="videoModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999999; align-items:center; justify-content:center;">
                             <div style="position:relative; width:90%; max-width:800px;">
                                 <button onclick="closeVideoModal()"
                                         style="position:absolute; top:-40px; right:0; background:none; border:none; color:#fff; font-size:32px; cursor:pointer; line-height:1;">
@@ -1335,12 +1338,19 @@
 
     document.getElementById('videoModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    document.getElementById('elCountryPicker').style.zIndex = '1';
+    var picker = document.getElementById('elCountryPicker');
+    if (picker) picker.style.visibility = 'hidden';
 }
 
 function closeVideoModal() {
     document.getElementById('videoContainer').innerHTML = ''; // بيوقف الفيديو فوراً
     document.getElementById('videoModal').style.display = 'none';
     document.body.style.overflow = '';
+
+    document.getElementById('elCountryPicker').style.zIndex = '100';
+    var picker = document.getElementById('elCountryPicker');
+    if (picker) picker.style.visibility = 'visible';
 }
 
     // إغلاق لو ضغط برا الفيديو
