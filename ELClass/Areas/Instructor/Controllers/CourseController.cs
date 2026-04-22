@@ -251,7 +251,20 @@ namespace ELClass.Areas.Instructor.Controllers
                     await _unitOfWork.LessonRepository.CreateAsync(lsn);
                     await _unitOfWork.CommitAsync();
 
-                    return Json(new { success = true, message = "Lesson created successfully" });
+
+                var appointmentId2 = int.Parse(Request.Form["lessonAppointmentId"].FirstOrDefault() ?? "0");
+                if (appointmentId2 > 0)
+                {
+                    var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(a => a.Id == appointmentId2);
+                    if (appointment != null)
+                    {
+                        appointment.LessonCreated = true;
+                        await _unitOfWork.AppoinmentRepository.EditAsync(appointment);
+                        await _unitOfWork.CommitAsync();
+                    }
+                }
+
+                return Json(new { success = true, message = "Lesson created successfully" });
                 }
 
                 return Json(new { success = false, message = "Validation failed" });

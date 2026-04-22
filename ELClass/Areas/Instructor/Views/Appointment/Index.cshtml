@@ -123,47 +123,24 @@
                                 <div class="flex justify-center gap-2">
                                     @if (isFinished)
                                     {
-                                        @* زر إنشاء درس جديد - يظهر فقط بعد انتهاء الموعد *@
-                                        <button onclick="openLessonModal(@item.value.Id, @item.value.Course?.Id ?? 0, '@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)', '@item.value.StartDateTime.ToString("yyyy-MM-dd")')"
-                                                class="inline-flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
-                                                title="@(isArabic ? "إنشاء درس لهذا الموعد" : "Create Lesson for this appointment")">
-                                            <i class="fas fa-plus-square"></i>
-                                            @(isArabic ? "إنشاء درس" : "Create Lesson")
-                                        </button>
-            
-                                        @* زر الحذف يظل متاحاً حتى لو انتهى الموعد *@
-                                        <button onclick="deleteAppointment(@item.value.Id)"
-                                                class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                       
-            
-                                        @* زر التعديل *@
-                                        <button onclick="openEditModal(@item.value.Id, '@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm")', @item.value.DurationInHours, '@item.value.MeetingLink')"
-                                                class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors border border-gray-100" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-
-                                        @if (item.value.IsActive)
+                                        @if (item.value.LessonCreated)
                                         {
-                                            <a href="@item.value.MeetingLink" target="_blank"
-                                                   class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm"
-                                                   title="@(isArabic ? "انضم الآن" : "Join Now")">
-                                                <i class="fas fa-video animate-pulse"></i>
-                                            </a>
+                                            @* علامة إن الدرس اتعمل *@
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs font-bold">
+                                                <i class="fas fa-check-circle text-green-500"></i>
+                                                @(isArabic ? "تم رفع الدرس" : "Lesson Created")
+                                            </span>
                                         }
                                         else
                                         {
-                                            <span class="p-2 text-gray-300 bg-gray-50 border border-gray-100 rounded-lg cursor-not-allowed"
-                                                  title="@(isArabic ? "الموعد غير متاح حالياً" : "Meeting not available yet")">
-                                                <i class="fas fa-video-slash"></i>
-                                            </span>
+                                            <button onclick="openLessonModal(@item.value.Id, @item.value.Course?.Id ?? 0, '@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)', '@item.value.StartDateTime.ToString("yyyy-MM-dd")')"
+                                                    class="inline-flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+                                                    title="@(isArabic ? "إنشاء درس لهذا الموعد" : "Create Lesson for this appointment")">
+                                                <i class="fas fa-plus-square"></i>
+                                                @(isArabic ? "إنشاء درس" : "Create Lesson")
+                                            </button>
                                         }
 
-                                        @* زر الحذف *@
                                         <button onclick="deleteAppointment(@item.value.Id)"
                                                 class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
@@ -452,69 +429,89 @@
         });
 
         function saveLesson() {
-        var title = $('#lessonTitle').val().trim();
-        if (!title) {
-        Swal.fire('', isAr ? 'أدخل عنوان المحاضرة' : 'Enter lesson title', 'warning');
-        switchTab('lesson');
-        return;
-        }
+            var title = $('#lessonTitle').val().trim();
+            if (!title) {
+            Swal.fire('', isAr ? 'أدخل عنوان المحاضرة' : 'Enter lesson title', 'warning');
+            switchTab('lesson');
+            return;
+            }
 
-        var formData = new FormData();
-        formData.append('Title', title);
-        formData.append('LectureDate', $('#lessonDate').val());
-        formData.append('DriveLink', $('#lessonDriveLink').val() ||"");
-        formData.append('CourseId', currentCourseId);
+            // ✅ التحقق من الدرجات الأول قبل أي حاجة
+            var hasZero = false;
+            var studentCount = 0;
+            $('.eval-score').each(function () {
+            studentCount++;
+            if (!$(this).val() || parseFloat($(this).val()) <= 0) {
+            hasZero = true;
+            }
+            });
 
-        // ملفات المحاضرة
-        var materials = document.getElementById('lessonMaterials').files;
-        for (var i = 0; i < materials.length; i++)
-        formData.append('materials', materials[i]);
+            if (studentCount === 0) {
+            Swal.fire('', isAr ? 'لازم تضيف طلاب للموعد الأول' : 'Add students to appointment first', 'warning');
+            return;
+            }
 
-        // ملفات الواجبات
-        var assignments = document.getElementById('lessonAssignments').files;
-        for (var i = 0; i < assignments.length; i++)
-        formData.append('assignments', assignments[i]);
+            if (hasZero) {
+            Swal.fire('', isAr ? 'لازم تدي كل الطلاب درجة قبل الحفظ' : 'All students must have a score before saving', 'warning');
+            switchTab('eval');
+            return;
+            }
 
-        // التقييمات - بعتها مع الفورم
-        var hasStudents = false;
-        $('.eval-score').each(function () {
-        formData.append('studentIds', $(this).data('student-id'));
-        formData.append('degrees', $(this).val() || '0');
-        hasStudents = true;
-        });
+           
+            var formData = new FormData();
+            formData.append('Title', title);
+            formData.append('LectureDate', $('#lessonDate').val());
+            formData.append('DriveLink', $('#lessonDriveLink').val() || "");
+            formData.append('CourseId', currentCourseId);
+            formData.append('lessonAppointmentId', currentAppointmentId); 
 
-        var btn = $('#saveLessonBtn');
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            var materials = document.getElementById('lessonMaterials').files;
+            for (var i = 0; i < materials.length; i++)
+            formData.append('materials', materials[i]);
 
-        $.ajax({
-        url: '/instructor/Course/CreateLesson2',
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        success: function (res) {
-        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations'));
-        if (res.success) {
-        Swal.fire({
-        icon: 'success',
-        title: isAr ? 'تم الحفظ بنجاح' : 'Saved Successfully',
-        text: isAr ? 'تم إنشاء الدرس وحفظ التقييمات' : 'Lesson created and evaluations saved',
-        timer: 1800,
-        showConfirmButton: false
-        }).then(function () {
-        bootstrap.Modal.getInstance(document.getElementById('createLessonModal')).hide();
-        });
-        } else {
-        Swal.fire('Error', res.message, 'error');
-        }
-        },
-        error: function () {
-        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations'));
-        Swal.fire('Error', isAr ? 'فشل الاتصال' : 'Connection failed', 'error');
-        }
-        });
-        }
+            var assignments = document.getElementById('lessonAssignments').files;
+            for (var i = 0; i < assignments.length; i++)
+            formData.append('assignments', assignments[i]);
+
+            $('.eval-score').each(function () {
+            formData.append('studentIds', $(this).data('student-id'));
+            formData.append('degrees', $(this).val() || '0');
+            });
+
+            var btn = $('#saveLessonBtn');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+
+            $.ajax({
+            url: '/instructor/Course/CreateLesson2',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function (res) {
+            btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations'));
+            if (res.success) {
+            Swal.fire({
+            icon: 'success',
+            title: isAr ? 'تم الحفظ بنجاح' : 'Saved Successfully',
+            text: isAr ? 'تم إنشاء الدرس وحفظ التقييمات' : 'Lesson created and evaluations saved',
+            timer: 1800,
+            showConfirmButton: false
+            }).then(function () {
+            bootstrap.Modal.getInstance(document.getElementById('createLessonModal')).hide();
+            location.reload();
+            });
+            } else {
+            Swal.fire('Error', res.message, 'error');
+            }
+            },
+            error: function () {
+            btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> ' + (isAr ? 'حفظ الدرس والتقييمات' : 'Save Lesson & Evaluations'));
+            Swal.fire('Error', isAr ? 'فشل الاتصال' : 'Connection failed', 'error');
+            }
+            });
+            }
 
         // ==================== openLessonModal ====================
         function openLessonModal(appointmentId, courseId, courseTitle, appointmentDate) {

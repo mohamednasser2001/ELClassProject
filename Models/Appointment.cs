@@ -15,8 +15,7 @@ namespace Models
 
         public string MeetingLink { get; set; } = string.Empty;
 
-        //public string? StudentId { get; set; } = string.Empty;  
-        //public Student? Student { get; set; }
+
         public string? InstructorId { get; set; } = string.Empty;
         public Instructor? Instructor { get; set; }
 
