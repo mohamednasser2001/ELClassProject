@@ -1,4 +1,5 @@
 ﻿using DataAccess.Repositories.IRepositories;
+using ELClass.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,16 @@ namespace ELClass.Areas.StudentArea.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ZoomSignatureService _zoomSignature;
+        private readonly IConfiguration _configuration;
 
-        public LecturesController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
+        public LecturesController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ZoomSignatureService zoomSignature
+            , IConfiguration config)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _zoomSignature = zoomSignature;
+            _configuration = config;
         }
 
         [HttpGet]
@@ -41,8 +47,8 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             DateTime GetStartDateTime(Appointment a)
             {
-                
-                    return a.StartDateTime.Date;
+
+                return a.StartDateTime.Date;
 
                 // Recurring: احسب أقرب occurrence جاية
                 //var today = DateTime.Today;
@@ -113,13 +119,91 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             if (sa?.Appointment == null) return NotFound();
 
-            //if (!sa.IsAccessAllowed) return Forbid();
-
             var link = sa.Appointment.MeetingLink;
             if (string.IsNullOrWhiteSpace(link)) return BadRequest("Meeting link is missing.");
 
-            return Redirect(link);
+            var (meetingNumber, password) = ExtractZoomInfo(link);
+
+            // لو فشل الاستخراج → افتح في نافذة جديدة كـ fallback
+            if (string.IsNullOrWhiteSpace(meetingNumber))
+                return Redirect(link);
+
+            var signature = _zoomSignature.GenerateSignature(meetingNumber, role: 0);
+
+            // جيب اسم الطالب الحقيقي
+            var appUser = await _userManager.GetUserAsync(User);
+            var displayName = appUser?.NameEN ?? appUser?.UserName ?? userId;
+
+            var vm = new ZoomMeetingVM
+            {
+                MeetingNumber = meetingNumber,
+                Signature = signature,
+                UserName = displayName,
+                ZoomSdkKey = _configuration["ZoomSettings:ClientId"]!,
+                Password = password ?? "",
+                StudentAppointmentId = studentAppointmentId
+            };
+
+            return View("ZoomMeeting", vm);
         }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAttended([FromBody] MarkAttendedRequest req)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var sa = await _unitOfWork.StudentAppointmentRepository.GetOneAsync(
+                x => x.Id == req.StudentAppointmentId && x.StudentId == userId,
+                tracked: true
+            );
+
+            if (sa == null) return NotFound();
+
+            sa.IsAttended = true;
+            await _unitOfWork.CommitAsync();
+
+            return Ok();
+        }
+
+        private static string? ExtractMeetingNumber(string url)
+        {
+            try
+            {
+                var uri = new Uri(url);
+                var parts = uri.AbsolutePath.Split('/');
+                foreach (var p in parts)
+                    if (p.Length >= 10 && p.All(char.IsDigit))
+                        return p;
+            }
+            catch { }
+            return null;
+        }
+
+        private static (string? meetingNumber, string? password) ExtractZoomInfo(string url)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(url)) return (null, null);
+
+                var uri = new Uri(url);
+                // استخراج رقم الاجتماع من المسار (Path)
+                // روابط زوم تكون عادة: /j/123456789 أو /s/123456789
+                var meetingNumber = uri.Segments
+                    .Select(s => s.Replace("/", ""))
+                    .FirstOrDefault(s => s.All(char.IsDigit) && s.Length >= 9);
+
+                // استخراج كلمة السر من الـ Query String
+                var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                var password = query["pwd"];
+
+                return (meetingNumber, password);
+            }
+            catch { return (null, null); }
+        }
+
     }
 }
 

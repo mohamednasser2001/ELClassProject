@@ -121,11 +121,17 @@
 
                             <td class="px-6 py-4">
                                 <div class="flex justify-center gap-2">
+                                    @* زر التعديل - يظهر دائماً *@
+                                    <button onclick="openEditModal(@item.value.Id, '@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm")', @item.value.DurationInHours, '@item.value.MeetingLink')"
+                                            class="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors border border-gray-100"
+                                            title="@(isArabic ? "تعديل" : "Edit")">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
                                     @if (isFinished)
                                     {
                                         @if (item.value.LessonCreated)
                                         {
-                                            @* علامة إن الدرس اتعمل *@
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs font-bold">
                                                 <i class="fas fa-check-circle text-green-500"></i>
                                                 @(isArabic ? "تم رفع الدرس" : "Lesson Created")
@@ -134,18 +140,19 @@
                                         else
                                         {
                                             <button onclick="openLessonModal(@item.value.Id, @item.value.Course?.Id ?? 0, '@(isArabic? item.value.Course?.TitleAr : item.value.Course?.TitleEn)', '@item.value.StartDateTime.ToString("yyyy-MM-dd")')"
-                                                    class="inline-flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
-                                                    title="@(isArabic ? "إنشاء درس لهذا الموعد" : "Create Lesson for this appointment")">
+                                                    class="inline-flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm">
                                                 <i class="fas fa-plus-square"></i>
                                                 @(isArabic ? "إنشاء درس" : "Create Lesson")
                                             </button>
                                         }
-
-                                        <button onclick="deleteAppointment(@item.value.Id)"
-                                                class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
                                     }
+
+                                    @* زر الحذف - يظهر دائماً *@
+                                    <button onclick="deleteAppointment(@item.value.Id)"
+                                            class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100"
+                                            title="@(isArabic ? "حذف" : "Delete")">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
