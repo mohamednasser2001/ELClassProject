@@ -1,0 +1,131 @@
+﻿@model Models.ViewModels.ZoomMeetingVM
+@{
+    Layout = "_StudentLayout";
+    ViewData["Title"] = "Join Meeting";
+}
+
+@section Styles {
+<style>
+    #zoom-container {
+        width: 100%;
+        height: calc(100vh - 80px);
+        min-height: 600px;
+        background: #1c1c1c;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+    #zmClient {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    .zoom-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        gap: 16px;
+        background: #1c1c1c;
+        z-index: 10;
+    }
+    .zoom-spinner {
+        width: 48px; height: 48px;
+        border: 4px solid rgba(255,255,255,0.2);
+        border-top-color: #2D8CFF;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @@keyframes spin { to { transform: rotate(360deg); } }
+    .zoom-error {
+        background: #2a1a1a;
+        color: #ff6b6b;
+        padding: 24px;
+        border-radius: 8px;
+        text-align: center;
+        display: none;
+    }
+</style>
+}
+
+<div style="padding: 16px;">
+    <div id="zoom-container">
+        <div class="zoom-loading" id="zoom-loading">
+            <div class="zoom-spinner"></div>
+            <div>جاري الاتصال بالمحاضرة...</div>
+        </div>
+        <div class="zoom-error" id="zoom-error">
+            <p id="zoom-error-msg">حدث خطأ في الاتصال بـ Zoom</p>
+            <a href="@Url.Action("Schedule","Lectures",new{area="StudentArea"})" 
+               style="color:#2D8CFF; text-decoration:underline;">العودة للجدول</a>
+        </div>
+        <div id="zmClient"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://source.zoom.us/3.8.5/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.8.5/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.8.5/lib/vendor/redux.js"></script>
+    <script src="https://source.zoom.us/3.8.5/lib/vendor/redux-thunk.js"></script>
+    <script src="https://source.zoom.us/3.8.5/lib/vendor/lodash.min.js"></script>
+
+    <script src="https://source.zoom.us/zoom-meeting-embedded-3.8.5.min.js"></script>
+
+    <script>
+    (async function () {
+        // انتظر قليلاً للتأكد من أن المتصفح تعرف على المكتبة
+        if (typeof ZoomMtgEmbedded === 'undefined') {
+            console.error('Zoom SDK failed to load. Check your internet or links.');
+            return;
+        }
+
+        const client = ZoomMtgEmbedded.createClient();
+        const meetingElement = document.getElementById('zmClient');
+
+        const loadingEl = document.getElementById('zoom-loading');
+        const errorEl = document.getElementById('zoom-error');
+
+        try {
+            await client.init({
+                zoomAppRoot: meetingElement,
+                language: 'ar-SA',
+                patchJsMedia: true,
+                leaveUrl: '@Url.Action("Schedule","Lectures",new{area="StudentArea"})'
+            });
+
+            await client.join({
+                sdkKey: '@Model.ZoomSdkKey',
+                signature: '@Model.Signature',
+                meetingNumber: '@Model.MeetingNumber',
+                password: '@Model.Password',
+                userName: '@Html.Raw(Model.UserName)',
+            });
+                console.log('@Model.Signature')
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            // إبلاغ السيرفر بالحضور
+            fetch('@Url.Action("MarkAttended","Lectures",new{area="StudentArea"})', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify({ studentAppointmentId: @Model.StudentAppointmentId })
+            }).catch(console.error);
+
+        } catch (e) {
+            console.error('Zoom Error Details:', e);
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (errorEl) {
+                errorEl.style.display = 'block';
+                // إظهار رسالة خطأ واضحة
+                document.getElementById('zoom-error-msg').textContent = 'فشل الاتصال: ' + (e.reason || e.message || 'تأكد من بيانات الاجتماع');
+            }
+        }
+    })();
+    </script>
+    @Html.AntiForgeryToken()
+}

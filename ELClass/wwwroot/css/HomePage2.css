@@ -37,31 +37,41 @@
 }
 
 /* =========================================
-   2. YouTube-Style Video Thumbnail (بدون تغيير جوهري)
+   تثبيت حجم حاوية الفيديو (YouTube Style)
    ========================================= */
 .el-video-thumb-wrapper {
     position: relative !important;
     display: block !important;
+    /* 1. تحديد العرض: جعلناه 100% لكن بحد أقصى ثابت لمنع التمدد المزعج */
     width: 100% !important;
-    max-width: 520px !important; /* زودته شوية عشان يناسب الزرار الكبير */
+    max-width: 480px !important; /* هذا الحجم المثالي ليكون متناسقاً مع الزرار */
+    /* 2. التوسيط */
     margin: 0 auto !important;
+    /* 3. الحفاظ على أبعاد الفيديو 16:9 */
+    aspect-ratio: 16 / 9 !important;
     border-radius: 16px !important;
     overflow: hidden !important;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
     cursor: pointer !important;
+    /* منع الـ Flex من مط العنصر */
     flex: none !important;
     align-self: center !important;
 }
 
+/* التأكد من أن الصورة تملأ الحاوية تماماً دون فراغات */
 .el-video-thumb-img {
     display: block !important;
     width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 16 / 9 !important;
-    object-fit: cover !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    vertical-align: middle !important;
+    height: 100% !important;
+    object-fit: cover !important; /* لضمان عدم حدوث تمطيط للصورة */
+}
+
+/* تعديل بسيط للموبايل لضمان عدم خروجها عن الشاشة */
+@media (max-width: 767px) {
+    .el-video-thumb-wrapper {
+        max-width: 90% !important; /* تصغيرها قليلاً لتناسب شاشات الموبايل الصغيرة */
+        margin-top: 20px !important;
+    }
 }
 
 .el-youtube-play-btn {
