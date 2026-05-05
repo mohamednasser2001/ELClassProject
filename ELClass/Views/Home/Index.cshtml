@@ -546,7 +546,7 @@
                     <div class="el-contact-left-form">
                         <img class="d-none d-lg-block" src="~/HomePageAssets/assets/img/about-video-icon.png" alt="video icon">
                         <div class="el-contact-form-box">
-                            <form action="/home/ContactUs" method="post">
+                            <form id="enrollContactForm" action="/home/ContactUs" method="post">
                                 <div class="el-contact-form-head">
                                     <h4>@(c?.EnrollFormTitle ?? (isArabic ? "سجل الآن" : "enroll now"))</h4>
                                     <p class="el-para">@(c?.EnrollFormSubtitle ?? (isArabic ? "احصل على التفاصيل في بريدك الإلكتروني الآن" : "Get details in your inbox right now"))</p>
@@ -601,7 +601,7 @@
                                     </select>
                                 </div>
                                 <div class="el-input-field">
-                                    <input type="text" name="PhoneNumber" placeholder="@(isArabic ? "رقم الهاتف" : "Mobile Number")">
+                                    <input type="text" name="PhoneNumber" placeholder="@(isArabic ? "رقم الواتساب" : "WhatsApp Number")">
                                 </div>
                                 <div class="el-input-field">
                                     <input type="text" name="Course" placeholder="@(isArabic ? "اسم المادة / الدورة" : "Course Name")">
@@ -1364,6 +1364,87 @@ function closeVideoModal() {
     });
 </script>
 
+<script>
+    var _swalSuccessTitle = '@Html.Raw(isArabic ? "تم الإرسال بنجاح!" : "Sent Successfully!")';
+    var _swalSuccessText  = '@Html.Raw(isArabic ? "تم إرسال رسالتك بنجاح، وسيتم الرد عليك خلال 24 ساعة بحد أقصى." : "Your message has been sent successfully. We will get back to you within 24 hours.")';
+    var _swalSuccessBtn   = '@Html.Raw(isArabic ? "حسناً" : "OK")';
+    var _swalErrorTitle   = '@Html.Raw(isArabic ? "حدث خطأ!" : "Something went wrong!")';
+    var _swalErrorText    = '@Html.Raw(isArabic ? "يرجى المحاولة مرة أخرى." : "Please try again.")';
+
+    $(document).ready(function () {
+        $('#enrollContactForm').on('submit', function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var submitBtn = form.find('[type="submit"]');
+            submitBtn.prop('disabled', true);
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function () {
+                    form[0].reset();
+                    Swal.fire({
+                        icon: 'success',
+                        title: _swalSuccessTitle,
+                        text: _swalSuccessText,
+                        confirmButtonText: _swalSuccessBtn,
+                        confirmButtonColor: '#ff6b35'
+                    });
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: _swalErrorTitle,
+                        text: _swalErrorText,
+                        confirmButtonColor: '#ff6b35'
+                    });
+                },
+                complete: function () {
+                    submitBtn.prop('disabled', false);
+                }
+            });
+        });
+    });
+</script>
+
+<!-- WhatsApp Floating Button -->
+<a href="https://wa.me/966545935890" target="_blank" rel="noopener noreferrer" class="el-whatsapp-float" aria-label="WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+</a>
+
+<style>
+    .el-whatsapp-float {
+        position: fixed;
+        bottom: 28px;
+        left: 28px;
+        width: 58px;
+        height: 58px;
+        background: #25d366;
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        box-shadow: 0 6px 24px rgba(37,211,102,.45);
+        z-index: 9999;
+        text-decoration: none;
+        animation: el-wa-pulse 2.2s infinite;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .el-whatsapp-float:hover {
+        transform: scale(1.12);
+        box-shadow: 0 10px 32px rgba(37,211,102,.6);
+        color: #fff;
+    }
+    @@keyframes el-wa-pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(37,211,102,.55); }
+        70%  { box-shadow: 0 0 0 16px rgba(37,211,102,0); }
+        100% { box-shadow: 0 0 0 0 rgba(37,211,102,0); }
+    }
+</style>
 
 </body>
 </html>

@@ -223,6 +223,7 @@ namespace ELClass.Areas.StudentArea.Controllers
 
             model.NextStudentAppointmentId = live?.SA.Id;
             model.CanJoinNow = live != null;
+            model.NextAppointmentMeetingLink = live?.SA.Appointment?.MeetingLink ?? string.Empty;
 
             model.CompletedLessons = studentLessons.Count();
             model.TotalLessons = courses.Sum(sc => sc.Course.Lessons?.Count ?? 0);

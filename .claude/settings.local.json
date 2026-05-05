@@ -12,7 +12,9 @@
       "Bash(dotnet ef:*)",
       "Bash(dotnet build:*)",
       "Bash(grep -E \"\\\\.\\(css|js\\)$\")",
-      "Bash(grep -iE \"\\\\.\\(cs|cshtml|js\\)$\")"
+      "Bash(grep -iE \"\\\\.\\(cs|cshtml|js\\)$\")",
+      "Bash(dotnet tool *)",
+      "Bash(grep \"\\\\.cs$\")"
     ]
   }
 }

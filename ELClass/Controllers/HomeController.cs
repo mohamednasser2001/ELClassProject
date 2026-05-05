@@ -149,10 +149,17 @@ namespace ELClass.Controllers
                     }
                 }
 
-                TempData["Success"] = isArabic ? "تم إرسال رسالتك بنجاح!" : "Your message has been sent successfully!";
                 await _realHub.Clients.All.SendAsync("ReceiveMessage", "New Contact Us Message",
                     $"You have a new message from {contactUs.Name} - {contactUs.Email}");
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = true });
+
+                TempData["Success"] = isArabic ? "تم إرسال رسالتك بنجاح!" : "Your message has been sent successfully!";
             }
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = false });
 
             return RedirectToAction("Index");
         }

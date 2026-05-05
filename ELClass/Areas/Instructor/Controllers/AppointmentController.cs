@@ -164,6 +164,25 @@ namespace ELClass.Areas.Instructor.Controllers
 
 
         [HttpPost]
+        public async Task<IActionResult> MarkInstructorAttended(int appointmentId)
+        {
+            var userId = _userManager.GetUserId(User);
+            var appointment = await _unitOfWork.AppoinmentRepository.GetOneAsync(
+                e => e.Id == appointmentId && e.InstructorId == userId);
+
+            if (appointment == null) return Json(new { success = false });
+
+            if (!appointment.InstructorAttended)
+            {
+                appointment.InstructorAttended = true;
+                appointment.InstructorAttendedAt = DateTime.Now;
+                await _unitOfWork.CommitAsync();
+            }
+
+            return Json(new { success = true, meetingLink = appointment.MeetingLink });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
             try

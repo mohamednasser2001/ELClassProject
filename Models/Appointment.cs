@@ -39,6 +39,7 @@ namespace Models
         }
 
         public bool LessonCreated { get; set; } = false;
-
+        public bool InstructorAttended { get; set; } = false;
+        public DateTime? InstructorAttendedAt { get; set; }
     }
 }

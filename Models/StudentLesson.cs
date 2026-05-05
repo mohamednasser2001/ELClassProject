@@ -12,5 +12,6 @@ namespace Models
         public string StudentId { get; set; }
         public Student Student { get; set; }
         public double Degree { get; set; }
+        public bool IsAttended { get; set; } = false;
     }
 }

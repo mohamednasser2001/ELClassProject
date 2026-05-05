@@ -11,6 +11,7 @@ namespace Models.ViewModels
 
         public int? NextStudentAppointmentId { get; set; }
         public bool CanJoinNow { get; set; }
+        public string NextAppointmentMeetingLink { get; set; } = string.Empty;
 
         public int TotalLessons { get; set; }      
         public int CompletedLessons { get; set; }   

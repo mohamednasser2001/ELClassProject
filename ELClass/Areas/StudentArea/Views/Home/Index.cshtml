@@ -227,14 +227,26 @@
             <div class="sd-la-actions">
                 @if (isLive && Model.NextStudentAppointmentId != null)
                 {
-                    <a class="sd-la-btn sd-la-btn-join"
-                       asp-area="StudentArea"
-                       asp-controller="Lectures"
-                       asp-action="Join"
-                       asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
-                        <i class="fa-solid fa-play"></i>
-                        @(isArabic ? "انضم الآن" : "Join Now")
-                    </a>
+                    @if (!string.IsNullOrWhiteSpace(Model.NextAppointmentMeetingLink))
+                    {
+                        <a class="sd-la-btn sd-la-btn-join"
+                           href="@Model.NextAppointmentMeetingLink"
+                           target="_blank" rel="noopener noreferrer">
+                            <i class="fa-solid fa-play"></i>
+                            @(isArabic ? "انضم الآن" : "Join Now")
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="sd-la-btn sd-la-btn-join"
+                           asp-area="StudentArea"
+                           asp-controller="Lectures"
+                           asp-action="Join"
+                           asp-route-studentAppointmentId="@Model.NextStudentAppointmentId">
+                            <i class="fa-solid fa-play"></i>
+                            @(isArabic ? "انضم الآن" : "Join Now")
+                        </a>
+                    }
                 }
                 else if (nextLecture != null)
                 {
@@ -501,10 +513,11 @@
          ══════════════════════════════════════════════════════ -->
     <script>
         (function () {
-            const isArabic     = '@currentLang' === 'ar';
-            const nextJoinAtStr= '@nextJoinAtStr';
-            const nextId       = '@(Model.NextStudentAppointmentId?.ToString() ?? "")';
-            const isLive       = @(isLive ? "true" : "false");
+            const isArabic      = '@currentLang' === 'ar';
+            const nextJoinAtStr = '@nextJoinAtStr';
+            const nextId        = '@(Model.NextStudentAppointmentId?.ToString() ?? "")';
+            const isLive        = @(isLive ? "true" : "false");
+            const nextMeetLink  = '@Html.Raw(Model.NextAppointmentMeetingLink)';
 
             const alertEl      = document.getElementById('sdLectureAlert');
             const timerEl      = document.getElementById('sdLaTimer');
@@ -529,9 +542,12 @@
                 if (timerEl) timerEl.textContent = isArabic ? 'مباشر' : 'LIVE';
 
                 if (actionsEl && nextId) {
+                    const href = nextMeetLink
+                        ? nextMeetLink
+                        : `/StudentArea/Lectures/Join?studentAppointmentId=${nextId}`;
+                    const extra = nextMeetLink ? 'target="_blank" rel="noopener noreferrer"' : '';
                     actionsEl.innerHTML = `
-                        <a class="sd-la-btn sd-la-btn-join"
-                           href="/StudentArea/Lectures/Join?studentAppointmentId=${nextId}">
+                        <a class="sd-la-btn sd-la-btn-join" href="${href}" ${extra}>
                             <i class="fa-solid fa-play"></i>
                             ${isArabic ? 'انضم الآن' : 'Join Now'}
                         </a>`;

@@ -116,11 +116,21 @@
 
                                     @if (item.value.IsActive)
                                     {
-                                        <a href="@item.value.MeetingLink" target="_blank"
+                                        @if (!string.IsNullOrWhiteSpace(item.value.MeetingLink))
+                                        {
+                                            <a href="@item.value.MeetingLink" target="_blank" rel="noopener noreferrer"
                                                class="p-2 text-green-500 hover:bg-green-50 rounded-lg border border-green-200 bg-green-50/50 shadow-sm animate-bounce"
-                                               title="@(isArabic ? "انضم الآن" : "Join Now")">
-                                            <i class="fas fa-video"></i>
-                                        </a>
+                                               title="@(isArabic ? "انضم الآن خارجياً" : "Join Now (External)")">
+                                                <i class="fas fa-video"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="p-2 text-amber-500 bg-amber-50 border border-amber-200 rounded-lg"
+                                                  title="@(isArabic ? "مباشر — بدون رابط خارجي" : "Live — No external link")">
+                                                <i class="fas fa-circle-dot animate-pulse"></i>
+                                            </span>
+                                        }
                                     }
                                     else
                                     {

@@ -85,8 +85,9 @@
                             <i class="fas fa-video text-orange"></i>
                         </span>
                         <input type="url" id="sharedMeetingLink" class="form-control bg-light border-start-0"
-                               placeholder="https://...">
+                               placeholder="@(isArabic ? "اتركه فارغاً للمحاضرة الداخلية" : "Leave empty for internal session")">
                     </div>
+                    <div class="form-text text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>@(isArabic ? "رابط Zoom أو Meet يفتح خارجياً، وإذا تركته فارغاً تُفتح المحاضرة داخل المنصة." : "Zoom/Meet link opens externally. Leave empty to open inside the platform.")</div>
                 </div>
 
                 @* <div class="mb-4">

@@ -4,6 +4,7 @@ using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505095743_UpdateInstructors")]
+    partial class UpdateInstructors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -249,12 +252,6 @@ namespace DataAccess.Migrations
 
                     b.Property<int>("DurationInHours")
                         .HasColumnType("int");
-
-                    b.Property<bool>("InstructorAttended")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("InstructorAttendedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("InstructorId")
                         .HasColumnType("nvarchar(255)");
@@ -804,9 +801,6 @@ namespace DataAccess.Migrations
                     b.Property<decimal?>("HourlyRate")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("HourlyRateCurrency")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("TimesCount")
                         .HasColumnType("int");
 
@@ -820,39 +814,6 @@ namespace DataAccess.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("InstructorStudents");
-                });
-
-            modelBuilder.Entity("Models.InstructorStudentMonthPayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("InstructorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("StudentId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("InstructorStudentMonthPayments");
                 });
 
             modelBuilder.Entity("Models.Lesson", b =>
@@ -875,9 +836,6 @@ namespace DataAccess.Migrations
 
                     b.Property<string>("DriveLink")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("InstructorAttended")
-                        .HasColumnType("bit");
 
                     b.Property<string>("InstructorId")
                         .IsRequired()
@@ -1084,9 +1042,6 @@ namespace DataAccess.Migrations
 
                     b.Property<double>("Degree")
                         .HasColumnType("float");
-
-                    b.Property<bool>("IsAttended")
-                        .HasColumnType("bit");
 
                     b.Property<int>("LessonId")
                         .HasColumnType("int");

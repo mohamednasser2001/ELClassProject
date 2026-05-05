@@ -27,6 +27,7 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<LessonAssignments> LessonAssignmentsRepository { get; }
         IRepository<LessonMaterials> LessonMaterialsRepository { get; }
         IRepository<StudentLesson> StudentLessonRepository { get; }
+        IRepository<InstructorStudentMonthPayment> InstructorStudentMonthPaymentRepository { get; }
         Task<IDbContextTransaction> BeginTransactionAsync();
         Task<bool> CommitAsync();
         void Dispose();

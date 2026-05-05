@@ -15,5 +15,7 @@ namespace Models
         public Student Student { get; set; } = null!;
 
         public int TimesCount { get; set; } = 0;
+        public decimal? HourlyRate { get; set; }
+        public string? HourlyRateCurrency { get; set; }
     }
 }

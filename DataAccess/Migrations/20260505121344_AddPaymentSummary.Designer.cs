@@ -4,6 +4,7 @@ using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505121344_AddPaymentSummary")]
+    partial class AddPaymentSummary
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -249,12 +252,6 @@ namespace DataAccess.Migrations
 
                     b.Property<int>("DurationInHours")
                         .HasColumnType("int");
-
-                    b.Property<bool>("InstructorAttended")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("InstructorAttendedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("InstructorId")
                         .HasColumnType("nvarchar(255)");
@@ -876,9 +873,6 @@ namespace DataAccess.Migrations
                     b.Property<string>("DriveLink")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("InstructorAttended")
-                        .HasColumnType("bit");
-
                     b.Property<string>("InstructorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)");
@@ -1084,9 +1078,6 @@ namespace DataAccess.Migrations
 
                     b.Property<double>("Degree")
                         .HasColumnType("float");
-
-                    b.Property<bool>("IsAttended")
-                        .HasColumnType("bit");
 
                     b.Property<int>("LessonId")
                         .HasColumnType("int");

@@ -93,22 +93,12 @@
                                 }
                                 else if (item.value.IsActive)
                                 {
-                                    @if (!string.IsNullOrEmpty(item.value.MeetingLink))
-                                    {
-                                        <a href="@item.value.MeetingLink" target="_blank"
-                                               class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm inline-block"
-                                               title="@(isArabic ? "انضم الآن" : "Join Now")">
-                                            <i class="fas fa-video animate-pulse"></i>
-                                            <span class="text-xs ms-1">@(isArabic ? "مباشر الآن" : "Live Now")</span>
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <span class="p-2 text-amber-500 bg-amber-50 border border-amber-200 rounded-lg cursor-help"
-                                              title="@(isArabic ? "لا يوجد رابط للمكان" : "No link provided")">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                        </span>
-                                    }
+                                    <button onclick="joinAsInstructor(@item.value.Id, '@item.value.MeetingLink')"
+                                            class="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors border border-green-200 bg-green-50/50 shadow-sm inline-flex items-center gap-1"
+                                            title="@(isArabic ? "انضم الآن" : "Join Now")">
+                                        <i class="fas fa-video animate-pulse"></i>
+                                        <span class="text-xs">@(isArabic ? "مباشر الآن" : "Live Now")</span>
+                                    </button>
                                 }
                                 else
                                 {
@@ -609,6 +599,22 @@
             $('#editDuration').val(duration);
             $('#editMeetingLink').val(meetingLink);
             new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        function joinAsInstructor(appointmentId, meetingLink) {
+            $.post('/Instructor/Appointment/MarkInstructorAttended', { appointmentId: appointmentId })
+                .done(function () {
+                    if (meetingLink && meetingLink.trim() !== '') {
+                        window.open(meetingLink, '_blank', 'noopener,noreferrer');
+                    } else {
+                        window.location.href = '/Instructor/Appointment/Join?appointmentId=' + appointmentId;
+                    }
+                })
+                .fail(function () {
+                    if (meetingLink && meetingLink.trim() !== '') {
+                        window.open(meetingLink, '_blank', 'noopener,noreferrer');
+                    }
+                });
         }
 
     </script>

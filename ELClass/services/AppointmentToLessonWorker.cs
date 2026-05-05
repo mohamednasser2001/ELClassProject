@@ -35,19 +35,26 @@ namespace ELClass.services
                             LectureDate = app.StartDateTime,
                             CourseId = app.CourseId,
                             InstructorId = app.InstructorId ?? "",
+                            InstructorAttended = app.InstructorAttended,
                             CreatedAt = DateTime.Now,
-                            
                         };
 
                         await unitOfWork.LessonRepository.CreateAsync(newLesson);
 
-                 
                         if (app.StudentAppointments.Any())
                         {
+                            var studentLessons = app.StudentAppointments.Select(sa => new StudentLesson
+                            {
+                                LessonId  = newLesson.Id,
+                                StudentId = sa.StudentId,
+                                IsAttended = sa.IsAttended,
+                                Degree    = 0
+                            }).ToList();
+
+                            await unitOfWork.StudentLessonRepository.CreateAllAsync(studentLessons);
                             await unitOfWork.StudentAppointmentRepository.DeleteAllAsync(app.StudentAppointments.ToList());
                         }
 
-                
                         await unitOfWork.AppoinmentRepository.DeleteAsync(app);
                     }
 

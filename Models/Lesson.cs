@@ -24,6 +24,7 @@ namespace Models
         public int CourseId { get; set; }
         public Course Course { get; set; } = null!;
         public ICollection<LessonMaterials> LessonMaterials { get; set; } = new List<LessonMaterials>();
+        public bool InstructorAttended { get; set; } = false;
         public ICollection<StudentLesson> StudentLessons { get; set; } = new List<StudentLesson>();
         public ICollection<LessonAssignments> LessonAssignments { get; set; } = new List<LessonAssignments>();
         

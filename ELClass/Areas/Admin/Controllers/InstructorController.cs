@@ -375,7 +375,9 @@ namespace ELClass.Areas.Admin.Controllers
                 {
                     studentId = s.StudentId,
                     name = s.Student.NameEn,
-                    timesCount = s.TimesCount
+                    timesCount = s.TimesCount,
+                    hourlyRate = s.HourlyRate,
+                    hourlyRateCurrency = s.HourlyRateCurrency
                 }).ToList();
 
                 return Json(new { draw, recordsTotal = totalCount, recordsFiltered = filteredCount, data = result });
@@ -507,6 +509,140 @@ namespace ELClass.Areas.Admin.Controllers
                 await unitOfWork.CommitAsync();
 
                 return Json(new { success = true, message = "تم تحديث عدد المحاضرات بنجاح" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateHourlyRate(string studentId, string instructorId, decimal? newRate, string? currency)
+        {
+            try
+            {
+                if (newRate.HasValue && newRate < 0)
+                    return Json(new { success = false, message = "السعر لا يمكن أن يكون أقل من صفر" });
+
+                var relation = await unitOfWork.InstructorStudentRepository.GetOneAsync(
+                    x => x.StudentId == studentId && x.InstructorId == instructorId);
+
+                if (relation == null) return Json(new { success = false, message = "العلاقة غير موجودة" });
+
+                relation.HourlyRate = newRate;
+                relation.HourlyRateCurrency = newRate.HasValue ? currency : null;
+                await unitOfWork.CommitAsync();
+
+                return Json(new { success = true, message = "تم تحديث سعر الساعة بنجاح" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPaymentSummary(string instructorId)
+        {
+            var now = DateTime.Now;
+            var periods = new[]
+            {
+                (now.Year, now.Month),
+                (now.AddMonths(-1).Year, now.AddMonths(-1).Month)
+            };
+
+            var instructorStudents = (await unitOfWork.InstructorStudentRepository.GetAsync(
+                filter: e => e.InstructorId == instructorId,
+                include: q => q.Include(x => x.Student).ThenInclude(s => s.ApplicationUser)
+            )).ToList();
+
+            var monthlyData = new List<object>();
+
+            foreach (var (year, month) in periods)
+            {
+                var studentsData = new List<object>();
+                decimal grandTotal = 0;
+
+                foreach (var rel in instructorStudents)
+                {
+                    // محاضرات اتحولت لـ Lessons: المدرس حضر + الطالب حضر
+                    var lessonSessions = await unitOfWork.StudentLessonRepository.CountAsync(
+                        sl => sl.StudentId == rel.StudentId &&
+                              sl.IsAttended &&
+                              sl.Lesson.InstructorId == instructorId &&
+                              sl.Lesson.InstructorAttended &&
+                              sl.Lesson.LectureDate.Year == year &&
+                              sl.Lesson.LectureDate.Month == month);
+
+                    // مواعيد لسه في الـ DB (لم تتحول بعد): المدرس حضر + الطالب حضر
+                    var apptSessions = await unitOfWork.StudentAppointmentRepository.CountAsync(
+                        sa => sa.StudentId == rel.StudentId &&
+                              sa.IsAttended &&
+                              sa.Appointment.InstructorId == instructorId &&
+                              sa.Appointment.InstructorAttended &&
+                              sa.Appointment.StartDateTime.Year == year &&
+                              sa.Appointment.StartDateTime.Month == month &&
+                              sa.Appointment.StartDateTime <= now);
+
+                    var totalSessions = lessonSessions + apptSessions;
+                    var subtotal = totalSessions * (rel.HourlyRate ?? 0);
+                    grandTotal += subtotal;
+
+                    var paymentRecord = await unitOfWork.InstructorStudentMonthPaymentRepository.GetOneAsync(
+                        p => p.InstructorId == instructorId && p.StudentId == rel.StudentId &&
+                             p.Month == month && p.Year == year);
+
+                    studentsData.Add(new
+                    {
+                        studentId = rel.StudentId,
+                        studentName = rel.Student.NameAr ?? rel.Student.NameEn,
+                        sessions = totalSessions,
+                        hourlyRate = rel.HourlyRate,
+                        currency = rel.HourlyRateCurrency ?? "SAR",
+                        subtotal,
+                        isPaid = paymentRecord?.IsPaid ?? false,
+                        paidAt = paymentRecord?.PaidAt?.ToString("yyyy-MM-dd")
+                    });
+                }
+
+                monthlyData.Add(new { year, month, students = studentsData, grandTotal });
+            }
+
+            return Json(monthlyData);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarkMonthAsPaid(string instructorId, int month, int year, string[] studentIds)
+        {
+            try
+            {
+                foreach (var studentId in studentIds)
+                {
+                    var existing = await unitOfWork.InstructorStudentMonthPaymentRepository.GetOneAsync(
+                        p => p.InstructorId == instructorId && p.StudentId == studentId &&
+                             p.Month == month && p.Year == year);
+
+                    if (existing == null)
+                    {
+                        await unitOfWork.InstructorStudentMonthPaymentRepository.CreateAsync(
+                            new InstructorStudentMonthPayment
+                            {
+                                InstructorId = instructorId,
+                                StudentId = studentId,
+                                Month = month,
+                                Year = year,
+                                IsPaid = true,
+                                PaidAt = DateTime.Now
+                            });
+                    }
+                    else
+                    {
+                        existing.IsPaid = true;
+                        existing.PaidAt = DateTime.Now;
+                        await unitOfWork.CommitAsync();
+                    }
+                }
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {

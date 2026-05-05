@@ -63,6 +63,15 @@
                 </div>
             </a>
         </div>
+        <div class="col-6 col-md-6 col-xl-3 mb-3">
+            <a href="#" onclick="openPaymentSummary(); return false;">
+                <div class="stat-card text-center" style="background: linear-gradient(135deg,#2e7d32,#43a047);">
+                    <i class="fas fa-file-invoice-dollar fa-2x mb-2"></i>
+                    <h3 class="text-white"><i class="fas fa-eye"></i></h3>
+                    <p>@(isArabic ? "ملخص الدفع" : "Payment Summary")</p>
+                </div>
+            </a>
+        </div>
     </div>
 
     <div class="row">
@@ -238,6 +247,7 @@
                         <tr><th>#</th>
                             <th>@(isArabic ? "اسم الطالب" : "Student Name")</th>
                             <th class="text-center">@(isArabic ? "المحاضرات المتاحة" : "Available Sessions")</th>
+                            <th class="text-center">@(isArabic ? "سعر الساعة" : "Hourly Rate")</th>
                             <th class="text-center">@(isArabic ? "التحكم" : "Actions")</th></tr>
                     </thead>
                     <tbody></tbody>
@@ -313,16 +323,48 @@
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">@(isArabic ? "تعديل المحاضرات" : "Edit Sessions")</h5>
+                <h5 class="modal-title"><i class="fas fa-edit text-orange me-1"></i> @(isArabic ? "تعديل بيانات الطالب" : "Edit Student Data")</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="editStudentId">
-                <label class="form-label small fw-bold">@(isArabic ? "عدد المحاضرات المتاحة" : "Available Sessions")</label>
-                <input type="number" id="newTimesCount" class="form-control" min="0">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold"><i class="fas fa-chalkboard-teacher text-orange me-1"></i> @(isArabic ? "عدد المحاضرات المتاحة" : "Available Sessions")</label>
+                    <input type="number" id="newTimesCount" class="form-control" min="0">
+                </div>
+                <div>
+                    <label class="form-label small fw-bold"><i class="fas fa-dollar-sign text-orange me-1"></i> @(isArabic ? "سعر الساعة" : "Hourly Rate")</label>
+                    <div class="input-group">
+                        <input type="number" id="newHourlyRate" class="form-control" min="0" step="0.01" placeholder="@(isArabic ? "اختياري" : "Optional")">
+                        <select id="newHourlyRateCurrency" class="form-select" style="max-width:130px;">
+                            <option value="EGP">🇪🇬 جنيه</option>
+                            <option value="USD">🇺🇸 دولار</option>
+                            <option value="SAR">🇸🇦 ريال</option>
+                            <option value="AED">🇦🇪 درهم</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-orange-custom w-100" onclick="saveNewTimesCount()">@(isArabic ? "حفظ التعديل" : "Save Changes")</button>
+                <button type="button" class="btn btn-orange-custom w-100" onclick="saveStudentData()">@(isArabic ? "حفظ التعديل" : "Save Changes")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Summary Modal -->
+<div class="modal fade" id="paymentSummaryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#2e7d32,#43a047);">
+                <h5 class="modal-title text-white"><i class="fas fa-file-invoice-dollar me-2"></i>@(isArabic ? "ملخص الدفع" : "Payment Summary")</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3" id="paymentSummaryBody">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-success"></i>
+                    <p class="mt-2 text-muted">@(isArabic ? "جاري التحميل..." : "Loading...")</p>
+                </div>
             </div>
         </div>
     </div>
@@ -371,12 +413,26 @@
                         data: 'timesCount',
                         className: 'text-center',
                         render: (data, t, row) => `
-                        <span class="badge bg-light text-dark border p-2 cursor-pointer"
-                        onclick="openEditTimesModal('${row.studentId}', ${data})"
-                        style="cursor: pointer;"
-                        title="Click to edit">
+                        <span class="badge bg-light text-dark border p-2"
+                        onclick="openEditModal('${row.studentId}', ${data}, ${row.hourlyRate ?? 'null'})"
+                        style="cursor: pointer;" title="${isAr ? 'اضغط للتعديل' : 'Click to edit'}">
                         <i class="fas fa-edit text-orange me-1"></i> ${data}
                         </span>`
+                    },
+                    {
+                        data: 'hourlyRate',
+                        className: 'text-center',
+                        render: (data, t, row) => {
+                            const currencyLabels = { EGP: 'ج.م', USD: '$', SAR: 'ر.س', AED: 'د.إ' };
+                            const symbol = currencyLabels[row.hourlyRateCurrency] || '';
+                            const display = (data !== null && data !== undefined) ? `${data} ${symbol}` : '-';
+                            const cur = row.hourlyRateCurrency || 'SAR';
+                            return `<span class="badge bg-light text-dark border p-2"
+                                onclick="openEditModal('${row.studentId}', ${row.timesCount}, ${data ?? 'null'}, '${cur}')"
+                                style="cursor: pointer;" title="${isAr ? 'اضغط للتعديل' : 'Click to edit'}">
+                                <i class="fas fa-edit text-orange me-1"></i>${display}
+                            </span>`;
+                        }
                     },
                     { data: 'studentId', className: 'text-center', render: (id, t, row) => `
                         <button class="btn btn-sm btn-light border" onclick="confirmRemoveStudent('${id}', '${row.name.replace(/'/g, "\\'")}')"><i class="fas fa-trash text-danger"></i></button>`
@@ -477,53 +533,40 @@
         }
 
 
-        function openEditTimesModal(studentId, currentCount) {
+        function openEditModal(studentId, currentCount, currentRate, currentCurrency) {
             $('#editStudentId').val(studentId);
             $('#newTimesCount').val(currentCount);
+            $('#newHourlyRate').val(currentRate !== null && currentRate !== undefined ? currentRate : '');
+            $('#newHourlyRateCurrency').val(currentCurrency || 'SAR');
             $('#updateTimesModal').modal('show');
         }
 
-        function saveNewTimesCount() {
-            const studentId = $('#editStudentId').val();
-            const newCount = $('#newTimesCount').val();
-            const instructorId = '@Model.Instructor.Id'; // تأكد أن الـ ID متاح في الموديل
+        function saveStudentData() {
+            const studentId   = $('#editStudentId').val();
+            const newCount    = $('#newTimesCount').val();
+            const newRate     = $('#newHourlyRate').val();
+            const currency    = $('#newHourlyRateCurrency').val();
+            const instructorId = '@Model.Instructor.Id';
             const isAr = '@isArabic' === 'True';
-            if (newCount === "" || newCount < 0) {
-                const validationMsg = isAr ? 'برجاء إدخال رقم صحيح' : 'Please enter a valid number';
-                const validationTitle = isAr ? 'خطأ في الإدخال' : 'Input Error';
-                Swal.fire(validationTitle, validationMsg, 'error');
+
+            if (newCount === '' || parseInt(newCount) < 0) {
+                Swal.fire(isAr ? 'خطأ' : 'Error', isAr ? 'برجاء إدخال عدد محاضرات صحيح' : 'Please enter a valid sessions count', 'error');
                 return;
-        }
+            }
 
-        $.post('/Admin/Instructor/UpdateStudentTimesCount', {
-        studentId: studentId,
-        instructorId: instructorId,
-        newCount: newCount
-        }, function(res) {
-        if (res.success) {
-        $('#updateTimesModal').modal('hide');
-            
-        // رسالة النجاح بلغة الصفحة
-        const successTitle = isAr ? 'تم التحديث بنجاح' : 'Updated Successfully';
-        Swal.fire({
-        icon: 'success',
-        title: successTitle,
-        timer: 1500,
-        showConfirmButton: false
-        });
+            const req1 = $.post('/Admin/Instructor/UpdateStudentTimesCount', { studentId, instructorId, newCount });
+            const req2 = $.post('/Admin/Instructor/UpdateHourlyRate', { studentId, instructorId, newRate: newRate !== '' ? newRate : null, currency });
 
-        // إعادة تحميل الجدول بدون ريفرش
-        if ($.fn.DataTable.isDataTable('#InstructorStudentsTable')) {
-        $('#InstructorStudentsTable').DataTable().ajax.reload(null, false);
-        } else {
-        location.reload(); // Fallback في حالة مفيش DataTable
-        }
-        } else {
-        // رسالة الخطأ القادمة من السيرفر (أو رسالة عامة)
-        const errorTitle = isAr ? 'عذراً' : 'Error';
-        Swal.fire(errorTitle, res.message, 'error');
-        }
-        });
+            $.when(req1, req2).done(function (res1, res2) {
+                const r1 = res1[0], r2 = res2[0];
+                if (r1.success && r2.success) {
+                    $('#updateTimesModal').modal('hide');
+                    Swal.fire({ icon: 'success', title: isAr ? 'تم التحديث' : 'Updated', timer: 1500, showConfirmButton: false });
+                    $('#InstructorStudentsTable').DataTable().ajax.reload(null, false);
+                } else {
+                    Swal.fire(isAr ? 'عذراً' : 'Error', r1.message || r2.message, 'error');
+                }
+            });
         }
 
 
@@ -586,6 +629,155 @@ function deleteInstructor(id) {
     });
 }
 
+
+        // ==================== Payment Summary ====================
+        const _instrId = '@Model.Instructor.Id';
+        const _isAr    = '@isArabic' === 'True';
+
+        const _arabicMonths = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        const _currSymbols  = { EGP: 'ج.م', USD: '$', SAR: 'ر.س', AED: 'د.إ' };
+
+        function openPaymentSummary() {
+            $('#paymentSummaryBody').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-success"></i><p class="mt-2 text-muted">' + (_isAr ? 'جاري التحميل...' : 'Loading...') + '</p></div>');
+            $('#paymentSummaryModal').modal('show');
+
+            $.get('/Admin/Instructor/GetPaymentSummary', { instructorId: _instrId }, function (data) {
+                renderPaymentSummary(data);
+            }).fail(function () {
+                $('#paymentSummaryBody').html('<div class="alert alert-danger">حدث خطأ أثناء التحميل</div>');
+            });
+        }
+
+        function renderPaymentSummary(months) {
+            if (!months || months.length === 0) {
+                $('#paymentSummaryBody').html('<div class="alert alert-info text-center">' + (_isAr ? 'لا توجد بيانات' : 'No data found') + '</div>');
+                return;
+            }
+
+            let html = '';
+
+            months.forEach(function (m) {
+                const monthLabel = _isAr ? (_arabicMonths[m.month - 1] + ' ' + m.year) : (new Date(m.year, m.month - 1).toLocaleString('en', { month: 'long' }) + ' ' + m.year);
+                const allPaid   = m.students.length > 0 && m.students.every(s => s.isPaid);
+                const hasData   = m.students.some(s => s.sessions > 0);
+
+                html += `
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="background:#f8f9fa;">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-success me-2"></i>${monthLabel}</h6>
+                        ${allPaid ? '<span class="badge bg-success fs-6 px-3 py-2"><i class="fas fa-check-circle me-1"></i>' + (_isAr ? 'تم الدفع' : 'Paid') + '</span>' : ''}
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>${_isAr ? 'الطالب' : 'Student'}</th>
+                                        <th class="text-center">${_isAr ? 'المحاضرات' : 'Sessions'}</th>
+                                        <th class="text-center">${_isAr ? 'سعر الساعة' : 'Rate/Hr'}</th>
+                                        <th class="text-center">${_isAr ? 'الإجمالي الفرعي' : 'Subtotal'}</th>
+                                        <th class="text-center">${_isAr ? 'الحالة' : 'Status'}</th>
+                                        <th class="text-center">${_isAr ? 'تحديد' : 'Select'}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                m.students.forEach(function (s) {
+                    const sym      = _currSymbols[s.currency] || s.currency;
+                    const rateDisp = s.hourlyRate !== null ? (s.hourlyRate + ' ' + sym) : '-';
+                    const subDisp  = s.hourlyRate !== null ? (s.subtotal.toFixed(2) + ' ' + sym) : '-';
+                    const paidBadge = s.isPaid
+                        ? `<span class="badge bg-success"><i class="fas fa-check me-1"></i>${_isAr ? 'مدفوع' : 'Paid'}</span>`
+                        : `<span class="badge bg-warning text-dark">${_isAr ? 'لم يُدفع' : 'Unpaid'}</span>`;
+
+                    html += `
+                                    <tr>
+                                        <td class="fw-semibold">${s.studentName}</td>
+                                        <td class="text-center"><span class="badge bg-light text-dark border">${s.sessions}</span></td>
+                                        <td class="text-center">${rateDisp}</td>
+                                        <td class="text-center fw-bold">${subDisp}</td>
+                                        <td class="text-center">${paidBadge}</td>
+                                        <td class="text-center">
+                                            <input type="checkbox" class="pay-cb form-check-input"
+                                                data-sid="${s.studentId}" data-month="${m.month}" data-year="${m.year}"
+                                                ${s.isPaid ? 'checked disabled' : ''}>
+                                        </td>
+                                    </tr>`;
+                });
+
+                html += `
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td colspan="3" class="text-end">${_isAr ? 'الإجمالي الكامل:' : 'Grand Total:'}</td>
+                                        <td class="text-center text-success fs-6">${m.grandTotal > 0 ? m.grandTotal.toFixed(2) : '-'}</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    ${!allPaid ? `
+                    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                        <button class="btn btn-sm" style="border:1px solid #2e7d32; color:#2e7d32;" onmouseover="this.style.background='#2e7d32';this.style.color='#fff'" onmouseout="this.style.background='';this.style.color='#2e7d32'" onclick="toggleSelectAll(${m.month}, ${m.year}, this)">
+                            <i class="fas fa-check-square me-1"></i>${_isAr ? 'تحديد الكل' : 'Select All'}
+                        </button>
+                        <button class="btn btn-success px-4" onclick="markAsPaid(${m.month}, ${m.year})">
+                            ${_isAr ? 'خالص ✔' : 'Mark as Paid ✔'}
+                        </button>
+                    </div>` : ''}
+                </div>`;
+            });
+
+            $('#paymentSummaryBody').html(html);
+        }
+
+        function toggleSelectAll(month, year, btn) {
+            const boxes = $(`.pay-cb[data-month="${month}"][data-year="${year}"]:not(:disabled)`);
+            const allChecked = boxes.filter(':checked').length === boxes.length;
+            boxes.prop('checked', !allChecked);
+            const isAr = _isAr;
+            $(btn).html(!allChecked
+                ? `<i class="fas fa-square me-1"></i>${isAr ? 'إلغاء التحديد' : 'Deselect All'}`
+                : `<i class="fas fa-check-square me-1"></i>${isAr ? 'تحديد الكل' : 'Select All'}`);
+        }
+
+        function markAsPaid(month, year) {
+            const checked = [];
+            $(`.pay-cb[data-month="${month}"][data-year="${year}"]:checked:not(:disabled)`).each(function () {
+                checked.push($(this).data('sid'));
+            });
+
+            if (checked.length === 0) {
+                Swal.fire(_isAr ? 'تنبيه' : 'Notice', _isAr ? 'برجاء تحديد طالب واحد على الأقل' : 'Please select at least one student', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: _isAr ? 'تأكيد الدفع' : 'Confirm Payment',
+                text: _isAr ? `سيتم تسجيل ${checked.length} طالب كمدفوع لهذا الشهر` : `Mark ${checked.length} student(s) as paid for this month?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2e7d32',
+                confirmButtonText: _isAr ? 'نعم، خالص' : 'Yes, Mark Paid',
+                cancelButtonText: _isAr ? 'إلغاء' : 'Cancel'
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+
+                $.post('/Admin/Instructor/MarkMonthAsPaid', {
+                    instructorId: _instrId,
+                    month: month,
+                    year: year,
+                    studentIds: checked
+                }).done(function () {
+                        openPaymentSummary();
+                        Swal.fire({ icon: 'success', title: _isAr ? 'تم التسجيل' : 'Saved!', timer: 1200, showConfirmButton: false });
+                    }).fail(function () {
+                        Swal.fire('Error', _isAr ? 'حدث خطأ' : 'Something went wrong', 'error');
+                    });
+            });
+        }
+        // =========================================================
 
     </script>
 }

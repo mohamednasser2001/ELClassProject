@@ -44,8 +44,9 @@
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">@(isArabic ? "رابط الاجتماع" : "Meeting Link")</label>
-                        <input type="url" asp-for="MeetingLink" class="form-control" placeholder="https://..." required />
+                        <input type="url" asp-for="MeetingLink" class="form-control" placeholder="@(isArabic ? "اتركه فارغاً للمحاضرة الداخلية" : "Leave empty for internal session")" />
                         <span asp-validation-for="MeetingLink" class="text-danger small"></span>
+                        <div class="form-text text-muted small"><i class="fas fa-info-circle me-1"></i>@(isArabic ? "إذا أضفت رابطاً سيفتح خارجياً (Zoom/Meet)، وإذا تركته فارغاً ستُفتح المحاضرة داخل المنصة." : "External link opens in Zoom/Meet. Leave empty to open session inside the platform.")</div>
                     </div>
 
                     <div class="col-md-3 mb-3">

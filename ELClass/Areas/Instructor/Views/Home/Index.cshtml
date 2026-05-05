@@ -239,6 +239,7 @@
 
 <div id="chatWidget" class="chat-widget" aria-hidden="true" role="dialog" aria-label="Chat widget">
     @Html.AntiForgeryToken()
+    <input type="hidden" id="currentUserId" value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
     <div class="chat-header">
         <div class="header-left">
             <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">←</button>
@@ -342,6 +343,8 @@
         download: '@Url.Action("DownloadAttachment","Home", new { area="Instructor" })',
         markRead: '@Url.Action("MarkAsRead","Home", new { area="Instructor" })'
     };
+
+    const currentUserId = document.getElementById('currentUserId')?.value ?? '';
 
     // =========================
     // Elements
@@ -1074,6 +1077,7 @@
 
         const optimistic = {
             id: tempId,
+            senderId: currentUserId,
             receiverId: state.currentStudentId,
             content: text,
             sentAt: nowIso,
