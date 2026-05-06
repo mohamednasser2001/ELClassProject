@@ -73,11 +73,11 @@
                                 <div class="flex flex-col">
                                     <span class="text-gray-900 font-medium">
                                         <i class="far fa-calendar-alt ml-1 text-blue-500"></i>
-                                        @item.value.StartDateTime.ToString("yyyy-MM-dd")
+                                        <span data-egypt-dt='@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="date">@item.value.StartDateTime.ToString("yyyy-MM-dd")</span>
                                     </span>
                                     <span class="text-orange-600 text-xs mt-1">
                                         <i class="far fa-clock"></i>
-                                        @item.value.StartDateTime.ToString("hh:mm tt")
+                                        <span data-egypt-dt='@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="time">@item.value.StartDateTime.ToString("hh:mm tt")</span>
                                         (@item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs"))
                                     </span>
                                 </div>
@@ -150,6 +150,11 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100" id="paginationContainer">
+            <div class="text-sm text-gray-500" id="paginationInfo"></div>
+            <div class="flex items-center gap-1" id="paginationControls"></div>
+        </div>
     </div>
 </div>
 
@@ -157,58 +162,145 @@
 
 @section Scripts {
     <script>
+        const ROWS_PER_PAGE = 10;
+        const isAr = "@isArabic".toLowerCase() === "true";
+        let currentPage = 1;
+
+        (function () {
+            function localizeEgyptTimes() {
+                document.querySelectorAll('[data-egypt-dt]').forEach(function (el) {
+                    var raw = el.getAttribute('data-egypt-dt');
+                    var fmt = el.getAttribute('data-dt-format') || 'time';
+                    var d = new Date(raw + '+02:00');
+                    if (isNaN(d.getTime())) return;
+                    try {
+                        if (fmt === 'date') {
+                            el.textContent = d.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                        } else if (fmt === 'date-long') {
+                            el.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' });
+                        } else if (fmt === 'date-short') {
+                            el.textContent = d.toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short' });
+                        } else if (fmt === 'time') {
+                            el.textContent = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        }
+                    } catch (e) {}
+                });
+            }
+            document.addEventListener('DOMContentLoaded', localizeEgyptTimes);
+        })();
+        let filteredRows = [];
+
+        function getAllRows() {
+            return Array.from(document.querySelectorAll('.appointment-row'));
+        }
+
+        function applyFilterAndPaginate(selectedId) {
+            const all = getAllRows();
+            filteredRows = selectedId === 'all'
+                ? all
+                : all.filter(r => r.getAttribute('data-instructor-id') === selectedId);
+            currentPage = 1;
+            renderPage();
+        }
+
+        function renderPage() {
+            const all = getAllRows();
+            all.forEach(r => r.style.display = 'none');
+
+            const start = (currentPage - 1) * ROWS_PER_PAGE;
+            const pageRows = filteredRows.slice(start, start + ROWS_PER_PAGE);
+
+            pageRows.forEach((row, i) => {
+                row.style.display = '';
+                const cell = row.querySelector('.row-index');
+                if (cell) cell.textContent = start + i + 1;
+            });
+
+            updatePaginationUI();
+        }
+
+        function updatePaginationUI() {
+            const total = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+            const start = Math.min((currentPage - 1) * ROWS_PER_PAGE + 1, total);
+            const end = Math.min(currentPage * ROWS_PER_PAGE, total);
+
+            document.getElementById('paginationInfo').textContent = isAr
+                ? `عرض ${start}–${end} من ${total}`
+                : `Showing ${start}–${end} of ${total}`;
+
+            const controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+
+            const btnClass = 'px-3 py-1.5 text-sm rounded-lg border transition-colors';
+            const activeClass = 'bg-blue-800 text-white border-blue-800 font-semibold';
+            const inactiveClass = 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50';
+            const disabledClass = 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed';
+
+            // زر السابق
+            const prev = document.createElement('button');
+            prev.className = `${btnClass} ${currentPage === 1 ? disabledClass : inactiveClass}`;
+            prev.innerHTML = isAr ? '&#8250; السابق' : '&lsaquo; Prev';
+            prev.disabled = currentPage === 1;
+            prev.onclick = () => { currentPage--; renderPage(); };
+            controls.appendChild(prev);
+
+            // أرقام الصفحات
+            const maxVisible = 5;
+            let pageStart = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let pageEnd = Math.min(totalPages, pageStart + maxVisible - 1);
+            if (pageEnd - pageStart < maxVisible - 1) pageStart = Math.max(1, pageEnd - maxVisible + 1);
+
+            for (let p = pageStart; p <= pageEnd; p++) {
+                const btn = document.createElement('button');
+                btn.className = `${btnClass} ${p === currentPage ? activeClass : inactiveClass}`;
+                btn.textContent = p;
+                btn.onclick = (function (page) { return () => { currentPage = page; renderPage(); }; })(p);
+                controls.appendChild(btn);
+            }
+
+            // زر التالي
+            const next = document.createElement('button');
+            next.className = `${btnClass} ${currentPage === totalPages ? disabledClass : inactiveClass}`;
+            next.innerHTML = isAr ? 'التالي &#8249;' : 'Next &rsaquo;';
+            next.disabled = currentPage === totalPages;
+            next.onclick = () => { currentPage++; renderPage(); };
+            controls.appendChild(next);
+        }
 
         document.getElementById('instructorFilter').addEventListener('change', function () {
-        const selectedId = this.value;
-        const rows = document.querySelectorAll('.appointment-row');
-        let visibleIndex = 1;
-
-        rows.forEach(row => {
-        const rowInstructorId = row.getAttribute('data-instructor-id');
-
-        if (selectedId === 'all' || rowInstructorId === selectedId) {
-        row.style.display = '';
-        // تحديث الرقم التسلسلي للصفوف الظاهرة فقط
-        const indexCell = row.querySelector('.row-index');
-        if (indexCell) indexCell.textContent = visibleIndex++;
-        } else {
-        row.style.display = 'none';
-        }
+            applyFilterAndPaginate(this.value);
         });
-        });
+
+        // تهيئة عند التحميل
+        applyFilterAndPaginate('all');
 
 
         function deleteAppointment(id) {
-        const isAr = "@isArabic".toLowerCase() === "true";
-
-        Swal.fire({
-        title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
-        text: isAr ? 'لن تتمكن من استعادة هذا الموعد!' : "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, delete it!',
-        cancelButtonText: isAr ? 'إلغاء' : 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        $.post('/Admin/Appointment/Delete', { id: id }, function (res) {
-        if (res.success) {
-        Swal.fire(
-        isAr ? 'تم الحذف!' : 'Deleted!',
-        isAr ? 'تم حذف الموعد بنجاح.' : 'The appointment has been deleted.',
-        'success'
-        ).then(() => {
-
-        location.reload();
-
-        });
-        } else {
-        Swal.fire('Error', res.message, 'error');
-        }
-        });
-        }
-        });
+            Swal.fire({
+                title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+                text: isAr ? 'لن تتمكن من استعادة هذا الموعد!' : "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, delete it!',
+                cancelButtonText: isAr ? 'إلغاء' : 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Admin/Appointment/Delete', { id: id }, function (res) {
+                        if (res.success) {
+                            Swal.fire(
+                                isAr ? 'تم الحذف!' : 'Deleted!',
+                                isAr ? 'تم حذف الموعد بنجاح.' : 'The appointment has been deleted.',
+                                'success'
+                            ).then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    });
+                }
+            });
         }
     </script>
 }

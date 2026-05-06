@@ -36,8 +36,8 @@ namespace ELClass.Areas.Instructor.Controllers
 
 
             var orderedAppointments = appointments
-        .OrderBy(a => a.StartDateTime)
-        .ToList();
+                .OrderByDescending(a => a.StartDateTime)
+                .ToList();
             return View(orderedAppointments);
         }
 

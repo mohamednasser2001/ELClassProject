@@ -122,9 +122,10 @@ namespace ELClass.Areas.Instructor.Controllers
             ViewData["CourseId"] = course.Id;
             ViewData["CourseTitle"] = course.TitleEn;
             var insId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var lessons = await _unitOfWork.LessonRepository.GetAsync(l => l.CourseId == id && l.InstructorId == insId ,
+            var lessons = (await _unitOfWork.LessonRepository.GetAsync(l => l.CourseId == id && l.InstructorId == insId ,
                 l=>l.Include(l=>l.LessonMaterials).Include(l=>l.LessonAssignments)
-                .Include(e=>e.StudentLessons).ThenInclude(e=>e.Student));
+                .Include(e=>e.StudentLessons).ThenInclude(e=>e.Student)))
+                .OrderByDescending(l => l.CreatedAt);
             return View(lessons);
         }
 

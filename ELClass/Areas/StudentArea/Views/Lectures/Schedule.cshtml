@@ -42,8 +42,8 @@
 
                         <div class="sd-up-row">
                             <div class="sd-up-time">
-                                <div class="sd-up-time-main">@lec.Date.ToString("ddd, dd MMM")</div>
-                                <div class="sd-up-time-sub">@lec.Date.ToString(isArabic ? "HH:mm" : "hh:mm tt")</div>
+                                <div class="sd-up-time-main"><span data-egypt-dt='@lec.Date.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="date-short">@lec.Date.ToString("ddd, dd MMM")</span></div>
+                                <div class="sd-up-time-sub"><span data-egypt-dt='@lec.Date.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="time">@lec.Date.ToString(isArabic ? "HH:mm" : "hh:mm tt")</span></div>
                             </div>
 
                             <div class="sd-up-course">
@@ -76,3 +76,26 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            function localizeEgyptTimes() {
+                document.querySelectorAll('[data-egypt-dt]').forEach(function (el) {
+                    var raw = el.getAttribute('data-egypt-dt');
+                    var fmt = el.getAttribute('data-dt-format') || 'time';
+                    var d = new Date(raw + '+02:00');
+                    if (isNaN(d.getTime())) return;
+                    try {
+                        if (fmt === 'date-short') {
+                            el.textContent = d.toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short' });
+                        } else if (fmt === 'time') {
+                            el.textContent = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        }
+                    } catch (e) {}
+                });
+            }
+            document.addEventListener('DOMContentLoaded', localizeEgyptTimes);
+        })();
+    </script>
+}

@@ -1,115 +1,340 @@
-﻿@using ELClass.services
+@using ELClass.services
 @using Models
 @model IEnumerable<ContactUs>
 
 @{
     ViewData["Title"] = "Contact Messages";
-    int index = 1;
-    
-    bool isArabic = CultureHelper.IsArabic;
+    bool isAr = CultureHelper.IsArabic;
+
+    int unreadCount = ViewBag.UnreadCount;
+    var unreadIds   = (HashSet<int>)ViewBag.UnreadIds;
 }
 
-<div class="bg-white dark:bg-slate-900 min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-200" dir="@(isArabic ? "rtl" : "ltr")">
-    <div class="w-full px-2 sm:px-4 py-4">
+<div class="p-6 bg-gray-50 min-h-screen" dir="@(isAr ? "rtl" : "ltr")">
 
-        <header class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg shadow-sm">
-            <nav class="flex items-center space-x-2 @(isArabic ? "space-x-reverse" : "") text-sm md:text-base font-medium">
-                <span class="text-slate-900 dark:text-white font-bold text-xl">
-                    <i class="material-icons align-middle">email</i>
-                    @(isArabic ? "رسائل التواصل" : "Contact Messages")
+    @* ── Header ───────────────────────────────────────────── *@
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-envelope text-blue-800"></i>
+                @(isAr ? "رسائل التواصل" : "Contact Messages")
+            </h1>
+            <p class="text-gray-500 text-sm mt-1">
+                @if (isAr)
+                {
+                    <text>إجمالي <strong id="totalCountLabel">@Model.Count()</strong> رسالة</text>
+                }
+                else
+                {
+                    <text><strong id="totalCountLabel">@Model.Count()</strong> messages total</text>
+                }
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+
+            @if (unreadCount > 0)
+            {
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
+                      style="background:#EFF6FF;color:#1D4ED8;">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block"></span>
+                    @(isAr ? $"{unreadCount} رسالة جديدة" : $"{unreadCount} new message{(unreadCount > 1 ? "s" : "")}")
                 </span>
-            </nav>
-            <div class="text-slate-500 text-sm">
-                @(isArabic ? "إجمالي الرسائل:" : "Total Messages:") <strong>@Model.Count()</strong>
-            </div>
-        </header>
+            }
 
-        <div class="bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden rounded-md">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left @(isArabic ? "text-right" : "") border-collapse min-w-[1000px]">
-                    <thead>
-                        <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600">
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">No.</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "المرسل" : "Sender")</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">@(isArabic ? "السنة الدراسية / التواصل" : "Academic Year / Contact")</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الدورة" : "Course")</th>
-                            <th class="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        @foreach (var item in Model)
-                        {
-                            <tr class="hover:bg-blue-50/50 dark:hover:bg-slate-700/40 transition-colors group @(!item.IsReaded ? "bg-blue-50/30 dark:bg-blue-900/10" : "")">
-                                <td class="px-4 py-4 text-sm text-slate-500 font-medium">@(index++)</td>
-                                <td class="px-4 py-4 text-sm">
+            @* Date-range filter *@
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
+                    @(isAr ? "من:" : "From:")
+                </label>
+                <input type="date" id="filterFrom"
+                       class="rounded-lg border-gray-300 text-sm py-1.5 px-2 dark:bg-white focus:ring-blue-500 shadow-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
+                    @(isAr ? "إلى:" : "To:")
+                </label>
+                <input type="date" id="filterTo"
+                       class="rounded-lg border-gray-300 text-sm py-1.5 px-2 dark:bg-white focus:ring-blue-500 shadow-sm" />
+            </div>
+            <button onclick="clearDateFilter()"
+                    class="text-xs text-gray-400 hover:text-gray-600 underline transition-colors">
+                @(isAr ? "مسح" : "Clear")
+            </button>
+        </div>
+    </div>
+
+    @* ── TempData ─────────────────────────────────────────── *@
+    @if (TempData["success"] != null)
+    {
+        <div class="mb-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-green-50 border border-green-100 text-green-700 text-sm font-medium">
+            <i class="fas fa-check-circle"></i>
+            @TempData["success"]
+        </div>
+    }
+
+    @* ── Card ─────────────────────────────────────────────── *@
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm" id="contactTable">
+                <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-center">#</th>
+                        <th class="px-6 py-4">@(isAr ? "المرسل" : "Sender")</th>
+                        <th class="px-6 py-4">@(isAr ? "بيانات التواصل" : "Contact Info")</th>
+                        <th class="px-6 py-4 text-center">@(isAr ? "السنة الدراسية" : "Academic Year")</th>
+                        <th class="px-6 py-4 text-center">@(isAr ? "الكورس" : "Course")</th>
+                        <th class="px-6 py-4 text-center">@(isAr ? "التاريخ" : "Date")</th>
+                        <th class="px-6 py-4 text-center">@(isAr ? "الإجراءات" : "Actions")</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50" id="contactTableBody">
+                    @foreach (var item in Model)
+                    {
+                        bool wasUnread = unreadIds.Contains(item.Id);
+                        <tr class="contact-row hover:bg-blue-50/30 transition-colors @(wasUnread ? "bg-blue-50/50" : "")"
+                            data-created="@item.CreatedAt.ToString("yyyy-MM-dd")">
+
+                            <td class="px-6 py-4 text-center text-gray-400 font-medium row-index"></td>
+
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center justify-content-center rounded-full font-bold text-white text-sm flex-shrink-0"
+                                         style="width:36px;height:36px;background:linear-gradient(135deg,#3B82F6,#6366F1);">
+                                        <span class="flex items-center justify-center w-full h-full">@item.Name.FirstOrDefault()</span>
+                                    </div>
                                     <div class="flex flex-col">
-                                        <span class="font-bold text-slate-800 dark:text-slate-100">@item.Name</span>
+                                        <span class="font-semibold text-gray-900">@item.Name</span>
+                                        @if (wasUnread)
+                                        {
+                                            <span class="inline-flex items-center gap-1 text-xs text-blue-600 font-medium mt-0.5">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
+                                                @(isAr ? "جديد" : "New")
+                                            </span>
+                                        }
                                     </div>
-                                </td>
-                                <td class="px-4 py-4 text-sm">
-                                    <div class="flex flex-col gap-1 text-xs">
-                                        <span class="flex items-center gap-1"><i class="material-icons text-xs">school</i> @item.AcademicYear</span>
-                                        <span class="flex items-center gap-1"><i class="material-icons text-xs">email</i> @item.Email</span>
-                                        <span class="flex items-center gap-1"><i class="material-icons text-xs">phone</i> @item.PhoneNumber</span>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-4 text-center">
-                                    <p>@item.Course</p>
-                                </td>
-                                <td class="px-4 py-4 text-center">
-                                    <div class="flex justify-center gap-2">
-                                        
+                                </div>
+                            </td>
 
-                                        <button type="button"
-                                                onclick="confirmDelete('@item.Id')"
-                                                class="p-1.5 rounded-full hover:bg-red-100 text-red-400 hover:text-red-600 transition-all border-none bg-transparent cursor-pointer">
-                                            <span class="material-icons text-xl">delete</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-xs text-gray-500 flex items-center gap-1">
+                                        <i class="fas fa-envelope" style="color:#6366F1;width:14px;font-size:11px;"></i>
+                                        @item.Email
+                                    </span>
+                                    <span class="text-xs text-gray-500 flex items-center gap-1">
+                                        <i class="fas fa-phone" style="color:#22C55E;width:14px;font-size:11px;"></i>
+                                        @item.PhoneNumber
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                                      style="background:#F1F5F9;color:#475569;">
+                                    @item.AcademicYear
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                                      style="background:#EFF6FF;color:#1D4ED8;">
+                                    @item.Course
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <span class="text-xs text-gray-500">
+                                    @item.CreatedAt.ToString("yyyy-MM-dd")
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <button type="button"
+                                        onclick="confirmDelete(@item.Id)"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+                                        style="background:#FEF2F2;color:#DC2626;border:none;"
+                                        onmouseover="this.style.background='#FECACA'"
+                                        onmouseout="this.style.background='#FEF2F2'">
+                                    <i class="fas fa-trash-alt" style="font-size:11px;"></i>
+                                    @(isAr ? "حذف" : "Delete")
+                                </button>
+                            </td>
+
+                        </tr>
+                    }
+
+                    @if (!Model.Any())
+                    {
+                        <tr id="emptyRow">
+                            <td colspan="7" class="text-center py-12 text-gray-400">
+                                <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
+                                <p class="text-sm">@(isAr ? "لا توجد رسائل بعد" : "No messages yet")</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @* ── Pagination bar ─────────────────────────────────── *@
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100" id="paginationContainer">
+            <div class="text-sm text-gray-500" id="paginationInfo"></div>
+            <div class="flex items-center gap-1" id="paginationControls"></div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 @Html.AntiForgeryToken()
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const ROWS_PER_PAGE = 10;
+        const isAr = @(isAr ? "true" : "false");
+        let currentPage = 1;
+        let filteredRows = [];
+
+        function getAllRows() {
+            return Array.from(document.querySelectorAll('.contact-row'));
+        }
+
+        function applyFilter() {
+            const from = document.getElementById('filterFrom').value;
+            const to   = document.getElementById('filterTo').value;
+            const all  = getAllRows();
+
+            filteredRows = all.filter(function (row) {
+                const created = row.getAttribute('data-created');
+                if (from && created < from) return false;
+                if (to   && created > to)   return false;
+                return true;
+            });
+
+            currentPage = 1;
+            renderPage();
+        }
+
+        function clearDateFilter() {
+            document.getElementById('filterFrom').value = '';
+            document.getElementById('filterTo').value   = '';
+            applyFilter();
+        }
+
+        function renderPage() {
+            const all = getAllRows();
+            all.forEach(function (r) { r.style.display = 'none'; });
+
+            const start    = (currentPage - 1) * ROWS_PER_PAGE;
+            const pageRows = filteredRows.slice(start, start + ROWS_PER_PAGE);
+
+            pageRows.forEach(function (row, i) {
+                row.style.display = '';
+                const cell = row.querySelector('.row-index');
+                if (cell) cell.textContent = start + i + 1;
+            });
+
+            const emptyRow = document.getElementById('emptyRow');
+            if (emptyRow) emptyRow.style.display = filteredRows.length === 0 ? '' : 'none';
+
+            // update total count label
+            const lbl = document.getElementById('totalCountLabel');
+            if (lbl) lbl.textContent = filteredRows.length;
+
+            updatePaginationUI();
+        }
+
+        function updatePaginationUI() {
+            const total      = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+            const start      = Math.min((currentPage - 1) * ROWS_PER_PAGE + 1, total || 0);
+            const end        = Math.min(currentPage * ROWS_PER_PAGE, total);
+
+            document.getElementById('paginationInfo').textContent = isAr
+                ? 'عرض ' + start + '–' + end + ' من ' + total
+                : 'Showing ' + start + '–' + end + ' of ' + total;
+
+            const controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            const btnBase     = 'px-3 py-1.5 text-sm rounded-lg border transition-colors';
+            const activeClass = 'bg-blue-800 text-white border-blue-800 font-semibold';
+            const inactiveClass = 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50';
+            const disabledClass = 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed';
+
+            // Prev
+            const prev = document.createElement('button');
+            prev.className = btnBase + ' ' + (currentPage === 1 ? disabledClass : inactiveClass);
+            prev.innerHTML = isAr ? '&#8250; السابق' : '&lsaquo; Prev';
+            prev.disabled = currentPage === 1;
+            prev.onclick = function () { currentPage--; renderPage(); };
+            controls.appendChild(prev);
+
+            // Page numbers
+            var maxVisible = 5;
+            var pageStart = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            var pageEnd   = Math.min(totalPages, pageStart + maxVisible - 1);
+            if (pageEnd - pageStart < maxVisible - 1) pageStart = Math.max(1, pageEnd - maxVisible + 1);
+
+            for (var p = pageStart; p <= pageEnd; p++) {
+                (function (pg) {
+                    const btn = document.createElement('button');
+                    btn.className = btnBase + ' ' + (pg === currentPage ? activeClass : inactiveClass);
+                    btn.textContent = pg;
+                    btn.onclick = function () { currentPage = pg; renderPage(); };
+                    controls.appendChild(btn);
+                })(p);
+            }
+
+            // Next
+            const next = document.createElement('button');
+            next.className = btnBase + ' ' + (currentPage === totalPages ? disabledClass : inactiveClass);
+            next.innerHTML = isAr ? 'التالي &#8249;' : 'Next &rsaquo;';
+            next.disabled = currentPage === totalPages;
+            next.onclick = function () { currentPage++; renderPage(); };
+            controls.appendChild(next);
+        }
+
+        document.getElementById('filterFrom').addEventListener('change', applyFilter);
+        document.getElementById('filterTo').addEventListener('change',   applyFilter);
+
+        // init on load
+        applyFilter();
+
         function confirmDelete(id) {
             Swal.fire({
-                title: '@Html.Raw(isArabic ? "هل أنت متأكد؟" : "Are you sure?")',
-                text: '@Html.Raw(isArabic ? "سيتم حذف هذه الرسالة نهائياً!" : "This message will be permanently deleted!")',
+                title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
+                text:  isAr ? 'سيتم حذف هذه الرسالة نهائياً!' : 'This message will be permanently deleted!',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: '@Html.Raw(isArabic ? "نعم، احذفها" : "Yes, delete it!")',
-                cancelButtonText: '@Html.Raw(isArabic ? "إلغاء" : "Cancel")'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/Admin/ContactUs/Delete/' + id; 
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor:  '#6B7280',
+                confirmButtonText: isAr ? 'نعم، احذفها' : 'Yes, delete it!',
+                cancelButtonText:  isAr ? 'إلغاء' : 'Cancel'
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
 
-                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-                    const tokenInput = document.createElement('input');
-                    tokenInput.type = 'hidden';
-                    tokenInput.name = '__RequestVerificationToken';
-                    tokenInput.value = token;
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/Admin/ContactUs/Delete/' + id;
 
-                    form.appendChild(tokenInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            })
+                var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                var t = document.createElement('input');
+                t.type = 'hidden'; t.name = '__RequestVerificationToken'; t.value = token;
+                form.appendChild(t);
+
+                document.body.appendChild(form);
+                form.submit();
+            });
         }
     </script>
+
+    <style>
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+    </style>
 }

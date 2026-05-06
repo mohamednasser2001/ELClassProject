@@ -13,6 +13,7 @@ namespace Models
         public string PhoneNumber { get; set; } = string.Empty;
         public string Course { get; set; } = string.Empty;
         public bool IsReaded { get; set; } = false;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     }
 }

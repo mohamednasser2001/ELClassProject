@@ -14,10 +14,16 @@
             </h1>
             <p class="text-gray-500 text-sm mt-1">@(isArabic ? "تعديل موعد واحد يطبق على جميع الطلاب المشتركين" : "Editing one appointment applies to all linked students")</p>
         </div>
-        @* <a href="/instructor/Appointment/AddNewAppointment" class="inline-flex items-center px-5 py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-medium rounded-lg transition-all shadow-sm gap-2 w-fit">
-            <i class="fas fa-plus text-sm"></i>
-            @(isArabic ? "إضافة ميعاد جديد" : "Add New Appointment")
-        </a> *@
+
+        <div class="flex items-center gap-2">
+            <label class="text-xs font-bold text-gray-500 uppercase">@(isArabic ? "تصفية:" : "Filter:")</label>
+            <select id="statusFilter" class="rounded-lg border-gray-300 text-sm py-2 dark:bg-white focus:ring-blue-500 shadow-sm">
+                <option value="all">@(isArabic ? "الكل" : "All")</option>
+                <option value="upcoming">@(isArabic ? "قادم" : "Upcoming")</option>
+                <option value="live">@(isArabic ? "مباشر الآن" : "Live Now")</option>
+                <option value="finished">@(isArabic ? "منتهي" : "Finished")</option>
+            </select>
+        </div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -33,11 +39,16 @@
                         <th class="px-6 py-4 text-center">@(isArabic ? "الإجراءات" : "Actions")</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-50">
+                <tbody class="divide-y divide-gray-50" id="apptTableBody">
                     @foreach (var item in Model.Select((value, index) => new { value, index }))
                     {
-                        <tr class="hover:bg-blue-80/30 transition-colors @(DateTime.Now > item.value.StartDateTime.AddHours(item.value.DurationInHours) ? "opacity-60 bg-gray-100/100" : "")">
-                            <td class="px-6 py-4 text-center text-gray-400 font-medium">@(item.index + 1)</td>
+                            var endDt   = item.value.StartDateTime.AddHours(item.value.DurationInHours);
+                            var rowStatus = DateTime.Now > endDt ? "finished"
+                                          : item.value.IsActive      ? "live"
+                                                                      : "upcoming";
+                        <tr class="appt-row hover:bg-blue-50/30 transition-colors @(rowStatus == "finished" ? "opacity-60 bg-gray-100/100" : "")"
+                            data-status="@rowStatus">
+                            <td class="px-6 py-4 text-center text-gray-400 font-medium row-index">@(item.index + 1)</td>
 
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
@@ -49,23 +60,22 @@
                             </td>
 
                             <td class="px-6 py-4">
-                                <div class="flex flex-col">
-                                    <span class="text-gray-900 font-medium flex items-center gap-1">
-                                        <i class="far fa-calendar-alt text-xs text-gray-400"></i>
-                                        @{
-                                            var culture = isArabic
-                                                ? new System.Globalization.CultureInfo("ar-EG")
-                                                : System.Globalization.CultureInfo.InvariantCulture;
-                                        }
-                                        @item.value.StartDateTime.ToString("dddd, dd MMM yyyy", culture)
+                                <div class="flex flex-col gap-1">
+                                    @{
+                                        var culture = isArabic
+                                            ? new System.Globalization.CultureInfo("ar-EG")
+                                            : System.Globalization.CultureInfo.InvariantCulture;
+                                    }
+                                    <span class="text-gray-900 font-medium flex items-center gap-1"
+                                          dir="@(isArabic ? "rtl" : "ltr")">
+                                        <i class="far fa-calendar-alt text-xs text-gray-400 flex-shrink-0"></i>
+                                        <span data-egypt-dt='@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="date-long">@item.value.StartDateTime.ToString("dddd, dd MMM yyyy", culture)</span>
                                     </span>
-                                    <span class="text-orange-600 text-xs font-semibold mt-1">
-                                        <i class="far fa-clock"></i>
-                                        @item.value.StartDateTime.ToString("hh:mm tt")
-                                        <span class="text-gray-300 mx-1">|</span>
-                                        <span class="text-gray-500">
-                                            @item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs")
-                                        </span>
+                                    <span class="text-xs font-semibold flex items-center gap-1" dir="ltr">
+                                        <i class="far fa-clock text-orange-500"></i>
+                                        <span class="text-orange-600" data-egypt-dt='@item.value.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="time">@item.value.StartDateTime.ToString("hh:mm tt")</span>
+                                        <span class="text-gray-300">|</span>
+                                        <span class="text-gray-500">@item.value.DurationInHours @(isArabic ? "ساعة" : "Hrs")</span>
                                     </span>
                                 </div>
                             </td>
@@ -79,12 +89,7 @@
                             </td>
 
                             <td class="px-6 py-4">
-                                @{
-                                    var endDateTime = item.value.StartDateTime.AddHours(item.value.DurationInHours);
-                                    var isFinished = DateTime.Now > endDateTime;
-                                }
-
-                                @if (isFinished)
+                                @if (rowStatus == "finished")
                                 {
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
                                         <i class="fas fa-check-circle"></i>
@@ -118,7 +123,7 @@
                                         <i class="fas fa-edit"></i>
                                     </button>
 
-                                    @if (isFinished)
+                                    @if (rowStatus == "finished")
                                     {
                                         @if (item.value.LessonCreated)
                                         {
@@ -149,6 +154,11 @@
                     }
                 </tbody>
             </table>
+        </div>
+
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100" id="paginationContainer">
+            <div class="text-sm text-gray-500" id="paginationInfo"></div>
+            <div class="flex items-center gap-1" id="paginationControls"></div>
         </div>
     </div>
 </div>
@@ -337,10 +347,113 @@
 
 @section Scripts{
     <script>
+        // ── Filter + Pagination ───────────────────────────────
+        const ROWS_PER_PAGE = 10;
+        const isAr = "@isArabic".toLowerCase() === "true";
+        let currentPage = 1;
+        let filteredRows = [];
+
+        function getAllRows() {
+            return Array.from(document.querySelectorAll('.appt-row'));
+        }
+
+        function applyFilterAndPaginate() {
+            var status = document.getElementById('statusFilter').value;
+            var all    = getAllRows();
+            filteredRows = status === 'all'
+                ? all
+                : all.filter(function (r) { return r.getAttribute('data-status') === status; });
+            currentPage = 1;
+            renderPage();
+        }
+
+        function renderPage() {
+            getAllRows().forEach(function (r) { r.style.display = 'none'; });
+            var start    = (currentPage - 1) * ROWS_PER_PAGE;
+            var pageRows = filteredRows.slice(start, start + ROWS_PER_PAGE);
+            pageRows.forEach(function (row, i) {
+                row.style.display = '';
+                var cell = row.querySelector('.row-index');
+                if (cell) cell.textContent = start + i + 1;
+            });
+            updatePaginationUI();
+        }
+
+        function updatePaginationUI() {
+            var total      = filteredRows.length;
+            var totalPages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+            var start      = Math.min((currentPage - 1) * ROWS_PER_PAGE + 1, total || 0);
+            var end        = Math.min(currentPage * ROWS_PER_PAGE, total);
+
+            document.getElementById('paginationInfo').textContent = isAr
+                ? 'عرض ' + start + '–' + end + ' من ' + total
+                : 'Showing ' + start + '–' + end + ' of ' + total;
+
+            var controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            var btnBase       = 'px-3 py-1.5 text-sm rounded-lg border transition-colors';
+            var activeClass   = 'bg-blue-800 text-white border-blue-800 font-semibold';
+            var inactiveClass = 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50';
+            var disabledClass = 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed';
+
+            var prev = document.createElement('button');
+            prev.className = btnBase + ' ' + (currentPage === 1 ? disabledClass : inactiveClass);
+            prev.innerHTML  = isAr ? '&#8250; السابق' : '&lsaquo; Prev';
+            prev.disabled   = currentPage === 1;
+            prev.onclick    = function () { currentPage--; renderPage(); };
+            controls.appendChild(prev);
+
+            var maxVisible = 5;
+            var pageStart  = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            var pageEnd    = Math.min(totalPages, pageStart + maxVisible - 1);
+            if (pageEnd - pageStart < maxVisible - 1) pageStart = Math.max(1, pageEnd - maxVisible + 1);
+
+            for (var p = pageStart; p <= pageEnd; p++) {
+                (function (pg) {
+                    var btn = document.createElement('button');
+                    btn.className   = btnBase + ' ' + (pg === currentPage ? activeClass : inactiveClass);
+                    btn.textContent = pg;
+                    btn.onclick     = function () { currentPage = pg; renderPage(); };
+                    controls.appendChild(btn);
+                })(p);
+            }
+
+            var next = document.createElement('button');
+            next.className = btnBase + ' ' + (currentPage === totalPages ? disabledClass : inactiveClass);
+            next.innerHTML  = isAr ? 'التالي &#8249;' : 'Next &rsaquo;';
+            next.disabled   = currentPage === totalPages;
+            next.onclick    = function () { currentPage++; renderPage(); };
+            controls.appendChild(next);
+        }
+
+        document.getElementById('statusFilter').addEventListener('change', applyFilterAndPaginate);
+        document.addEventListener('DOMContentLoaded', applyFilterAndPaginate);
+        // ─────────────────────────────────────────────────────
+
+        (function () {
+            function localizeEgyptTimes() {
+                document.querySelectorAll('[data-egypt-dt]').forEach(function (el) {
+                    var raw = el.getAttribute('data-egypt-dt');
+                    var fmt = el.getAttribute('data-dt-format') || 'time';
+                    var d = new Date(raw + '+02:00');
+                    if (isNaN(d.getTime())) return;
+                    try {
+                        if (fmt === 'date-long') {
+                            el.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' });
+                        } else if (fmt === 'time') {
+                            el.textContent = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        }
+                    } catch (e) {}
+                });
+            }
+            document.addEventListener('DOMContentLoaded', localizeEgyptTimes);
+        })();
+
         var currentTab = 'lesson';
         var currentAppointmentId = 0;
         var currentCourseId = 0;
-        var isAr = "@isArabic".toLowerCase() === "true";
 
         // ==================== Lesson Modal ====================
 

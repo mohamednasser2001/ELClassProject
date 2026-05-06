@@ -49,8 +49,8 @@ namespace ELClass.Areas.StudentArea.Controllers
             if (string.IsNullOrWhiteSpace(appointment.MeetingLink))
                 return BadRequest("Meeting link is missing.");
 
-            if (!appointment.IsActive)
-                return BadRequest("This session is not active yet.");
+            if (appointment.EndDateTime < DateTime.Now)
+                return BadRequest("This session has already ended.");
 
           
             if (!sa.IsAttended)

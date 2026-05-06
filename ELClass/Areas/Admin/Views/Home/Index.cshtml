@@ -38,9 +38,9 @@
             <div class="stat-icon"><i class="ti ti-user-plus"></i></div>
             <div class="stat-number">@ViewBag.newStudents</div>
             <div class="stat-label">@(isAr ? "الطلاب الجدد (آخر 30 يوم)" : "New Students (Last 30d)")</div>
-            <div class="stat-trend up">
-                <i class="ti ti-calendar"></i>
-                @ViewBag.NewLessonsThisWeek @(isAr ? "محاضرة جديدة هذا الأسبوع" : "new lessons this week")
+            <div class="stat-trend neutral">
+                <i class="ti ti-book"></i>
+                @(isAr ? "عبر جميع المراحل" : "Across all grades")
             </div>
         </div>
     </div>

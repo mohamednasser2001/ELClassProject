@@ -117,6 +117,7 @@ namespace ELClass.Controllers
             var isArabic = CultureHelper.IsArabic;
             if (ModelState.IsValid)
             {
+                contactUs.CreatedAt = DateTime.Now;
                 await _unitOfWork.ContactUsRepository.CreateAsync(contactUs);
                 await _unitOfWork.CommitAsync();
 

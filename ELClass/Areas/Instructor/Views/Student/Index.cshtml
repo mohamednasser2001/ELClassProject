@@ -223,8 +223,21 @@
                         width: "20%",
                         className: 'text-center',
                         render: function (data, type, row) {
-                            return `<span class="badge bg-soft-orange text-orange fw-bold" style="font-size: 0.9rem;">
-                                        <i class="fas fa-clock me-1"></i> ${data}
+                            var count = parseInt(data) || 0;
+                            var badgeStyle, dotColor;
+                            if (count === 0) {
+                                badgeStyle = 'background:#FEE2E2;color:#B91C1C;';
+                                dotColor   = '#EF4444';
+                            } else if (count <= 3) {
+                                badgeStyle = 'background:#FEF9C3;color:#92400E;';
+                                dotColor   = '#F59E0B';
+                            } else {
+                                badgeStyle = 'background:#DCFCE7;color:#166534;';
+                                dotColor   = '#22C55E';
+                            }
+                            return `<span style="${badgeStyle}border-radius:999px;padding:5px 14px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+                                        <span style="width:7px;height:7px;border-radius:50%;background:${dotColor};display:inline-block;"></span>
+                                        ${count}
                                     </span>`;
                         }
                     },

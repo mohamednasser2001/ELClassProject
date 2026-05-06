@@ -43,7 +43,7 @@ namespace ELClass.Areas.Admin.Controllers
             // 2. المدرسين والدروس
             ViewBag.ActiveInstructors = await unitOfWork.InstructorRepository.CountAsync();
             ViewBag.NewInstructors = await unitOfWork.InstructorRepository.CountAsync(i => i.CreatedAt >= thirtyDaysAgo);
-            ViewBag.NewLessonsThisWeek = await unitOfWork.LessonRepository.CountAsync(l => l.LectureDate >= now.AddDays(-7));
+            ViewBag.NewLessonsThisWeek = await unitOfWork.LessonRepository.CountAsync(l => l.CreatedAt >= now.AddDays(-7));
             ViewBag.TotalSubjects = await unitOfWork.CourseRepository.CountAsync();
             // الحصول على آخر 6 أشهر
             var last6Months = Enumerable.Range(0, 6)

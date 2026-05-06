@@ -218,12 +218,21 @@ namespace ELClass.Areas.StudentArea.Controllers
                 })
                 .ToList();
 
-            var live = lecturesComputed
-                .FirstOrDefault(x => now >= x.Start && now <= x.End!.Value);
+            // Check live status across ALL appointments (including already-attended) so
+            // a student who rejoins still sees the LIVE banner and can re-enter the meeting.
+            var liveAny = allStudentAppointments
+                .Where(sa => sa.Appointment != null)
+                .Select(sa => new
+                {
+                    SA  = sa,
+                    Start = sa.Appointment!.StartDateTime,
+                    End   = sa.Appointment!.EndDateTime
+                })
+                .FirstOrDefault(x => now >= x.Start && now <= x.End);
 
-            model.NextStudentAppointmentId = live?.SA.Id;
-            model.CanJoinNow = live != null;
-            model.NextAppointmentMeetingLink = live?.SA.Appointment?.MeetingLink ?? string.Empty;
+            model.NextStudentAppointmentId = liveAny?.SA.Id;
+            model.CanJoinNow = liveAny != null;
+            model.NextAppointmentMeetingLink = liveAny?.SA.Appointment?.MeetingLink ?? string.Empty;
 
             model.CompletedLessons = studentLessons.Count();
             model.TotalLessons = courses.Sum(sc => sc.Course.Lessons?.Count ?? 0);

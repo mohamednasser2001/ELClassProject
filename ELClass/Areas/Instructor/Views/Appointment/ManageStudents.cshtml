@@ -14,12 +14,12 @@
                 <i class="far fa-calendar-check text-blue-400"></i>
                 @(isArabic? Model.Course?.TitleAr : Model.Course?.TitleEn) |
                 
-                    <span>@Model.StartDateTime.ToString("yyyy-MM-dd")</span>
-                
+                    <span data-egypt-dt='@Model.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="date">@Model.StartDateTime.ToString("yyyy-MM-dd")</span>
+
                 <span class="text-gray-400">|</span>
                 <span class="text-orange-600">
                     <i class="far fa-clock text-xs"></i>
-                    @DateTime.Today.Add(Model.StartDateTime.TimeOfDay).ToString("hh:mm tt")
+                    <span data-egypt-dt='@Model.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss")' data-dt-format="time">@Model.StartDateTime.ToString("hh:mm tt")</span>
                 </span>
             </p>
         </div>
@@ -98,6 +98,25 @@
 
 @section Scripts {
     <script>
+        (function () {
+            function localizeEgyptTimes() {
+                document.querySelectorAll('[data-egypt-dt]').forEach(function (el) {
+                    var raw = el.getAttribute('data-egypt-dt');
+                    var fmt = el.getAttribute('data-dt-format') || 'time';
+                    var d = new Date(raw + '+02:00');
+                    if (isNaN(d.getTime())) return;
+                    try {
+                        if (fmt === 'date') {
+                            el.textContent = d.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                        } else if (fmt === 'time') {
+                            el.textContent = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        }
+                    } catch (e) {}
+                });
+            }
+            document.addEventListener('DOMContentLoaded', localizeEgyptTimes);
+        })();
+
         function initStudentSelect() {
             if ($('#studentSelect').hasClass("select2-hidden-accessible")) {
                 return;

@@ -1,4 +1,4 @@
-﻿using DataAccess.Repositories.IRepositories;
+using DataAccess.Repositories.IRepositories;
 using ELClass.services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -12,35 +12,39 @@ namespace ELClass.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var contacts = (await _unitOfWork.ContactUsRepository.GetAsync()).AsQueryable().OrderByDescending(c => c.Id);
-            if (contacts.Any())
+            var all = (await _unitOfWork.ContactUsRepository.GetAsync())
+                .OrderByDescending(c => c.Id)
+                .ToList();
+
+            var unreadIds = all.Where(c => !c.IsReaded).Select(c => c.Id).ToHashSet();
+            int unreadCount = unreadIds.Count;
+
+            if (unreadCount > 0)
             {
-                foreach (var contact in contacts)
-                {
-                    contact.IsReaded = true;
-                }
-                await _unitOfWork.ContactUsRepository.EditAllAsync(contacts);
+                foreach (var c in all.Where(c => !c.IsReaded))
+                    c.IsReaded = true;
+                await _unitOfWork.ContactUsRepository.EditAllAsync(all.AsQueryable());
                 await _unitOfWork.CommitAsync();
             }
 
-            return View(contacts);
+            ViewBag.UnreadCount = unreadCount;
+            ViewBag.UnreadIds   = unreadIds;
+
+            return View(all);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            
-            bool isArabic = CultureHelper.IsArabic;
-
             var model = await _unitOfWork.ContactUsRepository.GetOneAsync(c => c.Id == id);
-
-            if(model == null)
-            {
-                return NotFound();
-            }
+            if (model == null) return NotFound();
 
             await _unitOfWork.ContactUsRepository.DeleteAsync(model);
-            TempData["success"] = isArabic ? "تم حذف الرسالة  بنجاح." : "Message deleted successfully.";
+            await _unitOfWork.CommitAsync();
+
+            bool isArabic = CultureHelper.IsArabic;
+            TempData["success"] = isArabic ? "تم حذف الرسالة بنجاح." : "Message deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
     }

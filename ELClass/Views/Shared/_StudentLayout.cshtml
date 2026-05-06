@@ -117,6 +117,7 @@
 
     <!-- Student styles -->
     <link rel="stylesheet" href="~/css/DashboardStudent.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ChatMessage.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
 
@@ -568,6 +569,62 @@
         @RenderBody()
     </main>
 
+    <!-- ─── Chat Widget ──────────────────────────────────── -->
+    <input type="hidden" id="currentUserId" value="@UserManager.GetUserId(User)" />
+
+    <button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
+        <span class="chat-fab-icon" aria-hidden="true">
+            <i class="fa-solid fa-message"></i>
+        </span>
+        <span id="chatFabBadge" class="chat-fab-badge hidden">0</span>
+    </button>
+
+    <div id="chatWidget" class="chat-widget" aria-hidden="true">
+        @Html.AntiForgeryToken()
+        <div class="chat-header">
+            <div class="header-left">
+                <button id="chatBackBtn" class="chat-btn-icon hidden" type="button" aria-label="Back">
+                    <i class="fa-solid fa-arrow-@(isArabic ? "right" : "left") fa-sm"></i>
+                </button>
+                <div id="chatHeaderAvatar" class="cw-header-avatar hidden">
+                    <span id="chatHeaderAvatarText"></span>
+                </div>
+                <div class="title" id="chatHeaderTitle">
+                    <div id="chatHeaderName">@(isArabic ? "المحادثات" : "Chats")</div>
+                    <div id="chatHeaderStatus" class="chat-status"></div>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="chat-btn-icon" id="chatCloseBtn" type="button" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-screen" id="screenList">
+            <div class="chat-search">
+                <input id="chatSearch" type="text" placeholder="@(isArabic ? "ابحث عن المُدرسين..." : "Search instructors...")" autocomplete="off" />
+            </div>
+            <div class="chat-items" id="chatItems"></div>
+        </div>
+
+        <div class="chat-screen hidden" id="screenThread">
+            <div class="messages" id="messagesBox"></div>
+            <div class="composer">
+                <div id="attachChip" class="attach-chip hidden">
+                    <span id="attachName"></span>
+                    <button type="button" id="attachClearBtn" class="attach-clear" aria-label="Remove file">×</button>
+                </div>
+                <input id="chatInput" type="text" placeholder="@(isArabic ? "اكتب رسالة..." : "Type a message...")" autocomplete="off" />
+                <input type="file" id="chatFile" hidden />
+                <button type="button" id="attachBtn" class="chat-attach-btn" title="Attach file">
+                    <i class="fa-solid fa-paperclip"></i>
+                </button>
+                <button id="sendBtn" type="button" aria-label="Send">➤</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -606,5 +663,460 @@
     </script>
 
     @RenderSection("Scripts", required: false)
+
+    <!-- ─── Chat Widget Scripts ──────────────────────────── -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const API = {
+            conversations: '/StudentArea/Home/GetMyConversations',
+            history:       '/StudentArea/Home/GetChatHistory',
+            save:          '/StudentArea/Home/SaveMessage',
+            saveWithFile:  '/StudentArea/Home/SendMessageWithFile',
+            markRead:      '/StudentArea/Home/MarkAsRead',
+            download:      '/StudentArea/Home/DownloadAttachment'
+        };
+
+        const chatFab         = document.getElementById('chatFab');
+        const chatFabBadge    = document.getElementById('chatFabBadge');
+        const chatWidget      = document.getElementById('chatWidget');
+        const chatCloseBtn    = document.getElementById('chatCloseBtn');
+        const chatBackBtn     = document.getElementById('chatBackBtn');
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+        const screenList      = document.getElementById('screenList');
+        const screenThread    = document.getElementById('screenThread');
+        const chatSearch      = document.getElementById('chatSearch');
+        const chatItemsBox    = document.getElementById('chatItems');
+        const messagesBox     = document.getElementById('messagesBox');
+        const chatInput       = document.getElementById('chatInput');
+        const sendBtn         = document.getElementById('sendBtn');
+        const attachBtn       = document.getElementById('attachBtn');
+        const chatFile        = document.getElementById('chatFile');
+        const attachName      = document.getElementById('attachName');
+        const attachChip      = document.getElementById('attachChip');
+        const attachClearBtn  = document.getElementById('attachClearBtn');
+        const currentUserId   = document.getElementById('currentUserId')?.value;
+        const headerNameEl    = document.getElementById('chatHeaderName');
+        const headerStatusEl  = document.getElementById('chatHeaderStatus');
+
+        function getAntiForgeryToken() {
+            const el = chatWidget?.querySelector('input[name="__RequestVerificationToken"]')
+                || document.querySelector('input[name="__RequestVerificationToken"]');
+            return el?.value || '';
+        }
+
+        function addCsrfHeader(headersObj) {
+            const token = getAntiForgeryToken();
+            if (token) headersObj['RequestVerificationToken'] = token;
+            return headersObj;
+        }
+
+        const readCache = new Set();
+        const state = {
+            isOpen: false, currentInstructorId: null, currentInstructorName: '',
+            conversationId: null, conversationsCache: [],
+            take: 10, hasMore: true, oldestId: null, isLoadingOlder: false
+        };
+
+        let audioReady = false, audioCtx = null;
+        function initAudio() {
+            if (audioReady) return;
+            try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioReady = true; } catch {}
+        }
+
+        function setFabUnread(count) {
+            const n = Math.max(0, parseInt(count || 0));
+            if (!chatFabBadge) return;
+            if (n === 0) { chatFabBadge.classList.add('hidden'); chatFab.classList.remove('pulse'); chatFabBadge.textContent = '0'; }
+            else { chatFabBadge.classList.remove('hidden'); chatFabBadge.textContent = (n > 99) ? '99+' : String(n); chatFab.classList.add('pulse'); }
+        }
+
+        function calcTotalUnread() { return (state.conversationsCache || []).reduce((s, c) => s + (c.unread || 0), 0); }
+        function syncFabUnreadFromList() { setFabUnread(calcTotalUnread()); }
+
+        function escapeHtml(str) {
+            return (str ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
+        }
+
+        function toTime(sentAt) {
+            if (!sentAt) return '';
+            const d = new Date(sentAt);
+            if (Number.isNaN(d.getTime())) return '';
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function initials(name) {
+            const s = (name ?? '').trim();
+            if (!s) return 'IN';
+            const parts = s.split(/\s+/).filter(Boolean);
+            const first = parts[0]?.[0] ?? 'I';
+            const second = (parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1]) ?? 'N';
+            return (first + second).toUpperCase();
+        }
+
+        function isImageContentType(ct) { return typeof ct === 'string' && ct.toLowerCase().startsWith('image/'); }
+        function buildDownloadUrl(messageId) { return `${API.download}?messageId=${encodeURIComponent(messageId)}`; }
+
+        function ensureImageModal() {
+            if (document.getElementById('imgPreviewModal')) return;
+            const modal = document.createElement('div');
+            modal.id = 'imgPreviewModal';
+            modal.className = 'img-preview-modal hidden';
+            modal.innerHTML = `<div class="img-preview-backdrop"></div><div class="img-preview-content" role="dialog" aria-modal="true"><button type="button" class="img-preview-close" aria-label="Close">✕</button><img class="img-preview-img" alt="Preview" /></div>`;
+            document.body.appendChild(modal);
+            const close = () => modal.classList.add('hidden');
+            modal.querySelector('.img-preview-backdrop')?.addEventListener('click', close);
+            modal.querySelector('.img-preview-close')?.addEventListener('click', close);
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) close(); });
+        }
+
+        function openImagePreview(src) {
+            if (!src) return;
+            ensureImageModal();
+            const modal = document.getElementById('imgPreviewModal');
+            modal.querySelector('.img-preview-img').src = src;
+            modal.classList.remove('hidden');
+        }
+
+        const presenceMap = new Map();
+        function setHeaderStatus(isOnline) {
+            if (!headerStatusEl) return;
+            headerStatusEl.textContent = isOnline ? "● Online" : "● Offline";
+            headerStatusEl.classList.toggle("online", !!isOnline);
+            headerStatusEl.classList.toggle("offline", !isOnline);
+        }
+
+        function getSelectedFile() { return (chatFile && chatFile.files && chatFile.files.length > 0) ? chatFile.files[0] : null; }
+
+        function showAttachmentName(name) {
+            if (attachChip) { attachChip.classList.remove("hidden"); const n = attachChip.querySelector("#attachName"); if (n) n.textContent = name; return; }
+            if (attachName) { attachName.style.display = "inline-block"; attachName.textContent = name; }
+        }
+        function hideAttachmentName() {
+            if (attachChip) { attachChip.classList.add("hidden"); const n = attachChip.querySelector("#attachName"); if (n) n.textContent = ""; }
+            if (attachName) { attachName.style.display = "none"; attachName.textContent = ""; }
+        }
+        function clearAttachmentUI() { if (chatFile) chatFile.value = ""; hideAttachmentName(); }
+
+        if (attachBtn && chatFile) {
+            attachBtn.addEventListener("click", () => chatFile.click());
+            chatFile.addEventListener("change", () => { const f = getSelectedFile(); if (f) showAttachmentName(f.name); else clearAttachmentUI(); });
+        }
+        attachClearBtn?.addEventListener("click", () => clearAttachmentUI());
+
+        function showWidget() {
+            state.isOpen = true; chatWidget.classList.add('open'); chatWidget.setAttribute('aria-hidden','false'); chatFab.style.display = 'none';
+            showListScreen(); loadMyConversations();
+        }
+        function hideWidget() {
+            state.isOpen = false; chatWidget.classList.remove('open'); chatWidget.setAttribute('aria-hidden','true'); chatFab.style.display = 'block';
+            state.currentInstructorId = null; state.currentInstructorName = ''; state.conversationId = null;
+            state.hasMore = true; state.oldestId = null; state.isLoadingOlder = false;
+            messagesBox.innerHTML = ''; chatInput.value = ''; chatSearch.value = ''; clearAttachmentUI();
+            if (headerNameEl) headerNameEl.textContent = "Chats";
+            if (headerStatusEl) headerStatusEl.textContent = "";
+        }
+        function showListScreen() {
+            screenThread.classList.add('hidden'); screenList.classList.remove('hidden'); chatBackBtn.classList.add('hidden');
+            if (headerNameEl) headerNameEl.textContent = "Chats";
+            if (headerStatusEl) headerStatusEl.textContent = "";
+            document.getElementById('chatHeaderAvatar')?.classList.add('hidden');
+            state.currentInstructorId = null; state.currentInstructorName = ''; state.conversationId = null;
+            state.hasMore = true; state.oldestId = null; state.isLoadingOlder = false;
+            messagesBox.innerHTML = ''; clearAttachmentUI();
+        }
+        function showThreadScreen(n) {
+            screenList.classList.add('hidden'); screenThread.classList.remove('hidden'); chatBackBtn.classList.remove('hidden');
+            if (headerNameEl) headerNameEl.textContent = n || "Chat";
+            const avatarEl = document.getElementById('chatHeaderAvatar');
+            const avatarTextEl = document.getElementById('chatHeaderAvatarText');
+            if (avatarEl && avatarTextEl && n) {
+                const parts = n.trim().split(/\s+/).filter(Boolean);
+                avatarTextEl.textContent = ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? parts[0]?.[1] ?? '')).toUpperCase();
+                avatarEl.classList.remove('hidden');
+            }
+        }
+        function setActiveItem(id) { document.querySelectorAll('.chat-item').forEach(x => x.classList.toggle('active', x.dataset.instructorId === id)); }
+        function findItem(id) { return document.querySelector(`.chat-item[data-instructor-id="${CSS.escape(id)}"]`); }
+        function removeBadge(id) { const b = findItem(id)?.querySelector('.badge'); if (b) b.remove(); }
+        function incrementBadge(id) {
+            const item = findItem(id);
+            if (!item) return;
+            let b = item.querySelector('.badge');
+            if (!b) { b = document.createElement('div'); b.className = 'badge'; b.textContent = '1'; item.appendChild(b); }
+            else b.textContent = (parseInt(b.textContent||'0')+1).toString();
+        }
+
+        async function loadMyConversations() {
+            try {
+                const res = await fetch(API.conversations);
+                const data = await res.json();
+                state.conversationsCache = Array.isArray(data) ? data : [];
+                renderConversations(state.conversationsCache);
+                syncFabUnreadFromList();
+            } catch(e) { console.error(e); chatItemsBox.innerHTML = `<div class="empty">Failed to load chats</div>`; }
+        }
+
+        function renderConversations(list) {
+            chatItemsBox.innerHTML = '';
+            if (!list || list.length === 0) { chatItemsBox.innerHTML = `<div class="empty">No chats yet</div>`; return; }
+            for (const c of list) {
+                const idStr  = String(c.instructorId ?? '');
+                const name   = c.instructorName ?? 'Instructor';
+                const unread = c.unread ?? 0;
+                const avatarHtml = c.photoUrl
+                    ? `<img class="avatar-img" src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(name)}" />`
+                    : `<div class="avatar-text">${escapeHtml(initials(name))}</div>`;
+                const unreadHtml = unread > 0 ? `<div class="badge">${unread}</div>` : '';
+                const isOnline = presenceMap.get(idStr) === true;
+                chatItemsBox.insertAdjacentHTML('beforeend', `
+                    <div class="chat-item" data-instructor-id="${escapeHtml(idStr)}" data-instructor-name="${escapeHtml(name)}">
+                        <div class="avatar">${avatarHtml}<span class="presence-dot ${isOnline?'online':'offline'}" data-presence-id="${escapeHtml(idStr)}"></span></div>
+                        <div class="meta"><div class="name">${escapeHtml(name)}</div><div class="preview">${escapeHtml(c.lastMessage??'')}</div></div>
+                        ${unreadHtml}
+                    </div>`);
+            }
+            if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
+        }
+
+        chatItemsBox.addEventListener('click', (e) => {
+            const item = e.target.closest('.chat-item');
+            if (!item) return;
+            openChat(item.dataset.instructorId, item.dataset.instructorName);
+        });
+
+        chatSearch.addEventListener('input', () => {
+            const q = (chatSearch.value??'').trim().toLowerCase();
+            renderConversations(!q ? state.conversationsCache : state.conversationsCache.filter(x=>(x.instructorName??'').toLowerCase().includes(q)));
+            if (state.currentInstructorId) setActiveItem(state.currentInstructorId);
+        });
+
+        async function openChat(instructorId, instructorName) {
+            state.currentInstructorId = instructorId; state.currentInstructorName = instructorName;
+            setActiveItem(instructorId); showThreadScreen(instructorName); clearAttachmentUI();
+            await loadChatHistoryFirstPage();
+            await markAsRead(instructorId); scheduleMarkAsReadHub(); removeBadge(instructorId);
+            await loadMyConversations(); messagesBox.scrollTop = messagesBox.scrollHeight;
+            try {
+                if (headerNameEl) headerNameEl.textContent = instructorName || "Chat";
+                const cached = presenceMap.get(String(state.currentInstructorId));
+                if (cached !== undefined) { setHeaderStatus(cached); return; }
+                const isOnline = await studentConnection.invoke("IsUserOnline", state.currentInstructorId);
+                presenceMap.set(String(state.currentInstructorId), !!isOnline); setHeaderStatus(!!isOnline);
+            } catch(e) { console.error("IsUserOnline:", e); }
+        }
+
+        async function markAsRead(id) {
+            try { await fetch(API.markRead, { method:'POST', headers: addCsrfHeader({'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'}), body: new URLSearchParams({instructorId:id}) }); } catch(e) { console.error(e); }
+        }
+
+        async function loadChatHistoryFirstPage() {
+            messagesBox.innerHTML = ''; state.hasMore = true; state.oldestId = null; state.isLoadingOlder = false;
+            await loadOlderMessages();
+        }
+
+        async function loadOlderMessages() {
+            if (!state.currentInstructorId || !state.hasMore || state.isLoadingOlder) return;
+            state.isLoadingOlder = true;
+            const prevH = messagesBox.scrollHeight, prevT = messagesBox.scrollTop;
+            const url = `${API.history}?instructorId=${encodeURIComponent(state.currentInstructorId)}&take=${state.take}${state.oldestId?`&beforeId=${state.oldestId}`:''}`;
+            try {
+                const res = await fetch(url); const data = await res.json();
+                const list = data.messages??[]; state.conversationId = data.conversationId??null; state.hasMore = data.hasMore===true;
+                if (!list.length) { state.isLoadingOlder = false; return; }
+                const frag = document.createDocumentFragment();
+                for (const m of list) frag.appendChild(messageNode(m));
+                messagesBox.prepend(frag); state.oldestId = list[0].id??list[0].Id;
+                messagesBox.scrollTop = (messagesBox.scrollHeight - prevH) + prevT;
+            } catch(e) { console.error(e); } finally { state.isLoadingOlder = false; }
+        }
+
+        messagesBox.addEventListener('scroll', () => {
+            if (messagesBox.scrollTop <= 10) loadOlderMessages();
+            if (messagesBox.scrollTop + messagesBox.clientHeight >= messagesBox.scrollHeight - 6) scheduleMarkAsReadHub();
+        });
+
+        function ticksHtml(isMine, isRead) {
+            if (!isMine) return '';
+            return `<span class="${isRead?'ticks read':'ticks'}" title="${isRead?'Read':'Sent'}">✓✓</span>`;
+        }
+
+        function readAttachmentFromMessage(m) {
+            const a = m.attachment??m.Attachment??null;
+            return {
+                storedName:    m.attachmentStoredName??m.AttachmentStoredName??a?.storedName??a?.StoredName??null,
+                originalName:  m.attachmentOriginalName??m.AttachmentOriginalName??a?.name??a?.Name??null,
+                contentType:   m.attachmentContentType??m.AttachmentContentType??a?.type??a?.Type??null,
+                size:          m.attachmentSize??m.AttachmentSize??a?.size??a?.Size??null,
+                attachmentUrl: m.attachmentUrl??m.AttachmentUrl??null,
+                previewUrl:    m.previewUrl??null
+            };
+        }
+
+        function messageNode(m) {
+            const id = (m.id??m.Id??''); const senderId = (m.senderId??m.SenderId??'');
+            const content = (m.content??m.Content??''); const sentAt = (m.sentAt??m.SentAt);
+            const isRead = (m.isRead??m.IsRead)===true; const alreadyRead = isRead||readCache.has(String(id||''));
+            const isMine = currentUserId && senderId === currentUserId;
+            const att = readAttachmentFromMessage(m);
+            let attachmentHtml = '';
+            if (att.attachmentUrl) {
+                if (isImageContentType(att.contentType)) attachmentHtml = `<div class="att"><img class="att-img js-preview-img" src="${escapeHtml(att.attachmentUrl)}" data-full-src="${escapeHtml(att.attachmentUrl)}" alt="${escapeHtml(att.originalName||'image')}" /></div>`;
+                else attachmentHtml = `<div class="att"><a class="att-file" href="${escapeHtml(att.attachmentUrl)}" target="_blank" rel="noopener">📎 ${escapeHtml(att.originalName||'file')}</a></div>`;
+            } else if (att.previewUrl && isImageContentType(att.contentType)) {
+                attachmentHtml = `<div class="att"><img class="att-img js-preview-img" src="${escapeHtml(att.previewUrl)}" data-full-src="${escapeHtml(att.previewUrl)}" alt="${escapeHtml(att.originalName||'image')}" /></div>`;
+            } else if (id && (att.storedName||att.originalName)) {
+                const dl = buildDownloadUrl(id);
+                if (isImageContentType(att.contentType)) attachmentHtml = `<div class="att"><img class="att-img js-preview-img" src="${escapeHtml(dl)}" data-full-src="${escapeHtml(dl)}" alt="${escapeHtml(att.originalName||'image')}" /></div>`;
+                else attachmentHtml = `<div class="att"><a class="att-file" href="${escapeHtml(dl)}" target="_blank" rel="noopener">📎 ${escapeHtml(att.originalName||'file')}</a></div>`;
+            }
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-row ${isMine?'mine':''}`;
+            wrapper.dataset.messageId = String(id||'');
+            const textHtml = content ? `<div class="att-text">${escapeHtml(content)}</div>` : '';
+            wrapper.innerHTML = `<div class="bubble">${textHtml}${attachmentHtml}<span class="time">${escapeHtml(toTime(sentAt))} ${ticksHtml(isMine,alreadyRead)}</span></div>`;
+            return wrapper;
+        }
+
+        function renderMessage(m) {
+            const id = (m.id??m.Id??null);
+            if (id) { const ex = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(id))}"]`); if (ex) return ex; }
+            const node = messageNode(m); messagesBox.appendChild(node); return node;
+        }
+
+        function markMessagesReadInUI(messageIds) {
+            if (!Array.isArray(messageIds)||!messageIds.length) return;
+            messageIds.forEach(id => {
+                readCache.add(String(id));
+                const tick = messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(id))}"] .ticks`);
+                if (tick) { tick.classList.add("read"); tick.title = "Read"; }
+            });
+        }
+
+        messagesBox.addEventListener('click', (e) => {
+            const img = e.target.closest('img.js-preview-img');
+            if (!img) return;
+            openImagePreview(img.getAttribute('data-full-src')||img.src);
+        });
+
+        function patchOptimisticToReal(el, payload) {
+            if (!el||!payload) return;
+            const realId = payload.id??payload.Id;
+            if (!realId) return;
+            el.dataset.messageId = String(realId);
+            const attUrl = payload.attachmentUrl??payload.AttachmentUrl??null;
+            const ct = payload.attachmentContentType??payload.AttachmentContentType??'';
+            if (!attUrl) return;
+            const img = el.querySelector('img.att-img'), a = el.querySelector('a.att-file');
+            if (isImageContentType(ct)) { if (img) { img.src=attUrl; img.setAttribute('data-full-src',attUrl); } }
+            else { if (a) a.href=attUrl; }
+        }
+
+        async function sendMessageFromUI() {
+            const text = (chatInput.value||'').trim(); const file = getSelectedFile();
+            if (!state.currentInstructorId||(!text&&!file)) return;
+            const nowIso = new Date().toISOString(); const tempId = `tmp-${Date.now()}`;
+            let previewUrl=null, fileType=null, fileName=null;
+            if (file) { fileType=file.type||''; fileName=file.name||'file'; if(isImageContentType(fileType)) previewUrl=URL.createObjectURL(file); }
+            const optimisticNode = renderMessage({ id:tempId, senderId:currentUserId, receiverId:state.currentInstructorId, content:text, sentAt:nowIso, isRead:false, attachment:file?{name:fileName,type:fileType,size:file.size}:null, previewUrl });
+            messagesBox.scrollTop = messagesBox.scrollHeight; chatInput.value = ''; clearAttachmentUI();
+            const item = findItem(state.currentInstructorId);
+            if (item) { const p = item.querySelector('.preview'); if (p) p.textContent = text||(file?`📎 ${fileName}`:''); }
+            try {
+                if (file) {
+                    const fd = new FormData(); fd.append("ReceiverId",state.currentInstructorId); fd.append("Content",text); fd.append("File",file);
+                    const res = await fetch(API.saveWithFile,{method:'POST',headers:addCsrfHeader({}),body:fd});
+                    if (!res.ok) { console.error("SendMessageWithFile failed:", await res.text()); return; }
+                    const payload = await res.json(); patchOptimisticToReal(optimisticNode,payload);
+                    if (previewUrl) URL.revokeObjectURL(previewUrl);
+                    return;
+                }
+                const res = await fetch(API.save,{method:'POST',headers:addCsrfHeader({'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'}),body:new URLSearchParams({receiverId:state.currentInstructorId,content:text})});
+                const data = await res.json();
+                if (!data||data.success!==true) { console.log('SaveMessage failed:',data); return; }
+                const realId = data.id??data.Id??data.messageId??data.savedMessageId??data.data?.id??data.data?.Id??data.message?.id??data.message?.Id;
+                if (realId&&optimisticNode) optimisticNode.dataset.messageId = String(realId);
+                await sendRealtimeToInstructor(state.currentInstructorId, text);
+            } catch(e) { console.error(e); }
+        }
+
+        sendBtn.addEventListener('click', sendMessageFromUI);
+        chatInput.addEventListener('keydown', (e) => { if (e.key==='Enter') sendMessageFromUI(); });
+        chatFab.addEventListener('click', () => { initAudio(); showWidget(); });
+        chatCloseBtn.addEventListener('click', hideWidget);
+        chatBackBtn.addEventListener('click', showListScreen);
+
+        const studentConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub",{transport:signalR.HttpTransportType.LongPolling,skipNegotiation:false})
+            .withAutomaticReconnect().build();
+
+        studentConnection.on("PresenceChanged", (userId, isOnline) => {
+            const id = String(userId); presenceMap.set(id, !!isOnline);
+            if (state.currentInstructorId && String(state.currentInstructorId)===id) setHeaderStatus(!!isOnline);
+            const dot = document.querySelector(`.presence-dot[data-presence-id="${CSS.escape(id)}"]`);
+            if (dot) { dot.classList.toggle("online",!!isOnline); dot.classList.toggle("offline",!isOnline); }
+        });
+
+        studentConnection.onreconnected(async () => {
+            if (!state.currentInstructorId) return;
+            try { const ok = await studentConnection.invoke("IsUserOnline",state.currentInstructorId); presenceMap.set(String(state.currentInstructorId),!!ok); setHeaderStatus(!!ok); } catch(e) { console.error(e); }
+        });
+
+        studentConnection.start().then(()=>console.log("SignalR Connected!")).catch(e=>console.error(e.toString()));
+
+        let readDebounceTimer = null;
+        function scheduleMarkAsReadHub() {
+            clearTimeout(readDebounceTimer);
+            readDebounceTimer = setTimeout(() => {
+                if (!state.isOpen||!state.conversationId||!state.currentInstructorId) return;
+                studentConnection.invoke("MarkAsRead",state.conversationId,state.currentInstructorId).catch(e=>console.error(e));
+            }, 200);
+        }
+
+        studentConnection.on("ReceiveMessage", async (arg1, arg2, arg3) => {
+            if (arg1 && typeof arg1==='object') {
+                const p = arg1;
+                const senderId   = String(p.senderId??p.SenderId??'');
+                const receiverId = String(p.receiverId??p.ReceiverId??'');
+                const messageId  = (p.id??p.Id??null);
+                const sameOpenChat = state.isOpen && state.currentInstructorId && (senderId===String(state.currentInstructorId)||senderId===String(currentUserId));
+                if (sameOpenChat) {
+                    if (messageId) { const ex=messagesBox.querySelector(`.msg-row[data-message-id="${CSS.escape(String(messageId))}"]`); if(ex) return; }
+                    renderMessage(p); messagesBox.scrollTop=messagesBox.scrollHeight; scheduleMarkAsReadHub();
+                    if (senderId===String(state.currentInstructorId)) { await markAsRead(senderId); removeBadge(senderId); }
+                    await loadMyConversations(); return;
+                }
+                const otherId = senderId===String(currentUserId)?receiverId:senderId;
+                const item = findItem(otherId);
+                if (item) {
+                    const pEl = item.querySelector('.preview');
+                    const pText = (p.content??p.Content??'').trim()||(p.attachmentOriginalName??p.AttachmentOriginalName?`📎 ${(p.attachmentOriginalName??p.AttachmentOriginalName)}`:'');
+                    if (pEl) pEl.textContent = pText;
+                    if (senderId!==String(currentUserId)) { incrementBadge(otherId); syncFabUnreadFromList(); }
+                }
+                await loadMyConversations(); return;
+            }
+            const senderId=arg1, message=arg2, timestamp=arg3;
+            const sameOpenChat = state.isOpen&&state.currentInstructorId&&senderId===state.currentInstructorId;
+            if (sameOpenChat) {
+                renderMessage({senderId,receiverId:currentUserId,content:message,sentAt:timestamp});
+                messagesBox.scrollTop=messagesBox.scrollHeight; scheduleMarkAsReadHub();
+                await markAsRead(senderId); removeBadge(senderId); await loadMyConversations(); return;
+            }
+            const item = findItem(senderId);
+            if (item) { const p=item.querySelector('.preview'); if(p) p.textContent=message; incrementBadge(senderId); syncFabUnreadFromList(); }
+            await loadMyConversations();
+        });
+
+        studentConnection.on("MessagesRead", (payload) => {
+            if (!payload||!state.isOpen||!state.conversationId||String(payload.conversationId)!==String(state.conversationId)) return;
+            markMessagesReadInUI(payload.messageIds);
+        });
+
+        studentConnection.on("UpdateConversationList", () => { loadMyConversations(); });
+
+        async function sendRealtimeToInstructor(id, msg) {
+            try { await studentConnection.invoke("SendMessage",id,msg); } catch(e) { console.error(e); }
+        }
+    </script>
 </body>
 </html>

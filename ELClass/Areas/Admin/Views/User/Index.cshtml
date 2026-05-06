@@ -108,22 +108,41 @@
                     {
                         data: 'id',
                         render: function (data, type, row) {
-                            var actionText = row.isBlocked ? (currentLang === 'ar' ? 'إلغاء الحظر' : 'Unblock') : (currentLang === 'ar' ? 'حظر' : 'Block');
-                            var iconClass = row.isBlocked ? 'fa-lock' : 'fa-lock-open';
-                            var iconColor = row.isBlocked ? 'text-danger' : 'text-success';
-                            var btnClass = row.isBlocked ? 'btn-outline-secondary' : 'btn-outline-danger';
+                            var isBlocked = row.isBlocked;
+                            var statusBadge = isBlocked
+                                ? `<span class="badge rounded-pill d-inline-flex align-items-center gap-1"
+                                        style="background:#FEE2E2;color:#B91C1C;font-size:11px;font-weight:600;padding:4px 10px;">
+                                        <span style="width:6px;height:6px;border-radius:50%;background:#EF4444;display:inline-block;"></span>
+                                        ${currentLang === 'ar' ? 'محظور' : 'Blocked'}
+                                   </span>`
+                                : `<span class="badge rounded-pill d-inline-flex align-items-center gap-1"
+                                        style="background:#DCFCE7;color:#15803D;font-size:11px;font-weight:600;padding:4px 10px;">
+                                        <span style="width:6px;height:6px;border-radius:50%;background:#22C55E;display:inline-block;"></span>
+                                        ${currentLang === 'ar' ? 'نشط' : 'Active'}
+                                   </span>`;
 
-                            return `
-                                <div class="d-flex gap-2 justify-content-center align-items-center">
-                                    <button onclick="toggleBlock('${data}')" class="btn btn-sm ${btnClass} text-nowrap">
-                                      <i class="fas ${iconClass} ${iconColor} me-1" style="font-size: 1.1rem;"></i> ${actionText}
-                                    </button>
+                            var toggleBtn = isBlocked
+                                ? `<button onclick="toggleBlock('${data}')" title="${currentLang === 'ar' ? 'رفع الحظر' : 'Unblock'}"
+                                        style="border:none;background:#DCFCE7;color:#15803D;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;"
+                                        onmouseover="this.style.background='#BBF7D0'" onmouseout="this.style.background='#DCFCE7'">
+                                        <i class="fas fa-lock-open" style="font-size:12px;"></i>
+                                        ${currentLang === 'ar' ? 'رفع الحظر' : 'Unblock'}
+                                   </button>`
+                                : `<button onclick="toggleBlock('${data}')" title="${currentLang === 'ar' ? 'حظر' : 'Block'}"
+                                        style="border:none;background:#FEE2E2;color:#B91C1C;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;"
+                                        onmouseover="this.style.background='#FECACA'" onmouseout="this.style.background='#FEE2E2'">
+                                        <i class="fas fa-ban" style="font-size:12px;"></i>
+                                        ${currentLang === 'ar' ? 'حظر' : 'Block'}
+                                   </button>`;
 
-                                    <button class="btn btn-sm btn-light border text-danger"
-                                            onclick="deleteUser('${data}', '${row.userName}', '${row.role}')">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </div>`;
+                            var deleteBtn = `
+                                <button onclick="deleteUser('${data}', '${row.userName}', '${row.role}')" title="${currentLang === 'ar' ? 'حذف' : 'Delete'}"
+                                        style="border:none;background:#F3F4F6;color:#6B7280;border-radius:8px;padding:5px 9px;font-size:12px;cursor:pointer;transition:all .15s;"
+                                        onmouseover="this.style.background='#FEE2E2';this.style.color='#B91C1C'" onmouseout="this.style.background='#F3F4F6';this.style.color='#6B7280'">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>`;
+
+                            return `<div class="d-flex align-items-center gap-2 justify-content-center flex-wrap">${statusBadge}${toggleBtn}${deleteBtn}</div>`;
                         }
                     }
                 ],

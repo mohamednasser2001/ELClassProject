@@ -5,6 +5,11 @@
     var isAr = currentLang == "ar";
     var direction = isAr ? "rtl" : "ltr";
     ViewData["Title"] = isAr ? "إنشاء محاضر" : "Create Instructor";
+
+    var jsPlaceholder = isAr ? "ابحث عن مستخدم بالاسم أو البريد..." : "Search user by name or email...";
+    var jsInputTooShort = "Please enter 2 or more characters";
+    var jsSearching = "Searching...";
+    var jsNoResults = "No results found";
 }
 
 <div class="container-fluid py-2" style="direction: @direction; text-align: @(isAr ? "right" : "left");">
@@ -125,20 +130,20 @@
     <script>
         $(document).ready(function () {
             $('.select2-user').select2({
-                placeholder: "@(isAr ? "" : "Search user by name or email...")",
+                placeholder: "@Html.Raw(jsPlaceholder)",
                 allowClear: true,
                 minimumInputLength: 2,
                 width: '100%',
                 dir: "@direction",
                 language: {
                     inputTooShort: function () {
-                        return "@(isAr ? "يرجى إدخال حرفين أو أكثر" : "Please enter 2 or more characters")";
+                        return "@Html.Raw(jsInputTooShort)";
                     },
                     searching: function () {
-                        return "@(isAr ? "جاري البحث..." : "Searching...")";
+                        return "@Html.Raw(jsSearching)";
                     },
                     noResults: function () {
-                        return "@(isAr ? "لا توجد نتائج" : "No results found")";
+                        return "@Html.Raw(jsNoResults)";
                     }
                 },
                 templateResult: formatUserResult,

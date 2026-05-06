@@ -14,7 +14,10 @@
       "Bash(grep -E \"\\\\.\\(css|js\\)$\")",
       "Bash(grep -iE \"\\\\.\\(cs|cshtml|js\\)$\")",
       "Bash(dotnet tool *)",
-      "Bash(grep \"\\\\.cs$\")"
+      "Bash(grep \"\\\\.cs$\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(findstr *)"
     ]
   }
 }

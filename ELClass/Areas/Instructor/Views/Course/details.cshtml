@@ -37,11 +37,11 @@
             </div>
 
         </div>
-        <a asp-action="CreateLesson" asp-route-courseId="@ViewData["CourseId"]"
+        @* <a asp-action="CreateLesson" asp-route-courseId="@ViewData["CourseId"]"
                class="inline-flex items-center px-5 py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-medium rounded-lg transition-all shadow-sm gap-2 w-fit no-underline">
             <i class="fas fa-plus text-sm"></i>
             @(isArabic ? "إضافة محاضرة" : "Add Lecture")
-        </a>
+        </a> *@
     </div>
 
 
@@ -71,7 +71,7 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-50">
+                <tbody class="divide-y divide-gray-50" id="lessonsTableBody">
                     @foreach (var item in Model)
                     {
                         var materialsJson = System.Text.Json.JsonSerializer.Serialize(
@@ -92,14 +92,14 @@
                             }).ToList()
                         );
 
-                        <tr class="hover:bg-blue-50/30 transition-colors"
+                        <tr class="lesson-row hover:bg-blue-50/30 transition-colors"
                             data-lesson-id="@item.Id"
                             data-materials="@materialsJson"
                             data-assignments="@assignmentsJson"
                             data-students="@studentsJson">
 
-      
-                            <td class="px-6 py-4 text-center text-gray-400 font-medium">@(index++)</td>
+
+                            <td class="px-6 py-4 text-center text-gray-400 font-medium row-index">@(index++)</td>
 
      
                             <td class="px-6 py-4">
@@ -208,6 +208,11 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100" id="paginationContainer">
+            <div class="text-sm text-gray-500" id="paginationInfo"></div>
+            <div class="flex items-center gap-1" id="paginationControls"></div>
+        </div>
     </div>
 </div>
 
@@ -293,9 +298,83 @@
 
 @section Scripts {
     <script>
-        function confirmDelete(id) {
+        // ── Pagination ────────────────────────────────────────
+        const ROWS_PER_PAGE = 10;
         const isAr = "@isArabic".toLowerCase() === "true";
+        let currentPage = 1;
+        let allRows = [];
 
+        function initPagination() {
+            allRows = Array.from(document.querySelectorAll('.lesson-row'));
+            currentPage = 1;
+            renderPage();
+        }
+
+        function renderPage() {
+            allRows.forEach(function (r) { r.style.display = 'none'; });
+            const start    = (currentPage - 1) * ROWS_PER_PAGE;
+            const pageRows = allRows.slice(start, start + ROWS_PER_PAGE);
+            pageRows.forEach(function (row, i) {
+                row.style.display = '';
+                const cell = row.querySelector('.row-index');
+                if (cell) cell.textContent = start + i + 1;
+            });
+            updatePaginationUI();
+        }
+
+        function updatePaginationUI() {
+            const total      = allRows.length;
+            const totalPages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+            const start      = Math.min((currentPage - 1) * ROWS_PER_PAGE + 1, total || 0);
+            const end        = Math.min(currentPage * ROWS_PER_PAGE, total);
+
+            document.getElementById('paginationInfo').textContent = isAr
+                ? 'عرض ' + start + '–' + end + ' من ' + total
+                : 'Showing ' + start + '–' + end + ' of ' + total;
+
+            const controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const btnBase       = 'px-3 py-1.5 text-sm rounded-lg border transition-colors';
+            const activeClass   = 'bg-blue-800 text-white border-blue-800 font-semibold';
+            const inactiveClass = 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50';
+            const disabledClass = 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed';
+
+            const prev = document.createElement('button');
+            prev.className = btnBase + ' ' + (currentPage === 1 ? disabledClass : inactiveClass);
+            prev.innerHTML = isAr ? '&#8250; السابق' : '&lsaquo; Prev';
+            prev.disabled  = currentPage === 1;
+            prev.onclick   = function () { currentPage--; renderPage(); };
+            controls.appendChild(prev);
+
+            var maxVisible = 5;
+            var pageStart  = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            var pageEnd    = Math.min(totalPages, pageStart + maxVisible - 1);
+            if (pageEnd - pageStart < maxVisible - 1) pageStart = Math.max(1, pageEnd - maxVisible + 1);
+
+            for (var p = pageStart; p <= pageEnd; p++) {
+                (function (pg) {
+                    const btn = document.createElement('button');
+                    btn.className  = btnBase + ' ' + (pg === currentPage ? activeClass : inactiveClass);
+                    btn.textContent = pg;
+                    btn.onclick    = function () { currentPage = pg; renderPage(); };
+                    controls.appendChild(btn);
+                })(p);
+            }
+
+            const next = document.createElement('button');
+            next.className = btnBase + ' ' + (currentPage === totalPages ? disabledClass : inactiveClass);
+            next.innerHTML = isAr ? 'التالي &#8249;' : 'Next &rsaquo;';
+            next.disabled  = currentPage === totalPages;
+            next.onclick   = function () { currentPage++; renderPage(); };
+            controls.appendChild(next);
+        }
+
+        document.addEventListener('DOMContentLoaded', initPagination);
+        // ──────────────────────────────────────────────────────
+
+        function confirmDelete(id) {
         Swal.fire({
         title: isAr ? 'هل أنت متأكد؟' : 'Are you sure?',
         text: isAr ? 'سيتم حذف المحاضرة نهائياً!' : 'This lesson will be permanently deleted!',
@@ -325,7 +404,6 @@
         }
 
 
-        var isAr = "@isArabic".toLowerCase() === "true";
         var uploadsBase = '/uploads/';
 
         function openFilesModal(lessonId, lessonTitle) {

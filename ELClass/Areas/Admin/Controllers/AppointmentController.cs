@@ -22,12 +22,7 @@ namespace ELClass.Areas.Admin.Controllers
                 include: e => e.Include(e => e.Course!)
                               .Include(e => e.StudentAppointments)
                               .Include(e => e.Instructor!)
-            )).ToList();
-
-            var now = DateTime.Now;
-
-            
-           
+            )).OrderByDescending(a => a.StartDateTime).ToList();
 
             return View(appointments);
         }
