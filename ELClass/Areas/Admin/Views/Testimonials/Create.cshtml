@@ -7,57 +7,97 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0"><i class="ti ti-plus me-2"></i> @(isAr ? "إضافة شهادة جديدة" : "Add New Testimonial")</h4>
+    <h4 class="mb-0">
+        <i class="ti ti-plus me-2"></i>
+        @(isAr ? "إضافة شهادة جديدة" : "Add New Testimonial")
+    </h4>
     <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
        class="btn btn-outline-secondary btn-sm">
         <i class="ti ti-arrow-left me-1"></i> @(isAr ? "رجوع" : "Back")
     </a>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body" style="direction:@dir">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="Language" value="@Model.Language" />
-            <input type="hidden" name="CountryCode" value="@Model.CountryCode" />
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body" style="direction:@dir">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Language" value="@Model.Language" />
+                    <input type="hidden" name="CountryCode" value="@Model.CountryCode" />
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">@(isAr ? "اسم العميل" : "Client Name") <span class="text-danger">*</span></label>
-                    <input name="Name" class="form-control" required />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">@(isAr ? "التقييم (1-5)" : "Rating (1-5)")</label>
-                    <input type="number" name="Rating" class="form-control" value="5.0" min="1" max="5" step="0.1" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">@(isAr ? "الترتيب" : "Sort Order")</label>
-                    <input type="number" name="SortOrder" class="form-control" value="0" />
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">@(isAr ? "صورة العميل" : "Client Photo")</label>
-                    <input type="file" name="ImageFile" class="form-control" accept="image/*" />
-                    <small class="text-muted">@(isAr ? "مربعة 300×300 بكسل مُفضَّلة" : "Square 300×300px preferred")</small>
-                </div>
-                <div class="col-md-6 d-flex align-items-end">
-                    <div class="form-check mb-2">
-                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive" checked />
-                        <label class="form-check-label" for="isActive">@(isAr ? "نشط" : "Active")</label>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                @(isAr ? "الاسم" : "Name")
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input name="Name" class="form-control" required
+                                   placeholder="@(isAr ? "مثال: أحمد محمد" : "e.g. John Smith")" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                @(isAr ? "الاقتباس / رأي العميل" : "Quote / Review")
+                                <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="Quote" class="form-control" rows="4" required
+                                      placeholder="@(isAr ? "اكتب رأي الطالب أو ولي الأمر هنا..." : "Write the student or parent review here...")"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">@(isAr ? "الترتيب" : "Sort Order")</label>
+                            <input type="number" name="SortOrder" class="form-control" value="0" min="0" />
+                            <small class="text-muted">@(isAr ? "الأصغر يظهر أولاً" : "Lower numbers appear first")</small>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check mt-3">
+                                <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive" checked />
+                                <label class="form-check-label fw-semibold" for="isActive">
+                                    @(isAr ? "نشط (ظاهر في الصفحة)" : "Active (visible on page)")
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>
+                            @(isAr ? "حفظ" : "Save")
+                        </button>
+                        <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
+                           class="btn btn-outline-secondary">
+                            @(isAr ? "إلغاء" : "Cancel")
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3">
+                    <i class="ti ti-eye me-1 text-primary"></i>
+                    @(isAr ? "كيف تظهر في الصفحة؟" : "How it appears on the page")
+                </h6>
+                <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+                    <div style="color:#f59e0b;font-size:14px;margin-bottom:8px;">★★★★★</div>
+                    <p style="font-size:13px;color:#444;margin-bottom:12px;font-style:italic;">
+                        "@(isAr ? "نص الاقتباس يظهر هنا..." : "The quote text appears here...")"
+                    </p>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1E5FD8,#2DA84F);"></div>
+                        <div>
+                            <div style="font-size:13px;font-weight:600;">@(isAr ? "اسم الشخص" : "Person Name")</div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-12">
-                    <label class="form-label fw-semibold">@(isAr ? "الاقتباس / رأي العميل" : "Quote / Review")</label>
-                    <textarea name="Quote" class="form-control" rows="4" required></textarea>
-                </div>
+                <ul class="list-unstyled mt-3 small text-muted">
+                    <li class="mb-1"><i class="ti ti-check text-success me-1"></i> @(isAr ? "الاسم والاقتباس يظهران" : "Name and quote are shown")</li>
+                    <li class="mb-1"><i class="ti ti-x text-muted me-1"></i> @(isAr ? "الصورة غير مستخدمة (دائرة ملونة تلقائياً)" : "Photo not used (auto-colored circle)")</li>
+                    <li><i class="ti ti-x text-muted me-1"></i> @(isAr ? "التقييم غير مستخدم (دائماً 5 نجوم)" : "Rating not used (always 5 stars)")</li>
+                </ul>
             </div>
-
-            <div class="mt-4 d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="ti ti-device-floppy me-1"></i> @(isAr ? "حفظ" : "Save")
-                </button>
-                <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
-                   class="btn btn-outline-secondary">@(isAr ? "إلغاء" : "Cancel")</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>

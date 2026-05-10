@@ -3,7 +3,7 @@
 
 @{
     var isAr = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar");
-    ViewData["Title"] = isAr ? "الشهادات والتقييمات" : "Testimonials";
+    ViewData["Title"] = isAr ? "الشهادات والآراء" : "Testimonials";
     var dir = isAr ? "rtl" : "ltr";
 
     string lang = ViewBag.Lang ?? "en";
@@ -11,16 +11,31 @@
     var countries = (IEnumerable<(string Code, string NameAr, string NameEn)>)ViewBag.Countries;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4" style="direction:@dir">
+<div class="d-flex justify-content-between align-items-center mb-3" style="direction:@dir">
     <h4 class="mb-0">
         <i class="ti ti-stars me-2"></i>
-        @(isAr ? "إدارة الشهادات والتقييمات" : "Manage Testimonials")
+        @(isAr ? "إدارة الشهادات والآراء" : "Manage Testimonials")
     </h4>
     <a asp-action="Create" asp-route-lang="@lang" asp-route-country="@country" class="btn btn-primary btn-sm">
         <i class="ti ti-plus me-1"></i> @(isAr ? "إضافة شهادة" : "Add Testimonial")
     </a>
 </div>
 
+<div class="alert alert-info d-flex gap-2 align-items-start mb-3" style="direction:@dir; font-size:.875rem;">
+    <i class="ti ti-info-circle fs-5 flex-shrink-0 mt-1"></i>
+    <div>
+        @if (isAr)
+        {
+            <span>الحقول المستخدمة في صفحة الهوم: <strong>الاسم</strong> و<strong>الاقتباس</strong>. الصورة الشخصية تُولَّد تلقائياً (دائرة ملونة).</span>
+        }
+        else
+        {
+            <span>Fields used on the home page: <strong>Name</strong> and <strong>Quote</strong>. Profile avatars are auto-generated (colored circles).</span>
+        }
+    </div>
+</div>
+
+<!-- Language / Country Tabs -->
 <ul class="nav nav-tabs mb-3" style="direction:ltr; flex-wrap:wrap; gap:4px;">
     <li class="nav-item">
         <a class="nav-link @(lang == "en" ? "active" : "")"
@@ -46,21 +61,20 @@
         {
             <div class="text-center py-5 text-muted">
                 <i class="ti ti-mood-empty" style="font-size:3rem;"></i>
-                <p class="mt-2">@(isAr ? "لا توجد شهادات. أضف أولى الشهادات الآن." : "No testimonials yet.")</p>
+                <p class="mt-2">@(isAr ? "لا توجد شهادات بعد. أضف أولاها الآن." : "No testimonials yet. Add the first one.")</p>
             </div>
         }
         else
         {
-            <table class="table table-hover mb-0" style="direction:@dir">
+            <table class="table table-hover align-middle mb-0" style="direction:@dir">
                 <thead class="table-light">
                     <tr>
-                        <th>@(isAr ? "الصورة" : "Image")</th>
+                        <th style="width:48px;"></th>
                         <th>@(isAr ? "الاسم" : "Name")</th>
                         <th>@(isAr ? "الاقتباس" : "Quote")</th>
-                        <th>@(isAr ? "التقييم" : "Rating")</th>
-                        <th>@(isAr ? "الترتيب" : "Order")</th>
-                        <th>@(isAr ? "نشط" : "Active")</th>
-                        <th></th>
+                        <th style="width:80px;">@(isAr ? "الترتيب" : "Order")</th>
+                        <th style="width:80px;">@(isAr ? "نشط" : "Active")</th>
+                        <th style="width:100px;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,48 +82,41 @@
                     {
                         <tr>
                             <td>
-                                @if (!string.IsNullOrEmpty(item.ImageFileName))
-                                {
-                                    <img src="/uploads/testimonials/@item.ImageFileName" width="50" height="50"
-                                         style="object-fit:cover; border-radius:50%;" />
-                                }
-                                else
-                                {
-                                    <div style="width:50px;height:50px;border-radius:50%;background:#0053B3;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">
-                                        @(item.Name?.Substring(0, 1) ?? "?")
-                                    </div>
-                                }
+                                <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1E5FD8,#2DA84F);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;">
+                                    @(item.Name?.Length > 0 ? item.Name[0].ToString().ToUpper() : "?")
+                                </div>
                             </td>
-                            <td>@item.Name</td>
-                            <td style="max-width:300px;">
-                                <span class="text-truncate d-block" style="max-width:280px;" title="@item.Quote">@item.Quote</span>
-                            </td>
+                            <td class="fw-semibold">@item.Name</td>
                             <td>
-                                <span class="badge bg-warning text-dark">⭐ @item.Rating</span>
+                                <span class="text-muted" style="display:block;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.Quote">
+                                    @item.Quote
+                                </span>
                             </td>
-                            <td>@item.SortOrder</td>
-                            <td>
+                            <td class="text-center text-muted">@item.SortOrder</td>
+                            <td class="text-center">
                                 @if (item.IsActive)
                                 {
-                                    <span class="badge bg-success">@(isAr ? "نعم" : "Yes")</span>
+                                    <span class="badge bg-success-subtle text-success">@(isAr ? "نشط" : "Active")</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">@(isAr ? "لا" : "No")</span>
+                                    <span class="badge bg-secondary-subtle text-secondary">@(isAr ? "مخفي" : "Hidden")</span>
                                 }
                             </td>
                             <td>
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary me-1">
-                                    <i class="ti ti-edit"></i>
-                                </a>
-                                <form asp-action="Delete" method="post" style="display:inline;"
-                                      onsubmit="return confirm('@(isAr ? "هل تريد حذف هذه الشهادة؟" : "Delete this testimonial?")')">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                <div class="d-flex gap-1 justify-content-end">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-edit"></i>
+                                    </a>
+                                    <form asp-action="Delete" method="post" style="display:inline;"
+                                          onsubmit="return confirm('@(isAr ? "هل تريد حذف هذه الشهادة؟" : "Delete this testimonial?")')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }

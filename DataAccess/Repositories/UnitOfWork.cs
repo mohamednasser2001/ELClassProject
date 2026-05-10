@@ -27,7 +27,8 @@ namespace DataAccess.Repositories
            IRepository<LessonAssignments> lessonAssignmentsRepository,
            IRepository<LessonMaterials> lessonMaterialsRepository,
            IRepository<StudentLesson> studentLessonRepository,
-           IRepository<InstructorStudentMonthPayment> instructorStudentMonthPaymentRepository
+           IRepository<InstructorStudentMonthPayment> instructorStudentMonthPaymentRepository,
+           IRepository<FAQ> faqRepository
            )
            {
             CourseRepository = courseRepository;
@@ -51,6 +52,7 @@ namespace DataAccess.Repositories
             LessonMaterialsRepository = lessonMaterialsRepository;
             StudentLessonRepository = studentLessonRepository;
             InstructorStudentMonthPaymentRepository = instructorStudentMonthPaymentRepository;
+            FAQRepository = faqRepository;
         }
         public IRepository<Course> CourseRepository { get; }
         public IRepository<Instructor> InstructorRepository { get; }
@@ -72,6 +74,7 @@ namespace DataAccess.Repositories
         public IRepository<LessonMaterials> LessonMaterialsRepository { get; }
         public IRepository<StudentLesson> StudentLessonRepository { get; }
         public IRepository<InstructorStudentMonthPayment> InstructorStudentMonthPaymentRepository { get; }
+        public IRepository<FAQ> FAQRepository { get; }
 
         public async Task<bool> CommitAsync()
         {

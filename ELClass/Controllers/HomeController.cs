@@ -65,6 +65,11 @@ namespace ELClass.Controllers
                 orderBy: q => q.OrderBy(x => x.SortOrder),
                 tracked: false);
 
+            var faqs = await _unitOfWork.FAQRepository.GetAsync(
+                filter: x => x.Language == lang && x.CountryCode == selectedCountry && x.IsActive,
+                orderBy: q => q.OrderBy(x => x.SortOrder),
+                tracked: false);
+
             HomePageIndexVM model = new HomePageIndexVM()
             {
                 Instructors = instructors.ToList(),
@@ -72,7 +77,8 @@ namespace ELClass.Controllers
                 SelectedCountry = selectedCountry,
                 Testimonials = testimonials.ToList(),
                 PricingPlans = pricingPlans.ToList(),
-                Articles = articles.ToList()
+                Articles = articles.ToList(),
+                FAQs = faqs.ToList()
             };
             return View(model);
         }

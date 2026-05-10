@@ -18,7 +18,7 @@
     }
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4" style="direction:@(isAr?"rtl":"ltr")">
+<div class="d-flex justify-content-between align-items-center mb-3" style="direction:@(isAr?"rtl":"ltr")">
     <h4 class="mb-0">
         <i class="ti ti-home me-2"></i>
         @(isAr ? "إدارة محتوى الصفحة الرئيسية" : "Homepage Content Management")
@@ -28,7 +28,21 @@
     </a>
 </div>
 
-<!-- Language Tabs -->
+<div class="alert alert-info d-flex gap-2 align-items-start mb-3" style="direction:@(isAr?"rtl":"ltr"); font-size:.875rem;">
+    <i class="ti ti-info-circle fs-5 flex-shrink-0 mt-1"></i>
+    <div>
+        @if (isAr)
+        {
+            <span>هذه الصفحة تتحكم في النصوص القابلة للتعديل فقط. المدرسون والشهادات وخطط الأسعار تُدار من صفحاتها الخاصة.</span>
+        }
+        else
+        {
+            <span>This page controls only the editable text fields. Instructors, testimonials, and pricing plans are managed from their own pages.</span>
+        }
+    </div>
+</div>
+
+<!-- Language / Country Tabs -->
 <ul class="nav nav-tabs mb-0" id="contentTabs" role="tablist" style="direction:ltr; flex-wrap:wrap; gap:4px;">
     @foreach (var tab in tabs)
     {
@@ -57,9 +71,10 @@
     {
         var c = tab.Record ?? new Models.HomePageContent { Language = tab.Id == "en" ? "en" : "ar", CountryCode = tab.Id == "en" ? null : tab.Id };
         var dir = tab.Id == "en" ? "ltr" : "rtl";
+
         <div class="tab-pane fade @(activeTab == tab.Id ? "show active" : "")"
              id="tab-@tab.Id" role="tabpanel">
-            <form asp-action="Save" method="post" enctype="multipart/form-data" style="direction:@dir">
+            <form asp-action="Save" method="post" style="direction:@dir">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Id" value="@c.Id" />
                 <input type="hidden" name="Language" value="@c.Language" />
@@ -68,248 +83,95 @@
 
                 <div class="accordion" id="accordion-@tab.Id">
 
-                    <!-- ── Top Bar ────────────────────────── -->
+                    <!-- ── Hero ──────────────────────────── -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-topbar-@tab.Id">
-                                <i class="ti ti-layout-navbar me-2"></i>
-                                @(isAr ? "الشريط العلوي" : "Top Bar")
-                            </button>
-                        </h2>
-                        <div id="sec-topbar-@tab.Id" class="accordion-collapse collapse show">
-                            <div class="accordion-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "نص الترحيب" : "Welcome Text")</label>
-                                        <input type="text" class="form-control" name="WelcomeText" value="@c.WelcomeText" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "رقم الهاتف" : "Phone Number")</label>
-                                        <input type="text" class="form-control" name="PhoneNumber" value="@c.PhoneNumber" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Hero / Banner ─────────────────── -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                     data-bs-target="#sec-hero-@tab.Id">
                                 <i class="ti ti-speakerphone me-2"></i>
-                                @(isAr ? "قسم الهيرو / البانر" : "Hero / Banner Section")
+                                @(isAr ? "قسم الهيرو (البانر الرئيسي)" : "Hero Section")
                             </button>
                         </h2>
-                        <div id="sec-hero-@tab.Id" class="accordion-collapse collapse">
+                        <div id="sec-hero-@tab.Id" class="accordion-collapse collapse show">
                             <div class="accordion-body">
+                                <p class="text-muted small mb-3">
+                                    @(isAr
+                                        ? "العنوان يتكون من ثلاثة أجزاء: نص عادي + كلمة مميزة (تظهر بلون مختلف) + نص عادي. يمكن ترك الجزء الثالث فارغاً."
+                                        : "The title has 3 parts: plain text + highlighted word (shown in accent color) + optional plain text suffix.")
+                                </p>
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "عنوان البانر" : "Hero Title")</label>
-                                        <input type="text" class="form-control" name="HeroTitle" value="@c.HeroTitle" />
+                                        <label class="form-label">
+                                            @(isAr ? "بداية العنوان" : "Title — Part 1")
+                                        </label>
+                                        <input type="text" class="form-control" name="HeroTitle" value="@c.HeroTitle"
+                                               placeholder="@(isAr ? "مثال: ابحث عن المدرس المثالي لـ" : "e.g. Find the perfect tutor for")" />
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "الكلمة المميزة" : "Highlighted Word")</label>
-                                        <input type="text" class="form-control" name="HeroTitleHighlight" value="@c.HeroTitleHighlight" />
+                                        <label class="form-label">
+                                            @(isAr ? "الكلمة المميزة" : "Highlighted Word")
+                                            <span class="badge bg-primary-subtle text-primary ms-1" style="font-size:.7rem;">accent</span>
+                                        </label>
+                                        <input type="text" class="form-control" name="HeroTitleHighlight" value="@c.HeroTitleHighlight"
+                                               placeholder="@(isAr ? "مثال: الكلاس" : "e.g. Elclass")" />
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "نهاية العنوان" : "Title Suffix")</label>
-                                        <input type="text" class="form-control" name="HeroTitleSuffix" value="@c.HeroTitleSuffix" />
+                                        <label class="form-label">
+                                            @(isAr ? "نهاية العنوان (اختياري)" : "Title — Part 3 (optional)")
+                                        </label>
+                                        <input type="text" class="form-control" name="HeroTitleSuffix" value="@c.HeroTitleSuffix"
+                                               placeholder="@(isAr ? "اختياري" : "optional")" />
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label">@(isAr ? "النص الفرعي" : "Hero Subtitle")</label>
-                                        <textarea class="form-control" name="HeroSubtitle" rows="2">@c.HeroSubtitle</textarea>
+                                        <label class="form-label">@(isAr ? "النص الفرعي (تحت العنوان)" : "Subtitle")</label>
+                                        <textarea class="form-control" name="HeroSubtitle" rows="2"
+                                                  placeholder="@(isAr ? "جملة قصيرة تصف المنصة" : "A short description displayed under the title")">@c.HeroSubtitle</textarea>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "نص زر البدء" : "Start Button Text")</label>
-                                        <input type="text" class="form-control" name="HeroStartBtnText" value="@c.HeroStartBtnText" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "رابط الفيديو" : "Video URL")</label>
-                                        <input type="text" class="form-control" name="VideoUrl" value="@c.VideoUrl" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "صورة تشغيل الفيديو" : "Play Video Image")</label>
-                                        <input type="file" class="form-control" name="PlayVideoImg" value="@c.PlayVideoText" />
-                                        @* name="PlayVideoText" *@
+                                    <div class="col-md-5">
+                                        <label class="form-label">@(isAr ? "نص زر الحجز (الزر الأساسي)" : "Primary Button Text")</label>
+                                        <input type="text" class="form-control" name="HeroStartBtnText" value="@c.HeroStartBtnText"
+                                               placeholder="@(isAr ? "مثال: احجز جلسة مجانية" : "e.g. Book a Free Session")" />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ── Counters ───────────────────────── -->
+                    <!-- ── Stats ─────────────────────────── -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-counter-@tab.Id">
+                                    data-bs-target="#sec-stats-@tab.Id">
                                 <i class="ti ti-chart-bar me-2"></i>
-                                @(isAr ? "الأرقام والإحصائيات" : "Counter / Stats")
+                                @(isAr ? "الإحصائيات (أرقام الهيرو)" : "Hero Stats")
                             </button>
                         </h2>
-                        <div id="sec-counter-@tab.Id" class="accordion-collapse collapse">
+                        <div id="sec-stats-@tab.Id" class="accordion-collapse collapse">
                             <div class="accordion-body">
+                                <p class="text-muted small mb-3">
+                                    @(isAr
+                                        ? "ثلاثة أرقام تظهر في قسم الهيرو أسفل أزرار الحجز (مثال: +5000 طالب نشط)."
+                                        : "Three numbers shown in the hero section below the CTA buttons (e.g. +5000 Active Students).")
+                                </p>
                                 <div class="row g-3">
-                                    @for (int i = 1; i <= 4; i++)
+                                    @for (int i = 1; i <= 3; i++)
                                     {
-                                        var numProp = $"Counter{i}Num";
-                                        var lblProp = $"Counter{i}Label";
-                                        var numVal = i == 1 ? c.Counter1Num : i == 2 ? c.Counter2Num : i == 3 ? c.Counter3Num : c.Counter4Num;
-                                        var lblVal = i == 1 ? c.Counter1Label : i == 2 ? c.Counter2Label : i == 3 ? c.Counter3Label : c.Counter4Label;
-                                        <div class="col-md-3">
-                                            <label class="form-label fw-bold">@(isAr ? $"العداد {i}" : $"Counter {i}")</label>
-                                            <input type="number" class="form-control mb-1" name="@numProp" value="@numVal"
-                                                   placeholder="@(isAr ? "الرقم" : "Number")" />
-                                            <input type="text" class="form-control" name="@lblProp" value="@lblVal"
-                                                   placeholder="@(isAr ? "التسمية" : "Label")" />
+                                        var numVal = i == 1 ? c.Counter1Num : i == 2 ? c.Counter2Num : c.Counter3Num;
+                                        var lblVal = i == 1 ? c.Counter1Label : i == 2 ? c.Counter2Label : c.Counter3Label;
+                                        <div class="col-md-4">
+                                            <div class="card border p-3">
+                                                <h6 class="mb-3 fw-semibold">@(isAr ? $"الرقم {i}" : $"Stat {i}")</h6>
+                                                <label class="form-label small text-muted">@(isAr ? "الرقم" : "Number")</label>
+                                                <input type="number" class="form-control mb-2"
+                                                       name="Counter@(i)Num" value="@numVal"
+                                                       placeholder="@(isAr ? "مثال: 5000" : "e.g. 5000")" />
+                                                <label class="form-label small text-muted">@(isAr ? "التسمية" : "Label")</label>
+                                                <input type="text" class="form-control"
+                                                       name="Counter@(i)Label" value="@lblVal"
+                                                       placeholder="@(isAr ? "مثال: طالب نشط" : "e.g. Active Students")" />
+                                            </div>
                                         </div>
                                     }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── About ─────────────────────────── -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-about-@tab.Id">
-                                <i class="ti ti-info-circle me-2"></i>
-                                @(isAr ? "قسم من نحن" : "About Section")
-                            </button>
-                        </h2>
-                        <div id="sec-about-@tab.Id" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="AboutTopHeading" value="@c.AboutTopHeading" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="AboutMainHeading" value="@c.AboutMainHeading" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
-                                        <textarea class="form-control" name="AboutParagraph" rows="3">@c.AboutParagraph</textarea>
-                                    </div>
-                                    @for (int i = 1; i <= 4; i++)
-                                    {
-                                        var bProp = $"AboutBullet{i}";
-                                        var bVal = i == 1 ? c.AboutBullet1 : i == 2 ? c.AboutBullet2 : i == 3 ? c.AboutBullet3 : c.AboutBullet4;
-                                        <div class="col-md-6">
-                                            <label class="form-label">@(isAr ? $"النقطة {i}" : $"Bullet {i}")</label>
-                                            <input type="text" class="form-control" name="@bProp" value="@bVal" />
-                                        </div>
-                                    }
-                                    <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "نص زر اقرأ المزيد" : "Read More Button")</label>
-                                        <input type="text" class="form-control" name="AboutReadMoreBtn" value="@c.AboutReadMoreBtn" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Courses ────────────────────────── -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-courses-@tab.Id">
-                                <i class="ti ti-book me-2"></i>
-                                @(isAr ? "قسم الدورات" : "Courses Section")
-                            </button>
-                        </h2>
-                        <div id="sec-courses-@tab.Id" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="CoursesTopHeading" value="@c.CoursesTopHeading" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="CoursesMainHeading" value="@c.CoursesMainHeading" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
-                                        <textarea class="form-control" name="CoursesParagraph" rows="2">@c.CoursesParagraph</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Team ──────────────────────────── -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-team-@tab.Id">
-                                <i class="ti ti-users me-2"></i>
-                                @(isAr ? "قسم الفريق / المدرسون" : "Team / Instructors Section")
-                            </button>
-                        </h2>
-                        <div id="sec-team-@tab.Id" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="TeamTopHeading" value="@c.TeamTopHeading" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="TeamMainHeading" value="@c.TeamMainHeading" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
-                                        <textarea class="form-control" name="TeamParagraph" rows="2">@c.TeamParagraph</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Enroll / Contact ───────────────── -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-enroll-@tab.Id">
-                                <i class="ti ti-mail me-2"></i>
-                                @(isAr ? "قسم التسجيل / التواصل" : "Enroll / Contact Section")
-                            </button>
-                        </h2>
-                        <div id="sec-enroll-@tab.Id" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="EnrollTopHeading" value="@c.EnrollTopHeading" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="EnrollMainHeading" value="@c.EnrollMainHeading" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة الأولى" : "Paragraph 1")</label>
-                                        <textarea class="form-control" name="EnrollParagraph1" rows="2">@c.EnrollParagraph1</textarea>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة الثانية" : "Paragraph 2")</label>
-                                        <textarea class="form-control" name="EnrollParagraph2" rows="2">@c.EnrollParagraph2</textarea>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "نص زر التسجيل" : "Enroll Button Text")</label>
-                                        <input type="text" class="form-control" name="EnrollBtnText" value="@c.EnrollBtnText" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "عنوان النموذج" : "Form Title")</label>
-                                        <input type="text" class="form-control" name="EnrollFormTitle" value="@c.EnrollFormTitle" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">@(isAr ? "عنوان فرعي للنموذج" : "Form Subtitle")</label>
-                                        <input type="text" class="form-control" name="EnrollFormSubtitle" value="@c.EnrollFormSubtitle" />
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -319,28 +181,18 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-work-@tab.Id">
+                                    data-bs-target="#sec-how-@tab.Id">
                                 <i class="ti ti-list-check me-2"></i>
-                                @(isAr ? "كيف يعمل؟ (الخطوات)" : "How It Works (Steps)")
+                                @(isAr ? "كيف يعمل؟ (الخطوات الأربع)" : "How It Works — Steps")
                             </button>
                         </h2>
-                        <div id="sec-work-@tab.Id" class="accordion-collapse collapse">
+                        <div id="sec-how-@tab.Id" class="accordion-collapse collapse">
                             <div class="accordion-body">
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="WorkTopHeading" value="@c.WorkTopHeading" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="WorkMainHeading" value="@c.WorkMainHeading" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
-                                        <textarea class="form-control" name="WorkParagraph" rows="2">@c.WorkParagraph</textarea>
-                                    </div>
-                                </div>
-                                <hr />
+                                <p class="text-muted small mb-3">
+                                    @(isAr
+                                        ? "يجب تعبئة عناوين الخطوات الأربع كاملةً حتى يظهر القسم في الصفحة."
+                                        : "All 4 step titles must be filled for the section to appear on the page.")
+                                </p>
                                 <div class="row g-3">
                                     @{
                                         var steps = new[]
@@ -355,11 +207,18 @@
                                     {
                                         <div class="col-md-6">
                                             <div class="card border p-3">
-                                                <h6 class="mb-2">@(isAr ? $"الخطوة {num}" : $"Step {num}")</h6>
-                                                <label class="form-label small">@(isAr ? "العنوان" : "Title")</label>
-                                                <input type="text" class="form-control mb-2" name="Step@(num)Title" value="@title" />
-                                                <label class="form-label small">@(isAr ? "الوصف" : "Description")</label>
-                                                <textarea class="form-control" name="Step@(num)Desc" rows="2">@desc</textarea>
+                                                <h6 class="mb-3 fw-semibold">
+                                                    <span class="badge bg-primary rounded-circle me-1" style="width:22px;height:22px;line-height:22px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;">@num</span>
+                                                    @(isAr ? $"الخطوة {num}" : $"Step {num}")
+                                                </h6>
+                                                <label class="form-label small text-muted">@(isAr ? "العنوان" : "Title")</label>
+                                                <input type="text" class="form-control mb-2"
+                                                       name="Step@(num)Title" value="@title"
+                                                       placeholder="@(isAr ? "عنوان الخطوة" : "Step title")" />
+                                                <label class="form-label small text-muted">@(isAr ? "الوصف" : "Description")</label>
+                                                <textarea class="form-control" rows="2"
+                                                          name="Step@(num)Desc"
+                                                          placeholder="@(isAr ? "وصف مختصر" : "Brief description")">@desc</textarea>
                                             </div>
                                         </div>
                                     }
@@ -368,124 +227,64 @@
                         </div>
                     </div>
 
-                    <!-- ── Testimonials ───────────────────── -->
+                    <!-- ── Quick Links ────────────────────── -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-test-@tab.Id">
-                                <i class="ti ti-message-circle me-2"></i>
-                                @(isAr ? "قسم الشهادات / آراء العملاء" : "Testimonials Section")
+                                    data-bs-target="#sec-links-@tab.Id">
+                                <i class="ti ti-layout-grid me-2"></i>
+                                @(isAr ? "إدارة أقسام أخرى" : "Manage Other Sections")
                             </button>
                         </h2>
-                        <div id="sec-test-@tab.Id" class="accordion-collapse collapse">
+                        <div id="sec-links-@tab.Id" class="accordion-collapse collapse">
                             <div class="accordion-body">
                                 <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="TestimonialsTopHeading" value="@c.TestimonialsTopHeading" />
+                                    <div class="col-md-4">
+                                        <div class="card border p-3 h-100 d-flex flex-column">
+                                            <h6 class="mb-1"><i class="ti ti-users me-1 text-primary"></i> @(isAr ? "المدرسون" : "Instructors")</h6>
+                                            <p class="text-muted small flex-grow-1">
+                                                @(isAr ? "إضافة وتعديل بيانات المدرسين التي تظهر في قسم المدرسين بالصفحة الرئيسية." : "Add and edit instructor profiles shown in the Teachers section.")
+                                            </p>
+                                            <a href="/Admin/Instructor" class="btn btn-outline-primary btn-sm" target="_blank">
+                                                <i class="ti ti-arrow-up-right me-1"></i> @(isAr ? "إدارة المدرسين" : "Manage Instructors")
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="TestimonialsMainHeading" value="@c.TestimonialsMainHeading" />
+                                    <div class="col-md-4">
+                                        <div class="card border p-3 h-100 d-flex flex-column">
+                                            <h6 class="mb-1"><i class="ti ti-message-circle me-1 text-primary"></i> @(isAr ? "الشهادات والآراء" : "Testimonials")</h6>
+                                            <p class="text-muted small flex-grow-1">
+                                                @(isAr ? "إضافة وتعديل آراء الطلاب وأولياء الأمور التي تظهر في قسم الآراء." : "Add and edit student and parent reviews shown in the Testimonials section.")
+                                            </p>
+                                            <a href="/Admin/Testimonials?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
+                                               class="btn btn-outline-primary btn-sm" target="_blank">
+                                                <i class="ti ti-arrow-up-right me-1"></i> @(isAr ? "إدارة الشهادات" : "Manage Testimonials")
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
-                                        <textarea class="form-control" name="TestimonialsParagraph" rows="2">@c.TestimonialsParagraph</textarea>
+                                    <div class="col-md-4">
+                                        <div class="card border p-3 h-100 d-flex flex-column">
+                                            <h6 class="mb-1"><i class="ti ti-currency-dollar me-1 text-primary"></i> @(isAr ? "خطط الأسعار" : "Pricing Plans")</h6>
+                                            <p class="text-muted small flex-grow-1">
+                                                @(isAr ? "إضافة وتعديل خطط الاشتراك والأسعار وميزات كل خطة." : "Add and edit subscription plans, pricing, and features.")
+                                            </p>
+                                            <a href="/Admin/PricingPlans?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
+                                               class="btn btn-outline-primary btn-sm" target="_blank">
+                                                <i class="ti ti-arrow-up-right me-1"></i> @(isAr ? "إدارة الخطط" : "Manage Plans")
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div class="col-12">
-                                        <a href="/Admin/Testimonials?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
-                                           class="btn btn-outline-primary btn-sm" target="_blank">
-                                            <i class="ti ti-stars me-1"></i>
-                                            @(isAr ? "إدارة الشهادات والتقييمات ←" : "Manage Individual Testimonials →")
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Pricing ────────────────────────── -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-pricing-@tab.Id">
-                                <i class="ti ti-currency-dollar me-2"></i>
-                                @(isAr ? "قسم الأسعار" : "Pricing Section")
-                            </button>
-                        </h2>
-                        <div id="sec-pricing-@tab.Id" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="PricingTopHeading" value="@c.PricingTopHeading" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="PricingMainHeading" value="@c.PricingMainHeading" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
-                                        <textarea class="form-control" name="PricingParagraph" rows="2">@c.PricingParagraph</textarea>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">@(isAr ? "نص تبويب الشهري" : "Monthly Tab Label")</label>
-                                        <input type="text" class="form-control" name="PricingMonthlyLabel" value="@c.PricingMonthlyLabel" />
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">@(isAr ? "نص تبويب السنوي" : "Yearly Tab Label")</label>
-                                        <input type="text" class="form-control" name="PricingYearlyLabel" value="@c.PricingYearlyLabel" />
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">@(isAr ? "نص زر الاشتراك" : "CTA Button Text")</label>
-                                        <input type="text" class="form-control" name="PricingBtnText" value="@c.PricingBtnText" />
-                                    </div>
-                                    <div class="col-md-3 d-flex align-items-end">
-                                        <a href="/Admin/PricingPlans?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
-                                           class="btn btn-outline-primary btn-sm w-100" target="_blank">
-                                            <i class="ti ti-list me-1"></i>
-                                            @(isAr ? "إدارة الخطط ←" : "Manage Plans →")
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Blog / Articles ────────────────── -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#sec-blog-@tab.Id">
-                                <i class="ti ti-news me-2"></i>
-                                @(isAr ? "قسم المدونة / المقالات" : "Blog / Articles Section")
-                            </button>
-                        </h2>
-                        <div id="sec-blog-@tab.Id" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الصغير" : "Top Heading")</label>
-                                        <input type="text" class="form-control" name="BlogTopHeading" value="@c.BlogTopHeading" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">@(isAr ? "العنوان الرئيسي" : "Main Heading")</label>
-                                        <input type="text" class="form-control" name="BlogMainHeading" value="@c.BlogMainHeading" />
-                                    </div>
-                                    <div class="col-md-8">
-                                        <label class="form-label">@(isAr ? "الفقرة" : "Paragraph")</label>
-                                        <textarea class="form-control" name="BlogParagraph" rows="2">@c.BlogParagraph</textarea>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">@(isAr ? "نص اقرأ المزيد" : "Read More Text")</label>
-                                        <input type="text" class="form-control" name="BlogReadMoreText" value="@c.BlogReadMoreText" />
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <a href="/Admin/Articles?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
-                                           class="btn btn-outline-primary btn-sm w-100" target="_blank">
-                                            <i class="ti ti-pencil me-1"></i>
-                                            @(isAr ? "إدارة المقالات ←" : "Manage Articles →")
-                                        </a>
+                                    <div class="col-md-4 mt-3">
+                                        <div class="card border p-3 h-100 d-flex flex-column">
+                                            <h6 class="mb-1"><i class="ti ti-help-circle me-1 text-primary"></i> @(isAr ? "الأسئلة الشائعة" : "FAQs")</h6>
+                                            <p class="text-muted small flex-grow-1">
+                                                @(isAr ? "إضافة وتعديل الأسئلة الشائعة التي تظهر في قسم FAQ في الصفحة الرئيسية." : "Add and edit FAQ entries shown in the FAQ accordion on the home page.")
+                                            </p>
+                                            <a href="/Admin/FAQs?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
+                                               class="btn btn-outline-primary btn-sm" target="_blank">
+                                                <i class="ti ti-arrow-up-right me-1"></i> @(isAr ? "إدارة الأسئلة" : "Manage FAQs")
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

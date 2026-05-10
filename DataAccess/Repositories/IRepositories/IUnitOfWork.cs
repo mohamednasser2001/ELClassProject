@@ -24,6 +24,7 @@ namespace DataAccess.Repositories.IRepositories
         IRepository<Article> ArticleRepository { get; }
         IRepository<Testimonial> TestimonialRepository { get; }
         IRepository<PricingPlan> PricingPlanRepository { get; }
+        IRepository<FAQ> FAQRepository { get; }
         IRepository<LessonAssignments> LessonAssignmentsRepository { get; }
         IRepository<LessonMaterials> LessonMaterialsRepository { get; }
         IRepository<StudentLesson> StudentLessonRepository { get; }

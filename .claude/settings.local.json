@@ -17,7 +17,14 @@
       "Bash(grep \"\\\\.cs$\")",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\" -Directory)",
       "Bash(Select-Object Name)",
-      "PowerShell(findstr *)"
+      "PowerShell(findstr *)",
+      "Bash(Copy-Item \"C:\\\\Users\\\\Mohamed Ibrahim\\\\Downloads\\\\Elclass\\\\styles.css\" \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\ELClass\\\\wwwroot\\\\css\\\\elclass-landing.css\" -Force)",
+      "Bash(Copy-Item \"C:\\\\Users\\\\Mohamed Ibrahim\\\\Downloads\\\\Elclass\\\\content.js\" \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\ELClass\\\\wwwroot\\\\js\\\\elclass-content.js\" -Force)",
+      "Bash(Copy-Item \"C:\\\\Users\\\\Mohamed Ibrahim\\\\Downloads\\\\Elclass\\\\tweaks-panel.jsx\" \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\ELClass\\\\wwwroot\\\\js\\\\elclass-tweaks.jsx\" -Force)",
+      "Bash(Write-Host \"Done copying static files\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(head *)"
     ]
   }
 }

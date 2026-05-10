@@ -1,0 +1,113 @@
+@model List<Models.FAQ>
+@using ELClass.Areas.Admin.Controllers
+
+@{
+    var isAr = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar");
+    ViewData["Title"] = isAr ? "الأسئلة الشائعة" : "FAQs";
+    var dir = isAr ? "rtl" : "ltr";
+
+    string lang = ViewBag.Lang ?? "en";
+    string? country = ViewBag.Country;
+    var countries = (IEnumerable<(string Code, string NameAr, string NameEn)>)ViewBag.Countries;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3" style="direction:@dir">
+    <h4 class="mb-0">
+        <i class="ti ti-help-circle me-2"></i>
+        @(isAr ? "إدارة الأسئلة الشائعة" : "Manage FAQs")
+    </h4>
+    <a asp-action="Create" asp-route-lang="@lang" asp-route-country="@country" class="btn btn-primary btn-sm">
+        <i class="ti ti-plus me-1"></i> @(isAr ? "إضافة سؤال" : "Add FAQ")
+    </a>
+</div>
+
+<div class="alert alert-info border-0 py-2 small mb-3" style="direction:@dir">
+    <i class="ti ti-info-circle me-1"></i>
+    @if (isAr)
+    {
+        <span>الأسئلة تظهر في قسم "الأسئلة الشائعة" في الصفحة الرئيسية. الترتيب يتحدد من حقل "الترتيب".</span>
+    }
+    else
+    {
+        <span>FAQs appear in the FAQ accordion on the home page. Use the Sort Order field to control their sequence.</span>
+    }
+</div>
+
+<!-- Language / Country Tabs -->
+<ul class="nav nav-tabs mb-4" style="direction:ltr; flex-wrap:wrap; gap:4px;">
+    <li class="nav-item">
+        <a class="nav-link @(lang == "en" ? "active" : "")"
+           asp-action="Index" asp-route-lang="en" asp-route-country="">
+            <i class="fi fi-gb me-1"></i> English
+        </a>
+    </li>
+    @foreach (var c in countries)
+    {
+        <li class="nav-item">
+            <a class="nav-link @(lang == "ar" && country == c.Code ? "active" : "")"
+               asp-action="Index" asp-route-lang="ar" asp-route-country="@c.Code">
+                <i class="fi fi-@c.Code.ToLower() me-1"></i>
+                @(isAr ? c.NameAr : c.NameEn)
+            </a>
+        </li>
+    }
+</ul>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show py-2" role="alert">
+        <i class="ti ti-circle-check me-1"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5 text-muted">
+        <i class="ti ti-help-circle" style="font-size:3rem;"></i>
+        <p class="mt-2">@(isAr ? "لا توجد أسئلة بعد." : "No FAQs yet.")</p>
+        <a asp-action="Create" asp-route-lang="@lang" asp-route-country="@country" class="btn btn-primary btn-sm mt-2">
+            @(isAr ? "إضافة أول سؤال" : "Add first FAQ")
+        </a>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm" style="direction:@dir">
+        <div class="list-group list-group-flush">
+            @foreach (var faq in Model.OrderBy(f => f.SortOrder))
+            {
+                <div class="list-group-item py-3">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill" style="font-size:.75rem; min-width:28px;">
+                                    @faq.SortOrder
+                                </span>
+                                @if (!faq.IsActive)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning" style="font-size:.7rem;">@(isAr ? "مخفي" : "Hidden")</span>
+                                }
+                                <strong class="small">@faq.Question</strong>
+                            </div>
+                            <p class="mb-0 text-muted small" style="white-space:pre-wrap;">@faq.Answer</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-shrink-0">
+                            <a asp-action="Edit" asp-route-id="@faq.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="ti ti-edit"></i>
+                            </a>
+                            <form asp-action="Delete" method="post"
+                                  onsubmit="return confirm('@(isAr ? "حذف هذا السؤال؟" : "Delete this FAQ?")')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@faq.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

@@ -12,5 +12,6 @@ namespace Models.ViewModels
         public List<Models.Testimonial> Testimonials { get; set; } = new();
         public List<Models.PricingPlan> PricingPlans { get; set; } = new();
         public List<Models.Article> Articles { get; set; } = new();
+        public List<Models.FAQ> FAQs { get; set; } = new();
     }
 }

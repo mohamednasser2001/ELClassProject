@@ -4,79 +4,156 @@
     var isAr = System.Threading.Thread.CurrentThread.CurrentCulture.Name.StartsWith("ar");
     ViewData["Title"] = isAr ? "إضافة خطة سعر" : "Add Pricing Plan";
     var dir = Model.Language == "en" ? "ltr" : "rtl";
+    var baseCurrencyNote = Model.Language == "en"
+        ? "Enter the base price in USD ($). It will be automatically converted to each country's currency."
+        : "أدخل السعر الأساسي بالريال السعودي. سيُحوَّل تلقائياً لعملة كل دولة.";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0"><i class="ti ti-plus me-2"></i> @(isAr ? "إضافة خطة سعر" : "Add Pricing Plan")</h4>
+    <h4 class="mb-0">
+        <i class="ti ti-plus me-2"></i>
+        @(isAr ? "إضافة خطة سعر" : "Add Pricing Plan")
+    </h4>
     <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
        class="btn btn-outline-secondary btn-sm">
         <i class="ti ti-arrow-left me-1"></i> @(isAr ? "رجوع" : "Back")
     </a>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body" style="direction:@dir">
-        <form asp-action="Create" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="Language" value="@Model.Language" />
-            <input type="hidden" name="CountryCode" value="@Model.CountryCode" />
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body" style="direction:@dir">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Language" value="@Model.Language" />
+                    <input type="hidden" name="CountryCode" value="@Model.CountryCode" />
+                    <input type="hidden" name="Currency" value="@(Model.Language == "en" ? "$" : "ر.س")" />
 
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">@(isAr ? "اسم الخطة" : "Plan Name") <span class="text-danger">*</span></label>
-                    <input name="Name" class="form-control" required />
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">@(isAr ? "وصف الخطة" : "Description")</label>
-                    <input name="Description" class="form-control" />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">@(isAr ? "العملة" : "Currency")</label>
-                    <input name="Currency" class="form-control" value="@Model.Currency" />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">@(isAr ? "الترتيب" : "Sort Order")</label>
-                    <input type="number" name="SortOrder" class="form-control" value="0" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">@(isAr ? "السعر الشهري" : "Monthly Price")</label>
-                    <input name="MonthlyPrice" class="form-control" placeholder="199" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">@(isAr ? "السعر السنوي" : "Yearly Price")</label>
-                    <input name="YearlyPrice" class="form-control" placeholder="1900" />
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <div class="form-check mb-2">
-                        <input type="checkbox" name="IsPopular" value="true" class="form-check-input" id="isPopular" />
-                        <label class="form-check-label" for="isPopular">@(isAr ? "الأكثر شعبية" : "Most Popular")</label>
-                    </div>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <div class="form-check mb-2">
-                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive" checked />
-                        <label class="form-check-label" for="isActive">@(isAr ? "نشط" : "Active")</label>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <label class="form-label fw-semibold">
-                        @(isAr ? "المميزات" : "Features")
-                        <small class="text-muted fw-normal">
-                            — @(isAr ? "كل سطر: نص المميزة|1 (متاح) أو نص المميزة|0 (غير متاح)" : "Each line: Feature text|1 (included) or Feature text|0 (excluded)")
-                        </small>
-                    </label>
-                    <textarea name="Features" class="form-control font-monospace" rows="8"
-                              placeholder="@(isAr ? "وصول متميز لمدة سنة|1\nدورات غير محدودة|1\nتحميلات مجانية|0" : "One year premium access|1\nUnlimited courses|1\nFree eBook downloads|0")"></textarea>
-                </div>
-            </div>
+                    <div class="row g-3">
 
-            <div class="mt-4 d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="ti ti-device-floppy me-1"></i> @(isAr ? "حفظ" : "Save")
-                </button>
-                <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
-                   class="btn btn-outline-secondary">@(isAr ? "إلغاء" : "Cancel")</a>
+                        <!-- Name & Description -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                @(isAr ? "اسم الخطة" : "Plan Name")
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input name="Name" class="form-control" required
+                                   placeholder="@(isAr ? "مثال: أساسي" : "e.g. Basic")" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">@(isAr ? "وصف الخطة (العنوان الفرعي)" : "Description (subtitle)")</label>
+                            <input name="Description" class="form-control"
+                                   placeholder="@(isAr ? "مثال: للطلاب المبتدئين" : "e.g. For beginners")" />
+                        </div>
+
+                        <!-- Prices -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">@(isAr ? "الأسعار" : "Prices")</label>
+                            <div class="alert alert-warning py-2 px-3 mb-2" style="font-size:.8rem;">
+                                <i class="ti ti-currency-exchange me-1"></i> @baseCurrencyNote
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">@(isAr ? "الشهري" : "Monthly")</label>
+                                    <input name="MonthlyPrice" class="form-control"
+                                           placeholder="@(isAr ? "مثال: 199" : "e.g. 19")" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">@(isAr ? "السنوي" : "Yearly")</label>
+                                    <input name="YearlyPrice" class="form-control"
+                                           placeholder="@(isAr ? "مثال: 1900" : "e.g. 190")" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">@(isAr ? "الترتيب" : "Sort Order")</label>
+                            <input type="number" name="SortOrder" class="form-control" value="0" min="0" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end pb-1">
+                            <div class="form-check">
+                                <input type="checkbox" name="IsPopular" value="true" class="form-check-input" id="isPopular" />
+                                <label class="form-check-label" for="isPopular">
+                                    @(isAr ? "الأكثر شعبية (مميز)" : "Most Popular (featured)")
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end pb-1">
+                            <div class="form-check">
+                                <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive" checked />
+                                <label class="form-check-label" for="isActive">
+                                    @(isAr ? "نشط (ظاهر في الصفحة)" : "Active (visible on page)")
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">@(isAr ? "الميزات" : "Features")</label>
+                            <div class="text-muted small mb-2">
+                                @if (isAr)
+                                {
+                                    <span>ميزة واحدة في كل سطر. أضف <code>|1</code> في النهاية لميزة متاحة، أو <code>|0</code> لميزة غير متاحة.</span>
+                                }
+                                else
+                                {
+                                    <span>One feature per line. Append <code>|1</code> for an included feature, <code>|0</code> for excluded.</span>
+                                }
+                            </div>
+                            <textarea name="Features" class="form-control font-monospace" rows="7"
+                                      placeholder="@(isAr
+                                          ? "دروس خصوصية أسبوعية|1\nتتبع التقدم|1\nتقارير شهرية|0"
+                                          : "Weekly private sessions|1\nProgress tracking|1\nMonthly reports|0")"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>
+                            @(isAr ? "حفظ" : "Save")
+                        </button>
+                        <a asp-action="Index" asp-route-lang="@Model.Language" asp-route-country="@Model.CountryCode"
+                           class="btn btn-outline-secondary">
+                            @(isAr ? "إلغاء" : "Cancel")
+                        </a>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3">
+                    <i class="ti ti-eye me-1 text-primary"></i>
+                    @(isAr ? "كيف تظهر في الصفحة؟" : "How it appears on the page")
+                </h6>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-2 d-flex gap-2">
+                        <i class="ti ti-check text-success flex-shrink-0 mt-1"></i>
+                        <span>@(isAr ? "اسم الخطة والوصف" : "Plan name and description")</span>
+                    </li>
+                    <li class="mb-2 d-flex gap-2">
+                        <i class="ti ti-check text-success flex-shrink-0 mt-1"></i>
+                        <span>@(isAr ? "السعر محوَّل لعملة بلد المستخدم" : "Price converted to user's country currency")</span>
+                    </li>
+                    <li class="mb-2 d-flex gap-2">
+                        <i class="ti ti-check text-success flex-shrink-0 mt-1"></i>
+                        <span>@(isAr ? "جميع الميزات كقائمة (المتاحة وغير المتاحة)" : "All features as a list (included and excluded)")</span>
+                    </li>
+                    <li class="mb-2 d-flex gap-2">
+                        <i class="ti ti-check text-success flex-shrink-0 mt-1"></i>
+                        <span>@(isAr ? "\"الأكثر شعبية\" تعطيه شكل مميز" : "\"Most Popular\" gives it a featured style")</span>
+                    </li>
+                    <li class="d-flex gap-2">
+                        <i class="ti ti-x text-muted flex-shrink-0 mt-1"></i>
+                        <span>@(isAr ? "العملة المدخلة غير مستخدمة (تُحوَّل تلقائياً)" : "Currency field not used (auto-converted)")</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
