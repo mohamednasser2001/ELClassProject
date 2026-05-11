@@ -213,7 +213,7 @@ function Nav({ lang, setLang, country, setCountry }) {
     const fd = new FormData();
     fd.append("country", v);
     fd.append("returnUrl", "/");
-    fetch("/Home/SetCountry", { method: "POST", body: fd, redirect: "manual" })
+    fetch("/Home/SetCountry", { method: "POST", body: fd })
       .finally(() => window.location.reload());
   };
 
