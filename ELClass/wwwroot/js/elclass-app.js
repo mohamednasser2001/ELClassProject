@@ -166,7 +166,7 @@ function BookingModal({ open, onClose, lang, country }) {
 function WhatsAppFab({ lang }) {
   const tip = lang === "ar" ? "تواصل عبر واتساب" : "Chat on WhatsApp";
   return (
-    <a href="https://wa.me/201000000000" target="_blank" rel="noopener" className="wa-fab" aria-label={tip}>
+    <a href="https://wa.me/966545935890" target="_blank" rel="noopener" className="wa-fab" aria-label={tip}>
       <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/></svg>
       <span className="wa-tooltip">{tip}</span>
     </a>
@@ -282,23 +282,12 @@ function Hero({ lang, variant }) {
       <div className="hero-bg"><div className="hero-grid-bg" /></div>
       <div className="container">
         <div>
-          <span className="eyebrow reveal">
-            <span className="eyebrow-dot">★</span>
-            {c.eyebrow}
-          </span>
           <h1 className="hero-title reveal">
             {c.titleA[0]}<span className="accent">{c.titleA[1]}</span>{c.titleA[2]}
           </h1>
           <p className="hero-sub reveal">{c.sub}</p>
           <div className="hero-cta reveal">
             <button className="btn btn-lg" onClick={openBooking}>{c.ctaPrimary} →</button>
-            <a className="btn btn-ghost btn-lg" href="#how">{c.ctaSecondary}</a>
-            <a className="btn btn-yellow btn-lg" href="/Identity/Account/Login">{c.ctaAuth}</a>
-          </div>
-          <div className="hero-stats reveal">
-            <div><div className="stat-num">{c.stat1[0]}</div><div className="stat-lbl">{c.stat1[1]}</div></div>
-            <div><div className="stat-num">{c.stat2[0]}</div><div className="stat-lbl">{c.stat2[1]}</div></div>
-            <div><div className="stat-num">{c.stat3[0]}</div><div className="stat-lbl">{c.stat3[1]}</div></div>
           </div>
         </div>
         <div className="hero-vis reveal">
@@ -333,14 +322,24 @@ function Hero({ lang, variant }) {
 }
 
 // ── Trust strip ───────────────────────────
+const TRUST_ICONS = ["🇪🇬", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🌐"];
 function Trust({ lang }) {
   const t = window.ELCLASS_CONTENT[lang].trust;
+  const chips = t.items.map((x, i) => ({ label: x, icon: TRUST_ICONS[i] || "📚" }));
+  const doubled = [...chips, ...chips, ...chips];
   return (
     <section className="trust">
-      <div className="container">
-        <div className="trust-row">
-          <span className="trust-lbl">{t.label}</span>
-          {t.items.map((x) => <span key={x} className="trust-pill">{x}</span>)}
+      <div className="trust-lbl-wrap">
+        <span className="trust-lbl">{t.label}</span>
+      </div>
+      <div className="trust-marquee">
+        <div className="trust-track">
+          {doubled.map((item, i) => (
+            <div key={i} className="trust-chip">
+              <span className="trust-chip-icon">{item.icon}</span>
+              <span className="trust-chip-name">{item.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -348,28 +347,19 @@ function Trust({ lang }) {
 }
 
 // ── Subjects ──────────────────────────────
+const SUBJ_PALETTES = [
+  { bg: "linear-gradient(135deg,#EAF1FF 0%,#D9E5FF 100%)", blob: "#A8C0FF", iconBg: "#1E5FD8", iconFg: "#fff", iconBd: "#1E5FD8" },
+  { bg: "linear-gradient(135deg,#FFF1DE 0%,#FFE0B8 100%)", blob: "#F8B96A", iconBg: "#F08A1C", iconFg: "#fff", iconBd: "#F08A1C" },
+  { bg: "linear-gradient(135deg,#E6F7EC 0%,#C8EED6 100%)", blob: "#7AD89A", iconBg: "#2DA84F", iconFg: "#fff", iconBd: "#2DA84F" },
+  { bg: "linear-gradient(135deg,#FFE7EC 0%,#FFD2DC 100%)", blob: "#F49AAB", iconBg: "#E15A6E", iconFg: "#fff", iconBd: "#E15A6E" },
+  { bg: "linear-gradient(135deg,#FFF8DC 0%,#FFEDA0 100%)", blob: "#F4C430", iconBg: "#3a2a00", iconFg: "#F4C430", iconBd: "#3a2a00" },
+  { bg: "linear-gradient(135deg,#F1ECFF 0%,#DFD3FF 100%)", blob: "#B19BF0", iconBg: "#5B3FD0", iconFg: "#fff", iconBd: "#5B3FD0" },
+  { bg: "linear-gradient(135deg,#0E2E66 0%,#1E5FD8 100%)", blob: "#4A86F0", iconBg: "#fff", iconFg: "#1E5FD8", iconBd: "#fff", dark: true },
+  { bg: "linear-gradient(135deg,#FFE0E0 0%,#FFC4C4 100%)", blob: "#FF8C8C", iconBg: "#C8364D", iconFg: "#fff", iconBd: "#C8364D" },
+];
 function Subjects({ lang }) {
   const s = window.ELCLASS_CONTENT[lang].subjects;
-  const [tab, setTab] = useState(s.tabs[0]);
-
-  // Reset to "All" tab whenever the language changes
-  useEffect(() => {
-    setTab(window.ELCLASS_CONTENT[lang].subjects.tabs[0]);
-  }, [lang]);
-
-  const filtered = tab === s.tabs[0] ? s.list : s.list.filter((x) => x.cat === tab);
-
-  const palettes = [
-    { bg: "linear-gradient(135deg,#EAF1FF 0%,#D9E5FF 100%)", blob: "#A8C0FF", iconBg: "#1E5FD8", iconFg: "#fff", iconBd: "#1E5FD8" },
-    { bg: "linear-gradient(135deg,#FFF1DE 0%,#FFE0B8 100%)", blob: "#F8B96A", iconBg: "#F08A1C", iconFg: "#fff", iconBd: "#F08A1C" },
-    { bg: "linear-gradient(135deg,#E6F7EC 0%,#C8EED6 100%)", blob: "#7AD89A", iconBg: "#2DA84F", iconFg: "#fff", iconBd: "#2DA84F" },
-    { bg: "linear-gradient(135deg,#FFE7EC 0%,#FFD2DC 100%)", blob: "#F49AAB", iconBg: "#E15A6E", iconFg: "#fff", iconBd: "#E15A6E" },
-    { bg: "linear-gradient(135deg,#FFF8DC 0%,#FFEDA0 100%)", blob: "#F4C430", iconBg: "#3a2a00", iconFg: "#F4C430", iconBd: "#3a2a00" },
-    { bg: "linear-gradient(135deg,#F1ECFF 0%,#DFD3FF 100%)", blob: "#B19BF0", iconBg: "#5B3FD0", iconFg: "#fff", iconBd: "#5B3FD0" },
-    { bg: "linear-gradient(135deg,#0E2E66 0%,#1E5FD8 100%)", blob: "#4A86F0", iconBg: "#fff", iconFg: "#1E5FD8", iconBd: "#fff", dark: true },
-    { bg: "linear-gradient(135deg,#FFE0E0 0%,#FFC4C4 100%)", blob: "#FF8C8C", iconBg: "#C8364D", iconFg: "#fff", iconBd: "#C8364D" },
-  ];
-
+  const tripled = [...s.list, ...s.list, ...s.list];
   return (
     <section className="section" id="subjects">
       <div className="container">
@@ -378,20 +368,16 @@ function Subjects({ lang }) {
           <h2 className="section-title">{s.title}</h2>
           <p className="section-sub">{s.sub}</p>
         </div>
-        <div className="subj-tabs reveal">
-          {s.tabs.map((x) => (
-            <button key={x} className={`subj-tab ${tab === x ? "active" : ""}`} onClick={() => setTab(x)}>{x}</button>
-          ))}
-        </div>
-        <div className="subj-grid">
-          {filtered.map((x, i) => {
-            const p = palettes[i % palettes.length];
+      </div>
+      <div className="subj-marquee">
+        <div className="subj-track">
+          {tripled.map((x, i) => {
+            const p = SUBJ_PALETTES[i % SUBJ_PALETTES.length];
             return (
               <div
-                key={x.code}
-                className={`subj-card reveal ${p.dark ? "tone-dark" : ""}`}
+                key={i}
+                className={`subj-card ${p.dark ? "tone-dark" : ""}`}
                 style={{
-                  transitionDelay: `${i * 40}ms`,
                   "--card-bg": p.bg,
                   "--card-blob": p.blob,
                   "--card-icon-bg": p.iconBg,
@@ -402,7 +388,6 @@ function Subjects({ lang }) {
               >
                 <div className="subj-icon">{x.code}</div>
                 <div className="subj-name">{x.name}</div>
-                <div className="subj-meta">{x.meta}</div>
                 <div className="subj-card-cta">{s.cta} {lang === "ar" ? "←" : "→"}</div>
               </div>
             );
@@ -441,32 +426,24 @@ function How({ lang }) {
 // ── Teachers carousel ─────────────────────
 function Teachers({ lang }) {
   const t = window.ELCLASS_CONTENT[lang].teachers;
-  const ref = useRef(null);
-  const scroll = (dir) => {
-    if (!ref.current) return;
-    const sign = document.documentElement.dir === "rtl" ? -1 : 1;
-    ref.current.scrollBy({ left: dir * sign * 320, behavior: "smooth" });
-  };
 
   if (!t.list || t.list.length === 0) return null;
+
+  const tripled = [...t.list, ...t.list, ...t.list];
 
   return (
     <section className="section" id="teachers">
       <div className="container">
-        <div className="section-head-row reveal">
-          <div>
-            <span className="kicker">{t.kicker}</span>
-            <h2 className="section-title">{t.title}</h2>
-            <p className="section-sub">{t.sub}</p>
-          </div>
-          <div className="carousel-ctrls">
-            <button className="car-btn" onClick={() => scroll(-1)}>{lang === "ar" ? "→" : "←"}</button>
-            <button className="car-btn" onClick={() => scroll(1)}>{lang === "ar" ? "←" : "→"}</button>
-          </div>
+        <div className="reveal">
+          <span className="kicker">{t.kicker}</span>
+          <h2 className="section-title">{t.title}</h2>
+          <p className="section-sub">{t.sub}</p>
         </div>
-        <div className="teachers-row" ref={ref}>
-          {t.list.map((teacher, i) => (
-            <div key={i} className="teacher-card reveal" style={{ transitionDelay: `${i * 60}ms` }}>
+      </div>
+      <div className="teachers-marquee">
+        <div className="teachers-row">
+          {tripled.map((teacher, i) => (
+            <div key={i} className={`teacher-card hue-wrap-${(i % 5) + 1}`}>
               <div className={`teacher-photo hue-${(i % 5) + 1}`}>
                 <span className="teacher-tag">{teacher.tag}</span>
               </div>
@@ -474,7 +451,7 @@ function Teachers({ lang }) {
                 <div className="teacher-name">{teacher.name}</div>
                 <div className="teacher-subj">{teacher.subj}</div>
                 <div className="teacher-foot">
-                  <span className="teacher-rate"><span className="star">★</span> {teacher.rate} <span style={{ color: "var(--ink-4)", fontWeight: 500 }}></span></span>
+                  <span className="teacher-rate"><span className="star">★</span> {teacher.rate}</span>
                   {teacher.price !== "---" && <span className="teacher-fee"><b>{teacher.price}</b> {t.perHour}</span>}
                 </div>
               </div>
@@ -542,7 +519,7 @@ function Progress({ lang }) {
   const p = window.ELCLASS_CONTENT[lang].progress;
   const heights = [38, 60, 45, 72, 55, 68, 82, 90];
   return (
-    <section className="section" id="progress" style={{ background: "var(--bg-soft)" }}>
+    <section className="section" id="progress" style={{ background: "#DDE3EF" }}>
       <div className="container">
         <div className="split">
           <div className="dash reveal">
@@ -587,6 +564,11 @@ function Progress({ lang }) {
                 </li>
               ))}
             </ul>
+            <div className="hero-stats" style={{ marginTop: 32 }}>
+              {[window.ELCLASS_CONTENT[lang].hero.stat1, window.ELCLASS_CONTENT[lang].hero.stat2, window.ELCLASS_CONTENT[lang].hero.stat3].map((s, i) => (
+                <div key={i}><div className="stat-num">{s[0]}</div><div className="stat-lbl">{s[1]}</div></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -631,7 +613,7 @@ function FAQ({ lang }) {
   const f = window.ELCLASS_CONTENT[lang].faq;
   const [open, setOpen] = useState(0);
   return (
-    <section className="section" id="faq">
+    <section className="section" id="faq" style={{ background: "linear-gradient(160deg, #EAF1FF 0%, #F1ECFF 100%)" }}>
       <div className="container">
         <div className="reveal" style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 44px" }}>
           <span className="kicker">{f.kicker}</span>
@@ -657,14 +639,14 @@ function FAQ({ lang }) {
 function CTAWide({ lang }) {
   const c = window.ELCLASS_CONTENT[lang].cta;
   return (
-    <section className="section">
+    <section className="section" style={{ paddingTop: 40, paddingBottom: 20 }}>
       <div className="container">
         <div className="cta-wide reveal">
           <h2>{c.title}</h2>
           <p>{c.sub}</p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button className="btn btn-lg" onClick={openBooking}>{c.btnPrimary} →</button>
-            <button className="btn btn-ghost btn-lg" style={{ background: "transparent", color: "#fff", borderColor: "rgba(255,255,255,.25)" }}>{c.btnSecondary}</button>
+            <a href="https://wa.me/966545935890" target="_blank" rel="noopener" className="btn btn-ghost btn-lg" style={{ background: "transparent", color: "#fff", borderColor: "rgba(255,255,255,.25)" }}>{c.btnSecondary}</a>
           </div>
         </div>
       </div>
@@ -701,6 +683,9 @@ function Footer({ lang }) {
                 </a>
               ))}
             </div>
+            <a href="/Identity/Account/Login" className="btn btn-yellow" style={{ marginTop: 16, display: "inline-block" }}>
+              {window.ELCLASS_CONTENT[lang].hero.ctaAuth}
+            </a>
           </div>
           {f.cols.map((col, i) => (
             <div key={i} className="footer-col">
