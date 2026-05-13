@@ -173,6 +173,16 @@ function WhatsAppFab({ lang }) {
   );
 }
 
+// ── Mobile Booking FAB ────────────────────
+function MobileBookingFab({ lang }) {
+  const label = lang === "ar" ? "احجز معلمك" : "Book a Tutor";
+  return (
+    <div className="mobile-bottom-bar">
+      <button className="mobile-book-fab" onClick={openBooking}>{label}</button>
+    </div>
+  );
+}
+
 // ── Dropdown ──────────────────────────────
 function Dropdown({ trigger, children, align = "end" }) {
   const [open, setOpen] = useState(false);
@@ -267,7 +277,7 @@ function Nav({ lang, setLang, country, setCountry }) {
             )}
           </Dropdown>
 
-          <button className="btn" onClick={openBooking}>{c.nav.book}</button>
+          <button className="btn nav-book-btn" onClick={openBooking}>{c.nav.book}</button>
         </div>
       </nav>
     </div>
@@ -341,6 +351,101 @@ function Trust({ lang }) {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Academic Stages ───────────────────────
+function AcademicStages({ lang }) {
+  const isAr = lang === "ar";
+  const title = isAr ? "في جميع المراحل الدراسية" : "Across All Academic Stages";
+  const stages = [
+    {
+      label: isAr ? "رياض الاطفال" : "Kindergarten",
+      icon: (
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="38" width="28" height="28" rx="5" fill="currentColor"/>
+          <circle cx="18" cy="52" r="7" fill="white"/>
+          <rect x="40" y="38" width="28" height="28" rx="5" fill="currentColor"/>
+          <polygon points="54,41 63,54 45,54" fill="white"/>
+          <rect x="4" y="6" width="28" height="28" rx="5" fill="currentColor"/>
+          <polygon points="18,9 20.5,15.5 28,15.5 22,19.5 24,26 18,22 12,26 14,19.5 8,15.5 15.5,15.5" fill="white"/>
+          <rect x="40" y="6" width="28" height="28" rx="5" fill="currentColor"/>
+          <rect x="48" y="14" width="12" height="12" rx="2" fill="white"/>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "المرحلة الابتدائية" : "Primary School",
+      icon: (
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="28" height="28" rx="5" fill="currentColor"/>
+          <text x="18" y="25" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">1</text>
+          <rect x="40" y="4" width="28" height="28" rx="5" fill="currentColor"/>
+          <text x="54" y="25" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">2</text>
+          <rect x="4" y="40" width="28" height="28" rx="5" fill="currentColor"/>
+          <text x="18" y="61" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">+</text>
+          <rect x="40" y="40" width="28" height="28" rx="5" fill="currentColor"/>
+          <text x="54" y="61" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">3</text>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "المرحلة الإعدادية" : "Middle School",
+      icon: (
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="34" y="2" width="4" height="18" rx="1.5" fill="currentColor"/>
+          <polygon points="38,2 54,8 38,14" fill="currentColor"/>
+          <rect x="10" y="20" width="52" height="50" rx="4" fill="currentColor"/>
+          <rect x="16" y="28" width="12" height="12" rx="2" fill="white"/>
+          <rect x="44" y="28" width="12" height="12" rx="2" fill="white"/>
+          <rect x="28" y="44" width="16" height="26" rx="3" fill="white"/>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "المرحلة الثانوية" : "High School",
+      icon: (
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="34" y="2" width="4" height="14" rx="1.5" fill="currentColor"/>
+          <polygon points="38,2 56,7 38,12" fill="currentColor"/>
+          <rect x="16" y="10" width="40" height="8" rx="3" fill="currentColor"/>
+          <rect x="6" y="18" width="60" height="52" rx="4" fill="currentColor"/>
+          <rect x="12" y="26" width="10" height="10" rx="2" fill="white"/>
+          <rect x="50" y="26" width="10" height="10" rx="2" fill="white"/>
+          <rect x="12" y="42" width="10" height="10" rx="2" fill="white"/>
+          <rect x="50" y="42" width="10" height="10" rx="2" fill="white"/>
+          <rect x="28" y="44" width="16" height="26" rx="3" fill="white"/>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "الجامعة" : "University",
+      icon: (
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18,28 Q36,8 54,28 Z" fill="currentColor"/>
+          <rect x="14" y="26" width="44" height="5" rx="1" fill="currentColor"/>
+          <rect x="6" y="31" width="60" height="37" rx="4" fill="currentColor"/>
+          <rect x="12" y="37" width="8" height="27" rx="2" fill="white"/>
+          <rect x="26" y="37" width="8" height="27" rx="2" fill="white"/>
+          <rect x="52" y="37" width="8" height="27" rx="2" fill="white"/>
+          <rect x="30" y="50" width="12" height="18" rx="2" fill="currentColor"/>
+          <rect x="2" y="66" width="68" height="4" rx="1" fill="currentColor"/>
+        </svg>
+      )
+    }
+  ];
+  return (
+    <section className="academic-stages">
+      <h2 className="academic-stages-title">{title}</h2>
+      <div className="academic-stages-grid">
+        {stages.map((s, i) => (
+          <div key={i} className="academic-stage-item">
+            <div className="academic-stage-icon">{s.icon}</div>
+            <span className="academic-stage-label">{s.label}</span>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -784,6 +889,7 @@ function App() {
       />
       <Hero lang={lang} variant={t.heroVariant} />
       <Trust lang={lang} />
+      <AcademicStages lang={lang} />
       {(t.sectionOrder || TWEAK_DEFAULTS.sectionOrder).map((key) => (
         <React.Fragment key={key}>{sectionMap[key]}</React.Fragment>
       ))}
@@ -791,6 +897,7 @@ function App() {
       <Footer lang={lang} />
       <BookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} lang={lang} country={country} />
       <WhatsAppFab lang={lang} />
+      <MobileBookingFab lang={lang} />
 
       <TweaksPanel>
         <TweakSection label={lang === "ar" ? "الهوية" : "Brand"} />

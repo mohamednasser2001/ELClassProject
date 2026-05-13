@@ -490,8 +490,7 @@ section { position: relative; }
    Logos / trust strip
    ============================================ */
 .trust {
-  padding: 10px 48px 10px;
-  border-bottom: 1px solid var(--line-2);
+  padding: 15px 48px 10px;
 }
 .trust-lbl-wrap { text-align: center; margin-bottom: 8px; }
 .trust-lbl { font-weight: 600; color: var(--ink-3); font-size: 13px; }
@@ -529,6 +528,58 @@ section { position: relative; }
 @keyframes trust-scroll {
   from { transform: translateX(0); }
   to   { transform: translateX(-33.3333%); }
+}
+
+/* ============================================
+   Academic Stages
+   ============================================ */
+.academic-stages {
+  background: #ddeaf5;
+  margin-top: 32px;
+  padding: 36px 24px 60px;
+  text-align: center;
+}
+.academic-stages-title {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 800;
+  color: #0d1b2e;
+  margin-bottom: 48px;
+  line-height: 1.4;
+}
+.academic-stages-grid {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 56px;
+  flex-wrap: wrap;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.academic-stage-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+.academic-stage-icon {
+  width: 80px;
+  height: 80px;
+  color: #1a1a2e;
+}
+.academic-stage-icon svg { width: 100%; height: 100%; }
+.academic-stage-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.4;
+  max-width: 120px;
+}
+@media (max-width: 600px) {
+  .academic-stages { padding: 44px 16px; }
+  .academic-stages-grid { gap: 28px; }
+  .academic-stage-icon { width: 56px; height: 56px; }
+  .academic-stage-label { font-size: 12px; max-width: 80px; }
 }
 
 /* ============================================
@@ -1325,6 +1376,10 @@ footer {
 .modal-success h4 { margin: 0 0 8px; font-size: 19px; font-weight: 700; }
 .modal-success p { margin: 0 0 22px; color: var(--ink-3); font-size: 14px; line-height: 1.55; }
 
+/* Mobile Booking FAB */
+.mobile-bottom-bar { display: none; }
+.mobile-book-fab { display: none; }
+
 /* WhatsApp FAB */
 .wa-fab {
   position: fixed;
@@ -1408,6 +1463,39 @@ footer {
   .testi-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
   .nav-links { display: none; }
+  .nav-book-btn { display: none; }
+  .mobile-bottom-bar {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    bottom: 20px;
+    inset-inline-start: 16px;
+    z-index: 90;
+    background: #fff;
+    border-radius: 999px;
+    padding: 7px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 2px 6px rgba(0,0,0,.07);
+  }
+  .mobile-book-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 52px;
+    min-width: 170px;
+    padding: 0 28px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    border: 0;
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 40%, transparent);
+    cursor: pointer;
+    transition: transform .2s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .mobile-book-fab:hover { transform: scale(1.03); }
   .cta-wide { padding: 44px 28px; }
 }
 @media (max-width: 600px) {
