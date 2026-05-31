@@ -93,5 +93,15 @@ namespace Models
         public string? BlogMainHeading { get; set; }
         public string? BlogParagraph { get; set; }
         public string? BlogReadMoreText { get; set; }
+
+        // ── Hero Visual Cards ─────────────────────────────────────
+        /// <summary>Filename (not full path) of the uploaded hero image or video.</summary>
+        public string? HeroMediaUrl { get; set; }
+        /// <summary>"image" or "video"</summary>
+        public string? HeroMediaType { get; set; }
+        public bool ShowTeacherCard { get; set; } = true;
+        public bool ShowProgressCard { get; set; } = true;
+        public bool ShowBadgeCard { get; set; } = true;
+        public bool ShowPricingSection { get; set; } = true;
     }
 }

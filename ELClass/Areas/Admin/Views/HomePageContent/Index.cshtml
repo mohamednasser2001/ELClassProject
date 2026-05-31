@@ -74,12 +74,14 @@
 
         <div class="tab-pane fade @(activeTab == tab.Id ? "show active" : "")"
              id="tab-@tab.Id" role="tabpanel">
-            <form asp-action="Save" method="post" style="direction:@dir">
+            <form asp-action="Save" method="post" enctype="multipart/form-data" style="direction:@dir">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Id" value="@c.Id" />
                 <input type="hidden" name="Language" value="@c.Language" />
                 <input type="hidden" name="CountryCode" value="@c.CountryCode" />
                 <input type="hidden" name="tabId" value="@tab.Id" />
+                <input type="hidden" name="HeroMediaUrl" value="@c.HeroMediaUrl" />
+                <input type="hidden" name="HeroMediaType" value="@c.HeroMediaType" />
 
                 <div class="accordion" id="accordion-@tab.Id">
 
@@ -133,6 +135,123 @@
                                                placeholder="@(isAr ? "مثال: احجز جلسة مجانية" : "e.g. Book a Free Session")" />
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Hero Visual (Media + Card Visibility) ── -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#sec-herovis-@tab.Id">
+                                <i class="ti ti-photo me-2"></i>
+                                @(isAr ? "صورة/فيديو الهيرو وإعدادات البطاقات" : "Hero Image / Video & Card Visibility")
+                            </button>
+                        </h2>
+                        <div id="sec-herovis-@tab.Id" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+
+                                <!-- Media Upload -->
+                                <h6 class="fw-semibold mb-1">
+                                    <i class="ti ti-upload me-1 text-primary"></i>
+                                    @(isAr ? "رفع صورة أو فيديو" : "Upload Image or Video")
+                                </h6>
+                                <p class="text-muted small mb-3">
+                                    @(isAr
+                                        ? "يظهر في المربع الكبير (ذو الخطوط المائلة) على يسار البانر الرئيسي. يُطبّق على جميع اللغات والدول."
+                                        : "Shown in the large placeholder card in the hero section. Applied across all languages and countries.")
+                                </p>
+
+                                @if (!string.IsNullOrWhiteSpace(c.HeroMediaUrl))
+                                {
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">@(isAr ? "الملف الحالي" : "Current file")</label><br />
+                                        @if (c.HeroMediaType == "video")
+                                        {
+                                            <video src="/images/hero-media/@c.HeroMediaUrl" controls muted
+                                                   style="max-height:180px; border-radius:8px; border:1px solid #dee2e6;"></video>
+                                        }
+                                        else
+                                        {
+                                            <img src="/images/hero-media/@c.HeroMediaUrl" alt="hero"
+                                                 style="max-height:180px; border-radius:8px; border:1px solid #dee2e6; object-fit:cover;" />
+                                        }
+                                    </div>
+                                }
+
+                                <div class="mb-4">
+                                    <label class="form-label">@(isAr ? "رفع ملف جديد (صورة أو فيديو)" : "Upload new file (image or video)")</label>
+                                    <input type="file" class="form-control" name="HeroMediaFile"
+                                           accept="image/*,video/mp4,video/webm,video/ogg" />
+                                    <div class="form-text">
+                                        @(isAr ? "الصيغ المدعومة: JPG، PNG، WebP، MP4، WebM. الحجم الأقصى 10 MB." : "Supported: JPG, PNG, WebP, MP4, WebM. Max 10 MB.")
+                                    </div>
+                                </div>
+
+                                <hr class="my-3" />
+
+                                <!-- Card Visibility Toggles -->
+                                <h6 class="fw-semibold mb-1">
+                                    <i class="ti ti-eye me-1 text-primary"></i>
+                                    @(isAr ? "إظهار / إخفاء البطاقات" : "Show / Hide Cards")
+                                </h6>
+                                <p class="text-muted small mb-3">
+                                    @(isAr
+                                        ? "تحكم في ظهور كل بطاقة داخل قسم الهيرو بشكل مستقل."
+                                        : "Control the visibility of each floating card in the hero section independently.")
+                                </p>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="card border p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <div class="fw-semibold small">@(isAr ? "بطاقة المدرس" : "Teacher Card")</div>
+                                                    <div class="text-muted" style="font-size:.75rem;">@(isAr ? "أ. مريهان أحمد — الرياضيات • الصف ٩" : "Teacher name, subject, availability")</div>
+                                                </div>
+                                                <div class="form-check form-switch ms-2 mt-1">
+                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                           name="ShowTeacherCard" value="true"
+                                                           @(c.ShowTeacherCard ? "checked" : "") />
+                                                    <input type="hidden" name="ShowTeacherCard" value="false" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card border p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <div class="fw-semibold small">@(isAr ? "بطاقة التقدم" : "Progress Card")</div>
+                                                    <div class="text-muted" style="font-size:.75rem;">@(isAr ? "تقدم هذا الشهر · +18 درجة" : "Monthly progress bar +18 grade")</div>
+                                                </div>
+                                                <div class="form-check form-switch ms-2 mt-1">
+                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                           name="ShowProgressCard" value="true"
+                                                           @(c.ShowProgressCard ? "checked" : "") />
+                                                    <input type="hidden" name="ShowProgressCard" value="false" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card border p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <div class="fw-semibold small">@(isAr ? "بطاقة الحصص الفردية" : "1:1 Badge Card")</div>
+                                                    <div class="text-muted" style="font-size:.75rem;">@(isAr ? "١:١ حصص فردية" : "1:1 Private sessions badge")</div>
+                                                </div>
+                                                <div class="form-check form-switch ms-2 mt-1">
+                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                           name="ShowBadgeCard" value="true"
+                                                           @(c.ShowBadgeCard ? "checked" : "") />
+                                                    <input type="hidden" name="ShowBadgeCard" value="false" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -264,9 +383,17 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="card border p-3 h-100 d-flex flex-column">
-                                            <h6 class="mb-1"><i class="ti ti-currency-dollar me-1 text-primary"></i> @(isAr ? "خطط الأسعار" : "Pricing Plans")</h6>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <h6 class="mb-0"><i class="ti ti-currency-dollar me-1 text-primary"></i> @(isAr ? "خطط الأسعار" : "Pricing Plans")</h6>
+                                                <div class="form-check form-switch ms-2">
+                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                           name="ShowPricingSection" value="true"
+                                                           @(c.ShowPricingSection ? "checked" : "") />
+                                                    <input type="hidden" name="ShowPricingSection" value="false" />
+                                                </div>
+                                            </div>
                                             <p class="text-muted small flex-grow-1">
-                                                @(isAr ? "إضافة وتعديل خطط الاشتراك والأسعار وميزات كل خطة." : "Add and edit subscription plans, pricing, and features.")
+                                                @(isAr ? "إضافة وتعديل خطط الاشتراك والأسعار. يمكن إخفاء القسم كاملاً بإيقاف المفتاح." : "Add and edit subscription plans. Toggle off to hide the entire pricing section.")
                                             </p>
                                             <a href="/Admin/PricingPlans?lang=@(tab.Id == "en" ? "en" : "ar")&country=@(tab.Id == "en" ? "" : tab.Id)"
                                                class="btn btn-outline-primary btn-sm" target="_blank">

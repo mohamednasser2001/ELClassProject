@@ -82,7 +82,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/elclass-landing.css" />
+    <link rel="stylesheet" href="~/css/elclass-landing.css" asp-append-version="true" />
 </head>
 <body>
     <div id="root"></div>
@@ -92,7 +92,13 @@
         window.__ELCLASS_INIT__ = {
             lang: "@initLang",
             country: "@initCountry",
-            isLoggedIn: @(User.Identity?.IsAuthenticated == true ? "true" : "false")
+            isLoggedIn: @(User.Identity?.IsAuthenticated == true ? "true" : "false"),
+            heroMediaUrl: @Html.Raw(!string.IsNullOrWhiteSpace(hc?.HeroMediaUrl) ? $"\"/images/hero-media/{hc!.HeroMediaUrl}\"" : "null"),
+            heroMediaType: @Html.Raw(!string.IsNullOrWhiteSpace(hc?.HeroMediaType) ? $"\"{hc!.HeroMediaType}\"" : "null"),
+            showTeacherCard: @Html.Raw(hc == null || hc.ShowTeacherCard ? "true" : "false"),
+            showProgressCard: @Html.Raw(hc == null || hc.ShowProgressCard ? "true" : "false"),
+            showBadgeCard: @Html.Raw(hc == null || hc.ShowBadgeCard ? "true" : "false"),
+            showPricingSection: @Html.Raw(hc == null || hc.ShowPricingSection ? "true" : "false")
         };
     </script>
 
@@ -108,7 +114,7 @@
             crossorigin="anonymous"></script>
 
     @* ── Hardcoded content base ────────────────────────── *@
-    <script src="~/js/elclass-content.js"></script>
+    <script src="~/js/elclass-content.js" asp-append-version="true"></script>
 
     @* ── DB data overrides ─────────────────────────────── *@
     <script>
@@ -211,7 +217,7 @@
     </script>
 
     @* ── JSX app files ─────────────────────────────────── *@
-    <script type="text/babel" src="~/js/elclass-tweaks.js"></script>
-    <script type="text/babel" src="~/js/elclass-app.js"></script>
+    <script type="text/babel" src="~/js/elclass-tweaks.js" asp-append-version="true"></script>
+    <script type="text/babel" src="~/js/elclass-app.js" asp-append-version="true"></script>
 </body>
 </html>

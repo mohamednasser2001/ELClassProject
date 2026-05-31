@@ -287,6 +287,13 @@ function Nav({ lang, setLang, country, setCountry }) {
 // ── Hero ──────────────────────────────────
 function Hero({ lang, variant }) {
   const c = window.ELCLASS_CONTENT[lang].hero;
+  const init = window.__ELCLASS_INIT__ || {};
+  const heroMediaUrl = init.heroMediaUrl || null;
+  const heroMediaType = init.heroMediaType || "image";
+  const showTeacher = init.showTeacherCard !== false;
+  const showProgress = init.showProgressCard !== false;
+  const showBadge = init.showBadgeCard !== false;
+
   return (
     <section className="hero" data-variant={variant}>
       <div className="hero-bg"><div className="hero-grid-bg" /></div>
@@ -302,49 +309,166 @@ function Hero({ lang, variant }) {
         </div>
         <div className="hero-vis reveal">
           <div className="hv-card hv-photo">
-            <div className="ph"><span className="ph-tag">{c.photoTag}</span></div>
+            {heroMediaUrl ? (
+              heroMediaType === "video" ? (
+                <video
+                  src={heroMediaUrl}
+                  autoPlay muted loop playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }}
+                />
+              ) : (
+                <img
+                  src={heroMediaUrl}
+                  alt={c.photoTag}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }}
+                />
+              )
+            ) : (
+              <div className="ph"><span className="ph-tag">{c.photoTag}</span></div>
+            )}
           </div>
-          <div className="hv-card hv-teacher">
-            <div className="row">
-              <div className="hv-avatar" />
-              <div>
-                <div className="name">{c.teacherName}</div>
-                <div className="meta">{c.teacherSubj}</div>
-                <div className="stars">★★★★★</div>
+          {showTeacher && (
+            <div className="hv-card hv-teacher">
+              <div className="row">
+                <div className="hv-avatar" />
+                <div>
+                  <div className="name">{c.teacherName}</div>
+                  <div className="meta">{c.teacherSubj}</div>
+                  <div className="stars">★★★★★</div>
+                </div>
               </div>
+              <span className="pill">● {c.teacherBadge}</span>
             </div>
-            <span className="pill">● {c.teacherBadge}</span>
-          </div>
-          <div className="hv-card hv-progress">
-            <div className="ttl">{c.progressTtl}</div>
-            <div className="val">{c.progressVal}</div>
-            <div className="bar"><i /></div>
-            <div className="legend"><span>{c.progressLegend[0]}</span><span>{c.progressLegend[1]}</span></div>
-          </div>
-          <div className="hv-card hv-badge">
-            <div className="big">{c.badgeBig}</div>
-            <div className="sm">{c.badgeSm}</div>
-          </div>
+          )}
+          {showProgress && (
+            <div className="hv-card hv-progress">
+              <div className="ttl">{c.progressTtl}</div>
+              <div className="val">{c.progressVal}</div>
+              <div className="bar"><i /></div>
+              <div className="legend"><span>{c.progressLegend[0]}</span><span>{c.progressLegend[1]}</span></div>
+            </div>
+          )}
+          {showBadge && (
+            <div className="hv-card hv-badge">
+              <div className="big">{c.badgeBig}</div>
+              <div className="sm">{c.badgeSm}</div>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-// ── Trust strip ───────────────────────────
-const TRUST_ICONS = ["🇪🇬", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🌐"];
-function Trust({ lang }) {
+// ── Learn Everywhere (Subjects + Systems + Stages unified) ───
+function LearnEverywhere({ lang }) {
+  const isAr = lang === "ar";
+  const s = window.ELCLASS_CONTENT[lang].subjects;
   const t = window.ELCLASS_CONTENT[lang].trust;
-  const chips = t.items.map((x, i) => ({ label: x, icon: TRUST_ICONS[i] || "📚" }));
-  const doubled = [...chips, ...chips, ...chips];
+  const tripleSubj = [...s.list, ...s.list, ...s.list];
+  const trustIcons = ["🇪🇬", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🌐"];
+  const chips = t.items.map((x, i) => ({ label: x, icon: trustIcons[i] || "📚" }));
+  const tripleChips = [...chips, ...chips, ...chips];
+
+  const stages = [
+    {
+      label: isAr ? "رياض الأطفال" : "Kindergarten",
+      icon: (
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 14L16 4l12 10"/>
+          <path d="M6 14v12h20V14"/>
+          <path d="M12 26v-6h8v6"/>
+          <circle cx="10" cy="17" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="22" cy="17" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "المرحلة الابتدائية" : "Primary",
+      icon: (
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 3l8 8-16 16H5v-8z"/>
+          <path d="M17 7l8 8"/>
+          <path d="M5 27l3-2 1 3z" fill="currentColor" stroke="none"/>
+          <line x1="3" y1="13" x2="12" y2="13"/>
+          <line x1="3" y1="18" x2="9" y2="18"/>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "المرحلة الإعدادية" : "Middle",
+      icon: (
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 7v18"/>
+          <path d="M4 5c3 1 8 2 12 4V27c-4-2-9-3-12-3V5z"/>
+          <path d="M28 5c-3 1-8 2-12 4V27c4-2 9-3 12-3V5z"/>
+          <line x1="10" y1="13" x2="14" y2="13"/>
+          <line x1="10" y1="17" x2="13" y2="17"/>
+          <line x1="22" y1="13" x2="18" y2="13"/>
+          <line x1="22" y1="17" x2="19" y2="17"/>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "المرحلة الثانوية" : "High School",
+      icon: (
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 7L2 13l14 6 14-6z"/>
+          <path d="M6 16.5V23c0 2 4.5 4.5 10 4.5s10-2.5 10-4.5V16.5"/>
+          <line x1="28" y1="13" x2="28" y2="23"/>
+          <circle cx="28" cy="24.5" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+      )
+    },
+    {
+      label: isAr ? "الجامعة" : "University",
+      icon: (
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="16,2 2,9 30,9"/>
+          <line x1="2" y1="9" x2="30" y2="9"/>
+          <rect x="1" y="27" width="30" height="3" rx="1"/>
+          <line x1="6" y1="9" x2="6" y2="27"/>
+          <line x1="12" y1="9" x2="12" y2="27"/>
+          <line x1="20" y1="9" x2="20" y2="27"/>
+          <line x1="26" y1="9" x2="26" y2="27"/>
+        </svg>
+      )
+    }
+  ];
+
   return (
-    <section className="trust">
-      <div className="trust-lbl-wrap">
-        <span className="trust-lbl">{t.label}</span>
+    <section className="learn-everywhere" id="subjects">
+      <div className="container">
+        <div className="le-header reveal">
+          <span className="kicker">{s.kicker}</span>
+          <h2 className="le-title">{s.title}</h2>
+          <p className="le-sub">{s.sub}</p>
+        </div>
       </div>
+
+      <div className="subj-marquee">
+        <div className="subj-track">
+          {tripleSubj.map((x, i) => {
+            const p = SUBJ_PALETTES[i % SUBJ_PALETTES.length];
+            return (
+              <div key={i} className={`subj-card ${p.dark ? "tone-dark" : ""}`}
+                   style={{ "--card-bg": p.bg, "--card-blob": p.blob, "--card-icon-bg": p.iconBg, "--card-icon-fg": p.iconFg, "--card-icon-bd": p.iconBd, borderColor: "transparent" }}>
+                <div className="subj-icon">{x.code}</div>
+                <div className="subj-name">{x.name}</div>
+                <div className="subj-card-cta">{s.cta} {lang === "ar" ? "←" : "→"}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="le-connector">
+        <span>{isAr ? "لجميع الأنظمة" : "For All Curricula"}</span>
+      </div>
+
       <div className="trust-marquee">
         <div className="trust-track">
-          {doubled.map((item, i) => (
+          {tripleChips.map((item, i) => (
             <div key={i} className="trust-chip">
               <span className="trust-chip-icon">{item.icon}</span>
               <span className="trust-chip-name">{item.label}</span>
@@ -352,100 +476,20 @@ function Trust({ lang }) {
           ))}
         </div>
       </div>
-    </section>
-  );
-}
 
-// ── Academic Stages ───────────────────────
-function AcademicStages({ lang }) {
-  const isAr = lang === "ar";
-  const title = isAr ? "في جميع المراحل الدراسية" : "Across All Academic Stages";
-  const stages = [
-    {
-      label: isAr ? "رياض الاطفال" : "Kindergarten",
-      icon: (
-        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="4" y="38" width="28" height="28" rx="5" fill="currentColor"/>
-          <circle cx="18" cy="52" r="7" fill="white"/>
-          <rect x="40" y="38" width="28" height="28" rx="5" fill="currentColor"/>
-          <polygon points="54,41 63,54 45,54" fill="white"/>
-          <rect x="4" y="6" width="28" height="28" rx="5" fill="currentColor"/>
-          <polygon points="18,9 20.5,15.5 28,15.5 22,19.5 24,26 18,22 12,26 14,19.5 8,15.5 15.5,15.5" fill="white"/>
-          <rect x="40" y="6" width="28" height="28" rx="5" fill="currentColor"/>
-          <rect x="48" y="14" width="12" height="12" rx="2" fill="white"/>
-        </svg>
-      )
-    },
-    {
-      label: isAr ? "المرحلة الابتدائية" : "Primary School",
-      icon: (
-        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="4" y="4" width="28" height="28" rx="5" fill="currentColor"/>
-          <text x="18" y="25" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">1</text>
-          <rect x="40" y="4" width="28" height="28" rx="5" fill="currentColor"/>
-          <text x="54" y="25" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">2</text>
-          <rect x="4" y="40" width="28" height="28" rx="5" fill="currentColor"/>
-          <text x="18" y="61" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">+</text>
-          <rect x="40" y="40" width="28" height="28" rx="5" fill="currentColor"/>
-          <text x="54" y="61" textAnchor="middle" fill="white" fontSize="18" fontFamily="sans-serif" fontWeight="700">3</text>
-        </svg>
-      )
-    },
-    {
-      label: isAr ? "المرحلة الإعدادية" : "Middle School",
-      icon: (
-        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="34" y="2" width="4" height="18" rx="1.5" fill="currentColor"/>
-          <polygon points="38,2 54,8 38,14" fill="currentColor"/>
-          <rect x="10" y="20" width="52" height="50" rx="4" fill="currentColor"/>
-          <rect x="16" y="28" width="12" height="12" rx="2" fill="white"/>
-          <rect x="44" y="28" width="12" height="12" rx="2" fill="white"/>
-          <rect x="28" y="44" width="16" height="26" rx="3" fill="white"/>
-        </svg>
-      )
-    },
-    {
-      label: isAr ? "المرحلة الثانوية" : "High School",
-      icon: (
-        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="34" y="2" width="4" height="14" rx="1.5" fill="currentColor"/>
-          <polygon points="38,2 56,7 38,12" fill="currentColor"/>
-          <rect x="16" y="10" width="40" height="8" rx="3" fill="currentColor"/>
-          <rect x="6" y="18" width="60" height="52" rx="4" fill="currentColor"/>
-          <rect x="12" y="26" width="10" height="10" rx="2" fill="white"/>
-          <rect x="50" y="26" width="10" height="10" rx="2" fill="white"/>
-          <rect x="12" y="42" width="10" height="10" rx="2" fill="white"/>
-          <rect x="50" y="42" width="10" height="10" rx="2" fill="white"/>
-          <rect x="28" y="44" width="16" height="26" rx="3" fill="white"/>
-        </svg>
-      )
-    },
-    {
-      label: isAr ? "الجامعة" : "University",
-      icon: (
-        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18,28 Q36,8 54,28 Z" fill="currentColor"/>
-          <rect x="14" y="26" width="44" height="5" rx="1" fill="currentColor"/>
-          <rect x="6" y="31" width="60" height="37" rx="4" fill="currentColor"/>
-          <rect x="12" y="37" width="8" height="27" rx="2" fill="white"/>
-          <rect x="26" y="37" width="8" height="27" rx="2" fill="white"/>
-          <rect x="52" y="37" width="8" height="27" rx="2" fill="white"/>
-          <rect x="30" y="50" width="12" height="18" rx="2" fill="currentColor"/>
-          <rect x="2" y="66" width="68" height="4" rx="1" fill="currentColor"/>
-        </svg>
-      )
-    }
-  ];
-  return (
-    <section className="academic-stages">
-      <h2 className="academic-stages-title">{title}</h2>
-      <div className="academic-stages-grid">
-        {stages.map((s, i) => (
-          <div key={i} className="academic-stage-item">
-            <div className="academic-stage-icon">{s.icon}</div>
-            <span className="academic-stage-label">{s.label}</span>
-          </div>
-        ))}
+      <div className="le-connector">
+        <span>{isAr ? "في جميع المراحل الدراسية" : "Across All Academic Stages"}</span>
+      </div>
+
+      <div className="container">
+        <div className="le-stages reveal">
+          {stages.map((st, i) => (
+            <div key={i} className="le-stage">
+              <div className="le-stage-icon">{st.icon}</div>
+              <span className="le-stage-label">{st.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -866,7 +910,7 @@ function App() {
   useReveal();
 
   const sectionMap = {
-    subjects:     <Subjects lang={lang} />,
+    subjects:     <LearnEverywhere lang={lang} />,
     how:          <How lang={lang} />,
     teachers:     <Teachers lang={lang} />,
     pricing:      <Pricing lang={lang} country={country} />,
@@ -888,11 +932,11 @@ function App() {
         setCountry={(v) => setTweak("country", v)}
       />
       <Hero lang={lang} variant={t.heroVariant} />
-      <Trust lang={lang} />
-      <AcademicStages lang={lang} />
-      {(t.sectionOrder || TWEAK_DEFAULTS.sectionOrder).map((key) => (
-        <React.Fragment key={key}>{sectionMap[key]}</React.Fragment>
-      ))}
+      {(t.sectionOrder || TWEAK_DEFAULTS.sectionOrder)
+        .filter(key => key !== "pricing" || (window.__ELCLASS_INIT__ || {}).showPricingSection !== false)
+        .map((key) => (
+          <React.Fragment key={key}>{sectionMap[key]}</React.Fragment>
+        ))}
       <CTAWide lang={lang} />
       <Footer lang={lang} />
       <BookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} lang={lang} country={country} />

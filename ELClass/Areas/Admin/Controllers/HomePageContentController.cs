@@ -37,7 +37,7 @@ namespace ELClass.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(HomePageContent model, string tabId, IFormFile PlayVideoImg)
+        public async Task<IActionResult> Save(HomePageContent model, string tabId, IFormFile PlayVideoImg, IFormFile HeroMediaFile)
         {
             var isArabic = CultureHelper.IsArabic;
 
@@ -57,6 +57,32 @@ namespace ELClass.Areas.Admin.Controllers
                     await _unitOfWork.HomePageContentRepository.EditAsync(record);
                 }
             }
+
+            if (HeroMediaFile != null && HeroMediaFile.Length > 0)
+            {
+                var ext = Path.GetExtension(HeroMediaFile.FileName).ToLowerInvariant();
+                var mediaType = (ext == ".mp4" || ext == ".webm" || ext == ".ogg") ? "video" : "image";
+                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "hero-media");
+                Directory.CreateDirectory(folder);
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(folder, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await HeroMediaFile.CopyToAsync(stream);
+                }
+                var allRecords = await _unitOfWork.HomePageContentRepository.GetAsync();
+                foreach (var record in allRecords)
+                {
+                    record.HeroMediaUrl = fileName;
+                    record.HeroMediaType = mediaType;
+                    await _unitOfWork.HomePageContentRepository.EditAsync(record);
+                }
+                model.HeroMediaUrl = fileName;
+                model.HeroMediaType = mediaType;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.HeroMediaUrl)) model.HeroMediaUrl = null;
+            if (string.IsNullOrWhiteSpace(model.HeroMediaType)) model.HeroMediaType = null;
 
             await _unitOfWork.HomePageContentRepository.EditAsync(model);
             TempData["Success"] = isArabic ? "تم حفظ المحتوى بنجاح" : "Content saved successfully";
@@ -199,6 +225,9 @@ namespace ELClass.Areas.Admin.Controllers
             if (r.BlogMainHeading == null) { r.BlogMainHeading = S("News, Tips, Blogs & Insights", "أخبار ونصائح ورؤى"); changed = true; }
             if (r.BlogParagraph == null) { r.BlogParagraph = S("Stay updated with the latest educational tips.", "ابق على اطلاع بأحدث الأخبار والنصائح التعليمية"); changed = true; }
             if (r.BlogReadMoreText == null) { r.BlogReadMoreText = S("read more", "اقرأ المزيد"); changed = true; }
+
+            // Hero visual card visibility defaults (only patch if the record is brand new — bool defaults to false in DB)
+            // We intentionally don't overwrite existing saved values here.
 
             return changed;
         }

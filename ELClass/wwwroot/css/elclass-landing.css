@@ -531,55 +531,106 @@ section { position: relative; }
 }
 
 /* ============================================
-   Academic Stages
+   Learn Everywhere (unified subjects + systems + stages)
    ============================================ */
-.academic-stages {
-  background: #ddeaf5;
-  margin-top: 32px;
-  padding: 36px 24px 60px;
+.learn-everywhere {
+  background: linear-gradient(175deg, #eef4ff 0%, #ddeaf5 40%, #c8dff5 100%);
+  padding: 80px 0 72px;
+  overflow: hidden;
+}
+[data-theme="dark"] .learn-everywhere {
+  background: linear-gradient(175deg, #0d1b2e 0%, #0a2040 50%, #061428 100%);
+}
+
+.le-header {
   text-align: center;
+  margin-bottom: 44px;
 }
-.academic-stages-title {
-  font-size: clamp(20px, 3vw, 28px);
+.le-title {
+  font-size: clamp(24px, 4vw, 38px);
   font-weight: 800;
-  color: #0d1b2e;
-  margin-bottom: 48px;
-  line-height: 1.4;
+  color: var(--ink-1);
+  margin: 8px 0 12px;
+  line-height: 1.25;
 }
-.academic-stages-grid {
+.le-sub {
+  font-size: 16px;
+  color: var(--ink-2);
+  max-width: 540px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+.le-connector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 28px 0;
+}
+.le-connector span {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 32px;
+  border-radius: 100px;
+  letter-spacing: .02em;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18);
+}
+
+.le-stages {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  gap: 56px;
+  gap: 48px;
   flex-wrap: wrap;
-  max-width: 960px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 44px auto 0;
 }
-.academic-stage-item {
+.le-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex: 0 0 auto;
 }
-.academic-stage-icon {
-  width: 80px;
-  height: 80px;
-  color: #1a1a2e;
+.le-stage-icon {
+  width: 72px;
+  height: 72px;
+  background: #fff;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(30,95,216,.12);
+  color: var(--primary);
+  transition: transform .2s, box-shadow .2s;
 }
-.academic-stage-icon svg { width: 100%; height: 100%; }
-.academic-stage-label {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1a1a2e;
+.le-stage-icon svg {
+  width: 36px;
+  height: 36px;
+}
+.le-stage:hover .le-stage-icon {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(30,95,216,.2);
+}
+.le-stage-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-1);
+  text-align: center;
   line-height: 1.4;
-  max-width: 120px;
+  max-width: 110px;
 }
+
 @media (max-width: 600px) {
-  .academic-stages { padding: 44px 16px; }
-  .academic-stages-grid { gap: 28px; }
-  .academic-stage-icon { width: 56px; height: 56px; }
-  .academic-stage-label { font-size: 12px; max-width: 80px; }
+  .learn-everywhere { padding: 56px 0 52px; }
+  .le-stages { gap: 24px; margin-top: 32px; }
+  .le-stage-icon { width: 56px; height: 56px; border-radius: 16px; }
+  .le-stage-icon svg { width: 28px; height: 28px; }
+  .le-stage-label { font-size: 12px; max-width: 80px; }
+  .le-connector span { font-size: 13px; padding: 8px 22px; }
 }
 
 /* ============================================
@@ -1508,8 +1559,11 @@ footer {
   .plan-price { font-size: 20px; }
   .plan-feats li { font-size: 12px; padding: 5px 0; }
   #pricing.section { padding-top: 32px; }
-  .hero { padding: 48px 0 60px; }
-  .hero-vis { height: 380px; }
-  .hv-photo { width: 240px; }
-  .hv-teacher, .hv-progress { width: 200px; }
+  .hero { padding: 20px 0 20px; }
+  .hero .container { gap: 16px; }
+  .hero-title { font-size: 34px; margin: 8px 0 10px; }
+  .hero-sub { font-size: 15px; margin: 0 0 14px; }
+  .hero-vis { height: 310px; }
+  .hv-photo { width: 210px; }
+  .hv-teacher, .hv-progress { width: 180px; }
 }
