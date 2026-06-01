@@ -24,7 +24,10 @@
       "Bash(Write-Host \"Done copying static files\")",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\" -Recurse -Directory)",
       "Bash(Select-Object FullName)",
-      "PowerShell(head *)"
+      "PowerShell(head *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\" -Recurse -Include \"*.cshtml\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\wwwroot\" -Recurse -Include \"*.js\", \"*.jsx\", \"*.ts\", \"*.tsx\")"
     ]
   }
 }

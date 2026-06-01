@@ -1505,7 +1505,31 @@ footer {
    ============================================ */
 @media (max-width: 980px) {
   .hero .container { grid-template-columns: 1fr; }
-  .hero-vis { height: 460px; max-width: 540px; }
+  /* Image first, then text */
+  .hero-vis { order: -1; height: 400px; max-width: 100%; }
+  .hero .container > :first-child { text-align: center; }
+  .hero-cta { justify-content: center; }
+  .hero-sub { max-width: 100%; }
+  /* Photo fills full hero-vis width */
+  .hv-photo { inset: 0; width: auto; height: auto; }
+  /* Badge: top corner of image — compact */
+  .hv-badge { top: 10px; bottom: auto; inset-inline-start: 10px; inset-inline-end: auto; width: 80px; padding: 6px 8px; }
+  .hv-badge .big { font-size: 14px; }
+  .hv-badge .sm  { font-size: 8px; margin-top: 2px; }
+  /* Teacher: bottom-right, lower edge, compact */
+  .hv-teacher { top: auto; bottom: -15px; inset-inline-start: 6px; width: 148px; padding: 6px 8px; }
+  .hv-teacher .row { gap: 5px; }
+  .hv-avatar { width: 26px; height: 26px; }
+  .hv-teacher .name  { font-size: 10px; }
+  .hv-teacher .meta  { font-size: 8px; margin-top: 0; }
+  .hv-teacher .stars { font-size: 8px; letter-spacing: .5px; }
+  .hv-teacher .pill  { font-size: 8px; padding: 2px 6px; margin-top: 4px; }
+  /* Progress: bottom-left, lower edge, compact */
+  .hv-progress { bottom: -15px; inset-inline-start: auto; inset-inline-end: 6px; width: 148px; padding: 6px 8px; }
+  .hv-progress .ttl    { font-size: 8.5px; }
+  .hv-progress .val    { font-size: 14px; margin-top: 2px; }
+  .hv-progress .bar    { margin-top: 5px; height: 5px; }
+  .hv-progress .legend { margin-top: 3px; font-size: 8px; }
   .subj-grid { grid-template-columns: repeat(2, 1fr); }
   .steps { grid-template-columns: repeat(2, 1fr); }
   .plans { grid-template-columns: 1fr; }
@@ -1563,7 +1587,14 @@ footer {
   .hero .container { gap: 16px; }
   .hero-title { font-size: 34px; margin: 8px 0 10px; }
   .hero-sub { font-size: 15px; margin: 0 0 14px; }
-  .hero-vis { height: 310px; }
-  .hv-photo { width: 210px; }
-  .hv-teacher, .hv-progress { width: 180px; }
+  .hero-vis { height: 280px; }
+  .hv-photo { inset: 0; width: auto; height: auto; }
+  .hv-teacher, .hv-progress { width: 130px; }
+  .hv-teacher .name { font-size: 9px; }
+  .hv-teacher .meta, .hv-teacher .stars, .hv-teacher .pill { font-size: 7.5px; }
+  .hv-progress .val { font-size: 12px; }
+  .hv-progress .ttl, .hv-progress .legend { font-size: 7.5px; }
+  .hv-badge { width: 72px; }
+  .hv-badge .big { font-size: 12px; }
+  .hv-badge .sm  { font-size: 7px; }
 }
