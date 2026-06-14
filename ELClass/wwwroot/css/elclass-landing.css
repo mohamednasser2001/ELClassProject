@@ -1598,3 +1598,87 @@ footer {
   .hv-badge .big { font-size: 12px; }
   .hv-badge .sm  { font-size: 7px; }
 }
+
+/* ── Country Guide ─────────────────────────────────────── */
+.guide-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  z-index: 59; /* sits behind sticky nav (z-index: 60) */
+  animation: guide-fade .3s ease;
+}
+
+.guide-bubble {
+  position: fixed;
+  top: 80px;
+  inset-inline-end: 16px;
+  z-index: 61;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .22), 0 2px 8px rgba(0, 0, 0, .1);
+  padding: 18px 20px 16px;
+  width: 264px;
+  animation: guide-bubble-in .38s cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Upward-pointing arrow — JS sets --arrow-offset to align with the chip center */
+.guide-bubble::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: var(--arrow-offset, 40px);
+  margin-left: -7px;
+  width: 14px;
+  height: 14px;
+  background: var(--bg);
+  border-top: 1.5px solid var(--line);
+  border-left: 1.5px solid var(--line);
+  transform: rotate(45deg);
+}
+
+.guide-bubble-title {
+  margin: 0 0 6px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.guide-bubble-desc {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+
+.guide-ok-btn {
+  width: 100%;
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+/* Pulse ring on the flag chip while guide is visible */
+.guide-active #country-picker-chip {
+  animation: guide-chip-pulse 1.8s ease infinite;
+}
+
+@keyframes guide-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes guide-bubble-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes guide-chip-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 70%, transparent); }
+  50%       { box-shadow: 0 0 0 7px color-mix(in srgb, var(--primary) 12%, transparent); }
+}
+
+@media (max-width: 500px) {
+  .guide-bubble { width: calc(100vw - 16px); }
+}

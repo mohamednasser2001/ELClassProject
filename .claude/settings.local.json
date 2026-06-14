@@ -27,7 +27,11 @@
       "PowerShell(head *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\" -Recurse -Include \"*.cshtml\")",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\wwwroot\" -Recurse -Include \"*.js\", \"*.jsx\", \"*.ts\", \"*.tsx\")"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\wwwroot\" -Recurse -Include \"*.js\", \"*.jsx\", \"*.ts\", \"*.tsx\")",
+      "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\" -Depth 3)",
+      "Bash(Select-Object -First 60)",
+      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\ELClass\" -Depth 3 | Where-Object { $_.Name -match \"Home|Index|_Layout\" } | Select-Object FullName)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\Mohamed Ibrahim\\\\source\\\\repos\\\\ELClassProject\\\\ELClass\\\\wwwroot\\\\css\\\\elclass-landing.css\" | Measure-Object -Line\\).Lines)"
     ]
   }
 }

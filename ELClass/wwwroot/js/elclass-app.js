@@ -244,7 +244,7 @@ function Nav({ lang, setLang, country, setCountry }) {
         <div className="nav-controls">
           {/* Country picker */}
           <Dropdown trigger={
-            <button className="chip">
+            <button id="country-picker-chip" className="chip">
               <FlagSvg svg={ctry.flagSvg} size={20} />
               <span className="chip-caret">▾</span>
             </button>
@@ -883,6 +883,71 @@ function SectionReorder({ order, labels, onChange }) {
 }
 
 // ── App root ──────────────────────────────
+// ── Country Guide ─────────────────────────
+function CountryGuide({ lang }) {
+  const [visible, setVisible] = useState(() => !localStorage.getItem("elclass_guide_seen"));
+  const [pos, setPos] = useState(null); // { top, left, arrowOffset }
+
+  useEffect(() => {
+    if (!visible) return;
+    document.body.classList.add("guide-active");
+
+    const calc = () => {
+      const chip = document.getElementById("country-picker-chip");
+      if (!chip) return;
+      const r = chip.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const margin = 8;
+      const bubbleW = vw <= 500 ? vw - margin * 2 : 264;
+      const chipCX = r.left + r.width / 2;
+      let bubbleLeft = chipCX - bubbleW / 2;
+      bubbleLeft = Math.max(margin, Math.min(bubbleLeft, vw - bubbleW - margin));
+      setPos({ top: r.bottom + 12, left: bubbleLeft, arrowOffset: chipCX - bubbleLeft });
+    };
+
+    calc();
+    window.addEventListener("resize", calc);
+    return () => {
+      document.body.classList.remove("guide-active");
+      window.removeEventListener("resize", calc);
+    };
+  }, [visible]);
+
+  if (!visible) return null;
+
+  const dismiss = () => {
+    localStorage.setItem("elclass_guide_seen", "1");
+    setVisible(false);
+  };
+
+  const isAr = lang === "ar";
+  const bubbleStyle = pos ? {
+    top: pos.top,
+    left: pos.left,
+    insetInlineStart: "unset",
+    "--arrow-offset": pos.arrowOffset + "px",
+  } : {};
+
+  return (
+    <React.Fragment>
+      <div className="guide-overlay" onClick={dismiss} />
+      <div className="guide-bubble" style={bubbleStyle}>
+        <p className="guide-bubble-title">
+          {isAr ? "غيّر دولتك بسهولة" : "Change your country"}
+        </p>
+        <p className="guide-bubble-desc">
+          {isAr
+            ? "اضغط على أيقونة العلم في الشريط العلوي لاختيار دولتك وعرض الأسعار بعملتك المحلية."
+            : "Tap the flag icon in the top bar to select your country and view local pricing."}
+        </p>
+        <button className="btn guide-ok-btn" onClick={dismiss}>
+          {isAr ? "حسناً، فهمت ✓" : "Got it ✓"}
+        </button>
+      </div>
+    </React.Fragment>
+  );
+}
+
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const lang = t.lang;
@@ -942,6 +1007,7 @@ function App() {
       <BookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} lang={lang} country={country} />
       <WhatsAppFab lang={lang} />
       <MobileBookingFab lang={lang} />
+      <CountryGuide lang={lang} />
 
       <TweaksPanel>
         <TweakSection label={lang === "ar" ? "الهوية" : "Brand"} />
