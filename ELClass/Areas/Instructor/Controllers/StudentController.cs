@@ -194,6 +194,39 @@ namespace ELClass.Areas.Instructor.Controllers
                 if (vm.Appointments == null || !vm.Appointments.Any())
                     return Json(new { success = false, message = isArabic ? "أضف ميعاد واحد على الأقل" : "Add at least one appointment" });
 
+                if (vm.Appointments == null || !vm.Appointments.Any())
+                    return Json(new { success = false, message = isArabic ? "أضف ميعاد واحد على الأقل" : "Add at least one appointment" });
+
+                if (vm.StudentIds == null || !vm.StudentIds.Any())
+                    return Json(new { success = false, message = isArabic ? "اختر طالب واحد على الأقل" : "Select at least one student" });
+
+                // ✅ تحقق إن كل طالب فعلاً مسجل في الكورس ده + تابع للمدرس ده
+                var enrolledStudentIds = (await _unitOfWork.StudentCourseRepository
+                    .GetAsync(sc => sc.CourseId == vm.CourseId && vm.StudentIds.Contains(sc.StudentId)))
+                    .Select(sc => sc.StudentId)
+                    .ToHashSet();
+
+                var instructorStudentIds = (await _unitOfWork.InstructorStudentRepository
+                    .GetAsync(x => x.InstructorId == userId && vm.StudentIds.Contains(x.StudentId)))
+                    .Select(x => x.StudentId)
+                    .ToHashSet();
+
+                var invalidStudentIds = vm.StudentIds
+                    .Where(id => !enrolledStudentIds.Contains(id) || !instructorStudentIds.Contains(id))
+                    .ToList();
+
+                if (invalidStudentIds.Any())
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = isArabic
+                            ? "فيه طالب/طلاب مش مسجلين في هذا الكورس مع المدرس"
+                            : "One or more students are not enrolled in this course with this instructor"
+                    });
+                }
+
+
                 // التحقق من التعارض
                 var existingAppointments = await _unitOfWork.AppoinmentRepository
                     .GetAsync(a => a.InstructorId == userId);
